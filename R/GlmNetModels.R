@@ -200,17 +200,19 @@ setAdaptiveLasso <- function(nlambda=100,
                              lambda.min.ratio=0.01,
                              parallel=TRUE,
                              measure='default',
-                             lambdaStrategy='min'){
+                             lambdaStrategy='min',
+                             initialAlpha=1){
   if(!inherits(nlambda,c("numeric", "integer")))
     stop('nlambda must be a numeric value >0 ')
   if(sum(nlambda < 1)>0)
     stop('nlambda must be greater that 0 or -1')
   
   param <- list(
-    nlambda=nlambda,
-    lambda.min.ratio=lambda.min.ratio,
+    nlambda = nlambda,
+    lambda.min.ratio = lambda.min.ratio,
     alpha = 1,
-    measure=measure
+    measure = measure,
+    initialAlpha = initialAlpha
   )
   
   attr(param, 'settings') <- list(
@@ -409,7 +411,7 @@ cvGlmNet <- function(dataMatrix,
                      labels,
                      param,
                      covariateMap) {
-  labels <- labels %>% dplyr::arrange(rowId)
+  labels <- labels %>% dplyr::arrange(.data$rowId)
   settings <- attr(param, 'settings')
   y <- labels$outcomeCount
   
@@ -421,7 +423,7 @@ cvGlmNet <- function(dataMatrix,
   dataMatrix@Dimnames[[2]] <- as.character(covariateMap$covariateId)
   nvars <- dim(dataMatrix)[[2]]
   if (settings$adaptive==TRUE) {
-    firstModel <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$alpha, family='binomial',
+    firstModel <- glmnet::cv.glmnet(dataMatrix, y=y, alpha=param$initialAlpha, family='binomial',
                                   trace.it=1, nfolds=settings$nfolds, 
                                   lambda.min.ratio=param$lambda.min.ratio,
                                   foldId=labels$index, parallel=settings$parallel,
