@@ -351,6 +351,7 @@ createValidationSettings <- function(recalibrate = NULL,
 #' @param targetId The targetId of the target cohort to validate on
 #' @param outcomeId The outcomeId of the outcome cohort to validate on
 #' @param populationSettings A list of population restriction settings created by \code{createPopulationSettings}
+#' @param restrictPlpDataSettings A list of plpData restriction settings created by \code{createRestrictPlpDataSettings}
 #' @param plpModelList A list of plpModels objects created by \code{runPlp} or a path to such objects
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data

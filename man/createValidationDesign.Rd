@@ -21,6 +21,8 @@ createValidationDesign(
 
 \item{populationSettings}{A list of population restriction settings created by \code{createPopulationSettings}}
 
+\item{restrictPlpDataSettings}{A list of plpData restriction settings created by \code{createRestrictPlpDataSettings}}
+
 \item{plpModelList}{A list of plpModels objects created by \code{runPlp} or a path to such objects}
 
 \item{recalibrate}{A vector of characters specifying the recalibration method to apply,}
