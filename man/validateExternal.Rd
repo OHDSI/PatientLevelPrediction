@@ -9,8 +9,6 @@ validateExternal(
   predictionProblem,
   plpModel,
   databaseDetails,
-  restrictPlpDataSettings,
-  validationSettings,
   logSettings,
   outputFolder,
   matchModelsToTargets = TRUE
@@ -25,23 +23,14 @@ could also be a list ?}
 containing the trained model or a list of such models (to save extracting 
 data multiple times from database)}
 
-\item{databaseDetails}{A list of objects of class 
+\item{databaseDetails}{A list of objects of class
 \code{databaseDetails} created using \code{createDatabaseDetails}}
 
-\item{restrictPlpDataSettings}{A list of population restriction settings 
-created by \code{createRestrictPlpDataSettings()}}
-
-\item{validationSettings}{A settings object of class 
-\code{validationSettings} created using \code{createValidationSettings}}
-
-\item{logSettings}{An object of \code{logSettings} created 
+\item{logSettings}{An object of \code{logSettings} created
 using \code{createLogSettings}}
 
-\item{outputFolder}{The directory to save the validation results to 
+\item{outputFolder}{The directory to save the validation results to
 (subfolders are created per database in validationDatabaseDetails)}
-
-\item{matchModelsToTargets}{A boolean specifying if models should be validated 
-only on prediction problems with the same targetId}
 }
 \description{
 externalValidatePlp - Validate a model/s on new databases for a specific 

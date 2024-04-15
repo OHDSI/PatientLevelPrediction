@@ -505,7 +505,8 @@ validateMultiplePlp <- function(
             validationDatabaseDetails = validationDatabaseDetails,
             validationRestrictPlpDataSettings = validationRestrictPlpDataSettings,
             settings = createValidationSettings(
-              recalibrate = recalibrate
+              recalibrate = recalibrate,
+              runCovariateSummary = F
             ),
             outputFolder = saveLocation
           )},
