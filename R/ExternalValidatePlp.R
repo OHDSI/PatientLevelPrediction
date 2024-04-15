@@ -407,14 +407,11 @@ validateExternal <- function(validationDesignList,
   if (inherits(validationDesignList, 'list')) {
     lapply(validationDesignList, function(x)
       checkIsClass(x, 'validationDesign'))
- 
-  if (inherits(plpModel, 'list')) {
-    lapply(plpModel, function(x) checkIsClass(x, 'plpModel'))
   } else {
-    checkIsClass(plpModel, 'plpModel')
-    plpModel <- list(plpModel)
+    checkIsClass(validationDesignList, 'validationDesign')
+    validationDesignList <- list(validationDesignList)
   }
-  
+ 
   # check the class and make a list if a single database setting
   if (inherits(databaseDetails, 'list')) {
     lapply(databaseDetails, function(x)
@@ -567,4 +564,4 @@ validateModel <-
                     'validationResult'
                   ))
     return(result)
-  }
+}
