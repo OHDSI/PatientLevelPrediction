@@ -416,7 +416,7 @@ validateExternal <- function(validationDesignList,
   if (inherits(databaseDetails, 'list')) {
     lapply(databaseDetails, function(x)
       checkIsClass(x, 'databaseDetails'))
-  } else{
+  } else {
     checkIsClass(databaseDetails, 'databaseDetails')
     databaseDetails <- list(databaseDetails)
   }
@@ -482,7 +482,7 @@ validateExternal <- function(validationDesignList,
       plpDataLocation <-
         file.path(outputFolder, databaseName, plpDataName)
       if (!dir.exists(file.path(outputFolder, databaseName))) {
-        dir.create(file.path(outputFolder, databaseName), recursive = T)
+        dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
       }
       savePlpData(plpData, file = plpDataLocation)
       
@@ -492,8 +492,8 @@ validateExternal <- function(validationDesignList,
           createStudyPopulation,
           list(
             plpData = plpData,
-            outcomeId = problem$outcomeId,
-            populationSettings = problem$populationSettings
+            outcomeId = design$outcomeId,
+            populationSettings = design$populationSettings
           )
         )
       },
