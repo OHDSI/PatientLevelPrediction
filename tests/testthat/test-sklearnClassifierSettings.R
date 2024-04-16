@@ -17,9 +17,8 @@ test_that("setAdaBoost settings work checks", {
   
   expect_false(attr(adset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(adset$param, 'settings')$name, 'AdaBoost')
-  expect_equal(attr(adset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(adset$param, 'settings')$pythonImportSecond, 'ensemble')
-  expect_equal(attr(adset$param, 'settings')$pythonClassifier, "AdaBoostClassifier")
+  expect_equal(attr(adset$param, 'settings')$pythonModule, 'sklearn.ensemble')
+  expect_equal(attr(adset$param, 'settings')$pythonClass, "AdaBoostClassifier")
   
   
   inputs <- AdaBoostClassifierInputs(list, adset$param[[1]])
@@ -78,9 +77,8 @@ test_that("setMLP settings work checks", {
   
   expect_false(attr(mlpset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(mlpset$param, 'settings')$name, 'Neural Network')
-  expect_equal(attr(mlpset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(mlpset$param, 'settings')$pythonImportSecond, 'neural_network')
-  expect_equal(attr(mlpset$param, 'settings')$pythonClassifier, "MLPClassifier")
+  expect_equal(attr(mlpset$param, 'settings')$pythonModule, 'sklearn.neural_network')
+  expect_equal(attr(mlpset$param, 'settings')$pythonClass, "MLPClassifier")
   
   inputs <- MLPClassifierInputs(list, mlpset$param[[1]])
   expect_equal(
@@ -105,9 +103,8 @@ test_that("setNaiveBayes settings work checks", {
   
   expect_true(attr(nbset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(nbset$param, 'settings')$name, 'Naive Bayes')
-  expect_equal(attr(nbset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(nbset$param, 'settings')$pythonImportSecond, 'naive_bayes')
-  expect_equal(attr(nbset$param, 'settings')$pythonClassifier, "GaussianNB")
+  expect_equal(attr(nbset$param, 'settings')$pythonModule, 'sklearn.naive_bayes')
+  expect_equal(attr(nbset$param, 'settings')$pythonClass, "GaussianNB")
   
   inputs <- GaussianNBInputs(list, nbset$param[[1]])
   expect_equal(names(inputs),NULL)
@@ -144,9 +141,8 @@ test_that("setRandomForest settings work checks", {
   
   expect_false(attr(rfset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(rfset$param, 'settings')$name, 'Random forest')
-  expect_equal(attr(rfset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(rfset$param, 'settings')$pythonImportSecond, 'ensemble')
-  expect_equal(attr(rfset$param, 'settings')$pythonClassifier, "RandomForestClassifier")
+  expect_equal(attr(rfset$param, 'settings')$pythonModule, 'sklearn.ensemble')
+  expect_equal(attr(rfset$param, 'settings')$pythonClass, "RandomForestClassifier")
   
   inputs <- RandomForestClassifierInputs(list,  rfset$param[[1]])
   expect_equal(
@@ -183,9 +179,8 @@ test_that("setSVM  settings work checks", {
   
   expect_false(attr(svmset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(svmset$param, 'settings')$name, 'Support Vector Machine')
-  expect_equal(attr(svmset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(svmset$param, 'settings')$pythonImportSecond, 'svm')
-  expect_equal(attr(svmset$param, 'settings')$pythonClassifier, "SVC")
+  expect_equal(attr(svmset$param, 'settings')$pythonModule, 'sklearn.svm')
+  expect_equal(attr(svmset$param, 'settings')$pythonClass, "SVC")
   
   inputs <- SVCInputs(list,  svmset$param[[1]])
   expect_equal(

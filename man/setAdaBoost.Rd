@@ -26,7 +26,7 @@ Create setting for AdaBoost with python DecisionTreeClassifier base estimator
 }
 \examples{
 \dontrun{
-model.adaBoost <- setAdaBoost(nEstimators = list(10,50,200), learningRate = list(1, 0.5, 0.1), 
+model.adaBoost <- setAdaBoost(nEstimators = list(10,50,200), learningRate = list(1, 0.5, 0.1),
                               algorithm = list('SAMME.R'), seed = sample(1000000,1)
                               )
 }
