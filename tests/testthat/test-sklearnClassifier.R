@@ -26,9 +26,8 @@ expect_equal(length(unique(lapply(dtset$param, function(x) x[[3]]))), 3)
 
 expect_false(attr(dtset$param, 'settings')$requiresDenseMatrix)
 expect_equal(attr(dtset$param, 'settings')$name, 'Decision Tree')
-expect_equal(attr(dtset$param, 'settings')$pythonImport, 'sklearn')
-expect_equal(attr(dtset$param, 'settings')$pythonImportSecond, 'tree')
-expect_equal(attr(dtset$param, 'settings')$pythonClassifier, "DecisionTreeClassifier")
+expect_equal(attr(dtset$param, 'settings')$pythonModule, 'sklearn.tree')
+expect_equal(attr(dtset$param, 'settings')$pythonClass, "DecisionTreeClassifier")
 
 
 })
