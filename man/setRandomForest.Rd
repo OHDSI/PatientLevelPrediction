@@ -35,7 +35,7 @@ setRandomForest(
 
 \item{minWeightFractionLeaf}{(list) The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.}
 
-\item{mtries}{(list) The number of features to consider when looking for the best split: 
+\item{mtries}{(list) The number of features to consider when looking for the best split:
 \itemize{
 \item{int}{then consider max_features features at each split.}
 \item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
@@ -65,7 +65,7 @@ Create setting for random forest model with python (very fast)
 }
 \examples{
 \dontrun{
-model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100), 
+model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100),
                            maxDepth=c(5,20))
-}                           
+}
 }
