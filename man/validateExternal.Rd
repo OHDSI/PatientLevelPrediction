@@ -2,26 +2,17 @@
 % Please edit documentation in R/ExternalValidatePlp.R
 \name{validateExternal}
 \alias{validateExternal}
-\title{externalValidatePlp - Validate a model/s on new databases for a specific 
-predictionProblem}
+\title{externalValidatePlp - Validate model performance on new data}
 \usage{
 validateExternal(
-  predictionProblem,
-  plpModel,
+  validationDesignList,
   databaseDetails,
   logSettings,
-  outputFolder,
-  matchModelsToTargets = TRUE
+  outputFolder
 )
 }
 \arguments{
-\item{predictionProblem}{The prediction problem object, should
-have one T and one O along with the populationSettings (anything else ? ) 
-could also be a list ?}
-
-\item{plpModel}{The model object returned by runPlp() 
-containing the trained model or a list of such models (to save extracting 
-data multiple times from database)}
+\item{validationDesignList}{A list of objects created with \code{createValidationDesign}}
 
 \item{databaseDetails}{A list of objects of class
 \code{databaseDetails} created using \code{createDatabaseDetails}}
@@ -33,6 +24,5 @@ using \code{createLogSettings}}
 (subfolders are created per database in validationDatabaseDetails)}
 }
 \description{
-externalValidatePlp - Validate a model/s on new databases for a specific 
-predictionProblem
+externalValidatePlp - Validate model performance on new data
 }
