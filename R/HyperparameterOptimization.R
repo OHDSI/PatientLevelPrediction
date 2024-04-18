@@ -20,7 +20,7 @@ autoTuning <- function(
       
       performances <- list()
       for(i in 1:self$resamplingFunction$getInterationCount()){
-        
+        message(paste0('resample ', i, ' of ', self$resamplingFunction$getInterationCount()))
         # function to split trainData into train/val - cv/booststrap
         dataIndexes <- self$resamplingFunction$getIndexes(
           data = trainData, 
@@ -30,21 +30,23 @@ autoTuning <- function(
           validationPrediction <- self$fit(
             data = trainData,
             trainIndex = dataIndexes$trainRowIds,
-            validationIndex= dataIndexes$validationRowIds,
+            validationIndex = dataIndexes$validationRowIds,
             returnPredictionOnly = T
           )
           # user specified performance metric that takes prediction and spits out performance (could be multiple inputs)
           performanceTemp <- self$performanceFunction$metricFunction(validationPrediction)
           performances[[length(performances)+1]] <- performanceTemp
           
-          summaryPerformance[[length(summaryPerformance) + 1]] <- list(
-            hyperparameter = hyperparameter, 
-            fold = i, 
-            performance = performanceTemp
-            )
+          #summaryPerformance[[length(summaryPerformance) + 1]] <- list(
+          #  hyperparameter = hyperparameter, 
+          #  fold = i, 
+          #  performance = performanceTemp
+          #  )
       }
       
+      message('Aggregating performance')
       aggregatePerformanceIteration <- self$performanceFunction$aggregateFunction(performances)
+      message('aggregate performance: ', aggregatePerformanceIteration)
       
       summaryPerformance[[length(summaryPerformance) + 1]] <- list(
         hyperparameter = hyperparameter, 
@@ -54,6 +56,7 @@ autoTuning <- function(
       
       if(start){
         start <- F
+        message('Setting initial currentOptimal')
         currentOptimal <- aggregatePerformanceIteration
         optimalHyperparameters <- hyperparameter
       }
@@ -61,11 +64,13 @@ autoTuning <- function(
       # performance selection function - take performance vector to identify best hyper-params (returns index)
       if(self$performanceFunction$maxmize){
         if(currentOptimal < aggregatePerformanceIteration){
+          message('New maximum')
           optimalHyperparameters = hyperparameter
           currentOptimal <- aggregatePerformanceIteration
         }
       } else{
         if(currentOptimal > aggregatePerformanceIteration){
+          message('New minimum')
           optimalHyperparameters = hyperparameter
           currentOptimal <- aggregatePerformanceIteration
         }
