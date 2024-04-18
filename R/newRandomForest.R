@@ -1,5 +1,5 @@
 #library(R6)
-HyperparameterNtrees <- R6Class("HyperparameterNtrees", list(
+HyperparameterNtrees <- R6::R6Class("HyperparameterNtrees", list(
   min = NULL,
   max = NULL,
   randomSample = 10,
@@ -190,7 +190,7 @@ predictSklearnBase <- function(
   return(cohort)
 }
 
-RandomForest <- R6Class("RandomForest", list(
+RandomForest <- R6::R6Class("RandomForest", list(
   seed = NULL,
   nJobs = NULL,
   modelLocation = NULL,
@@ -435,7 +435,7 @@ RandomForest <- R6Class("RandomForest", list(
 #rfModel$print
 
 #library(R6)
-CrossValidationSampler <- R6Class("CrossValidationSampler", list(
+CrossValidationSampler <- R6::R6Class("CrossValidationSampler", list(
   seed = NULL,
   k = NULL,
   stratified = NULL,
@@ -532,7 +532,7 @@ computeAucNew <- function(prediction){
 }
 
 
-PerformanceFunction <- R6Class("PerformanceFunction", list(
+PerformanceFunction <- R6::R6Class("PerformanceFunction", list(
   maxmize = NULL,
   metricFunctionName = NULL,
   aggregateFunctionName = NULL,
@@ -566,7 +566,7 @@ PerformanceFunction <- R6Class("PerformanceFunction", list(
   }
 ))
 
-GridHyperparameter <- R6Class("GridHyperparameter", list(
+GridHyperparameter <- R6::R6Class("GridHyperparameter", list(
   type = 'grid search',
   hyperparameterList = NULL,
   currentIndex = 1,
