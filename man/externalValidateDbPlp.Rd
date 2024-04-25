@@ -22,7 +22,7 @@ externalValidateDbPlp(
 
 \item{settings}{A settings object of class \code{validationSettings} created using \code{createValidationSettings}}
 
-\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 
 \item{outputFolder}{The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)}
@@ -34,6 +34,6 @@ A list containing the performance for each validation_schema
 This function extracts data using a user specified connection and cdm_schema, applied the model and then calcualtes the performance
 }
 \details{
-Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the 
+Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the
 number of cdm_schemas input with the performance on the new data
 }
