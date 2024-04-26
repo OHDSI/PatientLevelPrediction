@@ -13,7 +13,8 @@ getCohortCovariateData(
   rowIdField = "row_id",
   aggregated,
   cohortIds,
-  covariateSettings
+  covariateSettings,
+  ...
 )
 }
 \arguments{
