@@ -44,16 +44,12 @@ The default is none.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-\item{setGradientBoostingMachine()}{ A gradient boosting machine}
-\item{setAdaBoost()}{ An ada boost model}
-\item{setRandomForest()}{ A random forest model}
-\item{setDecisionTree()}{ A decision tree model}
-\item{setCovNN())}{ A convolutional neural network model}
-\item{setCIReNN()}{ A recurrent neural network model}
-\item{setMLP()}{ A neural network model}
-\item{setDeepNN()}{ A deep neural network model}
-\item{setKNN()}{ A KNN model}
+\item setLassoLogisticRegression() A lasso logistic regression model
+\item setGradientBoostingMachine() A gradient boosting machine
+\item setAdaBoost() An ada boost model
+\item setRandomForest() A random forest model
+\item setDecisionTree() A decision tree model
+\item setKNN() A KNN model
 
 }}
 

@@ -26,14 +26,14 @@ Split the plpData into test/train sets using a splitting settings of class \code
 }
 \details{
 Returns a list containing the training data (Train) and optionally the test data (Test).  Train is an Andromeda object containing
-\itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the train data }
-         \item{covariateRef}{ a table with the covariate information}
-         \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the train data (outcomeCount is the class label) }
-         \item{folds}{ a table (rowId, index) specifying which training fold each data point is in.}
+\itemize{\item covariates: a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the train data
+         \item covariateRef: a table with the covariate information
+         \item labels: a table (rowId, outcomeCount, ...) for each data point in the train data (outcomeCount is the class label) 
+         \item folds: a table (rowId, index) specifying which training fold each data point is in.
          } 
 Test is an Andromeda object containing
-\itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the test data }
-         \item{covariateRef}{ a table with the covariate information}
-         \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the test data (outcomeCount is the class label) }
+\itemize{\item covariates: a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the test data 
+         \item covariateRef: a table with the covariate information
+         \item labels: a table (rowId, outcomeCount, ...) for each data point in the test data (outcomeCount is the class label) 
          }
 }

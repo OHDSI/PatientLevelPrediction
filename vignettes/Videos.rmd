@@ -26,14 +26,14 @@ output:
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Demo Videos}
 -->
 ```
 ## What is a cohort table?
 
 | Click To Launch                                                                                                                              | Description of Demo                                                 |
-|------------------------------------------------|------------------------|
+|-----------------------------------------------|------------------------|
 | [![Video Vignette PLP Package](http://img.youtube.com/vi/BEukCbT8UoA/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/GY2ZTcizY90) | Learn what a cohort table looks like and what columns are required. |
 
 ## Setting up a connection between your database and R
@@ -53,7 +53,6 @@ output:
 | Click To Launch                                                                                                                              | Description of Demo                                                       |
 |-----------------------------------------------|-------------------------|
 | [![Video Vignette PLP Package](http://img.youtube.com/vi/7wUilx580PE/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/7wUilx580PE) | Learn how to develop and validate multiple PatientLevelPrediction models. |
-
 
 ## Exploring the results in the shiny app
 

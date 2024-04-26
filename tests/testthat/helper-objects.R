@@ -187,4 +187,5 @@ tinyResults <- runPlp(plpData = nanoData,
                         runPreprocessData = T,
                         runModelDevelopment = T,
                         runCovariateSummary = F
-                      ))
+                      ),
+                      saveDirectory = file.path(saveLoc, 'tinyResults'))
