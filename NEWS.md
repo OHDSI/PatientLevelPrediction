@@ -1,3 +1,11 @@
+PatientLevelPrediction 6.3.8
+======================
+- Add support for R4.4 
+- Fix notes around documentation (vignette engine and brackets in itemize)
+- Use webp image format where possible (not in pdfs) for smaller size
+- Make sure random table names are unique in tests
+- Remove remote info for Eunomia since it's in CRAN
+
 PatientLevelPrediction 6.3.7
 ======================
 - Clean up dependencies, tibble removed and IHT and ParallelLogger from CRAN

@@ -13,7 +13,8 @@ getCohortCovariateData(
   rowIdField = "row_id",
   aggregated,
   cohortIds,
-  covariateSettings
+  covariateSettings,
+  ...
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ getCohortCovariateData(
 \item{cohortIds}{cohort id for the target cohort}
 
 \item{covariateSettings}{settings for the covariate cohorts and time periods}
+
+\item{...}{additional arguments from FeatureExtraction}
 }
 \value{
 The models will now be in the package

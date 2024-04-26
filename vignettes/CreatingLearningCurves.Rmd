@@ -25,12 +25,13 @@ output:
   word_document:
     toc: yes
 ---
+
+```{=html}
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Creating Learning Curves}
 -->
-
-
+```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -47,7 +48,7 @@ if (file.exists(vignetteDataFolder)){
 
 # Introduction
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the  [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
 
 Prediction models will show overly-optimistic performance when predicting on the same data as used for training. Therefore, best-practice is to partition our data into a training set and testing set. We then train our prediction model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set.
 
@@ -57,9 +58,7 @@ Learning curves assess the effect of training set size on model performance by t
 
 Figure 1, shows an example of learning curve plot in which the vertical axis represents the model performance and the horizontal axis the training set size. If training set size is small, the performance on the training set is high, because a model can often be fitted well to a limited number of training examples. At the same time, the performance on the testing set will be poor, because the model trained on such a limited number of training examples will not generalize well to unseen data in the testing set. As the training set size increases, the performance of the model on the training set will decrease. It becomes more difficult for the model to find a good fit through all the training examples. Also, the model will be trained on a more representative portion of training examples, making it generalize better to unseen data. This can be observed by the increasin testing set performance.
 
-The learning curve can help us in diagnosing bias and variance problems with our classifier which will provide guidance on how to further improve our model. We can observe high variance (overfitting) in a prediction model if it performs well on the training set, but poorly on the testing set (Figure 2). Adding additional data is a common approach to counteract high variance. From the learning curve it becomes apparent, that adding additional data may improve performance on the testing set a little further, as the learning curve has not yet plateaued and, thus, the model is not saturated yet. Therefore, adding more data will decrease the gap between training set and testing set, which is the main indicator for a high variance problem. 
-
-
+The learning curve can help us in diagnosing bias and variance problems with our classifier which will provide guidance on how to further improve our model. We can observe high variance (overfitting) in a prediction model if it performs well on the training set, but poorly on the testing set (Figure 2). Adding additional data is a common approach to counteract high variance. From the learning curve it becomes apparent, that adding additional data may improve performance on the testing set a little further, as the learning curve has not yet plateaued and, thus, the model is not saturated yet. Therefore, adding more data will decrease the gap between training set and testing set, which is the main indicator for a high variance problem.
 
 ![Prediction model suffering from high variance.](learningCurveVariance.png)
 
@@ -107,7 +106,7 @@ modelSettings <- setLassoLogisticRegression()
 
 ```
 
-Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of `trainFractions`,  you can provide a sequence of training events (`trainEvents`) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.
+Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of `trainFractions`, you can provide a sequence of training events (`trainEvents`) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.
 
 ```{r eval = FALSE}
 
@@ -122,7 +121,6 @@ trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
 # alternatively use a sequence of training events by uncommenting the line below.
 # trainEvents <- seq(100, 5000, 100)
 ```
-
 
 Create the learning curve object.
 
@@ -170,9 +168,9 @@ plotLearningCurve(
 
 ![Learning curve plot.](learningCurvePlot.png)
 
-
 # Parallel processing
-The learning curve object can be created in parallel, which can reduce computation time significantly.  Whether to run the code in parallel or not is specified using the `parallel` input. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.
+
+The learning curve object can be created in parallel, which can reduce computation time significantly. Whether to run the code in parallel or not is specified using the `parallel` input. Currently this functionality is only available for LASSO logistic regression and gradient boosting machines. Depending on the number of parallel workers it may require a significant amount of memory. We advise to use the parallelized learning curve function for parameter search and exploratory data analysis.
 
 When running in parrallel, R will find the number of available processing cores automatically and register the required parallel backend. Alternatively, you can provide the number of cores you wish to use via the `cores` input.
 
@@ -180,7 +178,7 @@ When running in parrallel, R will find the number of available processing cores 
 
 We have added a demo of the learningcurve:
 
-``` {r eval=FALSE}
+```{r eval=FALSE}
 # Show all demos in our package: 
  demo(package = "PatientLevelPrediction")
 
@@ -192,8 +190,7 @@ Do note that running this demo can take a considerable amount of time (15 min on
 
 # Publication
 
-A publication titled 'How little data do we need for patient-level prediction?' uses the learning curve functionality in this package and can be accessed as preprint in the arXiv archives at
-[https://arxiv.org/abs/2008.07361](https://arxiv.org/abs/2008.07361).
+A publication titled 'How little data do we need for patient-level prediction?' uses the learning curve functionality in this package and can be accessed as preprint in the arXiv archives at <https://arxiv.org/abs/2008.07361>.
 
 # Acknowledgments
 

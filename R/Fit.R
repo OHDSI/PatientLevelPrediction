@@ -29,11 +29,10 @@
 #'                                         data extracted from the CDM.
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
-#'                                         \item{logisticRegressionModel()}{ A lasso logistic regression model}
-#'                                         \item{GBMclassifier()}{ A gradient boosting machine}
-#'                                         \item{RFclassifier()}{ A random forest model}
-#'                                         \item{GLMclassifier ()}{ A generalised linear model}
-#'                                         \item{KNNclassifier()}{ A KNN model}
+#'                                         \item setLassoLogisticRegression() A lasso logistic regression model
+#'                                         \item setGradientBoostingMachine() A gradient boosting machine
+#'                                         \item setRandomForest() A random forest model
+#'                                         \item setKNN() A KNN model
 #'                                         }
 #' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
 #' @param analysisId                       The id of the analysis

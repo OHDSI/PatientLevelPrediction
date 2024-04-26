@@ -17,7 +17,7 @@
 
 
 #' Create the settings for defining how the plpData are split into test/validation/train sets using 
-#' default splitting functions (either random stratified by outcome, time or subject splitting).
+#' default splitting functions (either random stratified by outcome, time or subject splitting)
 #'
 #' @details
 #' Returns an object of class \code{splitSettings} that specifies the splitting function that will be called and the settings
@@ -28,9 +28,9 @@
 #' @param nfold             (numeric) An integer > 1 specifying the number of folds used in cross validation
 #' @param splitSeed         (numeric) A seed to use when splitting the data for reproducibility (if not set a random number will be generated)
 #' @param type              (character) Choice of:  \itemize{
-#'                                         \item{'stratified'}{ Each data point is randomly assigned into the test or a train fold set but this is done stratified such that the outcome rate is consistent in each partition }
-#'                                         \item{'time')}{ Older data are assigned into the training set and newer data are assigned into the test set}
-#'                                         \item{'subject'}{ Data are partitioned by subject, if a subject is in the data more than once, all the data points for the subject are assigned either into the test data or into the train data (not both).}
+#'                                         \item'stratified' Each data point is randomly assigned into the test or a train fold set but this is done stratified such that the outcome rate is consistent in each partition 
+#'                                         \item'time' Older data are assigned into the training set and newer data are assigned into the test set
+#'                                         \item'subject' Data are partitioned by subject, if a subject is in the data more than once, all the data points for the subject are assigned either into the test data or into the train data (not both).
 #'                                         } 
 #'
 #' @return
@@ -87,17 +87,17 @@ createDefaultSplitSetting <- function(testFraction=0.25,
 #'
 #' @details
 #' Returns a list containing the training data (Train) and optionally the test data (Test).  Train is an Andromeda object containing
-#' \itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the train data }
-#'          \item{covariateRef}{ a table with the covariate information}
-#'          \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the train data (outcomeCount is the class label) }
-#'          \item{folds}{ a table (rowId, index) specifying which training fold each data point is in.}
+#' \itemize{\item covariates: a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the train data
+#'          \item covariateRef: a table with the covariate information
+#'          \item labels: a table (rowId, outcomeCount, ...) for each data point in the train data (outcomeCount is the class label) 
+#'          \item folds: a table (rowId, index) specifying which training fold each data point is in.
 #'          } 
 #' Test is an Andromeda object containing
-#' \itemize{\item{covariates}{ a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the test data }
-#'          \item{covariateRef}{ a table with the covariate information}
-#'          \item{labels)}{ a table (rowId, outcomeCount, ...) for each data point in the test data (outcomeCount is the class label) }
+#' \itemize{\item covariates: a table (rowId, covariateId, covariateValue) containing the covariates for each data point in the test data 
+#'          \item covariateRef: a table with the covariate information
+#'          \item labels: a table (rowId, outcomeCount, ...) for each data point in the test data (outcomeCount is the class label) 
 #'          } 
-#' 
+#'   
 #' 
 #'
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction

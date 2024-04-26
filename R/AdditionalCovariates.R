@@ -32,6 +32,7 @@
 #' @param aggregated  whether the covariate should be aggregated
 #' @param cohortIds  cohort id for the target cohort
 #' @param covariateSettings  settings for the covariate cohorts and time periods
+#' @param ...  additional arguments from FeatureExtraction
 #'
 #' @return
 #' The models will now be in the package
@@ -46,7 +47,8 @@ getCohortCovariateData <- function(
   rowIdField = "row_id",
   aggregated,
   cohortIds,
-  covariateSettings
+  covariateSettings,
+  ...
   ){
   
   # Some SQL to construct the covariate:

@@ -37,17 +37,12 @@ data extracted from the CDM.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-\item{setGradientBoostingMachine()}{ A gradient boosting machine}
-\item{setAdaBoost()}{ An ada boost model}
-\item{setRandomForest()}{ A random forest model}
-\item{setDecisionTree()}{ A decision tree model}
-\item{setCovNN())}{ A convolutional neural network model}
-\item{setCIReNN()}{ A recurrent neural network model}
-\item{setMLP()}{ A neural network model}
-\item{setDeepNN()}{ A deep neural network model}
-\item{setKNN()}{ A KNN model}
-
+\item \code{setLassoLogisticRegression()} A lasso logistic regression model
+\item \code{setGradientBoostingMachine()} A gradient boosting machine
+\item \code{setAdaBoost()} An ada boost model
+\item \code{setRandomForest()} A random forest model
+\item \code{setDecisionTree()} A decision tree model
+\item \code{setKNN()} A KNN model
 }}
 
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
@@ -70,7 +65,7 @@ Therefore, it is recommended to provide \code{trainEvents} rather than
 \code{trainFractions}. Note, providing \code{trainEvents} will override
 your input to \code{trainFractions}. The format should be as follows:
 \itemize{
-  \item{ \code{c(500, 1000, 1500) } - a list of training events}
+  \item \code{c(500, 1000, 1500) } - a list of training events
 }}
 
 \item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.

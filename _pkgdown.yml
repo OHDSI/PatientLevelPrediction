@@ -91,6 +91,8 @@ reference:
       - createStratifiedImputationSettings
   - title: "External validation"
     contents:
+      - createValidationDesign
+      - validateExternal
       - createValidationSettings
       - recalibratePlp
       - recalibratePlpRefit

@@ -3,7 +3,7 @@
 \name{createDefaultSplitSetting}
 \alias{createDefaultSplitSetting}
 \title{Create the settings for defining how the plpData are split into test/validation/train sets using 
-default splitting functions (either random stratified by outcome, time or subject splitting).}
+default splitting functions (either random stratified by outcome, time or subject splitting)}
 \usage{
 createDefaultSplitSetting(
   testFraction = 0.25,
@@ -24,9 +24,9 @@ If not set train is equal to 1 - test}
 \item{nfold}{(numeric) An integer > 1 specifying the number of folds used in cross validation}
 
 \item{type}{(character) Choice of:  \itemize{
-\item{'stratified'}{ Each data point is randomly assigned into the test or a train fold set but this is done stratified such that the outcome rate is consistent in each partition }
-\item{'time')}{ Older data are assigned into the training set and newer data are assigned into the test set}
-\item{'subject'}{ Data are partitioned by subject, if a subject is in the data more than once, all the data points for the subject are assigned either into the test data or into the train data (not both).}
+\item'stratified' Each data point is randomly assigned into the test or a train fold set but this is done stratified such that the outcome rate is consistent in each partition 
+\item'time' Older data are assigned into the training set and newer data are assigned into the test set
+\item'subject' Data are partitioned by subject, if a subject is in the data more than once, all the data points for the subject are assigned either into the test data or into the train data (not both).
 }}
 }
 \value{
@@ -34,7 +34,7 @@ An object of class \code{splitSettings}
 }
 \description{
 Create the settings for defining how the plpData are split into test/validation/train sets using 
-default splitting functions (either random stratified by outcome, time or subject splitting).
+default splitting functions (either random stratified by outcome, time or subject splitting)
 }
 \details{
 Returns an object of class \code{splitSettings} that specifies the splitting function that will be called and the settings
