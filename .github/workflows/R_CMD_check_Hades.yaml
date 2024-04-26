@@ -136,7 +136,7 @@ jobs:
           draft: false
           prerelease: false
           
-      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-r@v2
         if: ${{ env.new_version != '' }}
         
       - name: Install drat
@@ -152,7 +152,7 @@ jobs:
           
       - name: Download package tarball
         if: ${{ env.new_version != '' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4
         with:
           name: package_tarball    
           
