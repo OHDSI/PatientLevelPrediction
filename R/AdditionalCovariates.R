@@ -49,7 +49,6 @@ getCohortCovariateData <- function(
   cohortIds,
   covariateSettings,
   ...
-  covariateSettings
   ){
   
   # Some SQL to construct the covariate:
