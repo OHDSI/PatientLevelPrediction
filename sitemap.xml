@@ -163,6 +163,9 @@
     <loc>/reference/createUnivariateFeatureSelection.html</loc>
   </url>
   <url>
+    <loc>/reference/createValidationDesign.html</loc>
+  </url>
+  <url>
     <loc>/reference/createValidationSettings.html</loc>
   </url>
   <url>
@@ -431,6 +434,9 @@
   </url>
   <url>
     <loc>/reference/toSparseM.html</loc>
+  </url>
+  <url>
+    <loc>/reference/validateExternal.html</loc>
   </url>
   <url>
     <loc>/reference/validateMultiplePlp.html</loc>
