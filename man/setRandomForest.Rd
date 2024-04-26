@@ -37,11 +37,11 @@ setRandomForest(
 
 \item{mtries}{(list) The number of features to consider when looking for the best split:
 \itemize{
-\item{int}{then consider max_features features at each split.}
-\item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
-\item{'sqrt'}{then max_features=sqrt(n_features)}
-\item{'log2'}{then max_features=log2(n_features).}
-\item{NULL}{then max_features=n_features}
+\item int then consider max_features features at each split.
+\item float then max_features is a fraction and round(max_features * n_features) features are considered at each split
+\item 'sqrt' then max_features=sqrt(n_features)
+\item 'log2' then max_features=log2(n_features)
+\item NULL then max_features=n_features
 }}
 
 \item{maxLeafNodes}{(list) Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes.}
@@ -56,7 +56,7 @@ setRandomForest(
 
 \item{nJobs}{The number of jobs to run in parallel.}
 
-\item{classWeight}{(list) Weights associated with classes. If not given, all classes are supposed to have weight one. {NULL, “balanced”, “balanced_subsample”}}
+\item{classWeight}{(list) Weights associated with classes. If not given, all classes are supposed to have weight one. NULL, “balanced”, “balanced_subsample”}
 
 \item{seed}{A seed when training the final model}
 }

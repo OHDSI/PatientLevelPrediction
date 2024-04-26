@@ -51,17 +51,12 @@ and whether to normalise the covariates before training}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-\item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-\item{setGradientBoostingMachine()}{ A gradient boosting machine}
-\item{setAdaBoost()}{ An ada boost model}
-\item{setRandomForest()}{ A random forest model}
-\item{setDecisionTree()}{ A decision tree model}
-\item{setCovNN())}{ A convolutional neural network model}
-\item{setCIReNN()}{ A recurrent neural network model}
-\item{setMLP()}{ A neural network model}
-\item{setDeepNN()}{ A deep neural network model}
-\item{setKNN()}{ A KNN model}
-
+\item setLassoLogisticRegression() A lasso logistic regression model
+\item setGradientBoostingMachine() A gradient boosting machine
+\item setAdaBoost() An ada boost model
+\item setRandomForest() A random forest model
+\item setDecisionTree() A decision tree model
+\item setKNN() A KNN model
 }}
 
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
@@ -75,13 +70,12 @@ specifying how the logging is done}
 An object containing the following:
 
  \itemize{
-          \item{inputSettings}{A list containing all the settings used to develop the model}
-          \item{model}{ The developed model of class \code{plpModel}}
-          \item{executionSummary}{ A list containing the hardward details, R package details and execution time}
-          \item{performanceEvaluation}{ Various internal performance metrics in sparse format}
-          \item{prediction}{ The plpData cohort table with the predicted risks added as a column (named value)}
-          \item{covariateSummary)}{ A characterization of the features for patients with and without the outcome during the time at risk}
-          \item{analysisRef}{ A list with details about the analysis}
+          \item model The developed model of class \code{plpModel}
+          \item executionSummary A list containing the hardward details, R package details and execution time
+          \item performanceEvaluation Various internal performance metrics in sparse format
+          \item prediction The plpData cohort table with the predicted risks added as a column (named value)
+          \item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
+          \item analysisRef A list with details about the analysis
           }
 }
 \description{

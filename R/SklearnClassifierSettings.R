@@ -317,15 +317,15 @@ DecisionTreeClassifierInputs <- function(classifier, param) {
 #' @param hiddenLayerSizes      (list of vectors) The ith element represents the number of neurons in the ith hidden layer.
 #' @param activation (list) Activation function for the hidden layer.
 #' \itemize{
-#'    \item{"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x}
-#'    \item{"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
-#'    \item{"tanh": the hyperbolic tan function, returns f(x) = tanh(x).}
-#'    \item{"relu": the rectified linear unit function, returns f(x) = max(0, x)}
+#'    \item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
+#'    \item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
+#'    \item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
+#'    \item "relu": the rectified linear unit function, returns f(x) = max(0, x)
 #'  }
 #' @param solver     (list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)
 #' @param alpha      (list) L2 penalty (regularization term) parameter.
 #' @param batchSize  (list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).
-#' @param learningRate (list) Only used when solver='sgd' Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’
+#' @param learningRate (list) Only used when solver='sgd' Learning rate schedule for weight updates. ‘constant’, ‘invscaling’, ‘adaptive’, default=’constant’
 #' @param learningRateInit  (list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.
 #' @param powerT     (list) Only used when solver=’sgd’.  The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’.
 #' @param maxIter  (list)  Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations. For stochastic solvers (‘sgd’, ‘adam’), note that this determines the number of epochs (how many times each data point will be used), not the number of gradient steps.
@@ -546,18 +546,18 @@ GaussianNBInputs <- function(classifier, param) {
 #' @param minWeightFractionLeaf (list) The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.
 #' @param mtries (list) The number of features to consider when looking for the best split:
 #' \itemize{
-#' \item{int}{then consider max_features features at each split.}
-#' \item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
-#' \item{'sqrt'}{then max_features=sqrt(n_features)}
-#' \item{'log2'}{then max_features=log2(n_features).}
-#' \item{NULL}{then max_features=n_features}
+#' \item int then consider max_features features at each split.
+#' \item float then max_features is a fraction and round(max_features * n_features) features are considered at each split
+#' \item 'sqrt' then max_features=sqrt(n_features)
+#' \item 'log2' then max_features=log2(n_features)
+#' \item NULL then max_features=n_features
 #' }
 #' @param maxLeafNodes    (list) Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes.
 #' @param minImpurityDecrease (list) A node will be split if this split induces a decrease of the impurity greater than or equal to this value.
 #' @param bootstrap (list) Whether bootstrap samples are used when building trees. If False, the whole dataset is used to build each tree.
 #' @param maxSamples (list) If bootstrap is True, the number of samples to draw from X to train each base estimator.
 #' @param oobScore (list) Whether to use out-of-bag samples to estimate the generalization score. Only available if bootstrap=True.
-#' @param classWeight (list) Weights associated with classes. If not given, all classes are supposed to have weight one. {NULL, “balanced”, “balanced_subsample”}
+#' @param classWeight (list) Weights associated with classes. If not given, all classes are supposed to have weight one. NULL, “balanced”, “balanced_subsample”
 #' @param nJobs The number of jobs to run in parallel.
 #' @param seed  A seed when training the final model
 #'
@@ -714,7 +714,7 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #' @param C             (list) Regularization parameter. The strength of the regularization is inversely proportional to C. Must be strictly positive. The penalty is a squared l2 penalty.
 #' @param kernel        (list) Specifies the kernel type to be used in the algorithm. one of ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given ‘rbf’ will be used.
 #' @param degree        (list) degree of kernel function is significant only in poly, rbf, sigmoid
-#' @param gamma         (list) kernel coefficient for rbf and poly, by default 1/n_features will be taken. {‘scale’, ‘auto’} or float, default=’scale’
+#' @param gamma         (list) kernel coefficient for rbf and poly, by default 1/n_features will be taken. ‘scale’, ‘auto’ or float, default=’scale’
 #' @param coef0         (list) independent term in kernel function. It is only significant in poly/sigmoid.
 #' @param shrinking     (list) whether to use the shrinking heuristic.
 #' @param tol           (list) Tolerance for stopping criterion.

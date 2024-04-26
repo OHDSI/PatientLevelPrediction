@@ -22,7 +22,7 @@ output:
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Adding Custom Feature Engineering}
 -->
 ```
