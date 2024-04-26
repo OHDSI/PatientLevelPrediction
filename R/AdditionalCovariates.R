@@ -32,6 +32,7 @@
 #' @param aggregated  whether the covariate should be aggregated
 #' @param cohortIds  cohort id for the target cohort
 #' @param covariateSettings  settings for the covariate cohorts and time periods
+#' @param ...  additional arguments from FeatureExtraction
 #'
 #' @return
 #' The models will now be in the package
