@@ -46,7 +46,8 @@ getCohortCovariateData <- function(
   rowIdField = "row_id",
   aggregated,
   cohortIds,
-  covariateSettings
+  covariateSettings,
+  ...
   ){
   
   # Some SQL to construct the covariate:

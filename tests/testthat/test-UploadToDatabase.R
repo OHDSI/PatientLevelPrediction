@@ -31,10 +31,8 @@ connectionRedshift <- DatabaseConnector::createConnectionDetails(
 conn <- DatabaseConnector::connect(connectionRedshift)
 targetDialect <- 'postgresql'
 
-withr::with_seed(NULL, {
-  randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
-  }
-)
+set.seed(NULL)
+randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
 
 appendRandom <- function(x, rand = randVar){
   return(paste("plp", rand, x, sep=''))
