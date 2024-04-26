@@ -11,3 +11,5 @@ compare_versions
 docs/*
 _pkgdown.yml
 ^vignettes/articles$
+^doc$
+^Meta$
