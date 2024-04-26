@@ -3,7 +3,7 @@ Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
 Version: 6.3.8
-Date: 2024-04-04
+Date: 2024-04-26
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
