@@ -31,9 +31,13 @@ connectionRedshift <- DatabaseConnector::createConnectionDetails(
 conn <- DatabaseConnector::connect(connectionRedshift)
 targetDialect <- 'postgresql'
 
-randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
+withr::with_seed(NULL, {
+  randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
+  }
+)
+
 appendRandom <- function(x, rand = randVar){
-  return(paste("plp_", rand, x, sep=''))
+  return(paste("plp", rand, x, sep=''))
 }
 
 }
@@ -119,7 +123,7 @@ test_that("database creation", {
 
 test_that("results uploaded to database", {
   skip_if(Sys.getenv('CI') != 'true', 'not run locally')
-    resultsLoc <- file.path(saveLoc,'dbUp')
+  resultsLoc <- file.path(saveLoc,'dbUp')
   
   plpResult$model$trainDetails$developmentDatabase <- 'test' 
   savePlpResult(plpResult, file.path(resultsLoc, 'Analysis_1','plpResult'))
