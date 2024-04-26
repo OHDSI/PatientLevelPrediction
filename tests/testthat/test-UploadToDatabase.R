@@ -33,7 +33,7 @@ targetDialect <- 'postgresql'
 
 randVar <- rawToChar(as.raw(sample(c(65:90,97:122), 5, replace=T)))
 appendRandom <- function(x, rand = randVar){
-  return(paste(rand, x, sep=''))
+  return(paste("plp_", rand, x, sep=''))
 }
 
 }
