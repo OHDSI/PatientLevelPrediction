@@ -59,6 +59,9 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v3
 
       - uses: r-lib/actions/check-r-package@v2
         with:
