@@ -116,3 +116,37 @@ test_that("GBM working checks", {
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue))>0, TRUE)
   
 })
+
+
+test_that("GBM without outcomes in early stopping set errors", {
+  hyperParameters <- list(
+    ntrees = 10,
+    earlyStopRound = 2,
+    maxDepth = 3,
+    learnRate = 0.1,
+    minChildWeight = 1,
+    scalePosWeight = 1,
+    lambda = 1,
+    alpha = 0
+  )
+  observations <- 100
+  features <- 10
+  data <- createData(observations = observations, features = features, 
+                     totalFeatures = 10,
+                     numCovs = FALSE, outcomeRate = 0.05)
+  dataMatrix <- Matrix::sparseMatrix(
+    i = data$covariates %>% dplyr::pull("rowId"),
+    j = data$covariates %>% dplyr::pull("columnId"),
+    x = data$covariates %>% dplyr::pull("covariateValue"),
+    dims = c(observations,features)
+  )
+  labels <- data.frame(outcomeCount = data$labels)
+  settings <- list(seed = 42, threads = 2)
+  expect_error(fitXgboost(dataMatrix = dataMatrix, 
+             labels = labels,
+             hyperParameters = hyperParameters,
+             settings = settings),
+             regexp = "* or turn off early stopping")
+
+})
+

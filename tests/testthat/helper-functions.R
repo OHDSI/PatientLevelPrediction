@@ -32,3 +32,32 @@ createTinyPlpData <- function(plpData, plpResult, n= 20) {
   class(tinyPlpData) <- class(plpData)
   return(tinyPlpData)
 }
+
+createData <- function(observations, features, totalFeatures,
+                       numCovs = FALSE,
+                       outcomeRate = 0.5,
+                       seed = 42) {
+  rowId <- rep(1:observations, each = features)
+  withr::with_seed(42, {
+    columnId <- sample(1:totalFeatures, observations * features, replace = TRUE)
+  })
+  covariateValue <- rep(1, observations * features)
+  covariates <- data.frame(rowId = rowId, columnId = columnId, covariateValue = covariateValue)  
+  if (numCovs) {
+    numRow <- 1:observations
+    numCol <- rep(totalFeatures + 1, observations)
+    withr::with_seed(seed, {
+      numVal <- runif(observations)
+    })
+    numCovariates <- data.frame(rowId = as.integer(numRow),
+                                columnId = as.integer(numCol),
+                                covariateValue = numVal)
+    covariates <- rbind(covariates, numCovariates)
+  }
+  withr::with_seed(seed, {
+    labels <- as.numeric(sample(0:1, observations, replace = TRUE, prob = c(1 - outcomeRate, outcomeRate)))  
+  })
+  
+  data <- list(covariates = covariates,  labels = labels)
+  return(data)
+}
