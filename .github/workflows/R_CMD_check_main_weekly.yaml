@@ -1,6 +1,8 @@
 on:
   schedule:
     - cron: '0 12 * * 6' # every Saturday at noon UTC
+  
+  workflow_dispatch:
     
 name: 'R check'
 
