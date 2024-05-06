@@ -444,7 +444,7 @@ validateExternal <- function(validationDesignList,
       logSettings$logFileName <- 'validationLog'
       logger <- do.call(createLog, logSettings)
       ParallelLogger::registerLogger(logger)
-      on.exit(logger$close())
+      on.exit(closeLog(logger))
       
       ParallelLogger::logInfo(paste('Validating model on', database$cdmDatabaseName))
       
@@ -476,7 +476,11 @@ validateExternal <- function(validationDesignList,
       error = function(e) {
         ParallelLogger::logError(e)
         return(NULL)
-      })     
+      })   
+      if (is.null(plpData)) {
+        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
+        next
+      }
       plpDataName <-
         paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
       plpDataLocation <-
