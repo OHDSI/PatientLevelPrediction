@@ -476,46 +476,49 @@ validateExternal <- function(validationDesignList,
       error = function(e) {
         ParallelLogger::logError(e)
         return(NULL)
-      })     
-      plpDataName <-
-        paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
-      plpDataLocation <-
-        file.path(outputFolder, databaseName, plpDataName)
-      if (!dir.exists(file.path(outputFolder, databaseName))) {
-        dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
-      }
-      savePlpData(plpData, file = plpDataLocation)
+      })
       
-      # create study population
-      population <- tryCatch({
-        do.call(
-          createStudyPopulation,
-          list(
-            plpData = plpData,
-            outcomeId = design$outcomeId,
-            populationSettings = design$populationSettings
+      if (!is.null(plpData)) {
+        plpDataName <-
+          paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
+        plpDataLocation <-
+          file.path(outputFolder, databaseName, plpDataName)
+        if (!dir.exists(file.path(outputFolder, databaseName))) {
+          dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
+        }
+        savePlpData(plpData, file = plpDataLocation)
+        
+        # create study population
+        population <- tryCatch({
+          do.call(
+            createStudyPopulation,
+            list(
+              plpData = plpData,
+              outcomeId = design$outcomeId,
+              populationSettings = design$populationSettings
+            )
           )
-        )
-      },
-      error = function(e) {
-        ParallelLogger::logError(e)
-        return(NULL)
-      })
-      
-      results <- lapply(design$plpModelList, function(model) {
-        analysisName <- paste0("Analysis_", analysisInfo[databaseName])
-        validateModel(
-          plpModel = model,
-          plpData = plpData,
-          population = population,
-          recalibrate = design$recalibrate,
-          runCovariateSummary = design$runCovariateSummary,
-          outputFolder = outputFolder,
-          databaseName = databaseName,
-          analysisName = analysisName
-        )
-        analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
-      })
+        },
+        error = function(e) {
+          ParallelLogger::logError(e)
+          return(NULL)
+        })
+        
+        results <- lapply(design$plpModelList, function(model) {
+          analysisName <- paste0("Analysis_", analysisInfo[databaseName])
+          validateModel(
+            plpModel = model,
+            plpData = plpData,
+            population = population,
+            recalibrate = design$recalibrate,
+            runCovariateSummary = design$runCovariateSummary,
+            outputFolder = outputFolder,
+            databaseName = databaseName,
+            analysisName = analysisName
+          )
+          analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
+        })
+      }
     }
   }
   for (database in databaseDetails) {
