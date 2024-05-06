@@ -489,7 +489,7 @@ validateExternal <- function(validationDesignList,
         dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
       }
       savePlpData(plpData, file = plpDataLocation)
-      
+
       # create study population
       population <- tryCatch({
         do.call(
@@ -505,7 +505,7 @@ validateExternal <- function(validationDesignList,
         ParallelLogger::logError(e)
         return(NULL)
       })
-      
+        
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
         validateModel(
