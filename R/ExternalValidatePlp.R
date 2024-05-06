@@ -435,6 +435,7 @@ validateExternal <- function(validationDesignList,
   for (name in databaseNames) {
     analysisInfo[name] <- 1
   }
+  results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
       databaseName <- database$cdmDatabaseName
