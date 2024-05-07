@@ -435,6 +435,7 @@ validateExternal <- function(validationDesignList,
   for (name in databaseNames) {
     analysisInfo[name] <- 1
   }
+  results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
       databaseName <- database$cdmDatabaseName
@@ -444,7 +445,7 @@ validateExternal <- function(validationDesignList,
       logSettings$logFileName <- 'validationLog'
       logger <- do.call(createLog, logSettings)
       ParallelLogger::registerLogger(logger)
-      on.exit(logger$close())
+      on.exit(closeLog(logger))
       
       ParallelLogger::logInfo(paste('Validating model on', database$cdmDatabaseName))
       
@@ -453,8 +454,16 @@ validateExternal <- function(validationDesignList,
       database$outcomeIds <- design$outcomeId
       
       allCovSettings <-
-        lapply(design$plpModelList, function(plpModel)
-          plpModel$modelDesign$covariateSettings)
+        lapply(design$plpModelList, function(plpModel) {
+          if (is.character(plpModel)) {
+            modelDesign <- ParallelLogger::loadSettingsFromJson(
+              normalizePath(file.path(plpModel, 'modelDesign.json'))
+            )
+            return(modelDesign$covariateSettings)
+          } else {
+          plpModel$modelDesign$covariateSettings
+          }
+        })
       # compare all to first covSettings, if not the same stop
       if (!Reduce(function(x, y)
         x &&
@@ -469,14 +478,18 @@ validateExternal <- function(validationDesignList,
           list(
             databaseDetails = database,
             restrictPlpDataSettings = design$restrictPlpDataSettings,
-            covariateSettings = design$plpModelList[[1]]$modelDesign$covariateSettings
+            covariateSettings = allCovSettings[[1]]
           )
         )
       },
       error = function(e) {
         ParallelLogger::logError(e)
         return(NULL)
-      })     
+      })   
+      if (is.null(plpData)) {
+        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
+        next
+      }
       plpDataName <-
         paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
       plpDataLocation <-
@@ -485,7 +498,7 @@ validateExternal <- function(validationDesignList,
         dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
       }
       savePlpData(plpData, file = plpDataLocation)
-      
+
       # create study population
       population <- tryCatch({
         do.call(
@@ -501,7 +514,7 @@ validateExternal <- function(validationDesignList,
         ParallelLogger::logError(e)
         return(NULL)
       })
-      
+        
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
         validateModel(
@@ -549,6 +562,9 @@ validateModel <-
            outputFolder,
            databaseName,
            analysisName) {
+    if (is.character(plpModel)) {
+      plpModel <- loadPlpModel(plpModel)
+    }
     result <- externalValidatePlp(
       plpModel = plpModel,
       plpData = plpData,
