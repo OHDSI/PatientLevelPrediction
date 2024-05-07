@@ -454,8 +454,16 @@ validateExternal <- function(validationDesignList,
       database$outcomeIds <- design$outcomeId
       
       allCovSettings <-
-        lapply(design$plpModelList, function(plpModel)
-          plpModel$modelDesign$covariateSettings)
+        lapply(design$plpModelList, function(plpModel) {
+          if (is.character(plpModel)) {
+            modelDesign <- ParallelLogger::loadSettingsFromJson(
+              normalizePath(file.path(plpModel, 'modelDesign.json'))
+            )
+            return(modelDesign$covariateSettings)
+          } else {
+          plpModel$modelDesign$covariateSettings
+          }
+        })
       # compare all to first covSettings, if not the same stop
       if (!Reduce(function(x, y)
         x &&
@@ -470,7 +478,7 @@ validateExternal <- function(validationDesignList,
           list(
             databaseDetails = database,
             restrictPlpDataSettings = design$restrictPlpDataSettings,
-            covariateSettings = design$plpModelList[[1]]$modelDesign$covariateSettings
+            covariateSettings = allCovSettings[[1]]
           )
         )
       },
@@ -554,6 +562,9 @@ validateModel <-
            outputFolder,
            databaseName,
            analysisName) {
+    if (is.character(plpModel)) {
+      plpModel <- loadPlpModel(plpModel)
+    }
     result <- externalValidatePlp(
       plpModel = plpModel,
       plpData = plpData,
