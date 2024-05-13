@@ -445,7 +445,6 @@ validateExternal <- function(validationDesignList,
       logSettings$logFileName <- 'validationLog'
       logger <- do.call(createLog, logSettings)
       ParallelLogger::registerLogger(logger)
-      on.exit(closeLog(logger))
       
       ParallelLogger::logInfo(paste('Validating model on', database$cdmDatabaseName))
       
@@ -529,6 +528,7 @@ validateExternal <- function(validationDesignList,
         )
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
+      on.exit(closeLog(logger))
     }
   }
   for (database in databaseDetails) {
