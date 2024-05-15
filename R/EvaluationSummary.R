@@ -263,7 +263,8 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
     eStatistic <- eStatistic90 <- -1
     if (!is.null(w)) {
       eStatistic <- mean(abs(w$actual - w$estimatedSurvival)) 
-      eStatistic90 <- stats::quantile(abs(w$actual - w$estimatedSurvival), probs = .9)
+      eStatistic90 <- stats::quantile(abs(w$actual - w$estimatedSurvival),
+                                      probs = .9, na.rm = TRUE)
     }
 
     result <- rbind(
