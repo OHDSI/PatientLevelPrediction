@@ -473,6 +473,11 @@ validateExternal <- function(validationDesignList,
         init = TRUE)) {
         stop("covariateSettings are not the same across models which is not supported yet")
       }
+      plpDataName <-
+        paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
+      plpDataLocation <-
+        file.path(outputFolder, databaseName, plpDataName)
+      if (!dir.exists(plpDataLocation)) {
       plpData <- tryCatch({
         do.call(
           getPlpData,
@@ -491,15 +496,15 @@ validateExternal <- function(validationDesignList,
         ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
         next
       }
-      plpDataName <-
-        paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
-      plpDataLocation <-
-        file.path(outputFolder, databaseName, plpDataName)
       if (!dir.exists(file.path(outputFolder, databaseName))) {
         dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
       }
       savePlpData(plpData, file = plpDataLocation)
-
+      } else {
+        ParallelLogger::logInfo(paste0("Data already extracted for ",
+                                plpDataName, ": Loading from disk"))
+        plpData <- loadPlpData(plpDataLocation)
+      }
       # create study population
       population <- tryCatch({
         do.call(
@@ -515,9 +520,18 @@ validateExternal <- function(validationDesignList,
         ParallelLogger::logError(e)
         return(NULL)
       })
-        
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
+        analysisDone <- file.exists(
+          file.path(
+            outputFolder,
+            databaseName,
+            analysisName,
+            'validationResult',
+            'runPlp.rds'
+          )
+        )
+        if (!analysisDone) {
         validateModel(
           plpModel = model,
           plpData = plpData,
@@ -526,8 +540,11 @@ validateExternal <- function(validationDesignList,
           runCovariateSummary = design$runCovariateSummary,
           outputFolder = outputFolder,
           databaseName = databaseName,
-          analysisName = analysisName
-        )
+          analysisName = analysisName)
+        } else {
+          ParallelLogger::logInfo(paste0("Analysis ", analysisName, " already done",
+                                         ", Proceeding to the next one."))
+        }
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
     }
