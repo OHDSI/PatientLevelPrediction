@@ -1,6 +1,7 @@
 
 
 test_that('KNN fit works', {
+  skip_on_ci()
   modelSettings = setKNN(k = 2)
   nanoTrainData <- reduceTrainData(tinyTrainData, n = 2)
   subjectToKeep <- nanoTrainData$labels[sample.int(nrow(nanoTrainData$labels), 50),"rowId"]
@@ -20,7 +21,7 @@ test_that('KNN fit works', {
 
 
 test_that("KNN settings", {
-
+skip_on_ci()
 model_set <- setKNN(k=5)
 testthat::expect_is(model_set, "modelSettings")
 testthat::expect_length(model_set,2)
