@@ -71,7 +71,6 @@ Suggests:
     lightgbm
 Remotes:
     ohdsi/BigKnn,
-    ohdsi/FeatureExtraction,
     ohdsi/ShinyAppBuilder,
     ohdsi/ResultModelManager,
 RoxygenNote: 7.3.1
