@@ -39,6 +39,7 @@ Imports:
     polspline,
     pROC,
     PRROC,
+    R6,
     reticulate (>= 1.30),
     rlang,
     SqlRender (>= 1.1.3),
