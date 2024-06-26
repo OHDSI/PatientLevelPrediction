@@ -304,5 +304,6 @@ createGlmModel <- function(coefficients,
     finalMapping = finalMapping
   )
   class(plpModel) <- "plpModel"
+  plpModel$modelType <- "GLM"
   return(plpModel)
 }
