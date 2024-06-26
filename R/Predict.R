@@ -279,7 +279,7 @@ predictGlm <- function(plpModel, data, cohort) {
 #' linear predictors to outcome probabilities. For generalized linear models
 #' this is the inverse of the link function. Supported values is only
 #' "logistic" for logistic regression model at the moment. 
-#' @return A plpModel object containing the model and the prediction function.
+#' @return A model object containing the model and the prediction function.
 #' @export
 createGlmModel <- function(coefficients,
                            intercept = 0,
@@ -301,9 +301,9 @@ createGlmModel <- function(coefficients,
   plpModel <- list(
     intercept = intercept,
     coefficients = coefficients,
-    finalMapping = finalMapping
+    finalMapping = finalMapping,
+    predictionFunction = "predictGlm"
   )
-  class(plpModel) <- "plpModel"
   plpModel$modelType <- "GLM"
   return(plpModel)
 }
