@@ -67,11 +67,18 @@ getCohortCovariateData <- function(
     group by a.@row_id_field; "
   )
   
-  if (is.null(covariateSettings$cohortTable) &
+  if (is.null(covariateSettings$cohortTable) &&
       (is.null(covariateSettings$cohortDatabaseSchema))) {
+    ParallelLogger::logInfo("cohortTable and cohortDatabaseSchema not specified in 
+      cohort covariateSettings. Attempting to fetch from databaseDetails")
     # use settings from databaseDetails which is two frames up 
     # in the call stack
-    databaseDetails <- get("databaseDetails", parent.frame(n = 2))
+    tryCatch(databaseDetails <- get("databaseDetails", parent.frame(n = 2)),
+      error = function(e) {
+        stop("cohortTable and cohortDatabaseSchema not specified in 
+          cohort covariateSettings. Attempt to fetch databaseDetails from parent 
+          frame failed with error: ", e$message)
+      })
     cohortCovariateTable <- databaseDetails$cohortTable
     cohortCovariateDatabaseSchema <- databaseDetails$cohortDatabaseSchema
   } else {
