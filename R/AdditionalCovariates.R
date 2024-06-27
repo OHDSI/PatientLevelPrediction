@@ -67,10 +67,22 @@ getCohortCovariateData <- function(
     group by a.@row_id_field; "
   )
   
+  if (is.null(covariateSettings$cohortTable) &
+      (is.null(covariateSettings$cohortDatabaseSchema))) {
+    # use settings from databaseDetails which is two frames up 
+    # in the call stack
+    databaseDetails <- get("databaseDetails", parent.frame(n = 2))
+    cohortCovariateTable <- databaseDetails$cohortTable
+    cohortCovariateDatabaseSchema <- databaseDetails$cohortDatabaseSchema
+  } else {
+    cohortCovariateTable <- covariateSettings$cohortTable
+    cohortCovariateDatabaseSchema <- covariateSettings$cohortDatabaseSchema
+  }
+  
   sql <- SqlRender::render(
     sql,
-    covariate_cohort_schema = covariateSettings$cohortDatabaseSchema,
-    covariate_cohort_table = covariateSettings$cohortTable,
+    covariate_cohort_schema = cohortCovariateDatabaseSchema,
+    covariate_cohort_table = cohortCovariateTable,
     covariate_cohort_id = covariateSettings$cohortIds,
     cohort_temp_table = cohortTable,
     row_id_field = rowIdField,
@@ -154,8 +166,10 @@ getCohortCovariateData <- function(
 #'
 #' @param cohortName  Name for the cohort
 #' @param settingId   A unique id for the covariate time and 
-#' @param cohortDatabaseSchema  The schema of the database with the cohort
-#' @param cohortTable  the table name that contains the covariate cohort
+#' @param cohortDatabaseSchema  The schema of the database with the cohort. If 
+#' nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.
+#' @param cohortTable  the table name that contains the covariate cohort. If 
+#' nothing is specified then the cohortTable from databaseDetails at runtime is used.
 #' @param cohortId  cohort id for the covariate cohort
 #' @param startDay  The number of days prior to index to start observing the cohort
 #' @param endDay  The number of days prior to index to stop observing the cohort
@@ -173,8 +187,8 @@ getCohortCovariateData <- function(
 createCohortCovariateSettings <- function(
   cohortName, 
   settingId,
-  cohortDatabaseSchema, 
-  cohortTable, 
+  cohortDatabaseSchema=NULL, 
+  cohortTable=NULL, 
   cohortId,
   startDay = -30, 
   endDay = 0, 
