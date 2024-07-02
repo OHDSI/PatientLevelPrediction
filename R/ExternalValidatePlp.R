@@ -617,7 +617,7 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
     if (any(lapply(modelDesigns, function(x) {
             x[[settingName]] != design[[settingName]]
           }))) {
-      ParallelLogger::logWarning(settingName, " are not the same in models and validationDesign") 
+      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
     }
   }
   return(design)
