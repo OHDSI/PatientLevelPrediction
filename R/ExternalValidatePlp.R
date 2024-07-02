@@ -460,6 +460,10 @@ validateExternal <- function(validationDesignList,
       
       # get plpData
       plpData <- getData(design, database, allCovSettings, outputFolder) 
+      if (is.null(plpData)) {
+        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
+        next
+      }
       # create study population
       population <- getPopulation(design, modelDesigns, plpData)
 
@@ -650,14 +654,12 @@ getData <- function(design, database, outputFolder, allCovSettings) {
       ParallelLogger::logError(e)
       return(NULL)
     })   
-  if (is.null(plpData)) {
-    ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
-    next
-  }
-  if (!dir.exists(file.path(outputFolder, databaseName))) {
-    dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
-  }
-  savePlpData(plpData, file = plpDataLocation)
+    if (!is.null(plpData)) {
+      if (!dir.exists(file.path(outputFolder, databaseName))) {
+        dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
+      }
+      savePlpData(plpData, file = plpDataLocation)
+    }
   } else {
     ParallelLogger::logInfo(paste0("Data already extracted for ",
                             plpDataName, ": Loading from disk"))
