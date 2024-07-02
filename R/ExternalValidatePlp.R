@@ -418,8 +418,8 @@ validateExternal <- function(validationDesignList,
                                                databaseDetails,
                                                logSettings,
                                                outputFolder)
-  validationDesignList <- changedInputs["validationDesignList"]
-  databaseDetails <- changedInputs["databaseDetails"]
+  validationDesignList <- changedInputs[["validationDesignList"]]
+  databaseDetails <- changedInputs[["databaseDetails"]]
   # create results list with the names of the databases to validate across
   result <- list()
   length(result) <- length(databaseDetails)
@@ -459,9 +459,9 @@ validateExternal <- function(validationDesignList,
       checkAllSameInModels(allCovSettings, "covariateSettings")
       
       # get plpData
-      plpData <- getData(design, database, allCovSettings, outputFolder) 
+      plpData <- getData(design, database, outputFolder, allCovSettings) 
       if (is.null(plpData)) {
-        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceding to the next one.")
+        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceeding to the next one.")
         next
       }
       # create study population
@@ -602,7 +602,8 @@ checkValidateExternalInputs <- function(validationDesignList,
     checkIsClass(databaseDetails, "databaseDetails")
     databaseDetails <- list(databaseDetails)
   }
-  results <- list(validationDesignList, databaseDetails)
+  results <- list(validationDesignList = validationDesignList,
+                  databaseDetails = databaseDetails)
   return(results)
 }
 
@@ -613,18 +614,18 @@ checkValidateExternalInputs <- function(validationDesignList,
 #' @return The updated design
 fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
   settingsFromModel <- lapply(modelDesigns, function(x) x[[settingName]])
-  if (design[[settingName]] == NULL) {
+  if (is.null(validationDesign[[settingName]])) {
     checkAllSameInModels(settingsFromModel, settingName)
-    design[[settingName]] <- settingsFromModel[[1]]
+    validationDesign[[settingName]] <- settingsFromModel[[1]]
     ParallelLogger::logInfo(paste0(settingName, " not set in design, using model's"))
   } else {
     if (any(lapply(modelDesigns, function(x) {
-            x[[settingName]] != design[[settingName]]
+            x[[settingName]] != validationDesign[[settingName]]
           }))) {
       ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
     }
   }
-  return(design)
+  return(validationDesign)
 }
 
 #' getData - Get the plpData for the validation
