@@ -6,6 +6,11 @@
 \usage{
 checkAllSameInModels(settingsList, settingName)
 }
+\arguments{
+\item{settingsList}{A list of settings to check}
+
+\item{settingName}{The name of the setting to check}
+}
 \description{
 checkAllSameInModels - Check if all settings are the same across models
 }

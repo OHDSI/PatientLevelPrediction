@@ -6,6 +6,12 @@
 \usage{
 extractModelDesigns(plpModelList)
 }
+\arguments{
+\item{plpModelList}{A list of plpModels}
+}
+\value{
+A list of modelDesigns
+}
 \description{
 extractModelDesigns - Extract all modelDesigns from a list of plpModels
 }

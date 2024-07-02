@@ -6,6 +6,18 @@
 \usage{
 getData(design, database, outputFolder, allCovSettings)
 }
+\arguments{
+\item{design}{The validationDesign object}
+
+\item{database}{The databaseDetails object}
+
+\item{outputFolder}{The directory to save the validation results to}
+
+\item{allCovSettings}{A list of covariateSettings from the models}
+}
+\value{
+The plpData object
+}
 \description{
 getData - Get the plpData for the validation
 }

@@ -6,6 +6,16 @@
 \usage{
 getPopulation(validationDesign, modelDesigns, plpData)
 }
+\arguments{
+\item{validationDesign}{The validationDesign objects}
+
+\item{modelDesigns}{A list of modelDesign objects}
+
+\item{plpData}{The plpData object}
+}
+\value{
+The population dataframe
+}
 \description{
 getPopulation - Get the population for the validationDesign
 }

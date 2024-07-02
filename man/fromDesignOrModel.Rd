@@ -13,6 +13,9 @@ fromDesignOrModel(validationDesign, modelDesigns, settingName)
 
 \item{settingName}{The name of the setting to check}
 }
+\value{
+The updated design
+}
 \description{
 fromDesignOrModel - Check if the design has the setting, if not use the model's
 }

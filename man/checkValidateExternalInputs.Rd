@@ -11,6 +11,18 @@ checkValidateExternalInputs(
   outputFolder
 )
 }
+\arguments{
+\item{validationDesignList}{A list of validationDesign objects}
+
+\item{databaseDetails}{A list of databaseDetails objects}
+
+\item{logSettings}{An object of logSettings}
+
+\item{outputFolder}{The directory to save the validation results to}
+}
+\value{
+A list of inputs that were modified
+}
 \description{
 checkValidateExternalInputs - Check the inputs for validateExternal
 }
