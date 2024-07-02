@@ -544,6 +544,8 @@ validateModel <-
 }
 
 #' checkAllSameInModels - Check if all settings are the same across models
+#' @param settingsList A list of settings to check
+#' @param settingName The name of the setting to check
 checkAllSameInModels <- function(settingsList, settingName) {
   if (!Reduce(function(x, y) {
     x &&
@@ -555,6 +557,8 @@ checkAllSameInModels <- function(settingsList, settingName) {
 }
 
 #' extractModelDesigns - Extract all modelDesigns from a list of plpModels
+#' @param plpModelList A list of plpModels
+#' @return A list of modelDesigns
 extractModelDesigns <- function(plpModelList) {
   lapply(plpModelList, function(plpModel) {
     if (is.character(plpModel)) {
@@ -569,6 +573,11 @@ extractModelDesigns <- function(plpModelList) {
 }
 
 #' checkValidateExternalInputs - Check the inputs for validateExternal
+#' @param validationDesignList A list of validationDesign objects
+#' @param databaseDetails A list of databaseDetails objects
+#' @param logSettings An object of logSettings
+#' @param outputFolder The directory to save the validation results to
+#' @return A list of inputs that were modified
 checkValidateExternalInputs <- function(validationDesignList,
                                         databaseDetails,
                                         logSettings,
@@ -597,6 +606,7 @@ checkValidateExternalInputs <- function(validationDesignList,
 #' @param validationDesign The validationDesign object
 #' @param modelDesigns A list of modelDesign objects
 #' @param settingName The name of the setting to check
+#' @return The updated design
 fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
   settingsFromModel <- lapply(modelDesigns, function(x) x[[settingName]])
   if (design[[settingName]] == NULL) {
@@ -614,6 +624,11 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 }
 
 #' getData - Get the plpData for the validation
+#' @param design The validationDesign object
+#' @param database The databaseDetails object
+#' @param outputFolder The directory to save the validation results to
+#' @param allCovSettings A list of covariateSettings from the models
+#' @return The plpData object
 getData <- function(design, database, outputFolder, allCovSettings) {
   databaseName <- database$cdmDatabaseName
   plpDataName <-
@@ -652,6 +667,10 @@ getData <- function(design, database, outputFolder, allCovSettings) {
 }
 
 #' getPopulation - Get the population for the validationDesign
+#' @param validationDesign The validationDesign objects
+#' @param modelDesigns A list of modelDesign objects
+#' @param plpData The plpData object
+#' @return The population dataframe
 getPopulation <- function(validationDesign, modelDesigns, plpData) {
   design <- fromDesignOrModel(validationDesign, modelDesigns, "populationSettings")
   population <- tryCatch({
