@@ -14,3 +14,4 @@ checkAllSameInModels(settingsList, settingName)
 \description{
 checkAllSameInModels - Check if all settings are the same across models
 }
+\keyword{internal}

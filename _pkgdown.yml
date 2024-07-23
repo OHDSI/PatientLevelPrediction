@@ -269,5 +269,7 @@ reference:
   - title: "Other functions"
     contents:
       - predictCyclops
+      - predictGlm
+      - createGlmModel
     
 

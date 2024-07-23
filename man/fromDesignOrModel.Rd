@@ -19,3 +19,4 @@ The updated design
 \description{
 fromDesignOrModel - Check if the design has the setting, if not use the model's
 }
+\keyword{internal}

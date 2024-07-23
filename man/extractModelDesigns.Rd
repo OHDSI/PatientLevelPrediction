@@ -15,3 +15,4 @@ A list of modelDesigns
 \description{
 extractModelDesigns - Extract all modelDesigns from a list of plpModels
 }
+\keyword{internal}

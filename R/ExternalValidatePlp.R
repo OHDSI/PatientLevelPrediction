@@ -550,6 +550,7 @@ validateModel <-
 #' checkAllSameInModels - Check if all settings are the same across models
 #' @param settingsList A list of settings to check
 #' @param settingName The name of the setting to check
+#' @keywords internal
 checkAllSameInModels <- function(settingsList, settingName) {
   if (!Reduce(function(x, y) {
     x &&
@@ -563,6 +564,7 @@ checkAllSameInModels <- function(settingsList, settingName) {
 #' extractModelDesigns - Extract all modelDesigns from a list of plpModels
 #' @param plpModelList A list of plpModels
 #' @return A list of modelDesigns
+#' @keywords internal
 extractModelDesigns <- function(plpModelList) {
   lapply(plpModelList, function(plpModel) {
     if (is.character(plpModel)) {
@@ -582,6 +584,7 @@ extractModelDesigns <- function(plpModelList) {
 #' @param logSettings An object of logSettings
 #' @param outputFolder The directory to save the validation results to
 #' @return A list of inputs that were modified
+#' @keywords internal
 checkValidateExternalInputs <- function(validationDesignList,
                                         databaseDetails,
                                         logSettings,
@@ -612,6 +615,7 @@ checkValidateExternalInputs <- function(validationDesignList,
 #' @param modelDesigns A list of modelDesign objects
 #' @param settingName The name of the setting to check
 #' @return The updated design
+#' @keywords internal
 fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
   settingsFromModel <- lapply(modelDesigns, function(x) x[[settingName]])
   if (is.null(validationDesign[[settingName]])) {
@@ -634,6 +638,7 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 #' @param outputFolder The directory to save the validation results to
 #' @param allCovSettings A list of covariateSettings from the models
 #' @return The plpData object
+#' @keywords internal
 getData <- function(design, database, outputFolder, allCovSettings) {
   databaseName <- database$cdmDatabaseName
   plpDataName <-
@@ -674,6 +679,7 @@ getData <- function(design, database, outputFolder, allCovSettings) {
 #' @param modelDesigns A list of modelDesign objects
 #' @param plpData The plpData object
 #' @return The population dataframe
+#' @keywords internal
 getPopulation <- function(validationDesign, modelDesigns, plpData) {
   design <- fromDesignOrModel(validationDesign, modelDesigns, "populationSettings")
   population <- tryCatch({
