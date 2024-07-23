@@ -3,7 +3,7 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -25,7 +25,7 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
-     
+
   </a>
 </li>
 <li>
@@ -40,7 +40,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -104,20 +104,20 @@
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create setting for the scikit-learn 1.0.1 DecisionTree with python</h1>
-    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/R/SklearnClassifierSettings.R" class="external-link"><code>R/SklearnClassifierSettings.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SklearnClassifierSettings.R" class="external-link"><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setDecisionTree.Rd</code></div>
     </div>
 
@@ -143,56 +143,58 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>criterion</dt>
+
+
+<dl><dt id="arg-criterion">criterion<a class="anchor" aria-label="anchor" href="#arg-criterion"></a></dt>
 <dd><p>The function to measure the quality of a split. Supported criteria are “gini” for the Gini impurity and “entropy” for the information gain.</p></dd>
 
 
-<dt>splitter</dt>
+<dt id="arg-splitter">splitter<a class="anchor" aria-label="anchor" href="#arg-splitter"></a></dt>
 <dd><p>The strategy used to choose the split at each node. Supported strategies are “best” to choose the best split and “random” to choose the best random split.</p></dd>
 
 
-<dt>maxDepth</dt>
+<dt id="arg-maxdepth">maxDepth<a class="anchor" aria-label="anchor" href="#arg-maxdepth"></a></dt>
 <dd><p>(list) The maximum depth of the tree. If NULL, then nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.</p></dd>
 
 
-<dt>minSamplesSplit</dt>
+<dt id="arg-minsamplessplit">minSamplesSplit<a class="anchor" aria-label="anchor" href="#arg-minsamplessplit"></a></dt>
 <dd><p>The minimum number of samples required to split an internal node</p></dd>
 
 
-<dt>minSamplesLeaf</dt>
+<dt id="arg-minsamplesleaf">minSamplesLeaf<a class="anchor" aria-label="anchor" href="#arg-minsamplesleaf"></a></dt>
 <dd><p>The minimum number of samples required to be at a leaf node. A split point at any depth will only be considered if it leaves at least minSamplesLeaf training samples in each of the left and right branches. This may have the effect of smoothing the model, especially in regression.</p></dd>
 
 
-<dt>minWeightFractionLeaf</dt>
+<dt id="arg-minweightfractionleaf">minWeightFractionLeaf<a class="anchor" aria-label="anchor" href="#arg-minweightfractionleaf"></a></dt>
 <dd><p>The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.</p></dd>
 
 
-<dt>maxFeatures</dt>
+<dt id="arg-maxfeatures">maxFeatures<a class="anchor" aria-label="anchor" href="#arg-maxfeatures"></a></dt>
 <dd><p>(list) The number of features to consider when looking for the best split (int/'sqrt'/NULL)</p></dd>
 
 
-<dt>maxLeafNodes</dt>
+<dt id="arg-maxleafnodes">maxLeafNodes<a class="anchor" aria-label="anchor" href="#arg-maxleafnodes"></a></dt>
 <dd><p>(list) Grow a tree with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes. (int/NULL)</p></dd>
 
 
-<dt>minImpurityDecrease</dt>
+<dt id="arg-minimpuritydecrease">minImpurityDecrease<a class="anchor" aria-label="anchor" href="#arg-minimpuritydecrease"></a></dt>
 <dd><p>Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.</p></dd>
 
 
-<dt>classWeight</dt>
+<dt id="arg-classweight">classWeight<a class="anchor" aria-label="anchor" href="#arg-classweight"></a></dt>
 <dd><p>(list) Weights associated with classes 'balance' or NULL</p></dd>
 
 
-<dt>seed</dt>
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>The random state seed</p></dd>
 
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">model.decisionTree</span> <span class="op">&lt;-</span> <span class="fu">setDecisionTree</span><span class="op">(</span>maxDepth<span class="op">=</span><span class="fl">10</span>,minSamplesLeaf<span class="op">=</span><span class="fl">10</span>, seed<span class="op">=</span><span class="cn">NULL</span> <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -207,15 +209,15 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

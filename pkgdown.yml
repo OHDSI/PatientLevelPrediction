@@ -1,5 +1,5 @@
 pandoc: 3.1.11
-pkgdown: 2.0.9
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   AddingCustomFeatureEngineering: AddingCustomFeatureEngineering.html
@@ -15,5 +15,4 @@ articles:
   CreatingNetworkStudies: CreatingNetworkStudies.html
   InstallationGuide: InstallationGuide.html
   Videos: Videos.html
-last_built: 2024-06-02T09:35Z
-
+last_built: 2024-07-23T14:21Z
