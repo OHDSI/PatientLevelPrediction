@@ -3,7 +3,7 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.7.9999</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.8.9999</span>
       </span>
     </div>
 
@@ -25,7 +25,7 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
-     
+
   </a>
 </li>
 <li>
@@ -40,7 +40,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu"><li>
@@ -104,20 +104,20 @@
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create setting for neural network model with python</h1>
-    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/R/SklearnClassifierSettings.R" class="external-link"><code>R/SklearnClassifierSettings.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SklearnClassifierSettings.R" class="external-link"><code>R/SklearnClassifierSettings.R</code></a></small>
     <div class="hidden name"><code>setMLP.Rd</code></div>
     </div>
 
@@ -153,11 +153,13 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>hiddenLayerSizes</dt>
+
+
+<dl><dt id="arg-hiddenlayersizes">hiddenLayerSizes<a class="anchor" aria-label="anchor" href="#arg-hiddenlayersizes"></a></dt>
 <dd><p>(list of vectors) The ith element represents the number of neurons in the ith hidden layer.</p></dd>
 
 
-<dt>activation</dt>
+<dt id="arg-activation">activation<a class="anchor" aria-label="anchor" href="#arg-activation"></a></dt>
 <dd><p>(list) Activation function for the hidden layer.</p><ul><li><p>"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x</p></li>
 <li><p>"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).</p></li>
 <li><p>"tanh": the hyperbolic tan function, returns f(x) = tanh(x).</p></li>
@@ -165,88 +167,88 @@
 </ul></dd>
 
 
-<dt>solver</dt>
+<dt id="arg-solver">solver<a class="anchor" aria-label="anchor" href="#arg-solver"></a></dt>
 <dd><p>(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)</p></dd>
 
 
-<dt>alpha</dt>
+<dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
 <dd><p>(list) L2 penalty (regularization term) parameter.</p></dd>
 
 
-<dt>batchSize</dt>
+<dt id="arg-batchsize">batchSize<a class="anchor" aria-label="anchor" href="#arg-batchsize"></a></dt>
 <dd><p>(list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).</p></dd>
 
 
-<dt>learningRate</dt>
-<dd><p>(list) Only used when solver='sgd' Learning rate schedule for weight updates.‘constant’, ‘invscaling’, ‘adaptive’, default=’constant’</p></dd>
+<dt id="arg-learningrate">learningRate<a class="anchor" aria-label="anchor" href="#arg-learningrate"></a></dt>
+<dd><p>(list) Only used when solver='sgd' Learning rate schedule for weight updates. ‘constant’, ‘invscaling’, ‘adaptive’, default=’constant’</p></dd>
 
 
-<dt>learningRateInit</dt>
+<dt id="arg-learningrateinit">learningRateInit<a class="anchor" aria-label="anchor" href="#arg-learningrateinit"></a></dt>
 <dd><p>(list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.</p></dd>
 
 
-<dt>powerT</dt>
+<dt id="arg-powert">powerT<a class="anchor" aria-label="anchor" href="#arg-powert"></a></dt>
 <dd><p>(list) Only used when solver=’sgd’.  The exponent for inverse scaling learning rate. It is used in updating effective learning rate when the learning_rate is set to ‘invscaling’.</p></dd>
 
 
-<dt>maxIter</dt>
+<dt id="arg-maxiter">maxIter<a class="anchor" aria-label="anchor" href="#arg-maxiter"></a></dt>
 <dd><p>(list)  Maximum number of iterations. The solver iterates until convergence (determined by ‘tol’) or this number of iterations. For stochastic solvers (‘sgd’, ‘adam’), note that this determines the number of epochs (how many times each data point will be used), not the number of gradient steps.</p></dd>
 
 
-<dt>shuffle</dt>
+<dt id="arg-shuffle">shuffle<a class="anchor" aria-label="anchor" href="#arg-shuffle"></a></dt>
 <dd><p>(list) boolean: Whether to shuffle samples in each iteration. Only used when solver=’sgd’ or ‘adam’.</p></dd>
 
 
-<dt>tol</dt>
+<dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>
 <dd><p>(list) Tolerance for the optimization. When the loss or score is not improving by at least tol for nIterNoChange consecutive iterations, unless learning_rate is set to ‘adaptive’, convergence is considered to be reached and training stops.</p></dd>
 
 
-<dt>warmStart</dt>
+<dt id="arg-warmstart">warmStart<a class="anchor" aria-label="anchor" href="#arg-warmstart"></a></dt>
 <dd><p>(list) When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.</p></dd>
 
 
-<dt>momentum</dt>
+<dt id="arg-momentum">momentum<a class="anchor" aria-label="anchor" href="#arg-momentum"></a></dt>
 <dd><p>(list) Momentum for gradient descent update. Should be between 0 and 1. Only used when solver=’sgd’.</p></dd>
 
 
-<dt>nesterovsMomentum</dt>
+<dt id="arg-nesterovsmomentum">nesterovsMomentum<a class="anchor" aria-label="anchor" href="#arg-nesterovsmomentum"></a></dt>
 <dd><p>(list) Whether to use Nesterov’s momentum. Only used when solver=’sgd’ and momentum &gt; 0.</p></dd>
 
 
-<dt>earlyStopping</dt>
+<dt id="arg-earlystopping">earlyStopping<a class="anchor" aria-label="anchor" href="#arg-earlystopping"></a></dt>
 <dd><p>(list) boolean Whether to use early stopping to terminate training when validation score is not improving. If set to true, it will automatically set aside 10 percent of training data as validation and terminate training when validation score is not improving by at least tol for n_iter_no_change consecutive epochs.</p></dd>
 
 
-<dt>validationFraction</dt>
+<dt id="arg-validationfraction">validationFraction<a class="anchor" aria-label="anchor" href="#arg-validationfraction"></a></dt>
 <dd><p>(list) The proportion of training data to set aside as validation set for early stopping. Must be between 0 and 1. Only used if earlyStopping is True.</p></dd>
 
 
-<dt>beta1</dt>
+<dt id="arg-beta-">beta1<a class="anchor" aria-label="anchor" href="#arg-beta-"></a></dt>
 <dd><p>(list) Exponential decay rate for estimates of first moment vector in adam, should be in 0 to 1.</p></dd>
 
 
-<dt>beta2</dt>
+<dt id="arg-beta-">beta2<a class="anchor" aria-label="anchor" href="#arg-beta-"></a></dt>
 <dd><p>(list) Exponential decay rate for estimates of second moment vector in adam, should be in 0 to 1.</p></dd>
 
 
-<dt>epsilon</dt>
+<dt id="arg-epsilon">epsilon<a class="anchor" aria-label="anchor" href="#arg-epsilon"></a></dt>
 <dd><p>(list) Value for numerical stability in adam.</p></dd>
 
 
-<dt>nIterNoChange</dt>
+<dt id="arg-niternochange">nIterNoChange<a class="anchor" aria-label="anchor" href="#arg-niternochange"></a></dt>
 <dd><p>(list) Maximum number of epochs to not meet tol improvement. Only effective when solver=’sgd’ or ‘adam’.</p></dd>
 
 
-<dt>seed</dt>
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
 <dd><p>A seed for the model</p></dd>
 
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="va">model.mlp</span> <span class="op">&lt;-</span> <span class="fu">setMLP</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -261,15 +263,15 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.8.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 
