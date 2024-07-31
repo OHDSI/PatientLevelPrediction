@@ -623,9 +623,9 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
     validationDesign[[settingName]] <- settingsFromModel[[1]]
     ParallelLogger::logInfo(paste0(settingName, " not set in design, using model's"))
   } else {
-    if (any(lapply(modelDesigns, function(x) {
-            x[[settingName]] != validationDesign[[settingName]]
-          }))) {
+    if (any(unlist(lapply(modelDesigns, function(x) {
+            !identical(x[[settingName]], validationDesign[[settingName]])
+          })))) {
       ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
     }
   }

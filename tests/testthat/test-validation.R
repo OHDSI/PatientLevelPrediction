@@ -73,3 +73,29 @@ test_that("external validate", {
   testthat::expect_equal(class(exVal[[1]]), 'externalValidatePlp')
   
 })
+
+test_that("fromDesignOrModel helper works", {
+    
+   settingName <- "restrictPlpDataSettings"
+   validationDesign <- list(targetId = 1,
+                            outcomeId = 2,
+                            restrictPlpDataSettings = list(a = 1, b = 2)
+   )
+   modelDesigns <- list(
+     list(targetId = 1,
+          outcomeId = 2,
+          restrictPlpDataSettings = list(a = 3, b = 4)
+     ),
+     list(targetId = 1,
+          outcomeId = 2,
+          restrictPlpDataSettings = list(a = 3, b = 4)
+     )
+   )
+   output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
+   
+   expect_equal(output[[settingName]], list(a = 1, b = 2))
+   validationDesign[[settingName]] <- NULL
+   output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
+   expect_equal(output[[settingName]], list(a = 3, b = 4))
+
+})
