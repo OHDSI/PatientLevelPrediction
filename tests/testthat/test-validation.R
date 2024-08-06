@@ -99,3 +99,72 @@ test_that("fromDesignOrModel helper works", {
    expect_equal(output[[settingName]], list(a = 3, b = 4))
 
 })
+
+test_that("createValidationDesign errors", {
+  
+  expect_error(createValidationDesign(targetId = NULL, outcomeId = 2,
+                                      plpModelList = list()))
+  expect_error(createValidationDesign(targetId = 1, outcomeId = NULL,
+                                      plpModelList = list()))
+  expect_error(createValidationDesign(targetId = "a", outcomeId = 2,
+                                      plpModelList = list()))
+  expect_error(createValidationDesign(targetId = 1, outcomeId = "a",
+                                      plpModelList = list()))
+  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
+                                      plpModelList = list(),
+                                      populationSettings = list()))
+  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
+                                      plpModelList = list(),
+                                      recalibrate = 1))
+  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
+                                      plpModelList = list(),
+                                      runCovariateSummary = 1))
+})
+
+test_that("createValidationDesign works with minimal required arguments", {
+  targetId <- 1
+  outcomeId <- 2
+  plpModelList <- list()
+  
+  design <- createValidationDesign(targetId, outcomeId, plpModelList)
+  expect_s3_class(design, "validationDesign")
+  expect_equal(design$targetId, targetId)
+  expect_equal(design$outcomeId, outcomeId)
+  expect_equal(design$plpModelList, plpModelList)
+})
+
+test_that("createValidationDesign works with all arguments", {
+  targetId <- 1
+  outcomeId <- 2
+  plpModelList <- list("model1", "model2")
+  populationSettings <- createStudyPopulationSettings()  
+  restrictPlpDataSettings <- createRestrictPlpDataSettings()  # Replace with actual restrictPlpDataSettings object
+  recalibrate <- c("recalibrationInTheLarge") 
+  runCovariateSummary <- FALSE
+  
+  design <- createValidationDesign(targetId, outcomeId, plpModelList, populationSettings, restrictPlpDataSettings, recalibrate, runCovariateSummary)
+  expect_s3_class(design[[1]], "validationDesign")
+  expect_equal(design[[1]]$targetId, targetId)
+  expect_equal(design[[1]]$outcomeId, outcomeId)
+  expect_equal(design[[1]]$plpModelList, plpModelList)
+  expect_equal(design[[1]]$populationSettings, populationSettings)
+  expect_equal(design[[1]]$restrictPlpDataSettings, restrictPlpDataSettings[[1]])
+  expect_equal(design[[1]]$recalibrate, recalibrate)
+  expect_equal(design[[1]]$runCovariateSummary, runCovariateSummary)
+})
+
+test_that("createValidationDesigns correctly handles multiple restrictSettings", {
+  targetId <- 1
+  outcomeId <- 2
+  plpModelList <- list()
+  restrictPlpDataSettings <- list(createRestrictPlpDataSettings(), createRestrictPlpDataSettings())
+  
+  design <- createValidationDesign(targetId, outcomeId, plpModelList, restrictPlpDataSettings = restrictPlpDataSettings)
+  expect_s3_class(design[[1]], "validationDesign")
+  expect_equal(design[[1]]$targetId, targetId)
+  expect_equal(design[[1]]$outcomeId, outcomeId)
+  expect_equal(design[[1]]$plpModelList, plpModelList)
+  expect_equal(design[[1]]$restrictPlpDataSettings, restrictPlpDataSettings[[1]])
+  expect_equal(design[[2]]$restrictPlpDataSettings, restrictPlpDataSettings[[2]])
+  expect_equal(length(design), length(restrictPlpDataSettings))
+})
