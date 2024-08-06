@@ -359,7 +359,7 @@ createValidationSettings <- function(recalibrate = NULL,
 #' @param plpModelList A list of plpModels objects created by \code{runPlp} or a path to such objects
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data
-#' @return A validation design object of class \code{validationDesign}
+#' @return A validation design object of class \code{validationDesign} or a list of such objects
 #' @export
 createValidationDesign <-
   function(targetId,
@@ -442,6 +442,37 @@ validateExternal <- function(validationDesignList,
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
+  # create download tasks
+  extractUniqueCombinations <- function(validationDesignList) {
+    j <- 1
+    restrictContentMap <- list()
+    uniqueCombinations <- do.call(rbind, lapply(seq_along(validationDesignList), function(i) {
+      design <- validationDesignList[[i]]
+      restrictContent <- paste0(design$restrictPlpDataSettings, collapse = "|")
+      if (!(restrictContent %in% names(restrictContentMap))) {
+       restrictContentMap[[restrictContent]] <<- j
+        j <<- j + 1
+      }
+      data.frame(
+        targetId = design$targetId,
+        outcomeId = design$outcomeId,
+        restrictPlpIndex = restrictContentMap[[restrictContent]],
+        restrictPlpDataSettings = restrictContent
+      )
+    }))
+    uniqueCombinations <- uniqueCombinations %>% 
+      dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings) %>%
+        dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
+                         restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(restrictPlpDataSettings = list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings))
+    return(uniqueCombinations)
+  }
+  downloadTasks <- extractUniqueCombinations(validationDesignList)
+
+
+
+
   results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
@@ -449,17 +480,13 @@ validateExternal <- function(validationDesignList,
       
       ParallelLogger::logInfo(paste("Validating model on", database$cdmDatabaseName))
       
-      database$targetId <- design$targetId
-      
-      database$outcomeIds <- design$outcomeId
-      
       modelDesigns <- extractModelDesigns(design$plpModelList)
       allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
       design <- fromDesignOrModel(design, modelDesigns, "restrictPlpDataSettings")
       checkAllSameInModels(allCovSettings, "covariateSettings")
       
       # get plpData
-      plpData <- getData(design, database, outputFolder, allCovSettings) 
+      plpData <- getData(design, database, outputFolder, allCovSettings, downloadTasks) 
       if (is.null(plpData)) {
         ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceeding to the next one.")
         next
@@ -637,12 +664,23 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 #' @param database The databaseDetails object
 #' @param outputFolder The directory to save the validation results to
 #' @param allCovSettings A list of covariateSettings from the models
+#' @param downloadTasks A list of download tasks determined by unique
+#' combinations of targetId and restrictPlpDataSettings
 #' @return The plpData object
 #' @keywords internal
-getData <- function(design, database, outputFolder, allCovSettings) {
+getData <- function(design, database, outputFolder, allCovSettings, downloadTasks) {
+  # find task associated with design and the index of the task in downloadTasks
+  task <- downloadTasks %>%
+    dplyr::mutate(taskId = dplyr::row_number()) %>%
+    dplyr::filter(.data$targetId == design$targetId,
+                  paste0(.data$restrictPlpDataSettings, collapse = "|") == 
+                  paste0(design$restrictPlpDataSettings, collapse = "|")) 
+  
   databaseName <- database$cdmDatabaseName
+  database$targetId <- task$targetId
+  database$outcomeIds <- task$outcomeIds
   plpDataName <-
-    paste0("targetId_", design$targetId, "_L", "1")
+    paste0("targetId_", design$targetId, "_L", task$taskId)
   plpDataLocation <-
     file.path(outputFolder, databaseName, plpDataName)
   if (!dir.exists(plpDataLocation)) {
@@ -651,7 +689,7 @@ getData <- function(design, database, outputFolder, allCovSettings) {
         getPlpData,
         list(
           databaseDetails = database,
-          restrictPlpDataSettings = design$restrictPlpDataSettings,
+          restrictPlpDataSettings = task$restrictPlpDataSettings,
           covariateSettings = allCovSettings[[1]]
         )
       )
