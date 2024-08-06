@@ -4,7 +4,7 @@
 \alias{getData}
 \title{getData - Get the plpData for the validation}
 \usage{
-getData(design, database, outputFolder, allCovSettings)
+getData(design, database, outputFolder, allCovSettings, downloadTasks)
 }
 \arguments{
 \item{design}{The validationDesign object}
@@ -14,6 +14,9 @@ getData(design, database, outputFolder, allCovSettings)
 \item{outputFolder}{The directory to save the validation results to}
 
 \item{allCovSettings}{A list of covariateSettings from the models}
+
+\item{downloadTasks}{A list of download tasks determined by unique
+combinations of targetId and restrictPlpDataSettings}
 }
 \value{
 The plpData object
