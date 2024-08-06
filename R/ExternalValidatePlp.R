@@ -374,26 +374,58 @@ createValidationDesign <-
     if (!is.null(populationSettings)) {
       checkIsClass(populationSettings, c("populationSettings"))
     }
-    if (!is.null(restrictPlpDataSettings)) {  
-      checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+    if (!is.null(restrictPlpDataSettings)) {
+      if (inherits(restrictPlpDataSettings, "list")) {
+        lapply(restrictPlpDataSettings, function(x) {
+          checkIsClass(x, "restrictPlpDataSettings")
+        })
+      } else {
+          checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+        }
     }
     checkIsClass(plpModelList, "list")
     lapply(plpModelList, function(x) {
       checkIsClass(x, c("plpModel", "character"))
     })
-    checkIsClass(recalibrate, c("character", "NULL"))
+    checkIsClass(recalibrate, c('character', 'NULL'))
+    if (!is.null(recalibrate)) {
+      if (sum(recalibrate %in% c('recalibrationInTheLarge', 'weakRecalibration')) !=
+          length(recalibrate)) {
+        ParallelLogger::logError(
+          'Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration'
+        )
+      }
+    }
     checkIsClass(runCovariateSummary, "logical")
     
-    design <- list(
-      targetId = targetId,
-      outcomeId = outcomeId,
-      populationSettings = populationSettings,
-      plpModelList = plpModelList,
-      restrictPlpDataSettings = restrictPlpDataSettings,
-      recalibrate = recalibrate,
-      runCovariateSummary = runCovariateSummary
-    )
-    class(design) <- "validationDesign"
+    # if restrictPlpDataSettings is a list make a list of designs with each
+    # settings
+    if (is.list(restrictPlpDataSettings)) {
+      design <- lapply(restrictPlpDataSettings, function(x) {
+        design <- list(
+          targetId = targetId,
+          outcomeId = outcomeId,
+          populationSettings = populationSettings,
+          plpModelList = plpModelList,
+          restrictPlpDataSettings = x,
+          recalibrate = recalibrate,
+          runCovariateSummary = runCovariateSummary
+        )
+       class(design) <- "validationDesign"
+       return(design)
+      })
+    } else {
+      design <- list(
+        targetId = targetId,
+        outcomeId = outcomeId,
+        populationSettings = populationSettings,
+        plpModelList = plpModelList,
+        restrictPlpDataSettings = restrictPlpDataSettings,
+        recalibrate = recalibrate,
+        runCovariateSummary = runCovariateSummary
+      )
+      class(design) <- "validationDesign"
+    } 
     return(design)
   }
 
