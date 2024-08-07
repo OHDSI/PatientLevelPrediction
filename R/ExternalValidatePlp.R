@@ -528,6 +528,18 @@ validateExternal <- function(validationDesignList,
       # create study population
       population <- getPopulation(design, modelDesigns, plpData)
 
+      if (sum(population$outcomeCount) < 10) {
+        ParallelLogger::logInfo(
+          paste(
+            "Population size is less than 10, skipping validation for design and database:",
+            databaseName,
+            "and",
+            paste0(design, collapse = "|")
+          )
+        )
+        next
+      }
+      
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
         analysisDone <- file.exists(
