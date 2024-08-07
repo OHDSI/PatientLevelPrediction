@@ -497,7 +497,9 @@ validateExternal <- function(validationDesignList,
         dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
                          restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
       dplyr::rowwise() %>%
-      dplyr::mutate(restrictPlpDataSettings = list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings))
+      dplyr::mutate(restrictPlpDataSettings =
+        list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings)) %>%
+      dplyr::ungroup()
     return(uniqueCombinations)
   }
   downloadTasks <- extractUniqueCombinations(validationDesignList)
@@ -703,14 +705,15 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 getData <- function(design, database, outputFolder, allCovSettings, downloadTasks) {
   # find task associated with design and the index of the task in downloadTasks
   task <- downloadTasks %>%
-    dplyr::mutate(taskId = dplyr::row_number()) %>%
+    dplyr::mutate(taskId = dplyr::row_number(),
+                  collapsed = sapply(.data$restrictPlpDataSettings, paste0, collapse = "|")) %>%
     dplyr::filter(.data$targetId == design$targetId,
-                  paste0(.data$restrictPlpDataSettings, collapse = "|") == 
-                  paste0(design$restrictPlpDataSettings, collapse = "|")) 
+                  .data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
+    dplyr::select(-.data$collapsed)
   
   databaseName <- database$cdmDatabaseName
   database$targetId <- task$targetId
-  database$outcomeIds <- task$outcomeIds
+  database$outcomeIds <- task$outcomeIds[[1]]
   plpDataName <-
     paste0("targetId_", design$targetId, "_L", task$taskId)
   plpDataLocation <-
@@ -721,7 +724,7 @@ getData <- function(design, database, outputFolder, allCovSettings, downloadTask
         getPlpData,
         list(
           databaseDetails = database,
-          restrictPlpDataSettings = task$restrictPlpDataSettings,
+          restrictPlpDataSettings = task$restrictPlpDataSettings[[1]],
           covariateSettings = allCovSettings[[1]]
         )
       )
