@@ -481,14 +481,14 @@ validateExternal <- function(validationDesignList,
     uniqueCombinations <- do.call(rbind, lapply(seq_along(validationDesignList), function(i) {
       design <- validationDesignList[[i]]
       restrictContent <- paste0(design$restrictPlpDataSettings, collapse = "|")
-      if (!(restrictContent %in% names(restrictContentMap))) {
-       restrictContentMap[[restrictContent]] <<- j
+      if (!(restrictContent %in% restrictContentMap)) {
+       restrictContentMap[[j]] <<- restrictContent
         j <<- j + 1
       }
       data.frame(
         targetId = design$targetId,
         outcomeId = design$outcomeId,
-        restrictPlpIndex = restrictContentMap[[restrictContent]],
+        restrictPlpIndex = which(restrictContent == restrictContentMap),
         restrictPlpDataSettings = restrictContent
       )
     }))
@@ -528,6 +528,18 @@ validateExternal <- function(validationDesignList,
       # create study population
       population <- getPopulation(design, modelDesigns, plpData)
 
+      if (sum(population$outcomeCount) < 10) {
+        ParallelLogger::logInfo(
+          paste(
+            "Population size is less than 10, skipping validation for design and database:",
+            databaseName,
+            "and",
+            paste0(design, collapse = "|")
+          )
+        )
+        next
+      }
+      
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
         analysisDone <- file.exists(
@@ -687,7 +699,8 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
     if (any(unlist(lapply(modelDesigns, function(x) {
             !identical(x[[settingName]], validationDesign[[settingName]])
           })))) {
-      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
+      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign,
+                              using from design") 
     }
   }
   return(validationDesign)
