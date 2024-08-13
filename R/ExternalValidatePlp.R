@@ -476,6 +476,9 @@ validateExternal <- function(validationDesignList,
   
   # create download tasks
   extractUniqueCombinations <- function(validationDesignList) {
+    # todo add covariatesettings (currently only same covariateSettings for all models per design is supported)
+    # todo where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
+    ParallelLogger::logInfo("Extracting unique combinations of targetId and restrictPlpDataSettings for extracting data")
     j <- 1
     restrictContentMap <- list()
     uniqueCombinations <- do.call(rbind, lapply(seq_along(validationDesignList), function(i) {
@@ -512,7 +515,8 @@ validateExternal <- function(validationDesignList,
     for (database in databaseDetails) {
       databaseName <- database$cdmDatabaseName
       
-      ParallelLogger::logInfo(paste("Validating model on", database$cdmDatabaseName))
+      ParallelLogger::logInfo(paste("Validating models on", database$cdmDatabaseName,
+                                    "with targetId:", design$targetId, "and outcomeId:", design$outcomeId))
       
       modelDesigns <- extractModelDesigns(design$plpModelList)
       allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
@@ -531,10 +535,10 @@ validateExternal <- function(validationDesignList,
       if (sum(population$outcomeCount) < 10) {
         ParallelLogger::logInfo(
           paste(
-            "Population size is less than 10, skipping validation for design and database:",
+            "Outcome size is less than 10, skipping validation for design and database:",
             databaseName,
-            "and",
-            paste0(design, collapse = "|")
+            "and targetId:", design$targetId,
+            "outcomeId", design$outcomeId
           )
         )
         next
