@@ -27,8 +27,6 @@
 <url><loc>/reference/averagePrecision.html</loc></url>
 <url><loc>/reference/brierScore.html</loc></url>
 <url><loc>/reference/calibrationLine.html</loc></url>
-<url><loc>/reference/checkAllSameInModels.html</loc></url>
-<url><loc>/reference/checkValidateExternalInputs.html</loc></url>
 <url><loc>/reference/computeAuc.html</loc></url>
 <url><loc>/reference/computeGridPerformance.html</loc></url>
 <url><loc>/reference/configurePython.html</loc></url>
@@ -41,7 +39,6 @@
 <url><loc>/reference/createDefaultSplitSetting.html</loc></url>
 <url><loc>/reference/createExecuteSettings.html</loc></url>
 <url><loc>/reference/createFeatureEngineeringSettings.html</loc></url>
-<url><loc>/reference/createGlmModel.html</loc></url>
 <url><loc>/reference/createLearningCurve.html</loc></url>
 <url><loc>/reference/createLogSettings.html</loc></url>
 <url><loc>/reference/createModelDesign.html</loc></url>
@@ -64,20 +61,16 @@
 <url><loc>/reference/evaluatePlp.html</loc></url>
 <url><loc>/reference/externalValidateDbPlp.html</loc></url>
 <url><loc>/reference/extractDatabaseToCsv.html</loc></url>
-<url><loc>/reference/extractModelDesigns.html</loc></url>
 <url><loc>/reference/f1Score.html</loc></url>
 <url><loc>/reference/falseDiscoveryRate.html</loc></url>
 <url><loc>/reference/falseNegativeRate.html</loc></url>
 <url><loc>/reference/falseOmissionRate.html</loc></url>
 <url><loc>/reference/falsePositiveRate.html</loc></url>
 <url><loc>/reference/fitPlp.html</loc></url>
-<url><loc>/reference/fromDesignOrModel.html</loc></url>
 <url><loc>/reference/getCalibrationSummary.html</loc></url>
 <url><loc>/reference/getCohortCovariateData.html</loc></url>
-<url><loc>/reference/getData.html</loc></url>
 <url><loc>/reference/getDemographicSummary.html</loc></url>
 <url><loc>/reference/getPlpData.html</loc></url>
-<url><loc>/reference/getPopulation.html</loc></url>
 <url><loc>/reference/getPredictionDistribution.html</loc></url>
 <url><loc>/reference/getPredictionDistribution_binary.html</loc></url>
 <url><loc>/reference/getThresholdSummary.html</loc></url>
@@ -119,7 +112,6 @@
 <url><loc>/reference/positiveLikelihoodRatio.html</loc></url>
 <url><loc>/reference/positivePredictiveValue.html</loc></url>
 <url><loc>/reference/predictCyclops.html</loc></url>
-<url><loc>/reference/predictGlm.html</loc></url>
 <url><loc>/reference/predictPlp.html</loc></url>
 <url><loc>/reference/preprocessData.html</loc></url>
 <url><loc>/reference/recalibratePlp.html</loc></url>

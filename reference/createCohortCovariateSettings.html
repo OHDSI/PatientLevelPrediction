@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.9</span>
       </span>
     </div>
 
@@ -117,7 +117,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Extracts covariates based on cohorts</h1>
-    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/AdditionalCovariates.R" class="external-link"><code>R/AdditionalCovariates.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/AdditionalCovariates.R" class="external-link"><code>R/AdditionalCovariates.R</code></a></small>
     <div class="hidden name"><code>createCohortCovariateSettings.Rd</code></div>
     </div>
 
@@ -129,8 +129,8 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createCohortCovariateSettings</span><span class="op">(</span></span>
 <span>  <span class="va">cohortName</span>,</span>
 <span>  <span class="va">settingId</span>,</span>
-<span>  cohortDatabaseSchema <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cohortTable <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">cohortDatabaseSchema</span>,</span>
+<span>  <span class="va">cohortTable</span>,</span>
 <span>  <span class="va">cohortId</span>,</span>
 <span>  startDay <span class="op">=</span> <span class="op">-</span><span class="fl">30</span>,</span>
 <span>  endDay <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -154,13 +154,11 @@
 
 
 <dt id="arg-cohortdatabaseschema">cohortDatabaseSchema<a class="anchor" aria-label="anchor" href="#arg-cohortdatabaseschema"></a></dt>
-<dd><p>The schema of the database with the cohort. If
-nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.</p></dd>
+<dd><p>The schema of the database with the cohort</p></dd>
 
 
 <dt id="arg-cohorttable">cohortTable<a class="anchor" aria-label="anchor" href="#arg-cohorttable"></a></dt>
-<dd><p>the table name that contains the covariate cohort. If
-nothing is specified then the cohortTable from databaseDetails at runtime is used.</p></dd>
+<dd><p>the table name that contains the covariate cohort</p></dd>
 
 
 <dt id="arg-cohortid">cohortId<a class="anchor" aria-label="anchor" href="#arg-cohortid"></a></dt>

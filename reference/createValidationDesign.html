@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.9</span>
       </span>
     </div>
 
@@ -117,7 +117,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>createValidationDesign - Define the validation design for external validation</h1>
-    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/ExternalValidatePlp.R" class="external-link"><code>R/ExternalValidatePlp.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/ExternalValidatePlp.R" class="external-link"><code>R/ExternalValidatePlp.R</code></a></small>
     <div class="hidden name"><code>createValidationDesign.Rd</code></div>
     </div>
 
@@ -129,9 +129,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createValidationDesign</span><span class="op">(</span></span>
 <span>  <span class="va">targetId</span>,</span>
 <span>  <span class="va">outcomeId</span>,</span>
+<span>  <span class="va">populationSettings</span>,</span>
+<span>  <span class="va">restrictPlpDataSettings</span>,</span>
 <span>  <span class="va">plpModelList</span>,</span>
-<span>  populationSettings <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  restrictPlpDataSettings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  recalibrate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -149,20 +149,16 @@
 <dd><p>The outcomeId of the outcome cohort to validate on</p></dd>
 
 
-<dt id="arg-plpmodellist">plpModelList<a class="anchor" aria-label="anchor" href="#arg-plpmodellist"></a></dt>
-<dd><p>A list of plpModels objects created by <code>runPlp</code> or a path to such objects</p></dd>
-
-
 <dt id="arg-populationsettings">populationSettings<a class="anchor" aria-label="anchor" href="#arg-populationsettings"></a></dt>
-<dd><p>A list of population restriction settings created
-by <code>createPopulationSettings</code>. Default is NULL and then this is taken
-from the model</p></dd>
+<dd><p>A list of population restriction settings created by <code>createPopulationSettings</code></p></dd>
 
 
 <dt id="arg-restrictplpdatasettings">restrictPlpDataSettings<a class="anchor" aria-label="anchor" href="#arg-restrictplpdatasettings"></a></dt>
-<dd><p>A list of plpData restriction settings
-created by <code>createRestrictPlpDataSettings</code>. Default is NULL and then
-this is taken from the model.</p></dd>
+<dd><p>A list of plpData restriction settings created by <code>createRestrictPlpDataSettings</code></p></dd>
+
+
+<dt id="arg-plpmodellist">plpModelList<a class="anchor" aria-label="anchor" href="#arg-plpmodellist"></a></dt>
+<dd><p>A list of plpModels objects created by <code>runPlp</code> or a path to such objects</p></dd>
 
 
 <dt id="arg-recalibrate">recalibrate<a class="anchor" aria-label="anchor" href="#arg-recalibrate"></a></dt>
@@ -173,10 +169,6 @@ this is taken from the model.</p></dd>
 <dd><p>whether to run the covariate summary for the validation data</p></dd>
 
 </dl></div>
-    <div id="value">
-    <h2>Value</h2>
-    <p>A validation design object of class <code>validationDesign</code></p>
-    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
