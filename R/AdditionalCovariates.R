@@ -49,8 +49,9 @@ getCohortCovariateData <- function(
   cohortIds,
   covariateSettings,
   ...
-  ){
+  ) {
   
+  ParallelLogger::logInfo("getCohortCovariateData start with settings: ", covariateSettings)
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
@@ -66,7 +67,7 @@ getCohortCovariateData <- function(
     "where b.cohort_definition_id = @covariate_cohort_id
     group by a.@row_id_field; "
   )
-  
+  ParallelLogger::logInfo("getCohortCovariateData rendering sql")
   sql <- SqlRender::render(
     sql,
     covariate_cohort_schema = covariateSettings$cohortDatabaseSchema,
@@ -82,7 +83,7 @@ getCohortCovariateData <- function(
     lnAgeInteraction = covariateSettings$lnAgeInteraction,
     cdm_database_schema = cdmDatabaseSchema
     )
-  
+  ParallelLogger::logInfo("getCohortCovariateData translating sql")
   sql <- SqlRender::translate(
     sql = sql, 
     targetDialect = attr(connection, "dbms"),
@@ -94,6 +95,8 @@ getCohortCovariateData <- function(
   
   # Convert colum names to camelCase:
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
+
+  ParallelLogger::logInfo("getCohortCovariateData constructing covariate reference")
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
   @analysis_id as analysis_id, -1 as concept_id;"
@@ -120,6 +123,7 @@ getCohortCovariateData <- function(
     )
   
   # Retrieve the covariateRef:
+  ParallelLogger::logInfo("getCohortCovariateData retrieving covariate reference")
   covariateRef  <- DatabaseConnector::querySql(connection, sql)
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
   
@@ -132,7 +136,7 @@ getCohortCovariateData <- function(
     isBinary = "Y",
     missingMeansZero = "Y"
     )
-  
+  ParallelLogger::logInfo("getCohortCovariateData constructing Andromeda object") 
   metaData <- list(sql = sql, call = match.call())
   result <- Andromeda::andromeda(
     covariates = covariates,
