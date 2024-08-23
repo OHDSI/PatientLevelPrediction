@@ -51,7 +51,8 @@ getCohortCovariateData <- function(
   ...
   ) {
   
-  ParallelLogger::logInfo("getCohortCovariateData start with settings: ", covariateSettings)
+  settings <- paste(covariateSettings, collapse = "|")
+  ParallelLogger::logInfo("getCohortCovariateData start with settings: ", settings)
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
