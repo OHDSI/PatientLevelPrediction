@@ -10,9 +10,10 @@ articles:
   BestPractices: BestPractices.html
   BuildingMultiplePredictiveModels: BuildingMultiplePredictiveModels.html
   BuildingPredictiveModels: BuildingPredictiveModels.html
+  ClinicalModels: ClinicalModels.html
   ConstrainedPredictors: ConstrainedPredictors.html
   CreatingLearningCurves: CreatingLearningCurves.html
   CreatingNetworkStudies: CreatingNetworkStudies.html
   InstallationGuide: InstallationGuide.html
   Videos: Videos.html
-last_built: 2024-08-21T15:52Z
+last_built: 2024-09-09T14:34Z
