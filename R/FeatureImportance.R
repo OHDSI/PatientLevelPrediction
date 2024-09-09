@@ -49,26 +49,37 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   if(is.null(covariates)){
     covariates <- plpResult$model$covariateImportance %>% 
       dplyr::filter(.data$covariateValue != 0) %>% 
-      dplyr::select(.data$covariateId) %>% 
+      dplyr::select("covariateId") %>% 
       dplyr::pull()
   }
   
   # add code to format covariateData based on plpModel
-  # do feature engineering/selection
-  plpData$covariateData <- do.call(
-    applyFeatureengineering, 
-    list(covariateData = plpData$covariateData,
-      settings = plpResult$model$settings$featureEngineering
-    )
-  )
   
-  # do preprocessing
-  plpData$covariateData <- do.call(
-    applyTidyCovariateData, 
-    list(covariateData = plpData$covariateData,
-      preprocessSettings = plpResult$model$settings$tidyCovariates
+  if(!is.null(plpResult$model$preprocessing$featureEngineering)){
+    # do feature engineering/selection
+    ParallelLogger::logInfo('Running FE in model')
+    plpData <- do.call(
+      applyFeatureengineering, 
+      list(plpData = plpData,
+           settings = plpResult$model$preprocessing$featureEngineering
+      )
     )
-  )
+  } else{
+    ParallelLogger::logInfo('No FE in model')
+  }
+  
+  if(!is.null(plpResult$model$preprocessing$tidyCovariates)){
+    # do preprocessing
+    ParallelLogger::logInfo('Applying data tidying done in model')
+    plpData$covariateData <- do.call(
+      applyTidyCovariateData, 
+      list(covariateData = plpData$covariateData,
+           preprocessSettings = plpResult$model$preprocessing$tidyCovariates
+      )
+    )
+  } else{
+    ParallelLogger::logInfo('No data tidying done in model')
+  }
   
   # apply prediction function
   pred <- do.call(
@@ -94,23 +105,20 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
     ParallelLogger::logInfo(paste0('Using all ', cores))
     ParallelLogger::logInfo(paste0('Set cores input to use fewer...'))
   }
-  
+  getVpiSettings <- function(i) {
+    result <- list(plpModel = plpResult$model, 
+                   population = population, 
+                   plpDataLocation = plpDataLocation,
+                   covariateId = covariates[i],
+                   repeats = repeats)
+    return(result)
+  }
+  if (cores > 1) {
   cluster <- ParallelLogger::makeCluster(numberOfThreads = cores)
   ParallelLogger::clusterRequire(cluster, c("PatientLevelPrediction", "Andromeda"))
   
-  
-  getVpiSettings <- function(i){
-    result <-list(plpModel = plpResult$model, 
-                  population = population, 
-                  plpDataLocation = plpDataLocation,
-                  covariateId = covariates[i],
-                  repeats = repeats)
-    return(result)
-  }
   vpiSettings <- lapply(1:length(covariates), getVpiSettings)
 
-  
-  #lapply(vpiSettings, function(x) do.call(permutePerf, x))
   aucP <- ParallelLogger::clusterApply(cluster = cluster, 
                                                 x = vpiSettings, 
                                                 fun = permutePerf, 
@@ -118,13 +126,15 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
                                                 progressBar = TRUE)
   ParallelLogger::stopCluster(cluster)
   
+  } else {
+    ParallelLogger::logInfo("Running in serial")
+    aucP <- lapply(1:length(covariates), function(i) {
+      permutePerf(getVpiSettings(i))
+    })
+  }
   aucP <- do.call(c, aucP)
-  
-  # do this in parellel
-
   varImp <- data.frame(covariateId = covariates,
-                       pfi = auc-aucP)
-  
+                       pfi = auc - aucP)
   return(varImp)
   
 }
@@ -178,7 +188,7 @@ permute <- function(plpDataLocation,cId,population){
   #get analysisId
   aId <- plpData$covariateData$covariateRef %>% 
     dplyr::filter(.data$covariateId == !!cId) %>%
-    dplyr::select(.data$analysisId) %>% dplyr::collect()
+    dplyr::select("analysisId") %>% dplyr::collect()
   
   # if analysis id is not 3 (age group), 4 (race) or 5 (ethnicity)
   if(!aId$analysisId %in% c(3,4,5)){
@@ -189,7 +199,7 @@ permute <- function(plpDataLocation,cId,population){
   
     # find a new random selection of people and give them the covariate and value
     newPlp <- sample(population$rowId,nSamp)
-    newData <- tibble::as_tibble(cbind(rowId = newPlp,coi[,-1]))
+    newData <- dplyr::as_tibble(cbind(rowId = newPlp,coi[,-1]))
     
     # swap old covariate data with new
     plpData$covariateData$covariates <- plpData$covariateData$covariates %>% dplyr::filter(.data$covariateId != !!cId) %>% dplyr::collect()
@@ -204,20 +214,20 @@ permute <- function(plpDataLocation,cId,population){
     
     # sample the pop to replace 
     swapPlp <- sample(population$rowId,nSamp)
-    haveCidDataSwapped <- tibble::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
+    haveCidDataSwapped <- dplyr::as_tibble(cbind(rowId = swapPlp,haveCidData[,-1]))
     
     # find the swapped people to switch 
     connectedCovs <- plpData$covariateData$covariateRef %>% 
       dplyr::filter(.data$analysisId == !!aId$analysisId) %>% 
       dplyr::group_by(.data$covariateId) %>% 
-      dplyr::select(.data$covariateId) %>% 
+      dplyr::select("covariateId") %>% 
       dplyr::collect()
     plpToSwap <- plpData$covariateData$covariates %>% 
       dplyr::filter(.data$covariateId %in% !!connectedCovs$covariateId) %>% 
       dplyr::filter(.data$rowId %in% swapPlp) %>% 
       dplyr::collect()
     
-    swappedForCid <- tibble::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
+    swappedForCid <- dplyr::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)],plpToSwap[,-1]))
     
 
     # swap old covariate data with new

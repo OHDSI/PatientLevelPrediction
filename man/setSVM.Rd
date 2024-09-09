@@ -12,7 +12,7 @@ setSVM(
   coef0 = list(0),
   shrinking = list(TRUE),
   tol = list(0.001),
-  classWeight = list("balanced", NULL),
+  classWeight = list(NULL),
   cacheSize = 500,
   seed = sample(1e+05, 1)
 )
@@ -24,7 +24,7 @@ setSVM(
 
 \item{degree}{(list) degree of kernel function is significant only in poly, rbf, sigmoid}
 
-\item{gamma}{(list) kernel coefficient for rbf and poly, by default 1/n_features will be taken. {‘scale’, ‘auto’} or float, default=’scale’}
+\item{gamma}{(list) kernel coefficient for rbf and poly, by default 1/n_features will be taken. ‘scale’, ‘auto’ or float, default=’scale’}
 
 \item{coef0}{(list) independent term in kernel function. It is only significant in poly/sigmoid.}
 

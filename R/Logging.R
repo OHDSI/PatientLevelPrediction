@@ -22,12 +22,12 @@
 #'
 #' @param verbosity                        Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
 #'                                         \itemize{
-#'                                         \item{DEBUG}{Highest verbosity showing all debug statements}
-#'                                         \item{TRACE}{Showing information about start and end of steps}
-#'                                         \item{INFO}{Show informative information (Default)}
-#'                                         \item{WARN}{Show warning messages}
-#'                                         \item{ERROR}{Show error messages}
-#'                                         \item{FATAL}{Be silent except for fatal errors}
+#'                                         \item DEBUG Highest verbosity showing all debug statements
+#'                                         \item TRACE Showing information about start and end of steps
+#'                                         \item INFO Show informative information (Default)
+#'                                         \item WARN Show warning messages
+#'                                         \item ERROR Show error messages
+#'                                         \item FATAL Be silent except for fatal errors
 #'                                         }
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param logName                          A string reference for the logger

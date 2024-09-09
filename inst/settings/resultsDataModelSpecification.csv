@@ -1,0 +1,200 @@
+table_name,column_name,data_type,is_required,primary_key,empty_is_na,mincellcount,description
+cohorts,cohort_id,int,Yes,Yes,No,No,a unique identifier for the cohort in the plp results database
+cohorts,cohort_definition_id,bigint,Yes,No,No,No,the identifier in ATLAS for the cohort
+cohorts,cohort_name,varchar,Yes,No,No,No,the name of the cohort
+cohort_definition,cohort_definition_id,bigint,Yes,No,No,No,The ATLAS cohort definition id
+cohort_definition,cohort_name,varchar,Yes,No,No,No,The name of the cohort
+cohort_definition,description,text,No,No,Yes,No,A description of the cohort
+cohort_definition,json,text,Yes,No,No,No,The json spec for the cohort
+cohort_definition,sql_command,text,No,No,Yes,No,The SQL used to create the cohort
+database_meta_data,database_id,varchar,Yes,Yes,Yes,No,The shared databaseId
+database_meta_data,cdm_source_name,varchar,Yes,No,Yes,No,The name of the database
+database_meta_data,cdm_source_abbreviation,varchar,Yes,No,Yes,No,The abbreviated name of the database
+database_meta_data,cdm_holder,varchar,No,No,Yes,No,The owner of the CDM
+database_meta_data,source_description,text,No,No,Yes,No,The full description of the database
+database_meta_data,source_documentation_reference,varchar,No,No,Yes,No,The link to the documentation
+database_meta_data,cdm_etl_reference,varchar,No,No,Yes,No,The link to the ETL document
+database_meta_data,source_release_date,varchar,No,No,Yes,No,The release date for the data
+database_meta_data,cdm_release_date,varchar,No,No,Yes,No,The release date for the CDM data
+database_meta_data,cdm_version,varchar,No,No,Yes,No,The vocabulary version
+database_meta_data,vocabulary_version,varchar,No,No,Yes,No,The max date in the database
+database_meta_data,max_obs_period_end_date,varchar,No,No,Yes,No,
+database_details,database_id,int,Yes,Yes,No,No,a unique identifier for the database
+database_details,database_meta_data_id,varchar,Yes,No,No,No,The shared databaseId
+tars,tar_id,int,Yes,Yes,No,No,a unique identifier for the tar
+tars,tar_start_day,int,Yes,No,No,No,the number of days offset the tar_start_anchor for the time-at-risk to start
+tars,tar_start_anchor,varchar,Yes,No,No,No,whether to use the cohort start or cohort end
+tars,tar_end_day,int,Yes,No,No,No,the number of days offset the tar_end_anchor for the time-at-risk to end
+tars,tar_end_anchor,varchar,Yes,No,No,No,whether to use the cohort start or cohort end
+population_settings,population_setting_id,int,Yes,Yes,No,No,a unique identifier for the population settings
+population_settings,population_settings_json,text,Yes,No,No,No,the json with the settings
+covariate_settings,covariate_setting_id,int,Yes,Yes,No,No,a unique identifier for the covaraite settings
+covariate_settings,covariate_settings_json,text,Yes,No,No,No,the json with the settings
+model_settings,model_setting_id,int,Yes,Yes,No,No,a unique identifier for the model settings
+model_settings,model_type,varchar,No,No,No,No,the type of model 
+model_settings,model_settings_json,varchar,Yes,No,No,No,the json with the settings
+split_settings,split_setting_id,int,Yes,Yes,No,No,a unique identifier for the split settings
+split_settings,split_settings_json,text,Yes,No,No,No,the json with the settings
+plp_data_settings,plp_data_setting_id,int,Yes,Yes,No,No,a unique identifier for the plp data settings
+plp_data_settings,plp_data_settings_json,text,Yes,No,No,No,the json with the settings
+feature_engineering_settings,feature_engineering_setting_id,int,Yes,Yes,No,No,a unique identifier for the feature engineering settings
+feature_engineering_settings,feature_engineering_settings_json,text,Yes,No,No,No,the json with the settings
+tidy_covariates_settings,tidy_covariates_setting_id,int,Yes,Yes,No,No,a unique identifier for the tidy covariates settings
+tidy_covariates_settings,tidy_covariates_settings_json,text,Yes,No,No,No,the json with the settings
+sample_settings,sample_setting_id,int,Yes,Yes,No,No,a unique identifier for the sample settings
+sample_settings,sample_settings_json,text,Yes,No,No,No,the json with the settings
+model_designs,model_design_id,int,Yes,Yes,No,No,a unique identifier for the model design settings
+model_designs,target_id,int,Yes,No,No,No,the  identifier for the target cohort id
+model_designs,outcome_id,int,Yes,No,No,No,the  identifier for the outcome cohort id
+model_designs,tar_id,int,Yes,No,No,No,the  identifier for the time at risk setting
+model_designs,plp_data_setting_id,int,Yes,No,No,No,the  identifier for the plp data setting
+model_designs,population_setting_id,int,Yes,No,No,No,the  identifier for the population setting
+model_designs,model_setting_id,int,Yes,No,No,No,the  identifier for the model setting
+model_designs,covariate_setting_id,int,Yes,No,No,No,the  identifier for the covaraite setting
+model_designs,sample_setting_id,int,Yes,No,No,No,the  identifier for the sample setting
+model_designs,split_setting_id,int,Yes,No,No,No,the  identifier for the split setting
+model_designs,feature_engineering_setting_id,int,Yes,No,No,No,the  identifier for the feature engineering setting
+model_designs,tidy_covariates_setting_id,int,Yes,No,No,No,the  identifier for the tidy covariate setting
+diagnostics,diagnostic_id,int,Yes,Yes,No,No,the unique identifier for the diagnostic results
+diagnostics,model_design_id,int,Yes,No,No,No,the identifier for the model design
+diagnostics,database_id,int,Yes,No,No,No,the identifier for the database
+diagnostics,execution_date_time,varchar,No,No,No,No,the date/time the diagnostic was run
+diagnostic_summary,diagnostic_id,int,Yes,No,No,No,the identifier for the diagnostics
+diagnostic_summary,probast_id,varchar,Yes,No,No,No,the probast id being diagnosed
+diagnostic_summary,result_value,varchar,Yes,No,No,No,the diagnostic result
+diagnostic_predictors,diagnostic_id,int,Yes,No,No,No,the identifier for the diagnostics
+diagnostic_predictors,days_to_event,int,Yes,No,No,No,the time between index to the day of interest
+diagnostic_predictors,outcome_at_time,int,Yes,No,No,Yes,the number of outcomes on the day of interest
+diagnostic_predictors,observed_at_start_of_day,bigint,Yes,No,No,Yes,the number of people observed up to the day of interest
+diagnostic_predictors,input_type,varchar,Yes,No,No,No,the setting id the results are for
+diagnostic_participants,diagnostic_id,int,Yes,No,No,No,the identifier for the diagnostics
+diagnostic_participants,design,varchar,Yes,No,No,No,the inclusion criteria of interest
+diagnostic_participants,metric,varchar,Yes,No,No,No,the metric calculated
+diagnostic_participants,value,float,Yes,No,No,No,the value calculated
+diagnostic_participants,probast_id,varchar,Yes,No,No,No,the corresponding probast id
+diagnostic_outcomes,diagnostic_id,int,Yes,No,No,No,the identifier for the diagnostics
+diagnostic_outcomes,xvalue,int,Yes,No,No,No,the value for the x-axis
+diagnostic_outcomes,outcome_percent,float,Yes,No,No,No,the percentage of people with the outcome
+diagnostic_outcomes,aggregation,varchar,Yes,No,No,No,"the type of aggregation (age,sex, year)"
+diagnostic_outcomes,probast_id,varchar,Yes,No,No,No,the corresponding probast id
+diagnostic_outcomes,input_type,varchar,Yes,No,No,No,the inclusion criteria of interest
+diagnostic_designs,diagnostic_id,int,Yes,Yes,No,No,the identifier for the diagnostics
+diagnostic_designs,probast_id,varchar,Yes,No,No,No,not used
+diagnostic_designs,value,varchar,Yes,No,No,No,not used
+models,model_id,int,Yes,Yes,No,No,A unique identifier for the model
+models,analysis_id,varchar,No,No,No,No,The analysis id from the model
+models,model_design_id,int,Yes,No,No,No,The corresponding model design id
+models,database_id,int,Yes,No,No,No,The corresponding database id
+models,model_type,varchar,No,No,No,No,The type of model 
+models,plp_model_file,text,Yes,No,No,No,A directory where the model is saved
+models,train_details,text,Yes,No,No,No,json containing the training details
+models,preprocessing,text,No,No,No,No,json containing the preprocessing details
+models,execution_date_time,varchar,No,No,No,No,the date/time the model was trained
+models,training_time,varchar,No,No,No,No,the time it took to develop the model
+models,intercept,float,No,No,No,No,the intercept (if the model is a GLM)
+recalibrations,recalibration_id,int,Yes,Yes,No,No,A unique identifier for the recalibration
+recalibrations,original_model_id,int,Yes,No,No,No,The corresponding uncalibrated model id
+recalibrations,recalibrated_model_id,int,Yes,No,No,No,The model id for the recalibrated model
+recalibrations,recalibration_type,varchar,Yes,No,No,No,The type of recalibration
+recalibrations,recalibration_json,varchar,Yes,No,No,No,The recalibration details
+performances,performance_id,int,Yes,Yes,No,No,A unique identifier for the performance
+performances,model_design_id,int,Yes,No,No,No,The corresponding model design id for development
+performances,development_database_id,int,Yes,No,No,No,The corresponding development database is
+performances,validation_database_id,int,Yes,No,No,No,The corresponding validation database is
+performances,target_id,int,Yes,No,No,No,The corresponding validation target cohort id
+performances,outcome_id,int,Yes,No,No,No,The corresponding validation outcome cohort id
+performances,tar_id,int,Yes,No,No,No,The corresponding validation time at risk id
+performances,plp_data_setting_id,int,Yes,No,No,No,The corresponding validation data settings id
+performances,population_setting_id,int,Yes,No,No,No,The corresponding validation population settings id
+performances,model_development,int,No,No,No,No,flag whether the performage is development or validation
+performances,execution_date_time,varchar,Yes,No,No,No,The date/time the validation was executed
+performances,plp_version,varchar,Yes,No,No,No,The PLP version for the validation execution
+attrition,performance_id,int,Yes,No,No,No,The corresponding performance id
+attrition,outcome_id,int,Yes,No,No,No,The corresponding outcome id
+attrition,description,varchar,Yes,No,No,No,A description of the inclusions/exclusion 
+attrition,target_count,int,Yes,No,No,No,The number of target patients remaining
+attrition,unique_people,int,Yes,No,No,No,The number of distinct target patients remaining
+attrition,outcomes,int,Yes,No,No,No,The number of target patients with the outcome remaining
+prediction_distribution,performance_id,int,Yes,No,No,No,The corresponding performance id
+prediction_distribution,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
+prediction_distribution,class_label,int,Yes,No,No,No,whether the group is the with outcome or without outcome
+prediction_distribution,person_count,int,Yes,No,No,No,the number of patients 
+prediction_distribution,average_predicted_probability,float,Yes,No,No,No,the mean predicted risk 
+prediction_distribution,st_dev_predicted_probability,float,Yes,No,No,No,the standard deviation of the predicted risk
+prediction_distribution,min_predicted_probability,float,Yes,No,No,No,the min predicted risk
+prediction_distribution,p_05_predicted_probability,float,Yes,No,No,No,the 5% quantile of predicted risk
+prediction_distribution,p_25_predicted_probability,float,Yes,No,No,No,the 25% quantile of predicted risk
+prediction_distribution,median_predicted_probability,float,Yes,No,No,No,The median predicted risk
+prediction_distribution,p_75_predicted_probability,float,Yes,No,No,No,the 75% quantile of predicted risk
+prediction_distribution,p_95_predicted_probability,float,Yes,No,No,No,the 95% quantile of predicted risk
+prediction_distribution,max_predicted_probability,float,Yes,No,No,No,the max predicted risk
+covariate_summary,performance_id,int,Yes,No,No,No,The corresponding performance id
+covariate_summary,covariate_id,bigint,Yes,No,No,No,The id for the covariate
+covariate_summary,covariate_name,varchar,Yes,No,No,No,the name for the covariate
+covariate_summary,concept_id,float,Yes,No,No,No,the concept id used to construct the covariate
+covariate_summary,covariate_value,float,Yes,No,No,No,the coefficient or covariate importance
+covariate_summary,covariate_count,int,Yes,No,No,Yes,the number of people with the covariate
+covariate_summary,covariate_mean,float,Yes,No,No,No,the mean value 
+covariate_summary,covariate_st_dev,float,Yes,No,No,No,the standard deviation of the values
+covariate_summary,with_no_outcome_covariate_count,int,Yes,No,No,Yes,the number of people without the outcome with the covariate
+covariate_summary,with_no_outcome_covariate_mean,float,Yes,No,No,No,the mean value for people without the outcome
+covariate_summary,with_no_outcome_covariate_st_dev,float,Yes,No,No,No,the standard deviation of the values for people without the outcome
+covariate_summary,with_outcome_covariate_count,int,Yes,No,No,Yes,the number of people with the outcome with the covariate
+covariate_summary,with_outcome_covariate_mean,float,Yes,No,No,No,the mean value for people with the outcome
+covariate_summary,with_outcome_covariate_st_dev,float,Yes,No,No,No,the standard deviation of the values for people with the outcome
+covariate_summary,standardized_mean_diff,float,Yes,No,No,No,The standardized mean difference for those with and without the outcome
+threshold_summary,performance_id,int,Yes,No,No,No,The corresponding performance id
+threshold_summary,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
+threshold_summary,prediction_threshold,float,Yes,No,No,No,The cut-off value being summarised
+threshold_summary,preference_threshold,float,Yes,No,No,No,the preference score of the cut-off value
+threshold_summary,positive_count,int,Yes,No,No,No,the number of patients predicted to have the outcome at the cut-off
+threshold_summary,negative_count,int,Yes,No,No,No,the number of patients predicted to not have the outcome at the cut-off
+threshold_summary,true_count,int,Yes,No,No,No,the number of patients with the outcome
+threshold_summary,false_count,int,Yes,No,No,No,the number of patients without the outcome
+threshold_summary,true_positive_count,int,Yes,No,No,No,the number of patients correctly predicted to have the outcome at the cut-off
+threshold_summary,true_negative_count,int,Yes,No,No,No,the number of patients correctly predicted to not have the outcome at the cut-off
+threshold_summary,false_positive_count,int,Yes,No,No,No,the number of patients incorrectly predicted to have the outcome at the cut-off
+threshold_summary,false_negative_count,int,Yes,No,No,No,the number of patients incorrectly predicted to not have the outcome at the cut-off
+threshold_summary,f_1_score,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,accuracy,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,sensitivity,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,false_negative_rate,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,false_positive_rate,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,specificity ,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,positive_predictive_value,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,false_discovery_rate,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,negative_predictive_value,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,false_omission_rate,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,positive_likelihood_ratio,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,negative_likelihood_ratio,float,No,No,Yes,No,the named metric at the cut-off
+threshold_summary,diagnostic_odds_ratio,float,No,No,Yes,No,the named metric at the cut-off
+calibration_summary,performance_id,int,Yes,No,No,No,The corresponding performance id
+calibration_summary,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
+calibration_summary,prediction_threshold,float,Yes,No,No,No,The cut-off value being summarised
+calibration_summary,person_count_at_risk,int,Yes,No,No,Yes,The number of people in the target population
+calibration_summary,person_count_with_outcome,int,Yes,No,No,Yes,The number of target patients with the outcome during TAR
+calibration_summary,average_predicted_probability,float,Yes,No,No,No,the mean predicted risk 
+calibration_summary,st_dev_predicted_probability,float,Yes,No,No,No,the standard deviation of the predicted risk
+calibration_summary,min_predicted_probability,float,Yes,No,No,No,the min predicted risk
+calibration_summary,p_25_predicted_probability,float,Yes,No,No,No,the 25% quantile of predicted risk
+calibration_summary,median_predicted_probability,float,Yes,No,No,No,The median predicted risk
+calibration_summary,p_75_predicted_probability,float,Yes,No,No,No,the 75% quantile of predicted risk
+calibration_summary,max_predicted_probability,float,Yes,No,No,No,the max predicted risk
+calibration_summary,observed_incidence,float,Yes,No,No,No,The true incidence (outcome %)
+evaluation_statistics,performance_id,int,Yes,No,No,No,The corresponding performance id
+evaluation_statistics,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
+evaluation_statistics,metric,varchar,Yes,No,No,No,The metric of interest
+evaluation_statistics,value,float,Yes,No,No,No,The value for the metric of interest
+demographic_summary,performance_id,int,Yes,No,No,No,The corresponding performance id
+demographic_summary,evaluation,varchar,Yes,No,No,No,The type of evalaution (test/train/CV)
+demographic_summary,age_group,varchar,Yes,No,No,No,The age group of interest
+demographic_summary,gen_group,varchar,Yes,No,No,No,The gender of interest
+demographic_summary,person_count_at_risk,int,Yes,No,No,Yes,The number of target patients with the age/gender of interest
+demographic_summary,person_count_with_outcome,int,Yes,No,No,Yes,The number of target patients with the age/gender of interest who also have the outcome during TAR
+demographic_summary,average_predicted_probability,float,Yes,No,No,No,the mean predicted risk 
+demographic_summary,st_dev_predicted_probability,float,Yes,No,No,No,the standard deviation of the predicted risk
+demographic_summary,min_predicted_probability,float,Yes,No,No,No,the min predicted risk
+demographic_summary,p_25_predicted_probability,float,Yes,No,No,No,the 25% quantile of predicted risk
+demographic_summary,p_50_predicted_probability,float,Yes,No,No,No,The median predicted risk
+demographic_summary,p_75_predicted_probability,float,Yes,No,No,No,the 75% quantile of predicted risk
+demographic_summary,max_predicted_probability,float,Yes,No,No,No,the max predicted risk

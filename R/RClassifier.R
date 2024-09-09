@@ -1,5 +1,12 @@
 # this is a generic wrapper for training models using classifiers in R
-fitRclassifier <- function(trainData, param, search = 'grid', analysisId){
+fitRclassifier <- function(
+  trainData, 
+  modelSettings, 
+  search = 'grid', 
+  analysisId,
+  ...){
+  
+  param <- modelSettings$param
   
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)){
     stop("Needs correct covariateData")
@@ -52,34 +59,37 @@ fitRclassifier <- function(trainData, param, search = 'grid', analysisId){
   result <- list(
     model = cvResult$model,
     
+    preprocessing = list(
+      featureEngineering = attr(trainData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
+      requireDenseMatrix = F
+    ),
+    
     prediction = prediction,
     
-    settings = list(
-      plpDataSettings = attr(trainData, "metaData")$plpDataSettings,
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = attr(trainData, "metaData")$targetId,
+      outcomeId = attr(trainData, "metaData")$outcomeId,
+      restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      #covariateMap = covariateMap, this is in covariateImportance
-      requireDenseMatrix = F,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      modelSettings = list(
-        model = attr(param, 'settings')$trainRFunction, 
-        param = param,
-        finalModelParameters = cvResult$finalParam,
-        extraSettings = attr(param, 'settings')
-      ),
+      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
+      preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
+      modelSettings = modelSettings,
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
     
     trainDetails = list(
       analysisId = analysisId,
-      cdmDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema,
-      outcomeId = attr(trainData, "metaData")$outcomeId,
-      cohortId = attr(trainData, "metaData")$cohortId,
+      analysisSource = '', #TODO add from model
+      developmentDatabase = attr(trainData, "metaData")$cdmDatabaseName,
+      developmentDatabaseSchema = attr(trainData, "metaData")$cdmDatabaseSchema, 
       attrition = attr(trainData, "metaData")$attrition, 
-      trainingTime = comp,
+      trainingTime = paste(as.character(abs(comp)), attr(comp,'units')),
       trainingDate = Sys.Date(),
+      modelName = attr(param, 'settings')$trainRFunction, 
+      finalModelParameters = cvResult$finalParam,
       hyperParamSearch = hyperSummary
     ),
     

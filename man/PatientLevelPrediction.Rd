@@ -2,8 +2,32 @@
 % Please edit documentation in R/PatientLevelPrediction.R
 \docType{package}
 \name{PatientLevelPrediction}
+\alias{PatientLevelPrediction-package}
 \alias{PatientLevelPrediction}
 \title{PatientLevelPrediction}
 \description{
 A package for running predictions using data in the OMOP CDM
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://ohdsi.github.io/PatientLevelPrediction}
+  \item \url{https://github.com/OHDSI/PatientLevelPrediction}
+  \item Report bugs at \url{https://github.com/OHDSI/PatientLevelPrediction/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Jenna Reps \email{jreps@its.jnj.com}
+
+Authors:
+\itemize{
+  \item Martijn Schuemie
+  \item Marc Suchard
+  \item Patrick Ryan
+  \item Peter Rijnbeek
+  \item Egill Fridgeirsson
+}
+
+}
+\keyword{internal}

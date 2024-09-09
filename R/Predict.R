@@ -44,24 +44,34 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   
   # do feature engineering/selection
-  plpData$covariateData <- do.call(
-    applyFeatureengineering, 
-    list(
-      covariateData = plpData$covariateData,
-      settings = plpModel$settings$featureEngineering
+  if(!is.null(plpModel$preprocessing$featureEngineering)){
+    plpData <- do.call(
+      applyFeatureengineering, 
+      list(
+        plpData = plpData,
+        settings = plpModel$preprocessing$featureEngineering
+      )
     )
-  )
+    featureEngineering <- T
+  } else{
+    featureEngineering <- F
+  }
   
   ParallelLogger::logTrace('did FE')
   
-  # do preprocessing
-  plpData$covariateData <- do.call(
-    applyTidyCovariateData, 
-    list(
-      covariateData = plpData$covariateData,
-      preprocessSettings = plpModel$settings$tidyCovariates
+  if(!is.null(plpModel$preprocessing$tidyCovariates)){
+    # do preprocessing
+    plpData$covariateData <- do.call(
+      applyTidyCovariateData, 
+      list(
+        covariateData = plpData$covariateData,
+        preprocessSettings = plpModel$preprocessing$tidyCovariates
+      )
     )
-  )
+    tidyCovariates <- T
+  } else{
+    tidyCovariates <- F
+  }
   
   ParallelLogger::logTrace('did tidy')
   
@@ -90,9 +100,13 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
   
   # add metaData
   metaData$modelType <- attr(plpModel, 'modelType') #"binary", 
-  metaData$cohortId <- attr(population,'metaData')$cohortId
+  metaData$targetId <- attr(population,'metaData')$targetId
   metaData$outcomeId <- attr(population,'metaData')$outcomeId
   metaData$timepoint <- timepoint
+  
+  # added information about running preprocessing/FE
+  metaData$tidyCovariates <- tidyCovariates
+  metaData$featureEngineering <- featureEngineering
   
   attr(prediction, "metaData") <- metaData
   return(prediction)
@@ -101,7 +115,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint){
 
 
 applyFeatureengineering <- function(
-  covariateData,
+  plpData, 
   settings
 ){
   
@@ -112,12 +126,12 @@ applyFeatureengineering <- function(
   
   # add code for implementing the feature engineering
   for(set in settings){
-    set$settings$trainData <- covariateData
-    covariateData <- do.call(eval(parse(text = set$funct)), set$settings)
+    set$settings$trainData <- plpData
+    plpData <- do.call(eval(parse(text = set$funct)), set$settings)
   }
   
   # dont do anything for now
-  return(covariateData)
+  return(plpData)
   
 }
 
@@ -154,10 +168,10 @@ applyTidyCovariateData <- function(
   
   if(!is.null(maxs)){
     if('bins'%in%colnames(maxs)){
-      covariateData$maxes <- tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = .data$bins) %>% 
-        dplyr::rename(maxValue = .data$maxs)
+      covariateData$maxes <- dplyr::as_tibble(maxs)  %>% dplyr::rename(covariateId = "bins") %>% 
+        dplyr::rename(maxValue = "maxs")
     } else{
-      covariateData$maxes <- maxs #tibble::as_tibble(maxs)  %>% dplyr::rename(covariateId = bins)
+      covariateData$maxes <- maxs 
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
     
@@ -170,8 +184,8 @@ applyTidyCovariateData <- function(
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId') %>% # added as join
       dplyr::inner_join(covariateData$maxes, by = 'covariateId') %>%
       dplyr::mutate(value = 1.0*.data$covariateValue/.data$maxValue) %>%
-      dplyr::select(- .data$covariateValue) %>%
-      dplyr::rename(covariateValue = .data$value)
+      dplyr::select(-"covariateValue") %>%
+      dplyr::rename(covariateValue = "value")
   } else{
     newCovariateData$covariates <- covariateData$covariates %>% 
       dplyr::inner_join(covariateData$includeCovariates, by='covariateId')

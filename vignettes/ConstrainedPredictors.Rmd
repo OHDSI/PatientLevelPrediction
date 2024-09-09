@@ -1,0 +1,125 @@
+---
+title: "Constrained predictors"
+author: "Jenna Reps"
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+
+```{=html}
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Constrainted Predictors}
+-->
+```
+## Constrained Predictors
+
+### How to use the PhenotypeLibrary R package
+
+Here we provide a set of phenotypes that can be used as predictors in prediction models or best practice research.
+
+These phenotypes can be extracted from the PhenotypeLibrary R package. To install the R package run:
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=FALSE}
+remotes::install_github('ohdsi/PhenotypeLibrary')
+```
+
+To extract the cohort definition for Alcoholism with an id of 1165, just run:
+
+```{r echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval = FALSE}
+PhenotypeLibrary::getPlCohortDefinitionSet(1165)
+```
+
+in general you can extract all the cohorts by running:
+
+```{r echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval = FALSE}
+phenotypeDefinitions <- PhenotypeLibrary::getPlCohortDefinitionSet(1152:1215)
+```
+
+### The full set of predictor phenotypes
+
+| Phenotype Name                                  | Disorder classification     | OHDSI Phenotype library ID |
+|--------------------------------|--------------------|-------------------|
+| Alcoholism                                      | Behavioral                  | 1165                       |
+| Smoking                                         | Behavioral                  | 1166                       |
+| Anemia                                          | Blood                       | 1188                       |
+| Osteoarthritis                                  | Bone                        | 1184                       |
+| Osteoporosis                                    | Bone                        | 1185                       |
+| Cancer                                          | Cancer                      | 1215                       |
+| Atrial fibrillation                             | Cardiovascular              | 1160                       |
+| Congestive heart failure                        | Cardiovascular              | 1154                       |
+| Coronary artery disease                         | Cardiovascular              | 1162                       |
+| Heart valve disorder                            | Cardiovascular              | 1172                       |
+| Hyperlipidemia                                  | Cardiovascular              | 1170                       |
+| Hypertension                                    | Cardiovascular              | 1198                       |
+| Angina                                          | Cardiovascular              | 1159                       |
+| Skin Ulcer                                      | Debility                    | 1168                       |
+| Diabetes type 1                                 | Endocrine                   | 1193                       |
+| Diabetes type 2                                 | Endocrine                   | 1194                       |
+| Hypothyroidism                                  | Endocrine                   | 1171                       |
+| Obesity                                         | Endocrine                   | 1179                       |
+| Gastroesophageal reflux disease (GERD)          | GI                          | 1178                       |
+| Gastrointestinal (GI) bleed                     | GI                          | 1197                       |
+| Inflammatory bowel disorder (IBD)               | GI/Rheumatology             | 1180                       |
+| Hormonal contraceptives                         | Gynecologic                 | 1190                       |
+| Antibiotics Aminoglycosides                     | Infection                   | 1201                       |
+| Antibiotics Carbapenems                         | Infection                   | 1202                       |
+| Antibiotics Cephalosporins                      | Infection                   | 1203                       |
+| Antibiotics Fluoroquinolones                    | Infection                   | 1204                       |
+| Antibiotics Glycopeptides and lipoglycopeptides | Infection                   | 1205                       |
+| Antibiotics Macrolides                          | Infection                   | 1206                       |
+| Antibiotics Monobactams                         | Infection                   | 1207                       |
+| Antibiotics Oxazolidinones                      | Infection                   | 1208                       |
+| Antibiotics Penicillins                         | Infection                   | 1209                       |
+| Antibiotics Polypeptides                        | Infection                   | 1210                       |
+| Antibiotics Rifamycins                          | Infection                   | 1211                       |
+| Antibiotics Sulfonamides                        | Infection                   | 1212                       |
+| Antibiotics Streptogramins                      | Infection                   | 1213                       |
+| Antibiotics Tetracyclines                       | Infection                   | 1214                       |
+| Pneumonia                                       | Infection/Respiratory       | 1199                       |
+| Sepsis                                          | Infection                   | 1176                       |
+| Urinary tract infection (UTI)                   | Infection                   | 1186                       |
+| Hepatitis                                       | Liver                       | 1169                       |
+| Anxiety                                         | Mood                        | 1189                       |
+| Depression (MDD)                                | Mood                        | 1161                       |
+| Psychotic disorder                              | Mood                        | 1175                       |
+| Antiepileptics (pain)                           | Neurology/Pain              | 1183                       |
+| Seizure                                         | Neurology                   | 1153                       |
+| Hemorrhagic stroke                              | Neurology/Vascular          | 1156                       |
+| Non-hemorrhagic stroke                          | Neurology/Vascular          | 1155                       |
+| Acetaminophen prescription                      | Pain/Infection              | 1187                       |
+| Low back pain                                   | Pain                        | 1173                       |
+| Neuropathy                                      | Pain/Neurology              | 1174                       |
+| Opioids                                         | Pain                        | 1182                       |
+| Acute kidney injury                             | Kidney                      | 1163                       |
+| Chronic kidney disease                          | Kidney                      | 1191                       |
+| Asthma                                          | Respiratory                 | 1164                       |
+| Chronic obstructive pulmonary disorder (COPD)   | Respiratory                 | 1192                       |
+| Dyspnea                                         | Respiratory                 | 1195                       |
+| Respiratory failure                             | Respiratory                 | 1177                       |
+| Sleep apnea                                     | Respiratory                 | 1167                       |
+| Rheumatoid arthritis                            | Rheumatology                | 1200                       |
+| Steroids                                        | Rheumatology/Pain/Pulmonary | 1181                       |
+| Peripheral vascular disease                     | Vascular                    | 1157                       |
+| Aspirin                                         | Vascular                    | 1158                       |
+| Deep vein thrombosis (DVT)                      | Vascular                    | 1152                       |
+| Edema                                           | Vascular                    | 1196                       |
+| Inpatient visit                                 | NA                          | NA                         |

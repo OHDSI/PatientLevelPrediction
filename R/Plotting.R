@@ -62,7 +62,7 @@ outcomeSurvivalPlot <- function(
   if(missing(outcomeId)){
     stop('outcomeId missing')
   }
-  if(class(plpData)!='plpData'){
+  if(!inherits(x = plpData, what = 'plpData')){
     stop('Incorrect plpData object')
   }
   if(!outcomeId%in%unique(plpData$outcomes$outcomeId)){
@@ -83,7 +83,7 @@ outcomeSurvivalPlot <- function(
   
   population$daysToEvent[is.na(population$daysToEvent)] <- population$survivalTime[is.na(population$daysToEvent)]
   survivalFit <- survival::survfit(
-    survival::Surv(daysToEvent, outcomeCount)~cohortId,
+    survival::Surv(daysToEvent, outcomeCount)~targetId,
     #riskDecile, 
     population, 
     conf.int = TRUE
@@ -293,11 +293,11 @@ plotSparseRoc <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
+  for (i in 1:length(evalTypes)){
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$falsePositiveRate, .data$sensitivity)
+      dplyr::select("falsePositiveRate", "sensitivity")
     
     #x <- thresholdSummary[,c('falsePositiveRate','sensitivity')]
     x <- x[order(x$falsePositiveRate, x$sensitivity),]
@@ -316,14 +316,14 @@ plotSparseRoc <- function(
         )
     ) +
       ggplot2::geom_polygon(fill = "blue", alpha = 0.2) +
-      ggplot2::geom_line(size=1) +
+      ggplot2::geom_line(linewidth = 1) +
       ggplot2::geom_abline(intercept = 0, slope = 1,linetype = 2) +
-      ggplot2::scale_x_continuous("1 - specificity", limits=c(0,1)) +
-      ggplot2::scale_y_continuous("Sensitivity", limits=c(0,1)) + 
+      ggplot2::scale_x_continuous("1 - specificity", limits = c(0,1)) +
+      ggplot2::scale_y_continuous("Sensitivity", limits = c(0,1)) + 
       ggplot2::ggtitle(evalType)
   }
   
-  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  plot <- gridExtra::marrangeGrob(plots, nrow =length(plots), ncol = 1)
   
   if (!is.null(saveLocation)){
     if(!dir.exists(saveLocation)){
@@ -370,11 +370,11 @@ plotPredictedPDF <- function(
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$predictionThreshold,
-        .data$truePositiveCount,
-        .data$trueNegativeCount,
-        .data$falsePositiveCount,
-        .data$falseNegativeCount
+        "predictionThreshold",
+        "truePositiveCount",
+        "trueNegativeCount",
+        "falsePositiveCount",
+        "falseNegativeCount"
       )
   
   x<- x[order(x$predictionThreshold,-x$truePositiveCount, -x$falsePositiveCount),]
@@ -460,11 +460,11 @@ plotPreferencePDF <- function(
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$preferenceThreshold,
-        .data$truePositiveCount,
-        .data$trueNegativeCount,
-        .data$falsePositiveCount,
-        .data$falseNegativeCount
+        "preferenceThreshold",
+        "truePositiveCount",
+        "trueNegativeCount",
+        "falsePositiveCount",
+        "falseNegativeCount"
       )
   
   x<- x[order(x$preferenceThreshold,-x$truePositiveCount, x$trueNegativeCount),]
@@ -551,27 +551,27 @@ plotPrecisionRecall <- function(
     
     N <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$falseCount) %>% 
+        dplyr::select("falseCount") %>% 
         dplyr::pull(), na.rm = T)
 
     
     O <- max(plpResult$performanceEvaluation$thresholdSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$trueCount) %>% 
+        dplyr::select("trueCount") %>% 
         dplyr::pull(), na.rm = T)
     
     inc <- O/(O + N)
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$positivePredictiveValue, .data$sensitivity)
+      dplyr::select("positivePredictiveValue", "sensitivity")
     
     plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$sensitivity, .data$positivePredictiveValue)) +
-      ggplot2::geom_line(size=1) +
+      ggplot2::geom_line(linewidth=1) +
       ggplot2::scale_x_continuous("Recall")+#, limits=c(0,1)) +
       ggplot2::scale_y_continuous("Precision") + #, limits=c(0,1))
       ggplot2::geom_hline(yintercept = inc, linetype="dashed", 
-        color = "red", size=1)  +
+        color = "red", linewidth = 1)  +
       ggplot2::ggtitle(evalType)
   }
   
@@ -622,7 +622,7 @@ plotF1Measure <- function(
     
     x <- plpResult$performanceEvaluation$thresholdSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$predictionThreshold, .data$f1Score)
+      dplyr::select("predictionThreshold", "f1Score")
     
   if(sum(is.nan(x$f1Score))>0){
     x <- x[!is.nan(x$f1Score),]
@@ -630,8 +630,8 @@ plotF1Measure <- function(
   }
   
   plots[[i]] <- ggplot2::ggplot(x, ggplot2::aes(.data$predictionThreshold, .data$f1Score)) +
-    ggplot2::geom_line(size=1) +
-    ggplot2::geom_point(size=1) +
+    ggplot2::geom_line(linewidth = 1) +
+    ggplot2::geom_point(size = 1) +
     ggplot2::scale_x_continuous("predictionThreshold")+#, limits=c(0,1)) +
     ggplot2::scale_y_continuous("F1Score") +#, limits=c(0,1))
     ggplot2::ggtitle(evalType)
@@ -688,11 +688,11 @@ plotDemographicSummary <- function(
     x <- plpResult$performanceEvaluation$demographicSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$ageGroup,
-        .data$genGroup,
-        .data$averagePredictedProbability,
-        .data$PersonCountAtRisk, 
-        .data$PersonCountWithOutcome
+        "ageGroup",
+        "genGroup",
+        "averagePredictedProbability",
+        "PersonCountAtRisk", 
+        "PersonCountWithOutcome"
         )
   
     # remove -1 values:
@@ -729,10 +729,10 @@ plotDemographicSummary <- function(
     ci <- plpResult$performanceEvaluation$demographicSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
       dplyr::select(
-        .data$ageGroup,
-        .data$genGroup,
-        .data$averagePredictedProbability,
-        .data$StDevPredictedProbability
+        "ageGroup",
+        "genGroup",
+        "averagePredictedProbability",
+        "StDevPredictedProbability"
       )
     
     ci$StDevPredictedProbability[is.na(ci$StDevPredictedProbability)] <- 1
@@ -769,7 +769,7 @@ plotDemographicSummary <- function(
                                   guide = ggplot2::guide_legend(title = NULL),
                                   labels = c("Expected", "Observed")) +
 
-      ggplot2::guides(linetype=FALSE) +
+      ggplot2::guides( linetype = "none") + # change from FALSE due to warning
       ggplot2::ggtitle(evalType)
   }
   
@@ -821,7 +821,7 @@ plotSparseCalibration <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+      dplyr::select("averagePredictedProbability", "observedIncidence")
 
   maxVal <- max(x$averagePredictedProbability,x$observedIncidence)
   model <- stats::lm(observedIncidence~averagePredictedProbability, data=x)
@@ -844,9 +844,9 @@ plotSparseCalibration <- function(
                                        )) +
     ggplot2::geom_ribbon(ggplot2::aes(ymin=.data$lci,ymax=.data$uci, x=x), 
                          fill="blue", alpha=0.2) +
-    ggplot2::geom_point(size=1, color='darkblue') +
+    ggplot2::geom_point(size = 1, color='darkblue') +
     ggplot2::coord_cartesian(ylim = c(0, maxVal), xlim =c(0,maxVal)) +
-    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, size=1,
+    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, linewidth = 1,
                          show.legend = TRUE) +
     ggplot2::geom_abline(intercept = res['Intercept'], slope = res['Gradient'],
                          linetype = 1,show.legend = TRUE,
@@ -903,7 +903,7 @@ plotSparseCalibration2 <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-      dplyr::select(.data$averagePredictedProbability, .data$observedIncidence, .data$PersonCountAtRisk)
+      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
 
   cis <- apply(x, 1, function(x) stats::binom.test(round(x[2]*x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
   x$lci <- cis[1,]  
@@ -919,7 +919,7 @@ plotSparseCalibration2 <- function(
     ggplot2::geom_point(size=2, color='black') +
     ggplot2::geom_errorbar(limits) +
     ggplot2::geom_line(colour='darkgrey') +
-    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, size=0.4,
+    ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 5, linewidth=0.4,
                          show.legend = TRUE) +
     ggplot2::scale_x_continuous("Average Predicted Probability") +
     ggplot2::scale_y_continuous("Observed Fraction With Outcome") +
@@ -993,7 +993,7 @@ plotSmoothCalibration <- function(plpResult,
     if('prediction'%in%names(plpResult)) {
       x <- plpResult$performanceEvaluation$calibrationSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
-        dplyr::select(.data$averagePredictedProbability, .data$observedIncidence)
+        dplyr::select("averagePredictedProbability", "observedIncidence")
       
       prediction <-  plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
       
@@ -1042,39 +1042,28 @@ plotSmoothCalibration <- function(plpResult,
         }
         # loess
         smoothData <- data.frame(y, p)
-        fit <- stats::loess(y ~ p, degree = 2)
-        predictedFit <- stats::predict(fit, se = TRUE)
-        smoothData <- smoothData %>%
-          dplyr::mutate(
-            calibration = predictedFit$fit,
-            se = predictedFit$se,
-            lci = .data$calibration - stats::qt(.975, predictedFit$df) * .data$se,
-            uci = .data$calibration + stats::qt(.975, predictedFit$df) * .data$se
-          )
-
-        xlim <- ylim <- c(0, 1)
+        # xlim <- ylim <- c(0, 1)
         smoothPlot <- plotSmoothCalibrationLoess(data = smoothData, span = span) +
           ggplot2::coord_cartesian(
-            xlim = xlim,
-            ylim = ylim
+            xlim = c(0, maxes),
+            ylim = c(0, maxes)
           )
       } else {
         # Restricted cubic splines
 
         smoothData <- data.frame(y, p)
-        smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, nKnots = nKnots)
+        smoothPlot <- plotSmoothCalibrationRcs(data = smoothData, numberOfKnots = nKnots)
         if (is.character(smoothPlot)) {
           plots[[i]] <- smoothPlot
           failedEvalType[evalTypes[i]] <- TRUE
           next
         }
-        xlim <- ylim <- c(0, 1)
+
         smoothPlot <- smoothPlot +
           ggplot2::coord_cartesian(
-            xlim = xlim,
-            ylim = ylim
+            xlim = c(0, maxes),
+            ylim = c(0, maxes)
           )
-
       }
       # construct the plot grid
       if (scatter) {
@@ -1112,7 +1101,7 @@ plotSmoothCalibration <- function(plpResult,
           strip.text = ggplot2::element_blank()
         ) +
         ggplot2::labs(x = "Predicted Probability") +
-        ggplot2::coord_cartesian(xlim = xlim)
+        ggplot2::coord_cartesian(xlim = c(0, maxes))
       
     } else {
       # use calibrationSummary
@@ -1259,15 +1248,14 @@ plotSmoothCalibrationLoess <- function(data, span = 0.75) {
     fill = "blue",
     alpha = 0.2
   ) +
-  ggplot2::geom_segment(
-    ggplot2::aes(
-      x = 0,
-      xend = 1,
-      y = 0,
-      yend = 1,
-      color = "Ideal",
-      linetype = "Ideal"
-    )
+  ggplot2::annotate(
+    geom = "segment",
+    x = 0,
+    xend = 1,
+    y = 0,
+    yend = 1,
+    color = "red",
+    linetype = "dashed"
   ) +
   ggplot2::scale_linetype_manual(
     name = "Models",
@@ -1291,36 +1279,92 @@ plotSmoothCalibrationLoess <- function(data, span = 0.75) {
   return(plot)
 }
 
-plotSmoothCalibrationRcs <- function(data, nKnots) {
+plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
+  data <- data %>%
+    dplyr::filter(!is.na(.data$y) & !is.na(.data$p))
   p <- data$p
-  for (k in nKnots:3) {
-    formSmooth <- paste0('y ~ rms::rcs(p, ', k, ')')
-    smoothFit <- suppressWarnings(rms::lrm(stats::as.formula(formSmooth), data = data, x = TRUE, y = TRUE))
-    smoothFitFail <- smoothFit$fail
-    if (smoothFitFail) {
+
+  .defineKnots <- function(predictedProbabilities, numberOfKnots) {
+    if (numberOfKnots == 3) {
+      lowestQuantile <- .1
+      highestQuantile <- .9
+    } else if (numberOfKnots > 3 & numberOfKnots <= 6) {
+      lowestQuantile <- .05
+      highestQuantile <- .95
+    } else if (numberOfKnots == 7) {
+      lowestQuantile <- .025
+      highestQuantile <- .975
+    } else {
+        # use mgcv defaults
+        return(numberOfKnots)
+    }
+    knotQuantiles <- seq(
+      lowestQuantile,
+      highestQuantile,
+      length.out = numberOfKnots
+    )
+
+    knotLocation <- stats::quantile(
+      x = predictedProbabilities,
+      probs = knotQuantiles,
+      na.rm = TRUE
+    )
+
+    return(knotLocation)
+  }
+
+  for (k in numberOfKnots:3) {
+    if (k > 7) {
+      smoothFit <- tryCatch(
+        expr = {
+          mgcv::gam(
+            y ~ s(p, bs = 'cr', k = k, m = 2),
+            data = data,
+            family = stats::binomial()
+          )
+        },
+        error = function(e) {
+          return("Failed")
+        }
+      )
+    } else {
+      smoothFit <- tryCatch(
+        expr = {
+          mgcv::gam(
+            y ~ s(p, bs = 'cr', k = k, m = 2),
+            data = data,
+            knots = list(p = .defineKnots(p, k)),
+            family = stats::binomial()
+          )
+        },
+        error = function(e) {
+          return("Failed")
+        }
+      )
+    }
+    if (is.character(smoothFit)) {
       if (k > 3) {
         ParallelLogger::logInfo(paste0("Setting number of Knots to ", k, " led to estimation problems. Switching to nKnots = ", k-1))
       } else {
         ParallelLogger::logInfo(paste0('Unable to fit model'))
-        plot <- "Failed"
       }
+    } else {
+      break
     }
   }
 
-  # If the fit failed for all nKnots return "Failed"
-  if (smoothFitFail) {
-    return(plot)
+  if (is.character(smoothFit)){
+    return("Failed")
   }
 
-  xRange <- seq(0, p[length(p)], length.out = 1000)
-  pred <- stats::predict(smoothFit, xRange, se.fit = T, type = "lp")
-  predXRange <- stats::plogis(pred$linear.predictors)
-  ciSmooth <- data.frame(
-    lci = stats::plogis(pred$linear.predictors - 1.96 * pred$se.fit),
-    uci = stats::plogis(pred$linear.predictors + 1.96 * pred$se.fit)
+  xRange <- seq(min(p), max(p), length.out = 1e3)
+  predictWithSe <- stats::predict(smoothFit, newdata = data.frame(p = xRange), se.fit = TRUE)
+  smoothData <- data.frame(
+    xRange = xRange,
+    predXRange = stats::plogis(predictWithSe$fit),
+    lci = stats::plogis(predictWithSe$fit - 1.96 * predictWithSe$se.fit),
+    uci = stats::plogis(predictWithSe$fit + 1.96 * predictWithSe$se.fit)
   )
-
-  smoothData <- cbind(xRange, predXRange, ciSmooth)
   plot <- ggplot2::ggplot(
     data = smoothData,
     ggplot2::aes(
@@ -1340,17 +1384,17 @@ plotSmoothCalibrationRcs <- function(data, nKnots) {
         ymax = .data$uci
       ),
       fill = "blue",
-      alpha = 0.2
+      alpha = 0.2,
+      show.legend = FALSE
     ) +
-    ggplot2::geom_segment(
-      ggplot2::aes(
-        x = 0,
-        xend = 1,
-        y = 0,
-        yend = 1,
+    ggplot2::geom_abline(
+      mapping = ggplot2::aes(
+        slope = 1,
+        intercept = 0,
         color = "Ideal",
         linetype = "Ideal"
-      )
+      ),
+      show.legend = FALSE
     ) +
     ggplot2::scale_color_manual(
       name = "Models",
@@ -1361,7 +1405,7 @@ plotSmoothCalibrationRcs <- function(data, nKnots) {
       values = c(rcs = "solid", Ideal = "dashed")
     ) +
     ggplot2::labs(x = "", y = "Observed Probability")
-               
+
   return(plot)
 }
 
@@ -1397,43 +1441,44 @@ plotPredictionDistribution <- function(
   plots <- list()
   length(plots) <- length(evalTypes)
   
-  for(i in 1:length(evalTypes)){
+  for (i in 1:length(evalTypes)) {
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$predictionDistribution %>% 
       dplyr::filter(.data[[typeColumn]] == evalType) 
   
-  non05 <- x$P05PredictedProbability[x$class==0]
-  non95 <- x$P95PredictedProbability[x$class==0]
-  one05 <- x$P05PredictedProbability[x$class==1]
-  one95 <- x$P95PredictedProbability[x$class==1]
+  non05 <- x$P05PredictedProbability[x$class == 0]
+  non95 <- x$P95PredictedProbability[x$class == 0]
+  one05 <- x$P05PredictedProbability[x$class == 1]
+  one95 <- x$P95PredictedProbability[x$class == 1]
   
-  plots[[i]] <-   ggplot2::ggplot(x, ggplot2::aes(x=as.factor(.data$class),
-                                            ymin=.data$MinPredictedProbability,
-                                            lower=.data$P25PredictedProbability,
-                                            middle=.data$MedianPredictedProbability,
-                                            upper=.data$P75PredictedProbability, 
-                                            ymax=.data$MaxPredictedProbability, 
-                                            color=as.factor(.data$class))) + 
+  plots[[i]] <- ggplot2::ggplot(x,
+    ggplot2::aes(x = as.factor(class),
+                 ymin = .data$MinPredictedProbability,
+                 lower = .data$P25PredictedProbability,
+                 middle = .data$MedianPredictedProbability,
+                 upper = .data$P75PredictedProbability, 
+                 ymax = .data$MaxPredictedProbability, 
+                 color = as.factor(.data$class))) + 
     ggplot2::coord_flip() +
-    ggplot2::geom_boxplot(stat="identity")  +
+    ggplot2::geom_boxplot(stat = "identity")  +
     ggplot2::scale_x_discrete("Class") + 
     ggplot2::scale_y_continuous("Predicted Probability") + 
-    ggplot2::theme(legend.position="none") +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non05, 
-                     xend = 1.1, yend = non05), color='red') +
-    ggplot2::geom_segment(ggplot2::aes(x = 0.9, y = non95, 
-                                       xend = 1.1, yend = non95), color='red') +
-  ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one05, 
-                                     xend = 2.1, yend = one05)) +
-    ggplot2::geom_segment(ggplot2::aes(x = 1.9, y = one95, 
-                                       xend = 2.1, yend = one95)) +
-    ggplot2::ggtitle(evalType)
+    ggplot2::theme(legend.position = "none") +
+    ggplot2::annotate("segment", x = 0.9, xend = 1.1, y = non05, yend = non05,
+                      color = "red") +
+    ggplot2::annotate("segment", x = 0.9, xend = 1.1, y = non95, yend = non95,
+                      color = "red") +
+    ggplot2::annotate("segment", x = 1.9, xend = 2.1, y = one05, yend = one05,
+                      color = "#00BFC4") +
+    ggplot2::annotate("segment", x = 1.9, xend = 2.1, y = one95, yend = one95,
+                      color = "#00BFC4") +
+     ggplot2::ggtitle(evalType)
   }
   
-  plot <- gridExtra::marrangeGrob(plots, nrow=length(plots), ncol=1)
+  plot <- gridExtra::marrangeGrob(plots, nrow = length(plots), ncol = 1)
   
-  if (!is.null(saveLocation)){
-    if(!dir.exists(saveLocation)){
+  if (!is.null(saveLocation)) {
+    if (!dir.exists(saveLocation)) {
       dir.create(saveLocation, recursive = T)
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)

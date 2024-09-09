@@ -4,7 +4,7 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(trainData, modelSettings, search = "grid", analysisId)
+fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
 }
 \arguments{
 \item{trainData}{An object of type \code{TrainData} created using \code{splitData}
@@ -12,27 +12,27 @@ data extracted from the CDM.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
 \itemize{
-\item{logisticRegressionModel()}{ A lasso logistic regression model}
-\item{GBMclassifier()}{ A gradient boosting machine}
-\item{RFclassifier()}{ A random forest model}
-\item{GLMclassifier ()}{ A generalised linear model}
-\item{KNNclassifier()}{ A KNN model}
+\item setLassoLogisticRegression() A lasso logistic regression model
+\item setGradientBoostingMachine() A gradient boosting machine
+\item setRandomForest() A random forest model
+\item setKNN() A KNN model
 }}
 
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 
 \item{analysisId}{The id of the analysis}
+
+\item{analysisPath}{The path of the analysis}
 }
 \value{
 An object of class \code{plpModel} containing:
 
 \item{model}{The trained prediction model}
-\item{modelLoc}{The path to where the model is saved (if saved)}
-\item{trainAuc}{The AUC obtained on the training set}
-\item{trainCalibration}{The calibration obtained on the training set}
-\item{modelSettings}{A list specifiying the model, preprocessing, outcomeId and cohortId}
-\item{metaData}{The model meta data}
-\item{trainingTime}{The time taken to train the classifier}
+\item{preprocessing}{The preprocessing required when applying the model}
+\item{prediction}{The cohort data.frame with the predicted risk column added}
+\item{modelDesign}{A list specifiying the modelDesign settings used to fit the model}
+\item{trainDetails}{The model meta data}
+\item{covariateImportance}{The covariate importance for the model}
 }
 \description{
 Train various models using a default parameter gird search or user specified parameters

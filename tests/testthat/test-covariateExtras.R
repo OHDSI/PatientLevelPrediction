@@ -18,10 +18,6 @@ library("testthat")
 
 context("CovariateExtras")
 
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-
-
 test_that("settings creation", {
   
 covSet <- createCohortCovariateSettings(
@@ -113,14 +109,14 @@ covs <- FeatureExtraction::getDbCovariateData(
   cohortTable = "cohort", 
   cohortDatabaseSchema = "main", 
   cohortTableIsTemp = F, 
-  cohortId = 1, 
+  cohortIds = c(1), 
   rowIdField = 'rowId', 
   covariateSettings = covSet, 
   aggregated = F
   )
 
 expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::pull())
-expect_equal(as.double(covs$covariateRef %>% dplyr::select(.data$covariateId) %>% dplyr::collect()), covSet$covariateId)
+expect_equal(as.double(covs$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect()), covSet$covariateId)
 expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::pull() > 0)
 
 })

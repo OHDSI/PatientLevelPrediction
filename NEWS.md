@@ -1,3 +1,196 @@
+PatientLevelPrediction 6.3.9
+======================
+- Hotfix adding schema to DatabaseConnector::getTableNames when creating results tables
+
+PatientLevelPrediction 6.3.8
+======================
+- Add support for R4.4 
+- Fix notes around documentation (vignette engine and brackets in itemize)
+- Use webp image format where possible (not in pdfs) for smaller size
+- Make sure random table names are unique in tests
+- Remove remote info for Eunomia since it's in CRAN
+
+PatientLevelPrediction 6.3.7
+======================
+- Clean up dependencies, tibble removed and IHT and ParallelLogger from CRAN
+- Use cohortIds for cohortCovariates to comply with FeatureExtraction
+- Add cdmDatabaseName from DatabaseDetails to model output
+- Fix bug when attributes weren't preserved on trainData$covariateData after split
+- Fix warnings in tests and speed them up
+- Fix bug in assignment operator in configurePython
+- Delay evaluation of plpData when using do.call like in learningCurves and 
+runMultiplePlp
+- Speed up population generation when subjectId's are distinct
+- Fix bug when population was still generated when provided to runPlp
+
+PatientLevelPrediction 6.3.6
+======================
+- fix bug with ohdsi shiny modules version check (issue 415)
+
+PatientLevelPrediction 6.3.5
+======================
+- Fix sklearnToJson to be compatible with scikit-learn>=1.3
+- Fix github actions so it's not hardcoded to use python 3.7
+
+
+PatientLevelPrediction 6.3.4
+======================
+- added spline feature engineering 
+- added age/sex stratified imputation feature engineering
+- changed result table execution date types to varchar
+- updated covariateSummary to use feature engineering
+
+PatientLevelPrediction 6.3.3
+======================
+- fixed bug introduced with new reticulate update in model saving to json tests
+
+
+PatientLevelPrediction 6.3.2
+======================
+- fixed bug with database insert if result is incomplete
+- updated/fixed documentation (Egill)
+- added model path to models (Henrik)
+- updated hyper-parameter saving to data.frame and made consistent 
+
+PatientLevelPrediction 6.3.1
+======================
+- fixed bug with multiple covariate settings in diagnose plp
+- added min cell count when exporting database results to csv files
+- light GBM added (thanks Jin Choi and Chungsoo Kim)
+- fixed minor bugs when uploading results to database
+
+PatientLevelPrediction 6.2.1
+======================
+- added ensure_installed("ResultModelManager") to getDataMigrator()
+
+PatientLevelPrediction 6.1.0
+======================
+- shiny app is now using ShinyAppBuilder with a config saved in the /inst folder
+
+PatientLevelPrediction 6.0.11
+======================
+- fixed bugs introduced when sklearn inputs changed
+- added sklearn model being saved as jsons
+- made changes around the DatabaseConnection get table names function to make it work for the updated DatabaseConnection
+- removed check RAM stop (now it just warns)
+
+PatientLevelPrediction 6.0.10
+======================
+- Updated test to skip test for FE setting if the model does not fit (this was causing occasional test fail)
+- replaced .data$ with "" for all dplyr::select to remove warnings
+
+PatientLevelPrediction 6.0.9
+======================
+- Fix bug with python type being required to be int
+
+PatientLevelPrediction 6.0.8
+======================
+- Allow priorType to be passed down to getCV function in case prior is not 'laplace'
+- Seed specified in Cyclops model wasn't passed to Cyclops
+
+PatientLevelPrediction 6.0.7
+======================
+- fixed issue with shiny viewer converting connection details to large json
+
+PatientLevelPrediction 6.0.6
+======================
+- added check for cdmDatabaseId into createDatabaseDetails
+- added test for check for cdmDatabaseId into createDatabaseDetails to error when NULL
+- removed session$onSessionEnded(shiny::stopApp)  from shiny server
+
+PatientLevelPrediction 6.0.5
+======================
+- fixing cox predictions
+
+PatientLevelPrediction 6.0.4
+======================
+- forcing cdmDatabaseId to be a string if integer is input
+
+PatientLevelPrediction 6.0.3
+======================
+- replaced utils::read.csv with readr::read_csv when inserting results from csv
+
+PatientLevelPrediction 6.0.2
+======================
+- replaced gsub with sub when inserting csvs to database
+
+PatientLevelPrediction 6.0.1
+======================
+- saved result specification csv in windows to fix odd formating issue
+
+PatientLevelPrediction 6.0.0
+======================
+- fixed sample data bugs
+- updated to use v1.0.0 of OhdsiShinyModules
+- updated plp database result tables to use the same structure for cohort and database as other HADES packages
+- added function to insert csv results into plp database result tables
+- added input for databaseId (database and version) when extracting data to be consistent with other HADES packages.  This is saved in plp objects.
+
+PatientLevelPrediction 5.4.4
+======================
+- fixed issue with 'preprocess' vs 'preprocessing' inconsistently used across models
+- added metaData tracking for feature engineering or preprocessing when predicting
+- fixed issue with FE using trainData$covariateData metaData rather than trainData
+- fixed bug when using sameData for FE
+
+PatientLevelPrediction 5.4.3
+======================
+- pulled in multiple bug fixes and test improvements from Egill
+- pulled in fix for learning curves from Henrik
+- Pulled in fix for feature engineering from Solomon
+- Cleaned check messages about comparing class(x) with a string by changing to inherits()
+
+PatientLevelPrediction 5.4.2
+======================
+- removed json saving for sklearn models since sklearn-json is no longer working for the latest sklearn
+
+
+PatientLevelPrediction 5.4.1
+======================
+- renamed the input corresponding to the string that gets appended to the results table names to tablePrefix
+- fixed issues with system.file() from SqlRender code breaking the tests
+- added an input fileAppend to the function that exports the database tables to csv files
+- moved the plp model (including preprocessing details) outside of the result database (into a specified folder) due to the size of the objects (too large to insert into the database). 
+
+PatientLevelPrediction 5.4.0
+======================
+- added saving of plp models into the result database 
+- added default cohortDefinitions in runMultiplePlp
+
+PatientLevelPrediction 5.3.3
+======================
+- added modelType to all models for database upload
+
+PatientLevelPrediction 5.3.2
+======================
+- moved FeatureExtraction to depends 
+- fixed using inherits()
+
+PatientLevelPrediction 5.3.1
+======================
+- moved most of the shiny app code into OhdsiShinyModules
+- removed shiny dependencies and added OhdsiShinyModules to suggests
+- fixed bug with linux sklearn saving
+
+PatientLevelPrediction 5.1.1
+======================
+- replaced cohortId to targetId for consistency throughout code
+
+PatientLevelPrediction 5.1.0
+======================
+- replaced targetId in model design to cohortId for consistency throughout code
+- replaced plpDataSettings to restrictPlpDataSettings to improve naming consistency 
+- added ability to use initial population in runPlp by adding the population to plpData$population
+- added splitSettings into modelDesign
+- replaced saving json settings with ParallelLogger function
+- updated database result schema (removed researcher_id from tables - if desired a new table with the setting_ids and researcher_id could be added, removed study tables and revised results table to performances table with a reference to model_design_id and development_database_id to enable validation results without a model to be inserted)
+- added diagnostic code based on PROBAST
+- added diagnostic shiny module
+- added code to create sqlite database and populate in uploadToDatabase
+- add code to convert runPlp+val to sqlite database when viewing shiny
+- added code to extract database results into csv files: extractDatabaseToCsv()
+
+
 PatientLevelPrediction 5.0.5
 ======================
 - pulled in GBM update (default hyper-parameters and variable importance fix) work done by Egill (egillax)

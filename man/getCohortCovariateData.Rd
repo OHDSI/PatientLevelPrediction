@@ -12,8 +12,9 @@ getCohortCovariateData(
   cohortTable = "#cohort_person",
   rowIdField = "row_id",
   aggregated,
-  cohortId,
-  covariateSettings
+  cohortIds,
+  covariateSettings,
+  ...
 )
 }
 \arguments{
@@ -31,9 +32,11 @@ getCohortCovariateData(
 
 \item{aggregated}{whether the covariate should be aggregated}
 
-\item{cohortId}{cohort id for the target population cohort}
+\item{cohortIds}{cohort id for the target cohort}
 
 \item{covariateSettings}{settings for the covariate cohorts and time periods}
+
+\item{...}{additional arguments from FeatureExtraction}
 }
 \value{
 The models will now be in the package

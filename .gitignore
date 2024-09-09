@@ -4,6 +4,8 @@
 *-Ex.R
 # R data files from past sessions
 .Rdata
+# R environ
+.Renviron
 # RStudio files
 .Rproj.user/
 .Rproj.user
@@ -21,3 +23,5 @@ standalone/build/*
 /python_models/*
 /mycache/*
 /inst/shiny/DiagnosticsExplorer/rsconnect/*
+/doc/
+/Meta/

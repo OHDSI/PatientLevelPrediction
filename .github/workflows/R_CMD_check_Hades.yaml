@@ -22,7 +22,7 @@ jobs:
         config:
           - {os: windows-latest, r: 'release'}  # Does not appear to have Java 32-bit, hence the --no-multiarch
           - {os: macOS-latest, r: 'release'}
-          - {os: ubuntu-20.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/focal/latest"}
+          - {os: ubuntu-22.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"}
 
     env:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
@@ -45,98 +45,56 @@ jobs:
       CDM5_SQL_SERVER_USER: ${{ secrets.CDM5_SQL_SERVER_USER }}
 
     steps:
-      - uses: actions/checkout@v2
-    
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: "3.7"
-          activate-environment: r-reticulate
-      
-      - name: python main dependencies  
-        run: conda install --name r-reticulate numpy scipy scikit-learn pandas pydotplus joblib
-      
-      - name: python json dependencies  
-        run: conda install --name r-reticulate -c conda-forge sklearn-json 
-      
-      - name: python scikit-survival dependencies    
-        run: conda install --name r-reticulate -c sebp scikit-survival
+      - uses: actions/checkout@v4
 
-      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
 
-      - uses: r-lib/actions/setup-tinytex@v1
+      - uses: r-lib/actions/setup-tinytex@v2
 
-      - uses: r-lib/actions/setup-pandoc@v1
+      - uses: r-lib/actions/setup-pandoc@v2
 
-      - name: Query dependencies
-        run: |
-          install.packages('remotes')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
-          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
-        shell: Rscript {0}
-
-      - name: Cache R packages
-        if: runner.os != 'Windows'
-        uses: actions/cache@v2
-        with:
-          path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-3-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-3-
-  
-      - name: Install system dependencies
+      - name: Install system requirements
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get install -y libssh-dev
+          Rscript -e 'install.packages("remotes")'
           while read -r cmd
           do
             eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "20.04"))')
-
-      - name: Install dependencies
-        run: |
-          remotes::install_deps(dependencies = TRUE, INSTALL_opts=c("--no-multiarch"))
-          remotes::install_cran("rcmdcheck")
-        shell: Rscript {0}
-
-      - name: Install covr
-        if: runner.os == 'Windows'
-        run: |
-          remotes::install_cran("covr")
-        shell: Rscript {0}
-
-      - name: Remove check folder if exists
-        if: runner.os == 'macOS'
-        run: unlink("check", recursive = TRUE)
-        shell: Rscript {0}
-
-      - name: use r-reticulate environment
-        run: |
-          reticulate::use_condaenv("r-reticulate", required = TRUE)
-        shell: Rscript {0}
-
-      - name: Check
-        env:
-          _R_CHECK_CRAN_INCOMING_REMOTE_: false
-        run: rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran", "--no-multiarch"), error_on = "warning", check_dir = "check")
-        shell: Rscript {0}
-
-      - name: Upload check results
-        if: failure()
-        uses: actions/upload-artifact@main
+          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "22.04"))')
+          
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v3
+        
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          name: ${{ runner.os }}-r${{ matrix.config.r }}-results
-          path: check
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--no-manual", "--as-cran")'
+          error-on: '"warning"'
+          check-dir: '"check"'
 
       - name: Upload source package
         if: success() && runner.os == 'macOS' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: package_tarball
           path: check/*.tar.gz
-
+          
+      - name: Install covr
+        if: runner.os == 'Linux'
+        run: |
+          remotes::install_cran("covr")
+        shell: Rscript {0}
+        
       - name: Test coverage
-        if: runner.os == 'Windows'
-        run: covr::codecov()
+        if: runner.os == 'Linux'
+        run: covr::codecov(token = "${{ secrets.CODECOV_TOKEN }}")
         shell: Rscript {0}
 
 
@@ -152,7 +110,7 @@ jobs:
 
     steps:
       
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0    
 
@@ -178,7 +136,7 @@ jobs:
           draft: false
           prerelease: false
           
-      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-r@v2
         if: ${{ env.new_version != '' }}
         
       - name: Install drat
@@ -194,7 +152,7 @@ jobs:
           
       - name: Download package tarball
         if: ${{ env.new_version != '' }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: package_tarball    
           

@@ -8,7 +8,7 @@ createFeatureEngineeringSettings(type = "none")
 }
 \arguments{
 \item{type}{(character) Choice of:  \itemize{
-\item{'none'}{ No feature engineering - this is the default }
+\item'none' No feature engineering - this is the default 
 }}
 }
 \value{

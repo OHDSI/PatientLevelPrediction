@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.9</span>
       </span>
     </div>
 
@@ -53,7 +55,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -72,10 +74,10 @@
       <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
-      <a href="../articles/BestPractices.html">Best Practice Research</a>
+      <a href="../articles/BenchmarkTasks.html">Benchmark Tasks</a>
     </li>
     <li>
-      <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
     </li>
     <li>
       <a href="../articles/BuildingMultiplePredictiveModels.html">Automatically Build Multiple Patient-Level Predictive Models</a>
@@ -84,13 +86,16 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/ClinicalModels.html">Clinical Models</a>
+    </li>
+    <li>
+      <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
+    </li>
+    <li>
       <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
-    </li>
-    <li>
-      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -101,10 +106,19 @@
   </ul>
 </li>
 <li>
-  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
+  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/" class="external-link">Tutorial</a>
+</li>
+<li>
+  <a href="../articles/BenchmarkTasks.html">Benchmarks</a>
+</li>
+<li>
+  <a href="../articles/ConstrainedPredictors.html">Predictors</a>
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
+  <a href="../articles/ClinicalModels.html">Clinical Models</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -112,10 +126,10 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades" class="external-link"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
-  <a href="https://github.com/OHDSI/PatientLevelPrediction">
+  <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -130,15 +144,16 @@
 
       
 
-      </header><script src="Videos_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Demo Videos</h1>
-                        <h4 class="author">Jenna Reps, Peter R. Rijnbeek</h4>
+                        <h4 data-toc-skip class="author">Jenna Reps,
+Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2022-03-09</h4>
+            <h4 data-toc-skip class="date">2024-09-09</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/Videos.rmd"><code>vignettes/Videos.rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/Videos.rmd" class="external-link"><code>vignettes/Videos.rmd</code></a></small>
       <div class="hidden name"><code>Videos.rmd</code></div>
 
     </div>
@@ -146,183 +161,123 @@
     
     
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Demo Videos}
 -->
-<div id="what-is-a-cohort-table" class="section level2">
-<h2 class="hasAnchor">
-<a href="#what-is-a-cohort-table" class="anchor"></a>What is a cohort table?</h2>
+<div class="section level2">
+<h2 id="what-is-a-cohort-table">What is a cohort table?<a class="anchor" aria-label="anchor" href="#what-is-a-cohort-table"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/GY2ZTcizY90" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn what a cohort table looks like and what columns are required.
-</td>
-</tr>
+<colgroup>
+<col width="66%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/GY2ZTcizY90" class="external-link"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>Learn what a cohort table looks like and what columns are
+required.</td>
+</tr></tbody>
 </table>
 </div>
-<div id="setting-up-a-connection-between-your-database-and-r" class="section level2">
-<h2 class="hasAnchor">
-<a href="#setting-up-a-connection-between-your-database-and-r" class="anchor"></a>Setting up a connection between your database and R</h2>
+<div class="section level2">
+<h2 id="setting-up-a-connection-between-your-database-and-r">Setting up a connection between your database and R<a class="anchor" aria-label="anchor" href="#setting-up-a-connection-between-your-database-and-r"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/8F2X5SKN64w" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to configure the connection to your OMOP CDM data from R using the OHDSI DatabaseConnector package.
-</td>
-</tr>
+<colgroup>
+<col width="55%">
+<col width="44%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/8F2X5SKN64w" class="external-link"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>Learn how to configure the connection to your OMOP CDM data from R
+using the OHDSI DatabaseConnector package.</td>
+</tr></tbody>
 </table>
 </div>
-<div id="running-a-single-patientlevelprediction-model" class="section level2">
-<h2 class="hasAnchor">
-<a href="#running-a-single-patientlevelprediction-model" class="anchor"></a>Running a single PatientLevelPrediction model</h2>
+<div class="section level2">
+<h2 id="running-a-single-patientlevelprediction-model">Running a single PatientLevelPrediction model<a class="anchor" aria-label="anchor" href="#running-a-single-patientlevelprediction-model"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/W9uf1IIhDQs" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to develop and validate a single PatientLevelPrediction model.
-</td>
-</tr>
+<colgroup>
+<col width="65%">
+<col width="34%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/7AraOsTynD4" class="external-link"><img src="http://img.youtube.com/vi/7AraOsTynD4/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>Learn how to develop and validate a single PatientLevelPrediction
+model.</td>
+</tr></tbody>
 </table>
 </div>
-<div id="running-multiple-patientlevelprediction-models-study" class="section level2">
-<h2 class="hasAnchor">
-<a href="#running-multiple-patientlevelprediction-models-study" class="anchor"></a>Running multiple PatientLevelPrediction models study</h2>
+<div class="section level2">
+<h2 id="running-multiple-patientlevelprediction-models-study">Running multiple PatientLevelPrediction models study<a class="anchor" aria-label="anchor" href="#running-multiple-patientlevelprediction-models-study"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/Ppsn_08z5FE" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to develop and validate multiple PatientLevelPrediction models.
-</td>
-</tr>
+<colgroup>
+<col width="65%">
+<col width="34%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/7wUilx580PE" class="external-link"><img src="http://img.youtube.com/vi/7wUilx580PE/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>Learn how to develop and validate multiple PatientLevelPrediction
+models.</td>
+</tr></tbody>
 </table>
 </div>
-<div id="designing-a-study-in-atlas" class="section level2">
-<h2 class="hasAnchor">
-<a href="#designing-a-study-in-atlas" class="anchor"></a>Designing a study in Atlas</h2>
+<div class="section level2">
+<h2 id="exploring-the-results-in-the-shiny-app">Exploring the results in the shiny app<a class="anchor" aria-label="anchor" href="#exploring-the-results-in-the-shiny-app"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/HqUdO3zx3DI" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to design a multiple or single PatientLevelPrediction study using Atlas. Atlas creates an R package that just needs to be built and then you’re on your way to developing multiple models!
-</td>
-</tr>
+<colgroup>
+<col width="54%">
+<col width="45%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/BulmuH32y_Y" class="external-link"><img src="http://img.youtube.com/vi/BulmuH32y_Y/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>Learn how to interactively explore the model performance and model
+via the shiny apps viewPlp() and viewMultiplePlp()</td>
+</tr></tbody>
 </table>
 </div>
-<div id="building-and-running-the-atlas-study" class="section level2">
-<h2 class="hasAnchor">
-<a href="#building-and-running-the-atlas-study" class="anchor"></a>Building and running the Atlas study</h2>
+<div class="section level2">
+<h2 id="validating-existing-models-on-omop-cdm-data">Validating existing models on OMOP CDM data<a class="anchor" aria-label="anchor" href="#validating-existing-models-on-omop-cdm-data"></a>
+</h2>
 <table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/qESMHZnpHJQ" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to build the R package generated by Atlas and how to then run the study.
-</td>
-</tr>
-</table>
-</div>
-<div id="exploring-the-results-in-the-shiny-app" class="section level2">
-<h2 class="hasAnchor">
-<a href="#exploring-the-results-in-the-shiny-app" class="anchor"></a>Exploring the results in the shiny app</h2>
-<table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/StpV40yl1UE" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-Learn how to interactively explore the model performance and model via the shiny apps viewPlp() and viewMultiplePlp()
-</td>
-</tr>
-</table>
-</div>
-<div id="validating-existing-models-on-omop-cdm-data" class="section level2">
-<h2 class="hasAnchor">
-<a href="#validating-existing-models-on-omop-cdm-data" class="anchor"></a>Validating existing models on OMOP CDM data</h2>
-<table class="table">
-<tr>
-<th>
-Click To Launch
-</th>
-<th>
-Description of Demo
-</th>
-</tr>
-<tr>
-<td width="40%">
-<a href="https://youtu.be/oBsfg9hfrpI" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package" width="240" height="180" border="10"></a>
-</td>
-<td width="60%">
-This demo shows how you can add any existing score or logistic model and valdiate the model on new OMOP CDM data. This is useful for benchmarking when developing new models or to perform extensive external validation of a model across the OHDSI network.
-</td>
-</tr>
+<colgroup>
+<col width="36%">
+<col width="63%">
+</colgroup>
+<thead><tr class="header">
+<th>Click To Launch</th>
+<th>Description of Demo</th>
+</tr></thead>
+<tbody><tr class="odd">
+<td><a href="https://youtu.be/oBsfg9hfrpI" class="external-link"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" alt="Video Vignette PLP Package"></a></td>
+<td>This demo shows how you can add any existing score or logistic model
+and validate the model on new OMOP CDM data. This is useful for
+benchmarking when developing new models or to perform extensive external
+validation of a model across the OHDSI network.</td>
+</tr></tbody>
 </table>
 </div>
   </div>
@@ -338,11 +293,13 @@ This demo shows how you can add any existing score or logistic model and valdiat
 
 
       <footer><div class="copyright">
-  <p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek.</p>
+  <p></p>
+<p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek, Egill Fridgeirsson.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
@@ -350,6 +307,8 @@ This demo shows how you can add any existing score or logistic model and valdiat
 
   
 
+
+  
 
   </body>
 </html>

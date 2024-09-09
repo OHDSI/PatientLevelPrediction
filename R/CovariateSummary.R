@@ -66,6 +66,28 @@ covariateSummary <- function(
     strata = strata
   )
   
+  # apply feature engineering
+  if(!is.null(featureEngineering)){
+    
+    # create copy of covariateData
+    newCovariateData <- Andromeda::andromeda(
+      covariateRef = covariateData$covariateRef,
+      analysisRef = covariateData$analysisRef,
+      covariates = covariateData$covariates
+      )
+    covariateData <- newCovariateData
+    
+    if(!is.null(featureEngineering$funct)){
+      featureEngineering <- list(featureEngineering)
+    }
+    
+    for(fe in featureEngineering){
+      feSettings <- fe$settings
+      feSettings$trainData = list(covariateData = covariateData)
+      covariateData <- do.call(fe$funct, feSettings)$covariateData
+    }
+  }
+  
   # make this run in parallel for big speed improvements..
   covariateSummariesPerStrata <- lapply(subsetList, 
     function(x){
@@ -114,10 +136,10 @@ aggregateCovariateSummaries <- function(
     ParallelLogger::logInfo('Aggregating with no labels or strata')
     result <- covariateSummariesPerStrata %>% 
       dplyr::select(
-        .data$covariateId, 
-        .data$CovariateCount, 
-        .data$CovariateMean, 
-        .data$CovariateStDev, 
+        "covariateId", 
+        "CovariateCount", 
+        "CovariateMean", 
+        "CovariateStDev", 
       )
   }
   
@@ -126,11 +148,11 @@ aggregateCovariateSummaries <- function(
     ParallelLogger::logInfo('Aggregating with only labels or strata')
     resultLabels <- covariateSummariesPerStrata %>% 
       dplyr::select(
-        .data$group,
-        .data$covariateId, 
-        .data$CovariateCount, 
-        .data$CovariateMean, 
-        .data$CovariateStDev, 
+        "group",
+        "covariateId", 
+        "CovariateCount", 
+        "CovariateMean", 
+        "CovariateStDev", 
       )
 
     resultLabels <- tidyr::pivot_longer(
@@ -142,7 +164,7 @@ aggregateCovariateSummaries <- function(
     
     resultLabels <- resultLabels %>% 
       dplyr::mutate(group_variable = paste(.data$group, .data$variable, sep ='_')) %>%
-      dplyr::select(-.data$group, -.data$variable)
+      dplyr::select(-"group", -"variable")
     
     resultLabels <- tidyr::pivot_wider(
       data = resultLabels, 
@@ -176,11 +198,11 @@ aggregateCovariateSummaries <- function(
     # labels and strata
     resultLabelStratas <- covariateSummariesPerStrata %>% 
       dplyr::select(
-        .data$group,
-        .data$covariateId, 
-        .data$CovariateCount, 
-        .data$CovariateMean, 
-        .data$CovariateStDev, 
+        "group",
+        "covariateId", 
+        "CovariateCount", 
+        "CovariateMean", 
+        "CovariateStDev", 
       )
     
     resultLabelStratas <- tidyr::pivot_longer(
@@ -192,7 +214,7 @@ aggregateCovariateSummaries <- function(
     
     resultLabelStratas <- resultLabelStratas %>% 
       dplyr::mutate(group_variable = paste(.data$group, .data$variable, sep ='_')) %>%
-      dplyr::select(-.data$group, -.data$variable)
+      dplyr::select(-"group", -"variable")
     
     resultLabelStratas <- tidyr::pivot_wider(
       data = resultLabelStratas, 
@@ -220,11 +242,11 @@ aggregateCovariateSummaries <- function(
       CovariateStDev = sqrt(sum(.data$sumSquares)/sum(.data$N) - (sum(.data$sumVal)/sum(.data$N))^2 )
     ) %>% 
       dplyr::select(
-        .data$groupLabel,
-        .data$covariateId, 
-        .data$CovariateCount, 
-        .data$CovariateMean, 
-        .data$CovariateStDev
+        "groupLabel",
+        "covariateId", 
+        "CovariateCount", 
+        "CovariateMean", 
+        "CovariateStDev"
       )
     
     resultLabels <- tidyr::pivot_longer(
@@ -236,7 +258,7 @@ aggregateCovariateSummaries <- function(
     
     resultLabels <- resultLabels %>% 
       dplyr::mutate(group_variable = paste(.data$groupLabel, .data$variable, sep ='_')) %>%
-      dplyr::select(-.data$groupLabel, -.data$variable)
+      dplyr::select(-"groupLabel", -"variable")
     
     resultLabels <- tidyr::pivot_wider(
       data = resultLabels, 
@@ -304,7 +326,7 @@ createCovariateSubsets <- function(
     ParallelLogger::logInfo(paste0('calculating subset of strata ',i))
     subset <- cohort %>% 
       dplyr::filter(.data$finalStrata == finalStratas[[i]]) %>%
-      dplyr::select(.data$rowId)
+      dplyr::select("rowId")
     
     result[[i]] <- list(
       subset = subset, 

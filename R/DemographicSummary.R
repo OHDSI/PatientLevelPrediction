@@ -44,7 +44,7 @@ getDemographicSummary_binary <- function(prediction, evalColumn , ...){
         ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
         genId = .data$gender,
         genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
-      dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+      dplyr::select("rowId","ageId","ageGroup","genId","genGroup") %>%
       dplyr::inner_join(predictionOfInterest[,colnames(predictionOfInterest)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
     
     demographicData <- demographicData %>%
@@ -88,7 +88,7 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         ageGroup = paste0('Age group: ', floor(.data$ageYear/5)*5, '-',floor(.data$ageYear/5)*5+4),
         genId = .data$gender,
         genGroup = ifelse(.data$gender==8507, 'Male', 'Female')) %>%
-      dplyr::select(.data$rowId,.data$ageId,.data$ageGroup,.data$genId,.data$genGroup ) %>%
+      dplyr::select("rowId","ageId","ageGroup","genId","genGroup" ) %>%
       dplyr::inner_join(predictionOfInterest[,colnames(predictionOfInterest)%in%c('rowId', 'value','outcomeCount','survivalTime')], by='rowId')
     
     
@@ -111,30 +111,30 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         tempDemo <- demographicSum %>% 
           dplyr::filter( .data$genGroup == gen & .data$ageGroup == age )
         
-        if(nrow(tempDemo)>0){
-          t1 <- tempDemo %>% dplyr::select(.data$t)
-          y1 <- tempDemo %>% dplyr::select(.data$y)
-          p1 <- tempDemo %>% dplyr::select(.data$value)
+        if (nrow(tempDemo) > 1 & length(unique(tempDemo$y)) > 1) {
+          t <- tempDemo$t
+          y <- tempDemo$y
+          value <- tempDemo$value
           
           out <- tryCatch(
             {
               summary(
-                survival::survfit(survival::Surv(t1$t, y1$y) ~ 1), 
+                survival::survfit(survival::Surv(t, y) ~ 1), 
                 times = timepoint
               )
             },
-            error = function(e){ParallelLogger::logError(e); return(NULL)}
+            error = function(e){ParallelLogger::logError(e);return(NULL)}
           )
           
           if(!is.null(out)){
             demoTemp <- c(
               genGroup = gen, 
               ageGroup = age, 
-              PersonCountAtRisk = length(p1$value),
-              PersonCountWithOutcome = round(length(p1$value)*(1-out$surv)),
+              PersonCountAtRisk = length(value),
+              PersonCountWithOutcome = round(length(value)*(1-out$surv)),
               observedRisk = 1-out$surv, 
-              averagePredictedProbability = mean(p1$value, na.rm = T),
-              StDevPredictedProbability = stats::sd(p1$value, na.rm = T)
+              averagePredictedProbability = mean(value, na.rm = T),
+              StDevPredictedProbability = stats::sd(value, na.rm = T)
               )
             
             demographicData <- rbind(demographicData, demoTemp)

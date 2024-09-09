@@ -11,14 +11,14 @@ setRandomForest(
   minSamplesSplit = list(2, 5),
   minSamplesLeaf = list(1, 10),
   minWeightFractionLeaf = list(0),
-  mtries = list("auto", "log2"),
+  mtries = list("sqrt", "log2"),
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(0),
   bootstrap = list(TRUE),
   maxSamples = list(NULL, 0.9),
   oobScore = list(FALSE),
   nJobs = list(NULL),
-  classWeight = list("balanced_subsample", NULL),
+  classWeight = list(NULL),
   seed = sample(1e+05, 1)
 )
 }
@@ -35,14 +35,13 @@ setRandomForest(
 
 \item{minWeightFractionLeaf}{(list) The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sampleWeight is not provided.}
 
-\item{mtries}{(list) The number of features to consider when looking for the best split: 
+\item{mtries}{(list) The number of features to consider when looking for the best split:
 \itemize{
-\item{int}{then consider max_features features at each split.}
-\item{float}{then max_features is a fraction and round(max_features * n_features) features are considered at each split}
-\item{'auto'}{then max_features=sqrt(n_features)}
-\item{'sqrt'}{then max_features=sqrt(n_features) (same as “auto”)}
-\item{'log2'}{then max_features=log2(n_features).}
-\item{NULL}{then max_features=n_features}
+\item int then consider max_features features at each split.
+\item float then max_features is a fraction and round(max_features * n_features) features are considered at each split
+\item 'sqrt' then max_features=sqrt(n_features)
+\item 'log2' then max_features=log2(n_features)
+\item NULL then max_features=n_features
 }}
 
 \item{maxLeafNodes}{(list) Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity. If None then unlimited number of leaf nodes.}
@@ -57,7 +56,7 @@ setRandomForest(
 
 \item{nJobs}{The number of jobs to run in parallel.}
 
-\item{classWeight}{(list) Weights associated with classes. If not given, all classes are supposed to have weight one. {NULL, “balanced”, “balanced_subsample”}}
+\item{classWeight}{(list) Weights associated with classes. If not given, all classes are supposed to have weight one. NULL, “balanced”, “balanced_subsample”}
 
 \item{seed}{A seed when training the final model}
 }
@@ -66,7 +65,7 @@ Create setting for random forest model with python (very fast)
 }
 \examples{
 \dontrun{
-model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100), 
+model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100),
                            maxDepth=c(5,20))
-}                           
+}
 }

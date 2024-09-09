@@ -30,8 +30,9 @@
 #' @param cohortTable  the table name that contains the target population cohort
 #' @param rowIdField  string representing the unique identifier in the target population cohort
 #' @param aggregated  whether the covariate should be aggregated
-#' @param cohortId  cohort id for the target population cohort
+#' @param cohortIds  cohort id for the target cohort
 #' @param covariateSettings  settings for the covariate cohorts and time periods
+#' @param ...  additional arguments from FeatureExtraction
 #'
 #' @return
 #' The models will now be in the package
@@ -45,8 +46,9 @@ getCohortCovariateData <- function(
   cohortTable = "#cohort_person",
   rowIdField = "row_id",
   aggregated,
-  cohortId,
-  covariateSettings
+  cohortIds,
+  covariateSettings,
+  ...
   ){
   
   # Some SQL to construct the covariate:
@@ -58,23 +60,23 @@ getCohortCovariateData <- function(
     "}} as covariate_value",
     "from @cohort_temp_table a inner join @covariate_cohort_schema.@covariate_cohort_table b",
     " on a.subject_id = b.subject_id and ",
-    " b.cohort_start_date <= dateadd(day, @endDay, a.cohort_start_date) and ",
+    " b.cohort_start_date <= dateadd(day, @endDays, a.cohort_start_date) and ",
     " b.cohort_end_date >= dateadd(day, @startDay, a.cohort_start_date) ",
     "{@ageInteraction | @lnAgeInteraction}?{inner join @cdm_database_schema.person p on p.person_id=a.subject_id}",
     "where b.cohort_definition_id = @covariate_cohort_id
-    group by a.@row_id_field "
+    group by a.@row_id_field; "
   )
   
   sql <- SqlRender::render(
     sql,
     covariate_cohort_schema = covariateSettings$cohortDatabaseSchema,
     covariate_cohort_table = covariateSettings$cohortTable,
-    covariate_cohort_id = covariateSettings$cohortId,
+    covariate_cohort_id = covariateSettings$cohortIds,
     cohort_temp_table = cohortTable,
     row_id_field = rowIdField,
     startDay = covariateSettings$startDay,
     covariate_id = covariateSettings$covariateId,
-    endDay = covariateSettings$endDay,
+    endDays = covariateSettings$endDays,
     countval = covariateSettings$count,
     ageInteraction = covariateSettings$ageInteraction,
     lnAgeInteraction = covariateSettings$lnAgeInteraction,
@@ -94,7 +96,7 @@ getCohortCovariateData <- function(
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
-  @analysis_id as analysis_id, -1 as concept_id"
+  @analysis_id as analysis_id, -1 as concept_id;"
   sql <- SqlRender::render(
     sql = sql, 
     covariate_id = covariateSettings$covariateId,
@@ -102,7 +104,7 @@ getCohortCovariateData <- function(
     concept_set = paste('Cohort_covariate during day',
       covariateSettings$startDay,
       'through',
-      covariateSettings$endDay,
+      covariateSettings$endDays,
       'days relative to index:',
       ifelse(covariateSettings$count, 'Number of', ''),
       covariateSettings$covariateName,
@@ -191,9 +193,9 @@ createCohortCovariateSettings <- function(
     covariateId = cohortId*100000+settingId*1000+analysisId,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
-    cohortId = cohortId,
+    cohortIds = cohortId,
     startDay = startDay,
-    endDay = endDay,
+    endDays = endDay,
     count = count,
     ageInteraction = ageInteraction,
     lnAgeInteraction = lnAgeInteraction,

@@ -85,7 +85,8 @@ createRestrictPlpDataSettings <- function(
 #'                                       instance. Requires read permissions to this database. On SQL
 #'                                       Server, this should specifiy both the database and the schema,
 #'                                       so for example 'cdm_instance.dbo'.
-#' @param cdmDatabaseName                A string with a shareable name of the database (this will be shown to OHDSI researchers if the results get transported)
+#' @param cdmDatabaseName                A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified)
+#' @param cdmDatabaseId                  A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified)
 #' @param tempEmulationSchema            For dmbs like Oracle only: the name of the database schema where you
 #'                                       want all temporary tables to be managed. Requires
 #'                                       create/insert permissions to this database.
@@ -101,10 +102,11 @@ createRestrictPlpDataSettings <- function(
 #' @param outcomeTable                   The tablename that contains the outcome cohorts.  Expectation is
 #'                                       outcomeTable has format of COHORT table: COHORT_DEFINITION_ID,
 #'                                       SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.
-#' @param cohortId                       An integer specifying the cohort id for the target cohort
+#' @param targetId                       An integer specifying the cohort id for the target cohort
 #' @param outcomeIds                      A single integer or vector of integers specifying the cohort ids for the outcome cohorts
-#' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and
-#'                                       "5".
+#' @param cdmVersion                     Define the OMOP CDM version used: currently support "4" and "5".
+#' @param cohortId                       (depreciated: use targetId) old input for the target cohort id
+#' 
 #' @return
 #' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
 #'
@@ -113,25 +115,55 @@ createDatabaseDetails <- function(
   connectionDetails,
   cdmDatabaseSchema,
   cdmDatabaseName,
+  cdmDatabaseId, # added for strategus
   tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
   outcomeTable = "cohort",
-  cohortId = NULL,
+  targetId = NULL,
   outcomeIds = NULL,
-  cdmVersion = 5
+  cdmVersion = 5,
+  cohortId = NULL
 ){
+  
+  if(is.null(targetId)){
+    if(!is.null(cohortId)){
+      ParallelLogger::logWarn('cohortId has been depreciated.  Please use targetId.')
+      targetId <- cohortId
+    }
+  }
+  
+  if(missing(cdmDatabaseName)){
+    ParallelLogger::logInfo('No cdm database name entered so using cdmDatabaseSchema')
+    cdmDatabaseName <- removeInvalidString(cdmDatabaseSchema)
+  }
+  if(missing(cdmDatabaseId)){
+    ParallelLogger::logInfo('No cdm database id entered so using cdmDatabaseSchema - if cdmDatabaseSchema is the same for multiple different databases, please use cdmDatabaseId to specify a unique identifier for the database and version')
+    cdmDatabaseId <- removeInvalidString(cdmDatabaseSchema)
+  }
+  
+  if(length(cdmDatabaseId) == 0 ){
+    stop('cdmDatabaseId must be a string with length > 0')
+  }
+  
+  # check to make sure cdmDatabaseId is not an int as that will cause issues
+  if(!inherits(cdmDatabaseId, 'character')){
+    ParallelLogger::logInfo('cdmDatabaseId is not a string - this will cause issues when inserting into a result database so casting it')
+    cdmDatabaseId <- as.character(cdmDatabaseId)
+  }
+  
   result <- list(
     connectionDetails = connectionDetails,
     cdmDatabaseSchema = cdmDatabaseSchema,
     cdmDatabaseName = cdmDatabaseName,
+    cdmDatabaseId = cdmDatabaseId,
     tempEmulationSchema = tempEmulationSchema,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
     outcomeDatabaseSchema = outcomeDatabaseSchema,
     outcomeTable = outcomeTable,
-    cohortId = cohortId ,
+    targetId = targetId,
     outcomeIds = outcomeIds,
     cdmVersion = cdmVersion
   )
@@ -188,10 +220,10 @@ getPlpData <- function(
   checkIsClass(databaseDetails, 'databaseDetails')
   checkIsClass(restrictPlpDataSettings, 'restrictPlpDataSettings')
 
-  if(is.null(databaseDetails$cohortId))
-    stop('User must input cohortId')
-  if(length(databaseDetails$cohortId)>1)
-    stop('Currently only supports one cohortId at a time')
+  if(is.null(databaseDetails$targetId))
+    stop('User must input targetId')
+  if(length(databaseDetails$targetId)>1)
+    stop('Currently only supports one targetId at a time')
   if(is.null(databaseDetails$outcomeIds))
     stop('User must input outcomeIds')
   #ToDo: add other checks the inputs are valid
@@ -202,16 +234,22 @@ getPlpData <- function(
   
   ParallelLogger::logTrace("\nConstructing the at risk cohort")
   if(!is.null(restrictPlpDataSettings$sampleSize))  writeLines(paste("\n Sampling ",restrictPlpDataSettings$sampleSize, " people"))
-  renderedSql <- SqlRender::loadRenderTranslateSql(
-    "CreateCohorts.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms, 
-    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    'CreateCohorts.sql', 
+    package = "PatientLevelPrediction"
+  )
+  
+  renderedSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  renderedSql <- SqlRender::render(
+    sql = renderedSql,
     cdm_database_schema = databaseDetails$cdmDatabaseSchema,
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
     cdm_version = databaseDetails$cdmVersion,
-    cohort_id = databaseDetails$cohortId,
+    target_id = databaseDetails$targetId,
     study_start_date = restrictPlpDataSettings$studyStartDate,
     study_end_date = restrictPlpDataSettings$studyEndDate,
     first_only = restrictPlpDataSettings$firstExposureOnly,
@@ -219,36 +257,57 @@ getPlpData <- function(
     use_sample = !is.null(restrictPlpDataSettings$sampleSize),
     sample_number = restrictPlpDataSettings$sampleSize
   )
+  renderedSql <- SqlRender::translate(
+    sql = renderedSql, 
+    targetDialect = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
+  )
+    
   DatabaseConnector::executeSql(connection, renderedSql)
   
   ParallelLogger::logTrace("Fetching cohorts from server")
   start <- Sys.time()
-  cohortSql <- SqlRender::loadRenderTranslateSql(
-    "GetCohorts.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms, 
-    tempEmulationSchema = databaseDetails$tempEmulationSchema,
+  
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    "GetCohorts.sql", 
+    package = "PatientLevelPrediction"
+  )
+  
+  cohortSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  
+  cohortSql <- SqlRender::render(
+    sql = cohortSql,
     cdm_version = databaseDetails$cdmVersion
+  )
+  
+  cohortSql <- SqlRender::translate(
+    sql = cohortSql, 
+    targetDialect = dbms, 
+    tempEmulationSchema = databaseDetails$tempEmulationSchema
   )
   cohorts <- DatabaseConnector::querySql(connection, cohortSql)
   colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
-  metaData.cohort <- list(cohortId = databaseDetails$cohortId)
+  metaData.cohort <- list(targetId = databaseDetails$targetId)
   
-  if(nrow(cohorts)==0)
+  if(nrow(cohorts)==0){
     stop('Target population is empty')
+  }
   
   delta <- Sys.time() - start
   ParallelLogger::logTrace(paste("Loading cohorts took", signif(delta, 3), attr(delta, "units")))
-  
-  #covariateSettings$useCovariateCohortIdIs1 <- TRUE
-  covariateData <- FeatureExtraction::getDbCovariateData(connection = connection, 
-                                                         oracleTempSchema = databaseDetails$tempEmulationSchema,
-                                                         cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
-                                                         cdmVersion = databaseDetails$cdmVersion,
-                                                         cohortTable = "#cohort_person",
-                                                         cohortTableIsTemp = TRUE,
-                                                         rowIdField = "row_id",
-                                                         covariateSettings = covariateSettings)
+
+  covariateData <- FeatureExtraction::getDbCovariateData(
+    connection = connection, 
+    oracleTempSchema = databaseDetails$tempEmulationSchema,
+    cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
+    cdmVersion = databaseDetails$cdmVersion,
+    cohortTable = "#cohort_person",
+    cohortTableIsTemp = TRUE,
+    rowIdField = "row_id",
+    covariateSettings = covariateSettings
+  )
   # add indexes for tidyCov + covariate summary
   Andromeda::createIndex(covariateData$covariates, c('rowId'),
                          indexName = 'covariates_rowId')
@@ -260,23 +319,38 @@ getPlpData <- function(
   if(max(databaseDetails$outcomeIds)!=-999){
     ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()
-    outcomeSql <- SqlRender::loadRenderTranslateSql(
-      "GetOutcomes.sql",
-      packageName = "PatientLevelPrediction",
-      dbms = dbms,
-      tempEmulationSchema = databaseDetails$tempEmulationSchema,
+    
+    pathToSql <- system.file(
+      paste("sql/", "sql_server", 
+            sep = ""),
+      "GetOutcomes.sql", 
+      package = "PatientLevelPrediction"
+    )
+    
+    outcomeSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+    
+    outcomeSql <- SqlRender::render(
+      sql = outcomeSql,
       cdm_database_schema = databaseDetails$cdmDatabaseSchema,
       outcome_database_schema = databaseDetails$outcomeDatabaseSchema,
       outcome_table = databaseDetails$outcomeTable,
       outcome_ids = databaseDetails$outcomeIds,
       cdm_version = databaseDetails$cdmVersion
     )
+    
+    outcomeSql <- SqlRender::translate(
+      sql = outcomeSql, 
+      targetDialect = dbms, 
+      tempEmulationSchema = databaseDetails$tempEmulationSchema
+    )
+    
     outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
     colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
     metaData.outcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
     attr(outcomes, "metaData") <- metaData.outcome
-    if(nrow(outcomes)==0)
+    if(nrow(outcomes)==0){
       stop('No Outcomes')
+    }
     
     metaData.cohort$attrition <- getCounts2(cohorts,outcomes, "Original cohorts")
     attr(cohorts, "metaData") <- metaData.cohort
@@ -288,17 +362,22 @@ getPlpData <- function(
   }
   
   
-  
-  
   # Remove temp tables:
-  renderedSql <- SqlRender::loadRenderTranslateSql(
-    "RemoveCohortTempTables.sql",
-    packageName = "PatientLevelPrediction",
-    dbms = dbms,
+  pathToSql <- system.file(
+    paste("sql/", "sql_server", 
+          sep = ""),
+    "RemoveCohortTempTables.sql", 
+    package = "PatientLevelPrediction"
+  )
+  
+  removeSql <- readChar(pathToSql, file.info(pathToSql)$size) 
+  removeSql <- SqlRender::translate(
+    sql = removeSql, 
+    targetDialect = dbms, 
     tempEmulationSchema = databaseDetails$tempEmulationSchema
   )
   
-  DatabaseConnector::executeSql(connection, renderedSql, progressBar = FALSE, reportOverallTime = FALSE)
+  DatabaseConnector::executeSql(connection, removeSql, progressBar = FALSE, reportOverallTime = FALSE)
   #DatabaseConnector::disconnect(connection)
   
   metaData <- covariateData$metaData
@@ -336,7 +415,7 @@ getPlpData <- function(
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
   writeLines("")
-  writeLines(paste("At risk concept ID:", attr(x$cohorts, "metaData")$cohortId))
+  writeLines(paste("At risk concept ID:", attr(x$cohorts, "metaData")$targetId))
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
@@ -366,7 +445,7 @@ summary.plpData <- function(object,...){
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
   writeLines("")
-  writeLines(paste("At risk cohort concept ID:", x$metaData$cohortId))
+  writeLines(paste("At risk cohort concept ID:", x$metaData$targetId))
   writeLines(paste("Outcome concept ID(s):", x$metaData$outcomeIds, collapse = ","))
   writeLines("")
   writeLines(paste("People:", paste(x$people)))

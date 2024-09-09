@@ -101,7 +101,7 @@ Data Creation
 Impact of over/under-sampling
 </td>
 <td>
-Study being developed
+<a href='https://link.springer.com/article/10.1186/s40537-023-00857-7'> Journal of big data</a>
 </td>
 </tr>
 
@@ -125,7 +125,7 @@ Model development
 How much data do we need for prediction - Learning curves at scale
 </td>
 <td>
-<a href='https://arxiv.org/abs/2008.07361'>Preprint link</a>
+<a href='https://www.sciencedirect.com/science/article/pii/S1386505622000764'>International Journal of Medical Informatics </a>
 </td>
 </tr>
 
@@ -170,12 +170,73 @@ Study needs to be done
 Model development	
 </td>
 <td>
+Can we use ensembles to combine different algorithm models within a database to improve models transportability? 
+</td>
+<td>
+<a href='https://ebooks.iospress.nl/doi/10.3233/SHTI230080'> Caring is Sharing–Exploiting the Value in Data for Health and Innovation  </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
 Can we use ensembles to combine models developed using different databases to improve models transportability?
 </td>
 <td>
-<a href=''> Paper under review at BMC </a>
+<a href='https://link.springer.com/article/10.1186/s12911-022-01879-6'> BMC Medical Informatics and Decision Making </a>
 </td>
 </tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Impact of regularization method 
+</td>
+<td>
+<a href='https://academic.oup.com/jamia/article/31/7/1514/7676584'> JAMIA </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+Why prediction is not suitable for risk factor identification  
+</td>
+<td>
+<a href='https://proceedings.mlr.press/v182/markus22a.html'> Machine Learning for Healthcare Conference </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+Iterative pairwise external validation to put validation into context 
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1007/s40264-022-01161-8'> Drug Safety </a>
+</td>
+</tr>
+
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+A novel method to estimate external validation using aggregate statistics  
+</td>
+<td>
+<a href=''> Study under review </a>
+</td>
+</tr>    
 
 <tr>
 <td>
@@ -225,4 +286,4 @@ Is there a way to automatically simplify models?
 </td>
 </tr>
 </table>
-    
+

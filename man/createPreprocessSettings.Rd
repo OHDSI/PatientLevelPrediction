@@ -2,7 +2,7 @@
 % Please edit documentation in R/PreprocessingData.R
 \name{createPreprocessSettings}
 \alias{createPreprocessSettings}
-\title{Create the settings for preprocessing the trainData using \code{ }.}
+\title{Create the settings for preprocessing the trainData.}
 \usage{
 createPreprocessSettings(
   minFraction = 0.001,
@@ -21,7 +21,7 @@ createPreprocessSettings(
 An object of class \code{preprocessingSettings}
 }
 \description{
-Create the settings for preprocessing the trainData using \code{ }.
+Create the settings for preprocessing the trainData.
 }
 \details{
 Returns an object of class \code{preprocessingSettings} that specifies how to preprocess the training data

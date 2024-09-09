@@ -2,17 +2,18 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 5.0.5
-Date: 2022-03-16
+Version: 6.3.9
+Date: 2024-08-21
 Authors@R: c(
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
     person("Martijn", "Schuemie", role = c("aut")),
     person("Marc", "Suchard", role = c("aut")),
     person("Patrick", "Ryan", role = c("aut")),
-    person("Peter", "Rijnbeek", role = c("aut"))
+    person("Peter", "Rijnbeek", role = c("aut")),
+    person("Egill", "Fridgeirsson", role = c("aut"))
     )
 Maintainer: Jenna Reps <jreps@its.jnj.com>
-Description: A package for creating patient level prediction models. Given a
+Description: A user friendly way to create patient level prediction models using the OMOP common data model. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be assessed to fit a predictive model using a number of machine learning algorithms.
@@ -22,69 +23,56 @@ URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/Pa
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.3.0),
-    FeatureExtraction (>= 3.0.0)
+    R (>= 4.0.0)
 Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
-    DatabaseConnector (>= 5.0.0),
+    DatabaseConnector (>= 6.0.0),
     dplyr,
+    FeatureExtraction (>= 3.0.0),
     ggplot2,
     gridExtra,
-    Hmisc,
-    jsonlite,
     Matrix,
     memuse,
+    mgcv,
     ParallelLogger (>= 2.0.0),
+    polspline,
     pROC,
     PRROC,
-    reticulate (> 1.16),
+    reticulate (>= 1.30),
     rlang,
-    rms,
-    RSQLite,
     SqlRender (>= 1.1.3),
     survival,
-    tibble,
     tidyr,
     utils
 Suggests:
     AUC,
     BigKnn (>= 1.0.0),
-    DBI,
     devtools,
-    diagram, 
-    DT,
     Eunomia,
-    gnm,
-    htmlwidgets (> 0.8),
-    htmltools,
     IterativeHardThresholding,
     knitr,
     markdown,
     Metrics,
     parallel,
-    plotly,
     plyr, 
     pool,
-    R6,
+    readr,
     ResourceSelection,
+    ResultModelManager (>= 0.2.0),
     rmarkdown,
+    RSQLite,
     scoring,
-    shiny,
-    shinycssloaders,
-    shinydashboard,
-    shinyWidgets,
-    SparseM,
-    survAUC,
+    ShinyAppBuilder (>= 1.1.1),
     survminer,
     testthat,
     withr,
-    xgboost (> 1.3.2.1)
+    xgboost (> 1.3.2.1),
+    lightgbm
 Remotes:
     ohdsi/BigKnn,
-    ohdsi/Eunomia,
     ohdsi/FeatureExtraction,
-    ohdsi/IterativeHardThresholding,
-    ohdsi/ParallelLogger
-RoxygenNote: 7.1.2
+    ohdsi/ShinyAppBuilder,
+    ohdsi/ResultModelManager,
+RoxygenNote: 7.3.1
 Encoding: UTF-8

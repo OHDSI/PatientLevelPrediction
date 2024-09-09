@@ -31,7 +31,8 @@
 #' develop and internally validate a model for the specified outcomeId.
 #'
 #' @param plpData                    An object of type \code{plpData} - the patient level prediction
-#'                                   data extracted from the CDM.
+#'                                   data extracted from the CDM.  Can also include an initial population as 
+#'                                   plpData$popualtion.
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param analysisName               (character) Name for the analysis
@@ -48,17 +49,12 @@
 #'                                   and whether to normalise the covariates before training  
 #' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
-#'                                         \item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-#'                                         \item{setGradientBoostingMachine()}{ A gradient boosting machine}
-#'                                         \item{setAdaBoost()}{ An ada boost model}
-#'                                         \item{setRandomForest()}{ A random forest model}
-#'                                         \item{setDecisionTree()}{ A decision tree model}
-#'                                         \item{setCovNN())}{ A convolutional neural network model}
-#'                                         \item{setCIReNN()}{ A recurrent neural network model}
-#'                                         \item{setMLP()}{ A neural network model}
-#'                                         \item{setDeepNN()}{ A deep neural network model}
-#'                                         \item{setKNN()}{ A KNN model}
-#'                                         
+#'                                         \item setLassoLogisticRegression() A lasso logistic regression model
+#'                                         \item setGradientBoostingMachine() A gradient boosting machine
+#'                                         \item setAdaBoost() An ada boost model
+#'                                         \item setRandomForest() A random forest model
+#'                                         \item setDecisionTree() A decision tree model
+#'                                         \item setKNN() A KNN model
 #'                                         } 
 #' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings} 
 #'                                   specifying how the logging is done                                                                            
@@ -70,13 +66,12 @@
 #' An object containing the following:
 #'
 #'  \itemize{
-#'           \item{inputSettings}{A list containing all the settings used to develop the model}
-#'           \item{model}{ The developed model of class \code{plpModel}}
-#'           \item{executionSummary}{ A list containing the hardward details, R package details and execution time}
-#'           \item{performanceEvaluation}{ Various internal performance metrics in sparse format}
-#'           \item{prediction}{ The plpData cohort table with the predicted risks added as a column (named value)}
-#'           \item{covariateSummary)}{ A characterization of the features for patients with and without the outcome during the time at risk}
-#'           \item{analysisRef}{ A list with details about the analysis}
+#'           \item model The developed model of class \code{plpModel}
+#'           \item executionSummary A list containing the hardward details, R package details and execution time
+#'           \item performanceEvaluation Various internal performance metrics in sparse format
+#'           \item prediction The plpData cohort table with the predicted risks added as a column (named value)
+#'           \item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
+#'           \item analysisRef A list with details about the analysis
 #'           } 
 #'
 #'
@@ -258,7 +253,7 @@ runPlp <- function(
   tryCatch({
     printHeader(
       plpData, 
-      plpData$metaData$databaseDetails$cohortId, 
+      plpData$metaData$databaseDetails$targetId, 
       outcomeId, 
       analysisId, 
       analysisName,
@@ -267,20 +262,23 @@ runPlp <- function(
   })
   
   # create the population
-  population <- tryCatch(
-    {
-      do.call(
-        createStudyPopulation, 
-        list(
-          plpData = plpData,
-          outcomeId = outcomeId,
-          populationSettings = populationSettings
-        )
-      )
-    },
+  if(!is.null(plpData$population)) {
+    ParallelLogger::logInfo('Using existing population')
+    population <- plpData$population
+  } else {
+    ParallelLogger::logInfo('Creating population')
+    population <- tryCatch({
+      do.call(createStudyPopulation,
+              list(plpData = plpData,
+                   outcomeId = outcomeId,
+                   populationSettings = populationSettings,
+                   population = plpData$population
+                   )
+      )},
     error = function(e){ParallelLogger::logError(e); return(NULL)}
-  )
-  
+    )
+  }
+    
   if(is.null(population)){
     stop('population NULL')
   }
@@ -364,7 +362,8 @@ runPlp <- function(
     settings <- list(
       trainData = data$Train, 
       modelSettings = modelSettings,
-      analysisId = analysisId
+      analysisId = analysisId,
+      analysisPath = analysisPath
     )
     
     ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
@@ -438,22 +437,29 @@ runPlp <- function(
     
     variableImportance <- plpData$covariateData$covariateRef %>% 
       dplyr::mutate(covariateValue = 0) %>% 
-      dplyr::select(.data$covariateId, .data$covariateValue) %>% 
+      dplyr::select("covariateId", "covariateValue") %>% 
       dplyr::collect()
     if(!is.null(model)){
       if(!is.null(model$covariateImportance)){
-        variableImportance <- model$covariateImportance %>% dplyr::select(.data$covariateId, .data$covariateValue)
+        variableImportance <- model$covariateImportance %>% 
+          dplyr::select("covariateId", "covariateValue")
       }
+    }
+    
+    # apply FE if it is used
+    featureEngineering <- NULL
+    if(!is.null(model)){
+      featureEngineering <- model$preprocessing$featureEngineering
     }
     
     covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
-        cohort = population %>% dplyr::select(.data$rowId),
-        labels = population %>% dplyr::select(.data$rowId, .data$outcomeCount), 
+        cohort = population %>% dplyr::select("rowId"),
+        labels = population %>% dplyr::select("rowId", "outcomeCount"), 
         strata = strata,
         variableImportance = variableImportance,
-        featureEngineering = NULL
+        featureEngineering = featureEngineering
         )
     )
   

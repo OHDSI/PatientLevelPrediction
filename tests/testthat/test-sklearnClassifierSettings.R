@@ -11,22 +11,20 @@ test_that("setAdaBoost settings work checks", {
   
   expect_equal(length(adset$param), 3*3*1)
   
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[1]]))), NULL)
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[2]]))), c(10,50, 200))
-  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[3]]))), c(1, 0.5, 0.1))
-  expect_equal(unique(lapply(adset$param, function(x) x[[4]])), list('SAMME.R'))
+  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[1]]))), c(10,50, 200))
+  expect_equal(unique(unlist(lapply(adset$param, function(x) x[[2]]))), c(1, 0.5, 0.1))
+  expect_equal(unique(lapply(adset$param, function(x) x[[3]])), list('SAMME.R'))
   
   expect_false(attr(adset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(adset$param, 'settings')$name, 'AdaBoost')
-  expect_equal(attr(adset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(adset$param, 'settings')$pythonImportSecond, 'ensemble')
-  expect_equal(attr(adset$param, 'settings')$pythonClassifier, "AdaBoostClassifier")
+  expect_equal(attr(adset$param, 'settings')$pythonModule, 'sklearn.ensemble')
+  expect_equal(attr(adset$param, 'settings')$pythonClass, "AdaBoostClassifier")
   
   
   inputs <- AdaBoostClassifierInputs(list, adset$param[[1]])
   expect_equal(
     names(inputs), 
-    c("base_estimator","n_estimators","learning_rate","algorithm","random_state" )
+    c("n_estimators","learning_rate","algorithm","random_state" )
     )
   
 })
@@ -40,10 +38,6 @@ test_that("setAdaBoost errors as expected", {
   expect_error(setAdaBoost(seed  =  list('seed')))
   
 })
-
-
-
-
 
 
 test_that("setMLP settings work checks", {
@@ -83,9 +77,8 @@ test_that("setMLP settings work checks", {
   
   expect_false(attr(mlpset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(mlpset$param, 'settings')$name, 'Neural Network')
-  expect_equal(attr(mlpset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(mlpset$param, 'settings')$pythonImportSecond, 'neural_network')
-  expect_equal(attr(mlpset$param, 'settings')$pythonClassifier, "MLPClassifier")
+  expect_equal(attr(mlpset$param, 'settings')$pythonModule, 'sklearn.neural_network')
+  expect_equal(attr(mlpset$param, 'settings')$pythonClass, "MLPClassifier")
   
   inputs <- MLPClassifierInputs(list, mlpset$param[[1]])
   expect_equal(
@@ -99,12 +92,6 @@ test_that("setMLP settings work checks", {
 })
 
 
-
-
-
-
-
-
 test_that("setNaiveBayes settings work checks", {
   
   nbset <- setNaiveBayes(
@@ -116,19 +103,13 @@ test_that("setNaiveBayes settings work checks", {
   
   expect_true(attr(nbset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(nbset$param, 'settings')$name, 'Naive Bayes')
-  expect_equal(attr(nbset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(nbset$param, 'settings')$pythonImportSecond, 'naive_bayes')
-  expect_equal(attr(nbset$param, 'settings')$pythonClassifier, "GaussianNB")
+  expect_equal(attr(nbset$param, 'settings')$pythonModule, 'sklearn.naive_bayes')
+  expect_equal(attr(nbset$param, 'settings')$pythonClass, "GaussianNB")
   
   inputs <- GaussianNBInputs(list, nbset$param[[1]])
   expect_equal(names(inputs),NULL)
   
 })
-
-
-
-
-
 
 
 test_that("setRandomForest settings work checks", {
@@ -140,29 +121,28 @@ test_that("setRandomForest settings work checks", {
     minSamplesSplit = list(2,5),
     minSamplesLeaf = list(1,10),
     minWeightFractionLeaf = list(0),
-    mtries = list('auto', 'log2'),
+    mtries = list('sqrt', 'log2'),
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(0),
     bootstrap = list(TRUE),
     maxSamples = list(NULL, 0.9),
     oobScore = list(FALSE),
     nJobs = list(NULL),
-    classWeight = list('balanced_subsample', NULL),
+    classWeight = list(NULL),
     seed = sample(100000,1)
   )
   
   expect_equal(rfset$fitFunction, "fitSklearn")
   
-  expect_equal(length(rfset$param), 2*3*2*2*2*2*2)
+  expect_equal(length(rfset$param), 2*3*2*2*2*2*1)
   
   expect_equal(unique(lapply(rfset$param, function(x) x[[1]])), list(100,500))
   expect_equal(unique(unlist(lapply(rfset$param, function(x) x[[3]]))), c(4,10,17))
   
   expect_false(attr(rfset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(rfset$param, 'settings')$name, 'Random forest')
-  expect_equal(attr(rfset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(rfset$param, 'settings')$pythonImportSecond, 'ensemble')
-  expect_equal(attr(rfset$param, 'settings')$pythonClassifier, "RandomForestClassifier")
+  expect_equal(attr(rfset$param, 'settings')$pythonModule, 'sklearn.ensemble')
+  expect_equal(attr(rfset$param, 'settings')$pythonClass, "RandomForestClassifier")
   
   inputs <- RandomForestClassifierInputs(list,  rfset$param[[1]])
   expect_equal(
@@ -175,8 +155,6 @@ test_that("setRandomForest settings work checks", {
 })
 
 
-
-
 test_that("setSVM  settings work checks", {
   
   svmset <- setSVM (
@@ -187,23 +165,22 @@ test_that("setSVM  settings work checks", {
     coef0 = list(0.0),
     shrinking = list(TRUE), 
     tol = list(0.001),
-    classWeight = list('balanced', NULL), 
+    classWeight = list(NULL), 
     cacheSize  = 500,
     seed = sample(100000,1)
   )
   
   expect_equal(svmset$fitFunction, "fitSklearn")
   
-  expect_equal(length(svmset$param), 4*3*6*2)
+  expect_equal(length(svmset$param), 4*3*6*1)
   
   expect_equal(unique(lapply(svmset$param, function(x) x[[4]])), list('scale', 1e-04, 3e-05, 0.001, 0.01, 0.25))
   expect_equal(unique(unlist(lapply(svmset$param, function(x) x[[1]]))), c(1,0.9,2,0.1))
   
   expect_false(attr(svmset$param, 'settings')$requiresDenseMatrix)
   expect_equal(attr(svmset$param, 'settings')$name, 'Support Vector Machine')
-  expect_equal(attr(svmset$param, 'settings')$pythonImport, 'sklearn')
-  expect_equal(attr(svmset$param, 'settings')$pythonImportSecond, 'svm')
-  expect_equal(attr(svmset$param, 'settings')$pythonClassifier, "SVC")
+  expect_equal(attr(svmset$param, 'settings')$pythonModule, 'sklearn.svm')
+  expect_equal(attr(svmset$param, 'settings')$pythonClass, "SVC")
   
   inputs <- SVCInputs(list,  svmset$param[[1]])
   expect_equal(

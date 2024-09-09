@@ -40,7 +40,7 @@
 #'   \code{trainFractions}. Note, providing \code{trainEvents} will override
 #'   your input to \code{trainFractions}. The format should be as follows:
 #'   \itemize{
-#'     \item{ \code{c(500, 1000, 1500) } - a list of training events}
+#'     \item \code{c(500, 1000, 1500) } - a list of training events
 #'   }
 #' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)                                                        
 #' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
@@ -48,17 +48,12 @@
 #'                                   and whether to normalise the covariates before training  
 #' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
-#'                                         \item{setLassoLogisticRegression()}{ A lasso logistic regression model}
-#'                                         \item{setGradientBoostingMachine()}{ A gradient boosting machine}
-#'                                         \item{setAdaBoost()}{ An ada boost model}
-#'                                         \item{setRandomForest()}{ A random forest model}
-#'                                         \item{setDecisionTree()}{ A decision tree model}
-#'                                         \item{setCovNN())}{ A convolutional neural network model}
-#'                                         \item{setCIReNN()}{ A recurrent neural network model}
-#'                                         \item{setMLP()}{ A neural network model}
-#'                                         \item{setDeepNN()}{ A deep neural network model}
-#'                                         \item{setKNN()}{ A KNN model}
-#'                                         
+#'                                         \item \code{setLassoLogisticRegression()} A lasso logistic regression model
+#'                                         \item \code{setGradientBoostingMachine()} A gradient boosting machine
+#'                                         \item \code{setAdaBoost()} An ada boost model
+#'                                         \item \code{setRandomForest()} A random forest model
+#'                                         \item \code{setDecisionTree()} A decision tree model
+#'                                         \item \code{setKNN()} A KNN model
 #'                                         } 
 #' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings} 
 #'                                   specifying how the logging is done                                                                            
@@ -98,7 +93,7 @@ createLearningCurve <- function(
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(),
   trainFractions = c(0.25, 0.50, 0.75),
-  trainEvents = c(500, 1000, 1500),
+  trainEvents = NULL,
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   preprocessSettings = createPreprocessSettings(
@@ -188,7 +183,7 @@ createLearningCurve <- function(
     nRuns <- length(trainFractions)
     
     settings = list(
-      plpData = plpData,
+      plpData = quote(plpData),
       outcomeId = outcomeId,
       analysisId = analysisId,
       populationSettings = populationSettings,
@@ -238,7 +233,7 @@ createLearningCurve <- function(
 
 lcWrapper <- function(settings){
   plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
-  settings$plpData <- plpData
+  settings$plpData <- quote(plpData)
   result <- tryCatch({do.call(runPlp, settings)},
                      warning = function(war) {
                        ParallelLogger::logInfo(paste0('a warning: ', war))
@@ -282,7 +277,7 @@ getTrainFractions <- function(
   trainFractionsTemp <- samplesRequired/nrow(population)
   
   # filter out no. of events that would exceed the available training set size
-  binaryMask <- trainFractionsTemp <= (1.0 - splitSettings$testFraction)
+  binaryMask <- trainFractionsTemp <= (1.0 - splitSettings$test)
   
   # override any input to trainFractions with event-based training fractions
   trainFractions <- trainFractionsTemp[binaryMask]
@@ -307,7 +302,7 @@ learningCurveHelper <- function(result, trainFractions){
   
   result$name <- paste(result$evaluation, result$metric, sep='_')
   
-  result <- result %>% dplyr::select(.data$name, .data$value)
+  result <- result %>% dplyr::select("name", "value")
   
   result <- rbind(
     c('executionTime', executeTime), 
@@ -381,9 +376,9 @@ plotLearningCurve <- function(learningCurve,
     # create a data.frame with evalautionType, AUROC
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUROC, .data$Train_AUROC)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_AUROC", "Train_AUROC")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
@@ -407,9 +402,9 @@ plotLearningCurve <- function(learningCurve,
     # tidy up dataframe
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$Test_AUPRC, .data$Train_AUPRC)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_AUPRC", "Train_AUPRC")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
@@ -432,9 +427,9 @@ plotLearningCurve <- function(learningCurve,
     # tidy up dataframe
     tidyLearningCurve <- learningCurve %>% 
       dplyr::rename(
-        Occurrences = .data$Train_outcomeCount, 
-        Observations = .data$Train_populationSize ) %>%
-      dplyr::select(.data$trainFraction, .data$Occurrences, .data$Observations, .data$`Test_brier score scaled`, .data$`Train_brier score scaled`)
+        Occurrences = "Train_outcomeCount", 
+        Observations = "Train_populationSize" ) %>%
+      dplyr::select("trainFraction", "Occurrences", "Observations", "Test_brier score scaled", "Train_brier score scaled")
     
     for(i in 1:ncol(tidyLearningCurve)){
       tidyLearningCurve[,i] <- as.double(as.character(tidyLearningCurve[,i]))
@@ -470,8 +465,8 @@ plotLearningCurve <- function(learningCurve,
   
   # create plot object
   plot <- tidyLearningCurve %>%
-    ggplot2::ggplot(ggplot2::aes_string(x = abscissa, y= 'value',
-      col = "Dataset")) +
+    ggplot2::ggplot(ggplot2::aes(x = .data[[abscissa]], y = .data[['value']],
+      col = .data[["Dataset"]])) +
     ggplot2::geom_line() +
     ggplot2::coord_cartesian(ylim = yAxisRange, expand = FALSE) +
     ggplot2::labs(title = plotTitle, subtitle = plotSubtitle, 

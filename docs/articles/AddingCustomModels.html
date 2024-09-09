@@ -19,6 +19,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -31,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">5.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.9</span>
       </span>
     </div>
 
@@ -53,7 +55,7 @@
   <a href="../reference/index.html">Reference</a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
      
     <span class="caret"></span>
@@ -72,10 +74,10 @@
       <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
     </li>
     <li>
-      <a href="../articles/BestPractices.html">Best Practice Research</a>
+      <a href="../articles/BenchmarkTasks.html">Benchmark Tasks</a>
     </li>
     <li>
-      <a href="../articles/BuildingEnsembleModels.html">Building Ensemble Models</a>
+      <a href="../articles/BestPractices.html">Best Practice Research</a>
     </li>
     <li>
       <a href="../articles/BuildingMultiplePredictiveModels.html">Automatically Build Multiple Patient-Level Predictive Models</a>
@@ -84,13 +86,16 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/ClinicalModels.html">Clinical Models</a>
+    </li>
+    <li>
+      <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
+    </li>
+    <li>
       <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
     </li>
     <li>
       <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
-    </li>
-    <li>
-      <a href="../articles/CreatingShinyApp.html">Creating Shiny App</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -101,10 +106,19 @@
   </ul>
 </li>
 <li>
-  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/">Tutorial</a>
+  <a href="https://www.ohdsi.org/past-events/patient-level-prediction/" class="external-link">Tutorial</a>
+</li>
+<li>
+  <a href="../articles/BenchmarkTasks.html">Benchmarks</a>
+</li>
+<li>
+  <a href="../articles/ConstrainedPredictors.html">Predictors</a>
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
+  <a href="../articles/ClinicalModels.html">Clinical Models</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -112,10 +126,10 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
+  <a href="https://ohdsi.github.io/Hades" class="external-link"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a>
 </li>
 <li>
-  <a href="https://github.com/OHDSI/PatientLevelPrediction">
+  <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -130,15 +144,17 @@
 
       
 
-      </header><script src="AddingCustomModels_files/header-attrs-2.11/header-attrs.js"></script><div class="row">
+      </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Adding Custom Patient-Level Prediction Algorithms</h1>
-                        <h4 class="author">Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
+      <h1 data-toc-skip>Adding Custom Patient-Level Prediction
+Algorithms</h1>
+                        <h4 data-toc-skip class="author">Jenna Reps,
+Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 class="date">2022-03-09</h4>
+            <h4 data-toc-skip class="date">2024-09-09</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/vignettes/AddingCustomModels.Rmd"><code>vignettes/AddingCustomModels.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/AddingCustomModels.Rmd" class="external-link"><code>vignettes/AddingCustomModels.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomModels.Rmd</code></div>
 
     </div>
@@ -146,472 +162,589 @@
     
     
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Adding Custom Patient-Level Prediction Algorithms}
 -->
-<div id="introduction" class="section level1">
-<h1 class="hasAnchor">
-<a href="#introduction" class="anchor"></a>Introduction</h1>
-<p>This vignette describes how you can add your own custom algorithms in the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction"><code>PatientLevelPrediction</code></a> package. This allows you to fully leverage the OHDSI PatientLevelPrediction framework for model development and validation. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf"><code>BuildingPredictiveModels</code> vignette</a>.</p>
-<p><strong>We invite you to share your new algorithms with the OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction">GitHub repository</a>.</strong></p>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>This vignette describes how you can add your own custom algorithms in
+the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
+package. This allows you to fully leverage the OHDSI
+PatientLevelPrediction framework for model development and validation.
+This vignette assumes you have read and are comfortable with building
+single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
+vignette</a>.</p>
+<p><strong>We invite you to share your new algorithms with the OHDSI
+community through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
+repository</a>.</strong></p>
 </div>
-<div id="algorithm-code-structure" class="section level1">
-<h1 class="hasAnchor">
-<a href="#algorithm-code-structure" class="anchor"></a>Algorithm Code Structure</h1>
-<p>Each algorithm in the package should be implemented in its own &lt;Name&gt;.R file, e.g. KNN.R, containing a set&lt;Name&gt; function, a fit&lt;Name&gt; function and a predict&lt;Name&gt; function. Occasionally the fit and prediction functions may be reused (if using an R classifier see RClassifier.R or if using a scikit-learn classifier see SklearnClassifier.R). We will now describe each of these functions in more detail below.</p>
-<div id="set" class="section level2">
-<h2 class="hasAnchor">
-<a href="#set" class="anchor"></a>Set</h2>
-<p>The set&lt;Name&gt; is a function that takes as input the different hyper-parameter values to do a grid search when training. The output of the functions needs to be a list as class <code>modelSettings</code> containing:</p>
+<div class="section level2">
+<h2 id="algorithm-code-structure">Algorithm Code Structure<a class="anchor" aria-label="anchor" href="#algorithm-code-structure"></a>
+</h2>
+<p>Each algorithm in the package should be implemented in its own
+&lt;Name&gt;.R file, e.g. KNN.R, containing a set&lt;Name&gt; function,
+a fit&lt;Name&gt; function and a predict&lt;Name&gt; function.
+Occasionally the fit and prediction functions may be reused (if using an
+R classifier see RClassifier.R or if using a scikit-learn classifier see
+SklearnClassifier.R). We will now describe each of these functions in
+more detail below.</p>
+<div class="section level3">
+<h3 id="set">Set<a class="anchor" aria-label="anchor" href="#set"></a>
+</h3>
+<p>The set&lt;Name&gt; is a function that takes as input the different
+hyper-parameter values to do a grid search when training. The output of
+the functions needs to be a list as class <code>modelSettings</code>
+containing:</p>
 <ul>
-<li>param - all the combinations of the hyper-parameter values input</li>
-<li>fitFunction - a string specifying what function to call to fit the model</li>
+<li>param - all the combinations of the hyper-parameter values
+input</li>
+<li>fitFunction - a string specifying what function to call to fit the
+model</li>
 </ul>
-<p>The param object can have a setttings attribute containing any extra settings. For example to specify the model name and the seed used for reproducibility:</p>
+<p>The param object can have a setttings attribute containing any extra
+settings. For example to specify the model name and the seed used for
+reproducibility:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-  seed <span class="op">=</span> <span class="fl">12</span>,
-  modelName <span class="op">=</span> <span class="st">"Special classifier"</span>
-  <span class="op">)</span></code></pre></div>
-<p>For example, if you were adding a model called madeUp that has two hyper-parameters then the set function should be:</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  seed <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>  modelName <span class="op">=</span> <span class="st">"Special classifier"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p>For example, if you were adding a model called madeUp that has two
+hyper-parameters then the set function should be:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">setMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">10</span><span class="op">)</span>, <span class="va">b</span><span class="op">=</span><span class="fl">2</span>, <span class="va">seed</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span><span class="op">{</span>
-  <span class="co"># add input checks here...</span>
-  
-  <span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html">split</a></span><span class="op">(</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>
-      a<span class="op">=</span><span class="va">a</span>, 
-      b<span class="op">=</span><span class="va">b</span>
-    <span class="op">)</span>,
-    <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span>
-    <span class="op">)</span>
-  
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    modelName <span class="op">=</span> <span class="st">"Made Up"</span>,
-    requiresDenseMatrix <span class="op">=</span> <span class="cn">TRUE</span>,
-    seed <span class="op">=</span> <span class="va">seed</span>
-    <span class="op">)</span>
-  
-  <span class="co"># now create list of all combinations:</span>
-  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    fitFunction <span class="op">=</span> <span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span>
-    param <span class="op">=</span> <span class="va">param</span>
-  <span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'modelSettings'</span> 
-  
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">setMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">10</span><span class="op">)</span>, <span class="va">b</span><span class="op">=</span><span class="fl">2</span>, <span class="va">seed</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="co"># add input checks here...</span></span>
+<span>  </span>
+<span>  <span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>      a<span class="op">=</span><span class="va">a</span>, </span>
+<span>      b<span class="op">=</span><span class="va">b</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    modelName <span class="op">=</span> <span class="st">"Made Up"</span>,</span>
+<span>    requiresDenseMatrix <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    seed <span class="op">=</span> <span class="va">seed</span></span>
+<span>    <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># now create list of all combinations:</span></span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    fitFunction <span class="op">=</span> <span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span></span>
+<span>    param <span class="op">=</span> <span class="va">param</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'modelSettings'</span> </span>
+<span>  </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
-<div id="fit" class="section level2">
-<h2 class="hasAnchor">
-<a href="#fit" class="anchor"></a>Fit</h2>
-<p>This function should train your custom model for each parameter entry, pick the best parameters and train a final model for that setting.</p>
+<div class="section level3">
+<h3 id="fit">Fit<a class="anchor" aria-label="anchor" href="#fit"></a>
+</h3>
+<p>This function should train your custom model for each parameter
+entry, pick the best parameters and train a final model for that
+setting.</p>
 <p>The fit&lt;Model&gt; should have as inputs:</p>
 <ul>
-<li>trainData - a list containing the covariateData, labels and folds for the training population</li>
+<li>trainData - a list containing the covariateData, labels and folds
+for the training population</li>
 <li>param - the hyper-parameters as a list of all combinations</li>
 <li>search - the type of hyper-parameter search</li>
 <li>analysisId - an identifier for the analysis</li>
 </ul>
-<p>The fit function should return a list of class <code>plpModel</code> with the following objects:</p>
+<p>The fit function should return a list of class <code>plpModel</code>
+with the following objects:</p>
 <ul>
-<li>model - a trained model (or location of the model if it is not an R object)</li>
-<li>prediction - a data.frame object with the trainData$labels plus an extra column with the name ‘value’ corresponding to the predicted risk of having the outcome during the time-at-risk.</li>
-<li>settings - a list containing:
+<li>model - a trained model (or location of the model if it is not an R
+object)</li>
+<li>prediction - a data.frame object with the trainData$labels plus an
+extra column with the name ‘value’ corresponding to the predicted risk
+of having the outcome during the time-at-risk.</li>
+<li>preprocessing - the settings required to preprocess the data when
+applying the model
 <ul>
-<li>plpDataSettings - the plpData settings e.g., attr(trainData, “metaData”)$plpDataSettings</li>
-<li>covariateSettings - the covariate settings e.g., attr(trainData, “metaData”)$covariateSettings</li>
-<li>populationSettings - the population settings e.g., attr(trainData, “metaData”)$populationSettings,</li>
-<li>featureEngineering - the feature engineering settings e.g., attr(trainData<span class="math inline">\(covariateData, "metaData")\)</span>featureEngineering,</li>
-<li>tidyCovariates - the preprocessing settings e.g., attr(trainData<span class="math inline">\(covariateData, "metaData")\)</span>tidyCovariateDataSettings,</li>
-<li>requireDenseMatrix - does the model require a dense matrix? e.g., attr(param, ‘settings’)$requiresDenseMatrix,</li>
-<li>modelSettings = a list containing: model (model name), param (the hyper-parameter search list), finalModelParameters (the final model hyper-parameters), extraSettings (any extra settings)</li>
-<li>splitSettings - the split settings e.g., attr(trainData, “metaData”)$splitSettings,</li>
-<li>sampleSettings - the sample settings e.g., attr(trainData, “metaData”)$sampleSettings</li>
+<li>featureEngineering - the feature engineering settings e.g.,
+attr(trainData<span class="math inline">\(covariateData,
+"metaData")\)</span>featureEngineering,</li>
+<li>tidyCovariates - the preprocessing settings e.g.,
+attr(trainData<span class="math inline">\(covariateData,
+"metaData")\)</span>tidyCovariateDataSettings,</li>
+<li>requireDenseMatrix - does the model require a dense matrix? e.g.,
+attr(param, ‘settings’)$requiresDenseMatrix,</li>
+</ul>
+</li>
+<li>modelDesign - a list containing:
+<ul>
+<li>targetId - the id of the target cohort</li>
+<li>outcomeId - the id of the outcome cohort</li>
+<li>plpDataSettings - the plpData settings e.g., attr(trainData,
+“metaData”)$plpDataSettings</li>
+<li>covariateSettings - the covariate settings e.g., attr(trainData,
+“metaData”)$covariateSettings</li>
+<li>populationSettings - the population settings e.g., attr(trainData,
+“metaData”)$populationSettings,</li>
+<li>featureEngineeringSettings - the feature engineering settings e.g.,
+attr(trainData<span class="math inline">\(covariateData,
+"metaData")\)</span>featureEngineeringSettings,</li>
+<li>preprocessSettings - the preprocessing settings e.g.,
+attr(trainData<span class="math inline">\(covariateData,
+"metaData")\)</span>preprocessSettings,</li>
+<li>modelSettings = a list containing: model (model name), param (the
+hyper-parameter search list), finalModelParameters (the final model
+hyper-parameters), extraSettings (any extra settings)</li>
+<li>splitSettings - the split settings e.g., attr(trainData,
+“metaData”)$splitSettings,</li>
+<li>sampleSettings - the sample settings e.g., attr(trainData,
+“metaData”)$sampleSettings</li>
 </ul>
 </li>
 <li>trainDetails - a list containing:
 <ul>
 <li>analysisId - the identifier for the analysis</li>
-<li>cdmDatabaseSchema - the database used to develop the model</li>
-<li>outcomeId - the outcome id</li>
-<li>cohortId - the target population id</li>
+<li>developmentDatabase - the database used to develop the model</li>
 <li>attrition - the attrition</li>
 <li>trainingTime - how long it took to train the model</li>
 <li>trainingDate - date of model training</li>
-<li>hyperParamSearch - the hyper-parameter search used to train the model</li>
+<li>hyperParamSearch - the hyper-parameter search used to train the
+model</li>
+<li>any other objects specific to training</li>
 </ul>
 </li>
-<li>covariateImportance - a data.frame containing the columns ‘covariateId’, ‘covariateValue’ (the variable importance) and ‘columnId’ (the column number that the variable need to be mapped to when implementing the model)</li>
+<li>covariateImportance - a data.frame containing the columns
+‘covariateId’, ‘covariateValue’ (the variable importance) and ‘columnId’
+(the column number that the variable need to be mapped to when
+implementing the model)</li>
 </ul>
 <p>In additon the plpModel requires two attributes:</p>
 <ul>
-<li>predictionFunction - the name of the function used to make predictions</li>
+<li>predictionFunction - the name of the function used to make
+predictions</li>
 <li>modelType - whether the model is ‘binary’ or ‘survival’</li>
 </ul>
-<p>For example <code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code> means when the model is applied to new data, the ‘madeupPrediction’ function is called to make predictions. If this doesnt exist, then the model will fail. The other attribute is the modelType <code>attr(result, 'modelType') &lt;- 'binary'</code> this is needed when evaluating the model to ensure the correct evaluation is applied. Currently the evaluation supports ‘binary’ and ‘survival’ modelType.</p>
-<p>Note: If a new modelType is desired, then the evalaution code within PatientLevelPrediction must be updated to specify how the new type is evaluated. This requires making edits to PatientLevelPrediction and then making a pull request to the PatientLevelPrediction github. The evaluation cannot have one off customization because the evaluation must be standardized to enable comparison across similar models.</p>
+<p>For example
+<code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code>
+means when the model is applied to new data, the ‘madeupPrediction’
+function is called to make predictions. If this doesnt exist, then the
+model will fail. The other attribute is the modelType
+<code>attr(result, 'modelType') &lt;- 'binary'</code> this is needed
+when evaluating the model to ensure the correct evaluation is applied.
+Currently the evaluation supports ‘binary’ and ‘survival’ modelType.</p>
+<p>Note: If a new modelType is desired, then the evalaution code within
+PatientLevelPrediction must be updated to specify how the new type is
+evaluated. This requires making edits to PatientLevelPrediction and then
+making a pull request to the PatientLevelPrediction github. The
+evaluation cannot have one off customization because the evaluation must
+be standardized to enable comparison across similar models.</p>
 <p>A full example of a custom ‘binary’ classifier fit function is:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">fitMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">param</span>, <span class="va">search</span>, <span class="va">analysisId</span><span class="op">)</span><span class="op">{</span>
-  
-  <span class="co"># **************** code to train the model here</span>
-  <span class="co"># trainedModel &lt;- this code should apply each hyper-parameter combination   </span>
-  <span class="co"># (param[[i]]) using the specified search (e.g., cross validation)</span>
-  <span class="co">#                 then pick out the best hyper-parameter setting</span>
-  <span class="co">#                 and finally fit a model on the whole train data using the </span>
-  <span class="co">#                 optimal hyper-parameter settings</span>
-  <span class="co"># ****************</span>
-  
-  <span class="co"># **************** code to apply the model to trainData</span>
-  <span class="co"># prediction &lt;- code to apply trainedModel to trainData</span>
-  <span class="co"># ****************</span>
-  
-  <span class="co"># **************** code to get variable importance (if possible)</span>
-  <span class="co"># varImp &lt;- code to get importance of each variable in trainedModel</span>
-  <span class="co"># ****************</span>
-  
-  
-  <span class="co"># construct the standard output for a model:</span>
-  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">trainedModel</span>,
-                 prediction <span class="op">=</span> <span class="va">prediction</span>, <span class="co"># the train and maybe the cross validation predictions for the trainData</span>
-    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      plpDataSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">plpDataSettings</span>,
-      covariateSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">covariateSettings</span>,
-      populationSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">populationSettings</span>,
-      featureEngineering <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,
-      tidyCovariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">tidyCovariateDataSettings</span>, 
-      requireDenseMatrix <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">requiresDenseMatrix</span>,
-      modelSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-        model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">modelName</span>, <span class="co"># the model name</span>
-        param <span class="op">=</span> <span class="va">param</span>,
-        finalModelParameters <span class="op">=</span> <span class="va">param</span><span class="op">[[</span><span class="va">bestInd</span><span class="op">]</span><span class="op">]</span>, <span class="co"># best hyper-parameters</span>
-        extraSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span>
-      <span class="op">)</span>,
-      splitSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">splitSettings</span>,
-      sampleSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">sampleSettings</span>
-    <span class="op">)</span>,
-    
-    trainDetails <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      analysisId <span class="op">=</span> <span class="va">analysisId</span>,
-      cdmDatabaseSchema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">cdmDatabaseSchema</span>,
-      outcomeId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">outcomeId</span>,
-      cohortId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">cohortId</span>,
-      attrition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">attrition</span>, 
-      trainingTime <span class="op">=</span> <span class="va">timeToTrain</span>, <span class="co"># how long it took to train the model</span>
-      trainingDate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,
-      hyperParamSearch <span class="op">=</span> <span class="va">hyperSummary</span> <span class="co"># the hyper-parameters and performance data.frame</span>
-    <span class="op">)</span>,
-    covariateImportance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>, <span class="va">varImp</span>, by<span class="op">=</span><span class="st">'covariateId'</span><span class="op">)</span> <span class="co"># add variable importance to covariateRef if possible</span>
-  <span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'plpModel'</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'predictionFunction'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'madeupPrediction'</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'modelType'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'binary'</span>
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>
-    
-<span class="op">}</span></code></pre></div>
-<p>You could make the fitMadeUp function cleaner by adding helper function in the MadeUp.R file that are called by the fit function (for example a function to run cross validation). It is important to ensure there is a valid prediction function (the one specified by <code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code> is <code>madeupPrediction()</code>) as specified below.</p>
+<code class="sourceCode R"><span><span class="va">fitMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">modelSettings</span>, <span class="va">search</span>, <span class="va">analysisId</span><span class="op">)</span><span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="va">param</span> <span class="op">&lt;-</span> <span class="va">modelSettings</span><span class="op">$</span><span class="va">param</span></span>
+<span>  </span>
+<span>  <span class="co"># **************** code to train the model here</span></span>
+<span>  <span class="co"># trainedModel &lt;- this code should apply each hyper-parameter combination   </span></span>
+<span>  <span class="co"># (param[[i]]) using the specified search (e.g., cross validation)</span></span>
+<span>  <span class="co">#                 then pick out the best hyper-parameter setting</span></span>
+<span>  <span class="co">#                 and finally fit a model on the whole train data using the </span></span>
+<span>  <span class="co">#                 optimal hyper-parameter settings</span></span>
+<span>  <span class="co"># ****************</span></span>
+<span>  </span>
+<span>  <span class="co"># **************** code to apply the model to trainData</span></span>
+<span>  <span class="co"># prediction &lt;- code to apply trainedModel to trainData</span></span>
+<span>  <span class="co"># ****************</span></span>
+<span>  </span>
+<span>  <span class="co"># **************** code to get variable importance (if possible)</span></span>
+<span>  <span class="co"># varImp &lt;- code to get importance of each variable in trainedModel</span></span>
+<span>  <span class="co"># ****************</span></span>
+<span>  </span>
+<span>  </span>
+<span>  <span class="co"># construct the standard output for a model:</span></span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">trainedModel</span>,</span>
+<span>                 prediction <span class="op">=</span> <span class="va">prediction</span>, <span class="co"># the train and maybe the cross validation predictions for the trainData</span></span>
+<span>                 preprocessing <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>                   featureEngineering <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,</span>
+<span>      tidyCovariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">tidyCovariateDataSettings</span>, </span>
+<span>      requireDenseMatrix <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">requiresDenseMatrix</span>,</span>
+<span>      </span>
+<span>                 <span class="op">)</span>,</span>
+<span>    modelDesign <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      outcomeId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">outcomeId</span>,</span>
+<span>      targetId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">targetId</span>,</span>
+<span>      plpDataSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">plpDataSettings</span>,</span>
+<span>      covariateSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">covariateSettings</span>,</span>
+<span>      populationSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">populationSettings</span>,</span>
+<span>      featureEngineeringSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineeringSettings</span>,</span>
+<span>      prerocessSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">prerocessSettings</span>, </span>
+<span>      modelSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>        model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">modelName</span>, <span class="co"># the model name</span></span>
+<span>        param <span class="op">=</span> <span class="va">param</span>,</span>
+<span>        finalModelParameters <span class="op">=</span> <span class="va">param</span><span class="op">[[</span><span class="va">bestInd</span><span class="op">]</span><span class="op">]</span>, <span class="co"># best hyper-parameters</span></span>
+<span>        extraSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span></span>
+<span>      <span class="op">)</span>,</span>
+<span>      splitSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">splitSettings</span>,</span>
+<span>      sampleSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">sampleSettings</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    </span>
+<span>    trainDetails <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>      analysisId <span class="op">=</span> <span class="va">analysisId</span>,</span>
+<span>      developmentDatabase <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">cdmDatabaseSchema</span>,</span>
+<span>      attrition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">attrition</span>, </span>
+<span>      trainingTime <span class="op">=</span> <span class="va">timeToTrain</span>, <span class="co"># how long it took to train the model</span></span>
+<span>      trainingDate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      hyperParamSearch <span class="op">=</span> <span class="va">hyperSummary</span> <span class="co"># the hyper-parameters and performance data.frame</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    covariateImportance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span>, <span class="va">varImp</span>, by<span class="op">=</span><span class="st">'covariateId'</span><span class="op">)</span> <span class="co"># add variable importance to covariateRef if possible</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'plpModel'</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'predictionFunction'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'madeupPrediction'</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'modelType'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'binary'</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span>    </span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>You could make the fitMadeUp function cleaner by adding helper
+function in the MadeUp.R file that are called by the fit function (for
+example a function to run cross validation). It is important to ensure
+there is a valid prediction function (the one specified by
+<code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code>
+is <code>madeupPrediction()</code>) as specified below.</p>
 </div>
-<div id="predict" class="section level2">
-<h2 class="hasAnchor">
-<a href="#predict" class="anchor"></a>Predict</h2>
-<p>The prediction function takes as input the plpModel returned by fit, new data and a corresponding cohort. It returns a data.frame with the same columns as cohort but with an additional column:</p>
+<div class="section level3">
+<h3 id="predict">Predict<a class="anchor" aria-label="anchor" href="#predict"></a>
+</h3>
+<p>The prediction function takes as input the plpModel returned by fit,
+new data and a corresponding cohort. It returns a data.frame with the
+same columns as cohort but with an additional column:</p>
 <ul>
-<li>value - the predicted risk from the plpModel for each patient in the cohort</li>
+<li>value - the predicted risk from the plpModel for each patient in the
+cohort</li>
 </ul>
 <p>For example:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">madeupPrediction</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">plpModel</span>, <span class="va">data</span>, <span class="va">cohort</span><span class="op">)</span><span class="op">{</span> 
-
-  <span class="co"># ************* code to do prediction for each rowId in cohort</span>
-  <span class="co"># predictionValues &lt;- code to do prediction here returning the predicted risk</span>
-  <span class="co">#               (value) for each rowId in cohort </span>
-  <span class="co">#**************</span>
-  
-  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">cohort</span>, <span class="va">predictionValues</span>, by<span class="op">=</span><span class="st">'rowId'</span><span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">prediction</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">plpModel</span>, <span class="st">'modelType'</span><span class="op">)</span><span class="op">)</span> 
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span>
-  
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">madeupPrediction</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">plpModel</span>, <span class="va">data</span>, <span class="va">cohort</span><span class="op">)</span><span class="op">{</span> </span>
+<span></span>
+<span>  <span class="co"># ************* code to do prediction for each rowId in cohort</span></span>
+<span>  <span class="co"># predictionValues &lt;- code to do prediction here returning the predicted risk</span></span>
+<span>  <span class="co">#               (value) for each rowId in cohort </span></span>
+<span>  <span class="co">#**************</span></span>
+<span>  </span>
+<span>  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">cohort</span>, <span class="va">predictionValues</span>, by<span class="op">=</span><span class="st">'rowId'</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">prediction</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plpModel</span>, <span class="st">'modelType'</span><span class="op">)</span><span class="op">)</span> </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
 </div>
-<div id="algorithm-example" class="section level1">
-<h1 class="hasAnchor">
-<a href="#algorithm-example" class="anchor"></a>Algorithm Example</h1>
-<p>Below a fully functional algorithm example is given, however we highly recommend you to have a look at the available algorithms in the package (see GradientBoostingMachine.R for the set function, RClassifier.R for the fit and prediction function for R classifiers).</p>
-<div id="set-1" class="section level2">
-<h2 class="hasAnchor">
-<a href="#set-1" class="anchor"></a>Set</h2>
+<div class="section level2">
+<h2 id="algorithm-example">Algorithm Example<a class="anchor" aria-label="anchor" href="#algorithm-example"></a>
+</h2>
+<p>Below a fully functional algorithm example is given, however we
+highly recommend you to have a look at the available algorithms in the
+package (see GradientBoostingMachine.R for the set function,
+RClassifier.R for the fit and prediction function for R
+classifiers).</p>
+<div class="section level3">
+<h3 id="set-1">Set<a class="anchor" aria-label="anchor" href="#set-1"></a>
+</h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">setMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">6</span><span class="op">)</span>, <span class="va">b</span><span class="op">=</span><span class="fl">2</span>, <span class="va">seed</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span><span class="op">{</span>
-  <span class="co"># add input checks here...</span>
-  
-  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html">is.null</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
-    <span class="va">seed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fl">100000</span>,<span class="fl">1</span><span class="op">)</span>
-  <span class="op">}</span>
-  
-  <span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html">split</a></span><span class="op">(</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>
-      a<span class="op">=</span><span class="va">a</span>, 
-      b<span class="op">=</span><span class="va">b</span>
-    <span class="op">)</span>,
-    <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span>
-    <span class="op">)</span>
-  
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    modelName <span class="op">=</span> <span class="st">"Made Up"</span>,
-    requiresDenseMatrix <span class="op">=</span> <span class="cn">TRUE</span>,
-    seed <span class="op">=</span> <span class="va">seed</span>
-    <span class="op">)</span>
-  
-  <span class="co"># now create list of all combinations:</span>
-  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    fitFunction <span class="op">=</span> <span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span>
-    param <span class="op">=</span> <span class="va">param</span>
-  <span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'modelSettings'</span> 
-  
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">setMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">4</span>,<span class="fl">6</span><span class="op">)</span>, <span class="va">b</span><span class="op">=</span><span class="fl">2</span>, <span class="va">seed</span><span class="op">=</span><span class="cn">NULL</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="co"># add input checks here...</span></span>
+<span>  </span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="va">seed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">100000</span>,<span class="fl">1</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="va">param</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
+<span>      a<span class="op">=</span><span class="va">a</span>, </span>
+<span>      b<span class="op">=</span><span class="va">b</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    <span class="fl">1</span><span class="op">:</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    modelName <span class="op">=</span> <span class="st">"Made Up"</span>,</span>
+<span>    requiresDenseMatrix <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    seed <span class="op">=</span> <span class="va">seed</span></span>
+<span>    <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># now create list of all combinations:</span></span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    fitFunction <span class="op">=</span> <span class="st">'fitMadeUp'</span>, <span class="co"># this will be called to train the made up model</span></span>
+<span>    param <span class="op">=</span> <span class="va">param</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'modelSettings'</span> </span>
+<span>  </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
-<div id="fit-1" class="section level2">
-<h2 class="hasAnchor">
-<a href="#fit-1" class="anchor"></a>Fit</h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">fitMadeUp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">param</span>, <span class="va">search</span>, <span class="va">analysisId</span><span class="op">)</span><span class="op">{</span>
-
-  <span class="co"># set the seed for reproducibility</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">seed</span><span class="op">)</span>
-  
-  <span class="co"># add folds to labels:</span>
-  <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html">merge</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">labels</span>, <span class="va">trainData</span><span class="op">$</span><span class="va">folds</span>, by<span class="op">=</span> <span class="st">'rowId'</span><span class="op">)</span>
-  <span class="co"># convert data into sparse R Matrix:</span>
-  <span class="va">mappedData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span><span class="op">(</span><span class="va">trainData</span>,map<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span>
-  <span class="va">matrixData</span> <span class="op">&lt;-</span> <span class="va">mappedData</span><span class="op">$</span><span class="va">dataMatrix</span>
-  <span class="va">labels</span> <span class="op">&lt;-</span> <span class="va">mappedData</span><span class="op">$</span><span class="va">labels</span>
-  <span class="va">covariateRef</span> <span class="op">&lt;-</span> <span class="va">mappedData</span><span class="op">$</span><span class="va">covariateRef</span>
-
-  <span class="co">#============= STEP 1 ======================================</span>
-  <span class="co"># pick the best hyper-params and then do final training on all data...</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="st">'Cross validation'</span><span class="op">)</span>
-  <span class="va">param.sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span>
-    <span class="va">param</span>, 
-    <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">{</span>
-      <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span>
-        <span class="va">made_up_model</span>, 
-        <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-          param <span class="op">=</span> <span class="va">x</span>, 
-          final <span class="op">=</span> <span class="cn">F</span>, 
-          data <span class="op">=</span> <span class="va">matrixData</span>, 
-          labels <span class="op">=</span> <span class="va">labels</span>
-          <span class="op">)</span>  
-      <span class="op">)</span>
-      <span class="op">}</span>
-    <span class="op">)</span>
-  <span class="va">hyperSummary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">param.sel</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">$</span><span class="va">hyperSum</span><span class="op">)</span><span class="op">)</span>
-  <span class="va">hyperSummary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html">as.data.frame</a></span><span class="op">(</span><span class="va">hyperSummary</span><span class="op">)</span>
-  <span class="va">hyperSummary</span><span class="op">$</span><span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">param.sel</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">$</span><span class="va">auc</span><span class="op">)</span><span class="op">)</span> 
-  <span class="va">param.sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">lapply</a></span><span class="op">(</span><span class="va">param.sel</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">$</span><span class="va">auc</span><span class="op">)</span><span class="op">)</span>
-  <span class="va">bestInd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.max</a></span><span class="op">(</span><span class="va">param.sel</span><span class="op">)</span>
-  
-  <span class="co">#get cross val prediction for best hyper-parameters</span>
-  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="va">param.sel</span><span class="op">[[</span><span class="va">bestInd</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">prediction</span>
-  <span class="va">prediction</span><span class="op">$</span><span class="va">evaluationType</span> <span class="op">&lt;-</span> <span class="st">'CV'</span>
-  
-  <span class="fu"><a href="https://rdrr.io/r/base/writeLines.html">writeLines</a></span><span class="op">(</span><span class="st">'final train'</span><span class="op">)</span>
-  <span class="va">finalResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html">do.call</a></span><span class="op">(</span>
-    <span class="va">made_up_model</span>, 
-    <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      param <span class="op">=</span> <span class="va">param</span><span class="op">[[</span><span class="va">bestInd</span><span class="op">]</span><span class="op">]</span>, 
-      final <span class="op">=</span> <span class="cn">T</span>, 
-      data <span class="op">=</span> <span class="va">matrixData</span>, 
-      labels <span class="op">=</span> <span class="va">labels</span>
-      <span class="op">)</span>  
-    <span class="op">)</span>
-  
-  <span class="va">trainedModel</span> <span class="op">&lt;-</span> <span class="va">finalResult</span><span class="op">$</span><span class="va">model</span>
-  
-  <span class="co"># prediction risk on training data:</span>
-  <span class="va">finalResult</span><span class="op">$</span><span class="va">prediction</span><span class="op">$</span><span class="va">evaluationType</span> <span class="op">&lt;-</span> <span class="st">'Train'</span>
-  
-  <span class="co"># get CV and train prediction</span>
-  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="va">prediction</span>, <span class="va">finalResult</span><span class="op">$</span><span class="va">prediction</span><span class="op">)</span>
-  
-  <span class="va">varImp</span> <span class="op">&lt;-</span> <span class="va">covariateRef</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html">collect</a></span><span class="op">(</span><span class="op">)</span>
-  <span class="co"># no feature importance available</span>
-  <span class="va">vqrImp</span><span class="op">$</span><span class="va">covariateValue</span> <span class="op">&lt;-</span> <span class="fl">0</span> 
-  
- <span class="va">timeToTrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.time</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="va">start</span>
-
-  <span class="co"># construct the standard output for a model:</span>
-  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>model <span class="op">=</span> <span class="va">trainedModel</span>,
-                 prediction <span class="op">=</span> <span class="va">prediction</span>, 
-    settings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      plpDataSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">plpDataSettings</span>,
-      covariateSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">covariateSettings</span>,
-      populationSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">populationSettings</span>,
-      featureEngineering <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">featureEngineering</span>,
-      tidyCovariates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">tidyCovariateDataSettings</span>, 
-      requireDenseMatrix <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">requiresDenseMatrix</span>,
-      modelSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-        model <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span><span class="op">$</span><span class="va">modelName</span>, <span class="co"># the model name</span>
-        param <span class="op">=</span> <span class="va">param</span>,
-        finalModelParameters <span class="op">=</span> <span class="va">param</span><span class="op">[[</span><span class="va">bestInd</span><span class="op">]</span><span class="op">]</span>, <span class="co"># best hyper-parameters</span>
-        extraSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">param</span>, <span class="st">'settings'</span><span class="op">)</span>
-      <span class="op">)</span>,
-      splitSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">splitSettings</span>,
-      sampleSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">sampleSettings</span>
-    <span class="op">)</span>,
-    
-    trainDetails <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-      analysisId <span class="op">=</span> <span class="va">analysisId</span>,
-      cdmDatabaseSchema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">cdmDatabaseSchema</span>,
-      outcomeId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">outcomeId</span>,
-      cohortId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">cohortId</span>,
-      attrition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">trainData</span>, <span class="st">"metaData"</span><span class="op">)</span><span class="op">$</span><span class="va">attrition</span>, 
-      trainingTime <span class="op">=</span> <span class="va">timeToTrain</span>, <span class="co"># how long it took to train the model</span>
-      trainingDate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>,
-      hyperParamSearch <span class="op">=</span> <span class="va">hyperSummary</span> <span class="co"># the hyper-parameters and performance data.frame</span>
-    <span class="op">)</span>,
-    covariateImportance <span class="op">=</span> <span class="va">varImp</span>
-  <span class="op">)</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'plpModel'</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'predictionFunction'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'madeupPrediction'</span>
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">result</span>, <span class="st">'modelType'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'binary'</span>
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>
-    
-<span class="op">}</span></code></pre></div>
+<div class="section level3">
+<h3 id="fit-1">Fit<a class="anchor" aria-label="anchor" href="#fit-1"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fitMadeUp <span class="ot">&lt;-</span> <span class="cf">function</span>(trainData, modelSettings, search, analysisId){</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="co"># set the seed for reproducibility</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>  param <span class="ot">&lt;-</span> modelSettings<span class="sc">$</span>param</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>seed)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  </span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="co"># add folds to labels:</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  trainData<span class="sc">$</span>labels <span class="ot">&lt;-</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>labels, trainData<span class="sc">$</span>folds, <span class="at">by=</span> <span class="st">'rowId'</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  <span class="co"># convert data into sparse R Matrix:</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  mappedData <span class="ot">&lt;-</span> <span class="fu">toSparseM</span>(trainData,<span class="at">map=</span><span class="cn">NULL</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>  matrixData <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>dataMatrix</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  labels <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>labels</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  covariateRef <span class="ot">&lt;-</span> mappedData<span class="sc">$</span>covariateRef</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>  <span class="co">#============= STEP 1 ======================================</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>  <span class="co"># pick the best hyper-params and then do final training on all data...</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'Cross validation'</span>)</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">lapply</span>(</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>    param, </span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    <span class="cf">function</span>(x){</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>      <span class="fu">do.call</span>(</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>        made_up_model, </span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>          <span class="at">param =</span> x, </span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>          <span class="at">final =</span> F, </span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>          <span class="at">data =</span> matrixData, </span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>          <span class="at">labels =</span> labels</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>          )  </span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>      )</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>      }</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>    )</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>hyperSum))</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>  hyperSummary <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(hyperSummary)</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>  hyperSummary<span class="sc">$</span>auc <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc)) </span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>  param.sel <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">lapply</span>(param.sel, <span class="cf">function</span>(x) x<span class="sc">$</span>auc))</span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>  bestInd <span class="ot">&lt;-</span> <span class="fu">which.max</span>(param.sel)</span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>  </span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>  <span class="co">#get cross val prediction for best hyper-parameters</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> param.sel[[bestInd]]<span class="sc">$</span>prediction</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>  prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'CV'</span></span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  </span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>  <span class="fu">writeLines</span>(<span class="st">'final train'</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>  finalResult <span class="ot">&lt;-</span> <span class="fu">do.call</span>(</span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>    made_up_model, </span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>      <span class="at">param =</span> param[[bestInd]], </span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>      <span class="at">final =</span> T, </span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>      <span class="at">data =</span> matrixData, </span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>      <span class="at">labels =</span> labels</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>      )  </span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    )</span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>  </span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>  trainedModel <span class="ot">&lt;-</span> finalResult<span class="sc">$</span>model</span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>  </span>
+<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>  <span class="co"># prediction risk on training data:</span></span>
+<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>  finalResult<span class="sc">$</span>prediction<span class="sc">$</span>evaluationType <span class="ot">&lt;-</span> <span class="st">'Train'</span></span>
+<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>  </span>
+<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a>  <span class="co"># get CV and train prediction</span></span>
+<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a>  prediction <span class="ot">&lt;-</span> <span class="fu">rbind</span>(prediction, finalResult<span class="sc">$</span>prediction)</span>
+<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>  </span>
+<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a>  varImp <span class="ot">&lt;-</span> covariateRef <span class="sc">%&gt;%</span> dplyr<span class="sc">::</span><span class="fu">collect</span>()</span>
+<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a>  <span class="co"># no feature importance available</span></span>
+<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a>  vqrImp<span class="sc">$</span>covariateValue <span class="ot">&lt;-</span> <span class="dv">0</span> </span>
+<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a>  </span>
+<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a> timeToTrain <span class="ot">&lt;-</span> <span class="fu">Sys.time</span>() <span class="sc">-</span> start</span>
+<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a>  <span class="co"># construct the standard output for a model:</span></span>
+<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a>  result <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">model =</span> trainedModel,</span>
+<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a>                 <span class="at">prediction =</span> prediction, </span>
+<span id="cb6-70"><a href="#cb6-70" tabindex="-1"></a>    <span class="at">preprocessing =</span> <span class="fu">list</span>(</span>
+<span id="cb6-71"><a href="#cb6-71" tabindex="-1"></a>                   <span class="at">featureEngineering =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineering,</span>
+<span id="cb6-72"><a href="#cb6-72" tabindex="-1"></a>      <span class="at">tidyCovariates =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>tidyCovariateDataSettings, </span>
+<span id="cb6-73"><a href="#cb6-73" tabindex="-1"></a>      <span class="at">requireDenseMatrix =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>requiresDenseMatrix,</span>
+<span id="cb6-74"><a href="#cb6-74" tabindex="-1"></a>      </span>
+<span id="cb6-75"><a href="#cb6-75" tabindex="-1"></a>                 ),</span>
+<span id="cb6-76"><a href="#cb6-76" tabindex="-1"></a>    <span class="at">modelDesign =</span> <span class="fu">list</span>(</span>
+<span id="cb6-77"><a href="#cb6-77" tabindex="-1"></a>      <span class="at">outcomeId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>outcomeId,</span>
+<span id="cb6-78"><a href="#cb6-78" tabindex="-1"></a>      <span class="at">targetId =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>targetId,</span>
+<span id="cb6-79"><a href="#cb6-79" tabindex="-1"></a>      <span class="at">plpDataSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>plpDataSettings,</span>
+<span id="cb6-80"><a href="#cb6-80" tabindex="-1"></a>      <span class="at">covariateSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>covariateSettings,</span>
+<span id="cb6-81"><a href="#cb6-81" tabindex="-1"></a>      <span class="at">populationSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>populationSettings,</span>
+<span id="cb6-82"><a href="#cb6-82" tabindex="-1"></a>      <span class="at">featureEngineeringSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>featureEngineeringSettings,</span>
+<span id="cb6-83"><a href="#cb6-83" tabindex="-1"></a>      <span class="at">prerocessSettings =</span> <span class="fu">attr</span>(trainData<span class="sc">$</span>covariateData, <span class="st">"metaData"</span>)<span class="sc">$</span>prerocessSettings, </span>
+<span id="cb6-84"><a href="#cb6-84" tabindex="-1"></a>      <span class="at">modelSettings =</span> <span class="fu">list</span>(</span>
+<span id="cb6-85"><a href="#cb6-85" tabindex="-1"></a>        <span class="at">model =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)<span class="sc">$</span>modelName, <span class="co"># the model name</span></span>
+<span id="cb6-86"><a href="#cb6-86" tabindex="-1"></a>        <span class="at">param =</span> param,</span>
+<span id="cb6-87"><a href="#cb6-87" tabindex="-1"></a>        <span class="at">finalModelParameters =</span> param[[bestInd]], <span class="co"># best hyper-parameters</span></span>
+<span id="cb6-88"><a href="#cb6-88" tabindex="-1"></a>        <span class="at">extraSettings =</span> <span class="fu">attr</span>(param, <span class="st">'settings'</span>)</span>
+<span id="cb6-89"><a href="#cb6-89" tabindex="-1"></a>      ),</span>
+<span id="cb6-90"><a href="#cb6-90" tabindex="-1"></a>      <span class="at">splitSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>splitSettings,</span>
+<span id="cb6-91"><a href="#cb6-91" tabindex="-1"></a>      <span class="at">sampleSettings =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>sampleSettings</span>
+<span id="cb6-92"><a href="#cb6-92" tabindex="-1"></a>    ),</span>
+<span id="cb6-93"><a href="#cb6-93" tabindex="-1"></a>    </span>
+<span id="cb6-94"><a href="#cb6-94" tabindex="-1"></a>    <span class="at">trainDetails =</span> <span class="fu">list</span>(</span>
+<span id="cb6-95"><a href="#cb6-95" tabindex="-1"></a>      <span class="at">analysisId =</span> analysisId,</span>
+<span id="cb6-96"><a href="#cb6-96" tabindex="-1"></a>      <span class="at">developmentDatabase =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>cdmDatabaseSchema,</span>
+<span id="cb6-97"><a href="#cb6-97" tabindex="-1"></a>      <span class="at">attrition =</span> <span class="fu">attr</span>(trainData, <span class="st">"metaData"</span>)<span class="sc">$</span>attrition, </span>
+<span id="cb6-98"><a href="#cb6-98" tabindex="-1"></a>      <span class="at">trainingTime =</span> timeToTrain, <span class="co"># how long it took to train the model</span></span>
+<span id="cb6-99"><a href="#cb6-99" tabindex="-1"></a>      <span class="at">trainingDate =</span> <span class="fu">Sys.Date</span>(),</span>
+<span id="cb6-100"><a href="#cb6-100" tabindex="-1"></a>      <span class="at">hyperParamSearch =</span> hyperSummary <span class="co"># the hyper-parameters and performance data.frame</span></span>
+<span id="cb6-101"><a href="#cb6-101" tabindex="-1"></a>    ),</span>
+<span id="cb6-102"><a href="#cb6-102" tabindex="-1"></a>    <span class="at">covariateImportance =</span> <span class="fu">merge</span>(trainData<span class="sc">$</span>covariateData<span class="sc">$</span>covariateRef, varImp, <span class="at">by=</span><span class="st">'covariateId'</span>) <span class="co"># add variable importance to covariateRef if possible</span></span>
+<span id="cb6-103"><a href="#cb6-103" tabindex="-1"></a>  ),</span>
+<span id="cb6-104"><a href="#cb6-104" tabindex="-1"></a>    covariateImportance <span class="ot">=</span> varImp</span>
+<span id="cb6-105"><a href="#cb6-105" tabindex="-1"></a>  <span class="er">)</span></span>
+<span id="cb6-106"><a href="#cb6-106" tabindex="-1"></a>  <span class="fu">class</span>(result) <span class="ot">&lt;-</span> <span class="st">'plpModel'</span></span>
+<span id="cb6-107"><a href="#cb6-107" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'predictionFunction'</span>) <span class="ot">&lt;-</span> <span class="st">'madeupPrediction'</span></span>
+<span id="cb6-108"><a href="#cb6-108" tabindex="-1"></a>  <span class="fu">attr</span>(result, <span class="st">'modelType'</span>) <span class="ot">&lt;-</span> <span class="st">'binary'</span></span>
+<span id="cb6-109"><a href="#cb6-109" tabindex="-1"></a>  <span class="fu">return</span>(result)</span>
+<span id="cb6-110"><a href="#cb6-110" tabindex="-1"></a>    </span>
+<span id="cb6-111"><a href="#cb6-111" tabindex="-1"></a>}</span></code></pre></div>
 </div>
-<div id="helpers" class="section level2">
-<h2 class="hasAnchor">
-<a href="#helpers" class="anchor"></a>Helpers</h2>
-<p>In the fit model a helper function <code>made_up_model</code> is called, this is the function that trains a model given the data, labels and hyper-parameters.</p>
+<div class="section level3">
+<h3 id="helpers">Helpers<a class="anchor" aria-label="anchor" href="#helpers"></a>
+</h3>
+<p>In the fit model a helper function <code>made_up_model</code> is
+called, this is the function that trains a model given the data, labels
+and hyper-parameters.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">made_up_model</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">param</span>, <span class="va">data</span>, <span class="va">final</span><span class="op">=</span><span class="cn">F</span>, <span class="va">labels</span><span class="op">)</span><span class="op">{</span>
-  
-  <span class="kw">if</span><span class="op">(</span><span class="va">final</span><span class="op">==</span><span class="cn">F</span><span class="op">)</span><span class="op">{</span>
-    <span class="co"># add value column to store all predictions</span>
-    <span class="va">labels</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">labels</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span>
-    
-    <span class="va">foldPerm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># this holds CV aucs</span>
-    <span class="kw">for</span><span class="op">(</span><span class="va">index</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">)</span><span class="op">)</span><span class="op">{</span>
-      <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">madeup</span><span class="fu">::</span><span class="fu">model</span><span class="op">(</span>
-        x <span class="op">=</span> <span class="va">data</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">!=</span><span class="va">index</span>,<span class="op">]</span>, <span class="co"># remove left out fold</span>
-        y <span class="op">=</span> <span class="va">labels</span><span class="op">$</span><span class="va">outcomeCount</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">!=</span><span class="va">index</span><span class="op">]</span>,
-        a <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">a</span>, 
-        b <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">b</span>
-      <span class="op">)</span>
-      
-      <span class="co"># predict on left out fold</span>
-      <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span>,<span class="op">]</span><span class="op">)</span>
-      <span class="va">labels</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">pred</span>
-      
-      <span class="co"># calculate auc on help out fold  </span>
-      <span class="va">aucVal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span>,<span class="op">]</span><span class="op">)</span>
-      <span class="va">foldPerm</span><span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">foldPerm</span>,<span class="va">aucVal</span><span class="op">)</span>    
-    <span class="op">}</span>
-    <span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span> <span class="co"># overal AUC</span>
-
-  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span>
-    <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">madeup</span><span class="fu">::</span><span class="fu">model</span><span class="op">(</span>
-      x <span class="op">=</span> <span class="va">data</span>, 
-      y <span class="op">=</span> <span class="va">labels</span><span class="op">$</span><span class="va">outcomeCount</span>,
-      a <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">a</span>,
-      b <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">b</span>
-      <span class="op">)</span>
-    
-    <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span>
-    <span class="va">labels</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="va">pred</span>
-    <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">labels</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span> 
-    <span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span>
-    <span class="va">foldPerm</span> <span class="op">&lt;-</span> <span class="va">auc</span>
-  <span class="op">}</span>
-  
-  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>
-    model <span class="op">=</span> <span class="va">model</span>,
-    auc <span class="op">=</span> <span class="va">auc</span>,
-    prediction <span class="op">=</span> <span class="va">labels</span>,
-    hyperSum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="va">a</span>, b <span class="op">=</span> <span class="va">b</span>, fold_auc <span class="op">=</span> <span class="va">foldPerm</span><span class="op">)</span>
-  <span class="op">)</span>
-  
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span>
-<span class="op">}</span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">made_up_model</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">param</span>, <span class="va">data</span>, <span class="va">final</span><span class="op">=</span><span class="cn">F</span>, <span class="va">labels</span><span class="op">)</span><span class="op">{</span></span>
+<span>  </span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="va">final</span><span class="op">==</span><span class="cn">F</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="co"># add value column to store all predictions</span></span>
+<span>    <span class="va">labels</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">labels</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="va">foldPerm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span> <span class="co"># this holds CV aucs</span></span>
+<span>    <span class="kw">for</span><span class="op">(</span><span class="va">index</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span>      <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">madeup</span><span class="fu">::</span><span class="fu">model</span><span class="op">(</span></span>
+<span>        x <span class="op">=</span> <span class="va">data</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">!=</span><span class="va">index</span>,<span class="op">]</span>, <span class="co"># remove left out fold</span></span>
+<span>        y <span class="op">=</span> <span class="va">labels</span><span class="op">$</span><span class="va">outcomeCount</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">!=</span><span class="va">index</span><span class="op">]</span>,</span>
+<span>        a <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">a</span>, </span>
+<span>        b <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">b</span></span>
+<span>      <span class="op">)</span></span>
+<span>      </span>
+<span>      <span class="co"># predict on left out fold</span></span>
+<span>      <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span>,<span class="op">]</span><span class="op">)</span></span>
+<span>      <span class="va">labels</span><span class="op">$</span><span class="va">value</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">pred</span></span>
+<span>      </span>
+<span>      <span class="co"># calculate auc on help out fold  </span></span>
+<span>      <span class="va">aucVal</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">[</span><span class="va">labels</span><span class="op">$</span><span class="va">index</span><span class="op">==</span><span class="va">index</span>,<span class="op">]</span><span class="op">)</span></span>
+<span>      <span class="va">foldPerm</span><span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">foldPerm</span>,<span class="va">aucVal</span><span class="op">)</span>    </span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span> <span class="co"># overal AUC</span></span>
+<span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">madeup</span><span class="fu">::</span><span class="fu">model</span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="va">data</span>, </span>
+<span>      y <span class="op">=</span> <span class="va">labels</span><span class="op">$</span><span class="va">outcomeCount</span>,</span>
+<span>      a <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">a</span>,</span>
+<span>      b <span class="op">=</span> <span class="va">param</span><span class="op">$</span><span class="va">b</span></span>
+<span>      <span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span></span>
+<span>    <span class="va">labels</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="va">pred</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">labels</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="st">"binary"</span><span class="op">)</span> </span>
+<span>    <span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/computeAuc.html">computeAuc</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span></span>
+<span>    <span class="va">foldPerm</span> <span class="op">&lt;-</span> <span class="va">auc</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    model <span class="op">=</span> <span class="va">model</span>,</span>
+<span>    auc <span class="op">=</span> <span class="va">auc</span>,</span>
+<span>    prediction <span class="op">=</span> <span class="va">labels</span>,</span>
+<span>    hyperSum <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="va">a</span>, b <span class="op">=</span> <span class="va">b</span>, fold_auc <span class="op">=</span> <span class="va">foldPerm</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
-<div id="predict-1" class="section level2">
-<h2 class="hasAnchor">
-<a href="#predict-1" class="anchor"></a>Predict</h2>
-<p>The final step is to create a predict function for the model. In the example above the predeiction function <code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code> was madeupPrediction, so a <code>madeupPrediction</code> function is required when applying the model. The predict function needs to take as input the plpModel returned by the fit function, new data to apply the model on and the cohort specifying the patients of interest to make the prediction for.</p>
+<div class="section level3">
+<h3 id="predict-1">Predict<a class="anchor" aria-label="anchor" href="#predict-1"></a>
+</h3>
+<p>The final step is to create a predict function for the model. In the
+example above the predeiction function
+<code>attr(result, 'predictionFunction') &lt;- 'madeupPrediction'</code>
+was madeupPrediction, so a <code>madeupPrediction</code> function is
+required when applying the model. The predict function needs to take as
+input the plpModel returned by the fit function, new data to apply the
+model on and the cohort specifying the patients of interest to make the
+prediction for.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">madeupPrediction</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">plpModel</span>, <span class="va">data</span> , <span class="va">cohort</span><span class="op">)</span><span class="op">{</span> 
-  
-  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">==</span> <span class="st">'plpData'</span><span class="op">)</span><span class="op">{</span>
-    <span class="co"># convert</span>
-    <span class="va">matrixObjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span><span class="op">(</span>
-      plpData <span class="op">=</span> <span class="va">data</span>, 
-      cohort <span class="op">=</span> <span class="va">cohort</span>,
-      map <span class="op">=</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">covariateImportance</span> <span class="op">%&gt;%</span> 
-        <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">columnId</span>, <span class="va">.data</span><span class="op">$</span><span class="va">covariateId</span><span class="op">)</span>
-    <span class="op">)</span>
-    
-    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="va">matrixObjects</span><span class="op">$</span><span class="va">dataMatrix</span>
-    <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">matrixObjects</span><span class="op">$</span><span class="va">labels</span>
-    
-  <span class="op">}</span><span class="kw">else</span><span class="op">{</span>
-    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="va">data</span>
-  <span class="op">}</span>
-  
-  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">plpModel</span><span class="op">)</span> <span class="op">==</span> <span class="st">'plpModel'</span><span class="op">)</span><span class="op">{</span>
-    <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">model</span>
-  <span class="op">}</span> <span class="kw">else</span><span class="op">{</span>
-    <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">plpModel</span>
-  <span class="op">}</span>
-  
-  <span class="va">cohort</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span>
-  
-  <span class="co"># fix the rowIds to be the old ones</span>
-  <span class="co"># now use the originalRowId and remove the matrix rowId</span>
-  <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">cohort</span> <span class="op">%&gt;%</span> 
-    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span><span class="op">)</span> <span class="op">%&gt;%</span>
-    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html">rename</a></span><span class="op">(</span>rowId <span class="op">=</span> <span class="va">.data</span><span class="op">$</span><span class="va">originalRowId</span><span class="op">)</span>
-  
-  <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">cohort</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html">attr</a></span><span class="op">(</span><span class="va">plpModel</span>, <span class="st">'modelType'</span><span class="op">)</span><span class="op">)</span> 
-  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">cohort</span><span class="op">)</span>
-  
-<span class="op">}</span></code></pre></div>
-<p>As the madeup model uses the standard R prediction, it has the same prediction function as xgboost, so we could have not added a new prediction function and instead made the predictionFunction of the result returned by fitMadeUpModel to <code>attr(result, 'predictionFunction') &lt;- 'predictXgboost'</code>.</p>
+<code class="sourceCode R"><span><span class="va">madeupPrediction</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">plpModel</span>, <span class="va">data</span> , <span class="va">cohort</span><span class="op">)</span><span class="op">{</span> </span>
+<span>  </span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">==</span> <span class="st">'plpData'</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="co"># convert</span></span>
+<span>    <span class="va">matrixObjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span><span class="op">(</span></span>
+<span>      plpData <span class="op">=</span> <span class="va">data</span>, </span>
+<span>      cohort <span class="op">=</span> <span class="va">cohort</span>,</span>
+<span>      map <span class="op">=</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">covariateImportance</span> <span class="op">%&gt;%</span> </span>
+<span>        <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="st">"columnId"</span>, <span class="st">"covariateId"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="va">matrixObjects</span><span class="op">$</span><span class="va">dataMatrix</span></span>
+<span>    <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">matrixObjects</span><span class="op">$</span><span class="va">labels</span></span>
+<span>    </span>
+<span>  <span class="op">}</span><span class="kw">else</span><span class="op">{</span></span>
+<span>    <span class="va">newData</span> <span class="op">&lt;-</span> <span class="va">data</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">plpModel</span><span class="op">)</span> <span class="op">==</span> <span class="st">'plpModel'</span><span class="op">)</span><span class="op">{</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">model</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span><span class="op">{</span></span>
+<span>    <span class="va">model</span> <span class="op">&lt;-</span> <span class="va">plpModel</span></span>
+<span>  <span class="op">}</span></span>
+<span>  </span>
+<span>  <span class="va">cohort</span><span class="op">$</span><span class="va">value</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="co"># fix the rowIds to be the old ones</span></span>
+<span>  <span class="co"># now use the originalRowId and remove the matrix rowId</span></span>
+<span>  <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">cohort</span> <span class="op">%&gt;%</span> </span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="st">"rowId"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>rowId <span class="op">=</span> <span class="st">"originalRowId"</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">cohort</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plpModel</span>, <span class="st">'modelType'</span><span class="op">)</span><span class="op">)</span> </span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cohort</span><span class="op">)</span></span>
+<span>  </span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>As the madeup model uses the standard R prediction, it has the same
+prediction function as xgboost, so we could have not added a new
+prediction function and instead made the predictionFunction of the
+result returned by fitMadeUpModel to
+<code>attr(result, 'predictionFunction') &lt;- 'predictXgboost'</code>.</p>
 </div>
 </div>
-<div id="acknowledgments" class="section level1">
-<h1 class="hasAnchor">
-<a href="#acknowledgments" class="anchor"></a>Acknowledgments</h1>
-<p>Considerable work has been dedicated to provide the <code>PatientLevelPrediction</code> package.</p>
+<div class="section level2">
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<p>Considerable work has been dedicated to provide the
+<code>PatientLevelPrediction</code> package.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/citation.html">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></code></pre></div>
-<pre><code>## 
-## To cite PatientLevelPrediction in publications use:
-## 
-## Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
-## and implementation of a standardized framework to generate and evaluate
-## patient-level prediction models using observational healthcare data."
-## _Journal of the American Medical Informatics Association_, *25*(8),
-## 969-975. &lt;URL: https://doi.org/10.1093/jamia/ocy032&gt;.
-## 
-## A BibTeX entry for LaTeX users is
-## 
-##   @Article{,
-##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
-##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
-##     journal = {Journal of the American Medical Informatics Association},
-##     volume = {25},
-##     number = {8},
-##     pages = {969-975},
-##     year = {2018},
-##     url = {https://doi.org/10.1093/jamia/ocy032},
-##   }</code></pre>
-<p><strong>Please reference this paper if you use the PLP Package in your work:</strong></p>
-<p><a href="http://dx.doi.org/10.1093/jamia/ocy032">Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.</a></p>
-<p>This work is supported in part through the National Science Foundation grant IIS 1251151.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"PatientLevelPrediction"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## To cite PatientLevelPrediction in publications use:</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design</span></span>
+<span><span class="co">##   and implementation of a standardized framework to generate and</span></span>
+<span><span class="co">##   evaluate patient-level prediction models using observational</span></span>
+<span><span class="co">##   healthcare data." _Journal of the American Medical Informatics</span></span>
+<span><span class="co">##   Association_, *25*(8), 969-975.</span></span>
+<span><span class="co">##   &lt;https://doi.org/10.1093/jamia/ocy032&gt;.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## A BibTeX entry for LaTeX users is</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">##   @Article{,</span></span>
+<span><span class="co">##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},</span></span>
+<span><span class="co">##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},</span></span>
+<span><span class="co">##     journal = {Journal of the American Medical Informatics Association},</span></span>
+<span><span class="co">##     volume = {25},</span></span>
+<span><span class="co">##     number = {8},</span></span>
+<span><span class="co">##     pages = {969-975},</span></span>
+<span><span class="co">##     year = {2018},</span></span>
+<span><span class="co">##     url = {https://doi.org/10.1093/jamia/ocy032},</span></span>
+<span><span class="co">##   }</span></span></code></pre>
+<p><strong>Please reference this paper if you use the PLP Package in
+your work:</strong></p>
+<p><a href="http://dx.doi.org/10.1093/jamia/ocy032" class="external-link">Reps JM, Schuemie
+MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
+standardized framework to generate and evaluate patient-level prediction
+models using observational healthcare data. J Am Med Inform Assoc.
+2018;25(8):969-975.</a></p>
+<p>This work is supported in part through the National Science
+Foundation grant IIS 1251151.</p>
 </div>
   </div>
 
@@ -626,11 +759,13 @@
 
 
       <footer><div class="copyright">
-  <p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek.</p>
+  <p></p>
+<p>Developed by Jenna Reps, Martijn Schuemie, Marc Suchard, Patrick Ryan, Peter Rijnbeek, Egill Fridgeirsson.</p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
       </footer>
@@ -638,6 +773,8 @@
 
   
 
+
+  
 
   </body>
 </html>

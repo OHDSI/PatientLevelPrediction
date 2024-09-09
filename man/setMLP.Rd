@@ -5,7 +5,7 @@
 \title{Create setting for neural network model with python}
 \usage{
 setMLP(
-  hiddenLayerSizes = list(c(100), c(20, 4)),
+  hiddenLayerSizes = list(c(100), c(20)),
   activation = list("relu"),
   solver = list("adam"),
   alpha = list(0.3, 0.01, 1e-04, 1e-06),
@@ -23,7 +23,7 @@ setMLP(
   validationFraction = list(0.1),
   beta1 = list(0.9),
   beta2 = list(0.999),
-  epsilon = list(1, 0.1, 1e-08),
+  epsilon = list(1e-08),
   nIterNoChange = list(10),
   seed = sample(1e+05, 1)
 )
@@ -33,10 +33,10 @@ setMLP(
 
 \item{activation}{(list) Activation function for the hidden layer.
 \itemize{
-   \item{"identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x}
-   \item{"logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).}
-   \item{"tanh": the hyperbolic tan function, returns f(x) = tanh(x).}
-   \item{"relu": the rectified linear unit function, returns f(x) = max(0, x)}
+   \item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
+   \item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
+   \item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
+   \item "relu": the rectified linear unit function, returns f(x) = max(0, x)
  }}
 
 \item{solver}{(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)}
@@ -45,7 +45,7 @@ setMLP(
 
 \item{batchSize}{(list) Size of minibatches for stochastic optimizers. If the solver is ‘lbfgs’, the classifier will not use minibatch. When set to “auto”, batchSize=min(200, n_samples).}
 
-\item{learningRate}{(list) Only used when solver='sgd' Learning rate schedule for weight updates.{‘constant’, ‘invscaling’, ‘adaptive’}, default=’constant’}
+\item{learningRate}{(list) Only used when solver='sgd' Learning rate schedule for weight updates. ‘constant’, ‘invscaling’, ‘adaptive’, default=’constant’}
 
 \item{learningRateInit}{(list) Only used when solver=’sgd’ or ‘adam’. The initial learning rate used. It controls the step-size in updating the weights.}
 

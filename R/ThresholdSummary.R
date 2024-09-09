@@ -81,6 +81,14 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
     # sort prediction
     predictionOfInterest <- predictionOfInterest[order(-predictionOfInterest$value),]
     
+    # because of numerical precision issues (I think), in very rare cases the preferenceScore 
+    # is not monotonically decreasing after this sort (it should follow the predictions)
+    # as a fix I remove the troublesome row from influencing the thresholdSummary
+    if (!all(predictionOfInterest$preferenceScore == cummin(predictionOfInterest$preferenceScore))) {
+      troubleRow <- (which((predictionOfInterest$preferenceScore == cummin(predictionOfInterest$preferenceScore))==FALSE))
+      predictionOfInterest <- predictionOfInterest[-troubleRow,]
+      }
+    
     # create indexes
     if(length(predictionOfInterest$preferenceScore)>100){
       indexesOfInt <- c(
@@ -166,6 +174,7 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...){
       )
     )
     
+    
   }
   
   result <- as.data.frame(result)
@@ -196,17 +205,19 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
     )
     
     nbSummary <- tryCatch(
-      {
+      { xstart <- max(min(preddat$p),0.001); 
+        xstop <- min(max(preddat$p),0.99);
         stdca(
           data = preddat, 
           outcome = "y", 
           ttoutcome = "t", 
           timepoint = timepoint,  
           predictors = "p", 
-          xstart = max(min(preddat$p),0.001), #0.001, 
-          xstop = min(max(preddat$p),0.99), 
-          xby = 0.001, 
-          smooth=F
+          xstart = xstart, 
+          xstop = xstop, 
+          xby = (xstop - xstart)/100,
+          smooth = FALSE,
+          graph = FALSE
         )
       },
       error = function(e){ParallelLogger::logError(e); return(NULL)}
@@ -249,7 +260,7 @@ stdca <- function (data, outcome, ttoutcome, timepoint, predictors, xstart = 0.0
       1), outcome]) > 0) & cmprsk == FALSE) {
     stop("outcome must be coded as 0 and 1")
   }
-  if (class(data) != "data.frame") {
+  if (!inherits(x = data, what = "data.frame")) {
     stop("Input data must be class data.frame")
   }
   if (xstart < 0 | xstart > 1) {
@@ -453,6 +464,37 @@ stdca <- function (data, outcome, ttoutcome, timepoint, predictors, xstart = 0.0
 }
 
 
+checkToByTwoTableInputs <- function(TP,FP,FN,TN){
+  # check classes
+  if(!inherits(x = TP, what = c('integer','numeric'))){
+    stop('Incorrect TP class')
+  }
+  if(!inherits(x = FP, what = c('integer','numeric'))){
+    stop('Incorrect FP class')
+  }
+  if(!inherits(x = TN, what = c('integer','numeric'))){
+    stop('Incorrect TN class')
+  }
+  if(!inherits(x = FN, what = c('integer','numeric'))){
+    stop('Incorrect FN class')
+  }
+  
+  # check positive values
+  if(sum(TP<0)>0){
+    stop('TP < 0')
+  }
+  if(sum(FP<0)>0){
+    stop('FP < 0')
+  }
+  if(sum(TN<0)>0){
+    stop('TN < 0')
+  }
+  if(sum(FN<0)>0){
+    stop('FN < 0')
+  }
+  
+  return(invisible(TRUE))
+}
 # making all this single for easy unit testing
 #' Calculate the f1Score
 #'
@@ -468,14 +510,13 @@ stdca <- function (data, outcome, ttoutcome, timepoint, predictors, xstart = 0.0
 #' f1Score value
 #'
 f1Score <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+    )
+
   return(2*(TP/(TP+FP))*(TP/(TP+FN))/((TP/(TP+FP))+(TP/(TP+FN))))
 }
 #' Calculate the accuracy
@@ -492,15 +533,15 @@ f1Score <- function(TP,TN,FN,FP){
 #' accuracy value
 #'
 accuracy <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  (TP+TN)/(TP+TN+FP+FN)}
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return((TP+TN)/(TP+TN+FP+FN))
+}
 
 #' Calculate the sensitivity
 #'
@@ -516,15 +557,15 @@ accuracy <- function(TP,TN,FN,FP){
 #' sensitivity value
 #'
 sensitivity <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  TP/(TP+FN)}
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+
+  return(TP/(TP+FN))
+}
 
 #' Calculate the falseNegativeRate
 #'
@@ -540,15 +581,15 @@ sensitivity <- function(TP,TN,FN,FP){
 #' falseNegativeRate  value
 #'
 falseNegativeRate <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  FN/(TP+FN)}
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(FN/(TP+FN))
+}
 
 #' Calculate the falsePositiveRate
 #'
@@ -564,15 +605,15 @@ falseNegativeRate <- function(TP,TN,FN,FP){
 #' falsePositiveRate  value
 #'
 falsePositiveRate <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  FP/(FP+TN)}
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+
+  return(FP/(FP+TN))
+}
 
 #' Calculate the specificity
 #'
@@ -588,15 +629,16 @@ falsePositiveRate <- function(TP,TN,FN,FP){
 #' specificity value
 #'
 specificity <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  TN/(FP+TN)}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+ 
+  return(TN/(FP+TN))
+}
 
 #' Calculate the positivePredictiveValue
 #'
@@ -612,15 +654,16 @@ specificity <- function(TP,TN,FN,FP){
 #' positivePredictiveValue value
 #'
 positivePredictiveValue <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  TP/(TP+FP)}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(TP/(TP+FP))
+}
 
 #' Calculate the falseDiscoveryRate
 #'
@@ -636,15 +679,16 @@ positivePredictiveValue <- function(TP,TN,FN,FP){
 #' falseDiscoveryRate value
 #'
 falseDiscoveryRate <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  FP/(TP+FP)}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(FP/(TP+FP))
+  }
 
 #' Calculate the negativePredictiveValue
 #'
@@ -660,15 +704,16 @@ falseDiscoveryRate <- function(TP,TN,FN,FP){
 #' negativePredictiveValue value
 #'
 negativePredictiveValue <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  TN/(FN+TN)}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(TN/(FN+TN))
+}
 
 #' Calculate the falseOmissionRate
 #'
@@ -684,15 +729,16 @@ negativePredictiveValue <- function(TP,TN,FN,FP){
 #' falseOmissionRate value
 #'
 falseOmissionRate <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  FN/(FN+TN)}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(FN/(FN+TN))
+}
 
 #' Calculate the positiveLikelihoodRatio
 #'
@@ -708,15 +754,16 @@ falseOmissionRate <- function(TP,TN,FN,FP){
 #' positiveLikelihoodRatio value
 #' 
 positiveLikelihoodRatio <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  (TP/(TP+FN))/(FP/(FP+TN))}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return((TP/(TP+FN))/(FP/(FP+TN)))
+}
 
 #' Calculate the negativeLikelihoodRatio
 #'
@@ -732,15 +779,16 @@ positiveLikelihoodRatio <- function(TP,TN,FN,FP){
 #' negativeLikelihoodRatio value
 #'
 negativeLikelihoodRatio <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  (FN/(TP+FN))/(TN/(FP+TN))}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return((FN/(TP+FN))/(TN/(FP+TN)))
+}
 
 
 #' Calculate the diagnostic odds ratio
@@ -757,12 +805,13 @@ negativeLikelihoodRatio <- function(TP,TN,FN,FP){
 #' diagnosticOddsRatio value
 #'
 diagnosticOddsRatio <- function(TP,TN,FN,FP){
-  if(sum(TP<0)>0) stop('TP < 0')
-  if(sum(FP<0)>0) stop('FP < 0')
-  if(sum(TN<0)>0) stop('TN < 0')
-  if(sum(FN<0)>0) stop('FN < 0')
-  if(class(TP)!='numeric') stop('Incorrect TP class')
-  if(class(FP)!='numeric') stop('Incorrect FP class')
-  if(class(TN)!='numeric') stop('Incorrect TN class')
-  if(class(FN)!='numeric') stop('Incorrect FN class')
-  ((TP/(TP+FN))/(FP/(FP+TN)))/((FN/(TP+FN))/(TN/(FP+TN)))}
+  
+  checkToByTwoTableInputs(
+    TP = TP,
+    FP = FP,
+    FN = FN,
+    TN = TN
+  )
+  
+  return(((TP/(TP+FN))/(FP/(FP+TN)))/((FN/(TP+FN))/(TN/(FP+TN))))
+}
