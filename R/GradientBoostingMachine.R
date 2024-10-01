@@ -204,9 +204,13 @@ fitXgboost <- function(
   hyperParameters,
   settings
   ){
-  
-  if(!is.null(hyperParameters$earlyStopRound)){
+  set.seed(settings$seed)
+  if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix)*0.9)
+    if (sum(labels$outcomeCount[-trainInd]) == 0) {
+      stop("No outcomes in early stopping set, either increase size of training
+            set or turn off early stopping")
+    }
     train <- xgboost::xgb.DMatrix(
       data = dataMatrix[trainInd,, drop = F], 
       label = labels$outcomeCount[trainInd]
@@ -215,9 +219,9 @@ fitXgboost <- function(
       data = dataMatrix[-trainInd,, drop = F], 
       label = labels$outcomeCount[-trainInd]
       )
-    watchlist <- list(train=train, test=test)
+    watchlist <- list(train = train, test = test)
     
-  } else{
+  } else {
     train <- xgboost::xgb.DMatrix(
       data = dataMatrix, 
       label = labels$outcomeCount
@@ -225,10 +229,9 @@ fitXgboost <- function(
     watchlist <- list()
   }
   
-  outcomes <- sum(labels$outcomeCount>0)
+  outcomes <- sum(labels$outcomeCount > 0)
   N <- nrow(labels)
   outcomeProportion <- outcomes/N
-  set.seed(settings$seed)
   model <- xgboost::xgb.train(
     data = train, 
     params = list(
@@ -240,7 +243,6 @@ fitXgboost <- function(
       lambda = hyperParameters$lambda,
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
-      #eval.metric = "logloss"
       base_score = outcomeProportion,
       eval_metric = "auc"
     ),

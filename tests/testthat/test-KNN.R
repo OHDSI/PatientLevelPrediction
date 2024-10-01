@@ -21,7 +21,8 @@ test_that('KNN fit works', {
 
 
 test_that("KNN settings", {
-skip_on_ci()
+  skip_on_ci()
+
 model_set <- setKNN(k=5)
 testthat::expect_is(model_set, "modelSettings")
 testthat::expect_length(model_set,2)

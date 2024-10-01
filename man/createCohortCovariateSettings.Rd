@@ -7,8 +7,8 @@
 createCohortCovariateSettings(
   cohortName,
   settingId,
-  cohortDatabaseSchema,
-  cohortTable,
+  cohortDatabaseSchema = NULL,
+  cohortTable = NULL,
   cohortId,
   startDay = -30,
   endDay = 0,
@@ -23,9 +23,11 @@ createCohortCovariateSettings(
 
 \item{settingId}{A unique id for the covariate time and}
 
-\item{cohortDatabaseSchema}{The schema of the database with the cohort}
+\item{cohortDatabaseSchema}{The schema of the database with the cohort. If 
+nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.}
 
-\item{cohortTable}{the table name that contains the covariate cohort}
+\item{cohortTable}{the table name that contains the covariate cohort. If 
+nothing is specified then the cohortTable from databaseDetails at runtime is used.}
 
 \item{cohortId}{cohort id for the covariate cohort}
 

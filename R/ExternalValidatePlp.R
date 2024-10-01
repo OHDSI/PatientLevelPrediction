@@ -350,11 +350,16 @@ createValidationSettings <- function(recalibrate = NULL,
 #'
 #' @param targetId The targetId of the target cohort to validate on
 #' @param outcomeId The outcomeId of the outcome cohort to validate on
-#' @param populationSettings A list of population restriction settings created by \code{createPopulationSettings}
-#' @param restrictPlpDataSettings A list of plpData restriction settings created by \code{createRestrictPlpDataSettings}
+#' @param populationSettings A list of population restriction settings created 
+#' by \code{createPopulationSettings}. Default is NULL and then this is taken
+#' from the model
+#' @param restrictPlpDataSettings A list of plpData restriction settings
+#' created by \code{createRestrictPlpDataSettings}. Default is NULL and then
+#' this is taken from the model.
 #' @param plpModelList A list of plpModels objects created by \code{runPlp} or a path to such objects
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data
+#' @return A validation design object of class \code{validationDesign}
 #' @export
 createValidationDesign <-
   function(targetId,
@@ -366,24 +371,63 @@ createValidationDesign <-
            runCovariateSummary = TRUE) {
     checkIsClass(targetId, c("numeric", "integer"))
     checkIsClass(outcomeId, c("numeric", "integer"))
-    checkIsClass(populationSettings, c("populationSettings"))
-    checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+
+    if (!is.null(populationSettings)) {
+      checkIsClass(populationSettings, c("populationSettings"))
+    }
+    if (!is.null(restrictPlpDataSettings)) {
+      if (inherits(restrictPlpDataSettings, "list")) {
+        lapply(restrictPlpDataSettings, function(x) {
+          checkIsClass(x, "restrictPlpDataSettings")
+        })
+      } else {
+          checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+        }
+    }
     checkIsClass(plpModelList, "list")
-    lapply(plpModelList, function(x)
-      checkIsClass(x, c("plpModel", "character")))
-    checkIsClass(recalibrate, c("character", "NULL"))
+    lapply(plpModelList, function(x) {
+      checkIsClass(x, c("plpModel", "character"))
+    })
+    checkIsClass(recalibrate, c('character', 'NULL'))
+    if (!is.null(recalibrate)) {
+      if (sum(recalibrate %in% c('recalibrationInTheLarge', 'weakRecalibration')) !=
+          length(recalibrate)) {
+        ParallelLogger::logError(
+          'Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration'
+        )
+      }
+    }
     checkIsClass(runCovariateSummary, "logical")
     
-    design <- list(
-      targetId = targetId,
-      outcomeId = outcomeId,
-      populationSettings = populationSettings,
-      plpModelList = plpModelList,
-      restrictPlpDataSettings = restrictPlpDataSettings,
-      recalibrate = recalibrate,
-      runCovariateSummary = runCovariateSummary
-    )
-    class(design) <- "validationDesign"
+    # if restrictPlpDataSettings is a list make a list of designs with each
+    # settings
+    if (is.list(restrictPlpDataSettings)) {
+      design <- lapply(restrictPlpDataSettings, function(x) {
+        design <- list(
+          targetId = targetId,
+          outcomeId = outcomeId,
+          populationSettings = populationSettings,
+          plpModelList = plpModelList,
+          restrictPlpDataSettings = x,
+          recalibrate = recalibrate,
+          runCovariateSummary = runCovariateSummary
+        )
+       class(design) <- "validationDesign"
+       return(design)
+      })
+    } else {
+      design <- list(
+        targetId = targetId,
+        outcomeId = outcomeId,
+        populationSettings = populationSettings,
+        plpModelList = plpModelList,
+        restrictPlpDataSettings = restrictPlpDataSettings,
+        recalibrate = recalibrate,
+        runCovariateSummary = runCovariateSummary
+      )
+      class(design) <- "validationDesign"
+    } 
+
     return(design)
   }
 
@@ -403,125 +447,95 @@ validateExternal <- function(validationDesignList,
                              logSettings,
                              outputFolder) {
   # Input checks
-  #=======
-  if (inherits(validationDesignList, 'list')) {
-    lapply(validationDesignList, function(x)
-      checkIsClass(x, 'validationDesign'))
-  } else {
-    checkIsClass(validationDesignList, 'validationDesign')
-    validationDesignList <- list(validationDesignList)
-  }
- 
-  # check the class and make a list if a single database setting
-  if (inherits(databaseDetails, 'list')) {
-    lapply(databaseDetails, function(x)
-      checkIsClass(x, 'databaseDetails'))
-  } else {
-    checkIsClass(databaseDetails, 'databaseDetails')
-    databaseDetails <- list(databaseDetails)
-  }
-  
+  changedInputs <- checkValidateExternalInputs(validationDesignList,
+                                               databaseDetails,
+                                               logSettings,
+                                               outputFolder)
+  validationDesignList <- changedInputs[["validationDesignList"]]
+  databaseDetails <- changedInputs[["databaseDetails"]]
+
   # create results list with the names of the databases to validate across
   result <- list()
   length(result) <- length(databaseDetails)
   names(result) <-
-    unlist(lapply(databaseDetails, function(x)
-      attr(x, 'cdmDatabaseName')))
+    unlist(lapply(databaseDetails, function(x) {
+      attr(x, "cdmDatabaseName")}))
   
   # Need to keep track of incremental analysisId's for each database
-  databaseNames <- unlist(lapply(databaseDetails, function(x)
-    x$cdmDatabaseName))
+  databaseNames <- unlist(lapply(databaseDetails, function(x) {
+    x$cdmDatabaseName}))
+
   analysisInfo <- list()
   for (name in databaseNames) {
     analysisInfo[name] <- 1
   }
+  
+  # initiate log
+  logSettings$saveDirectory <- outputFolder
+  logSettings$logFileName <- "validationLog"
+  logger <- do.call(createLog, logSettings)
+  ParallelLogger::registerLogger(logger)
+  on.exit(closeLog(logger))
+  
+  results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
       databaseName <- database$cdmDatabaseName
-      # initiate log
-      logSettings$saveDirectory <- file.path(outputFolder,
-                                             database$cdmDatabaseName)
-      logSettings$logFileName <- 'validationLog'
-      logger <- do.call(createLog, logSettings)
-      ParallelLogger::registerLogger(logger)
-      on.exit(logger$close())
       
-      ParallelLogger::logInfo(paste('Validating model on', database$cdmDatabaseName))
+      ParallelLogger::logInfo(paste("Validating model on", database$cdmDatabaseName))
       
       database$targetId <- design$targetId
       
       database$outcomeIds <- design$outcomeId
       
-      allCovSettings <-
-        lapply(design$plpModelList, function(plpModel)
-          plpModel$modelDesign$covariateSettings)
-      # compare all to first covSettings, if not the same stop
-      if (!Reduce(function(x, y)
-        x &&
-        identical(y, allCovSettings[[1]]),
-        allCovSettings[-1],
-        init = TRUE)) {
-        stop("covariateSettings are not the same across models which is not supported yet")
-      }
-      plpData <- tryCatch({
-        do.call(
-          getPlpData,
-          list(
-            databaseDetails = database,
-            restrictPlpDataSettings = design$restrictPlpDataSettings,
-            covariateSettings = design$plpModelList[[1]]$modelDesign$covariateSettings
-          )
-        )
-      },
-      error = function(e) {
-        ParallelLogger::logError(e)
-        return(NULL)
-      })     
-      plpDataName <-
-        paste0("targetId_", design$targetId, "_L", "1") # Is the 1 for how many targetIds in file ?
-      plpDataLocation <-
-        file.path(outputFolder, databaseName, plpDataName)
-      if (!dir.exists(file.path(outputFolder, databaseName))) {
-        dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
-      }
-      savePlpData(plpData, file = plpDataLocation)
+      modelDesigns <- extractModelDesigns(design$plpModelList)
+      allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
+      design <- fromDesignOrModel(design, modelDesigns, "restrictPlpDataSettings")
+      checkAllSameInModels(allCovSettings, "covariateSettings")
       
+      # get plpData
+      plpData <- getData(design, database, outputFolder, allCovSettings) 
+      if (is.null(plpData)) {
+        ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceeding to the next one.")
+        next
+      }
       # create study population
-      population <- tryCatch({
-        do.call(
-          createStudyPopulation,
-          list(
-            plpData = plpData,
-            outcomeId = design$outcomeId,
-            populationSettings = design$populationSettings
-          )
-        )
-      },
-      error = function(e) {
-        ParallelLogger::logError(e)
-        return(NULL)
-      })
-      
+      population <- getPopulation(design, modelDesigns, plpData)
+
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
-        validateModel(
-          plpModel = model,
-          plpData = plpData,
-          population = population,
-          recalibrate = design$recalibrate,
-          runCovariateSummary = design$runCovariateSummary,
-          outputFolder = outputFolder,
-          databaseName = databaseName,
-          analysisName = analysisName
+        analysisDone <- file.exists(
+          file.path(
+            outputFolder,
+            databaseName,
+            analysisName,
+            "validationResult",
+            "runPlp.rds"
+          )
         )
+        if (!analysisDone) {
+          validateModel(
+            plpModel = model,
+            plpData = plpData,
+            population = population,
+            recalibrate = design$recalibrate,
+            runCovariateSummary = design$runCovariateSummary,
+            outputFolder = outputFolder,
+            databaseName = databaseName,
+            analysisName = analysisName)
+        } else {
+            ParallelLogger::logInfo(paste0("Analysis ", analysisName, " already done",
+                                           ", Proceeding to the next one."))
+        }
+
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
     }
   }
   for (database in databaseDetails) {
     databaseName <- database$cdmDatabaseName
-    sqliteLocation <-
-      file.path(outputFolder, 'sqlite')
+    sqliteLocation <- file.path(outputFolder, "sqlite")
+
     tryCatch({
       insertResultsToSqlite(
         resultLocation = file.path(outputFolder, databaseName),
@@ -549,6 +563,12 @@ validateModel <-
            outputFolder,
            databaseName,
            analysisName) {
+
+    
+    if (is.character(plpModel)) {
+      plpModel <- loadPlpModel(plpModel)
+    }
+
     result <- externalValidatePlp(
       plpModel = plpModel,
       plpData = plpData,
@@ -561,7 +581,161 @@ validateModel <-
                     outputFolder,
                     databaseName,
                     analysisName,
-                    'validationResult'
+
+                    "validationResult"
                   ))
     return(result)
 }
+
+#' checkAllSameInModels - Check if all settings are the same across models
+#' @param settingsList A list of settings to check
+#' @param settingName The name of the setting to check
+#' @keywords internal
+checkAllSameInModels <- function(settingsList, settingName) {
+  if (!Reduce(function(x, y) {
+    x &&
+    identical(y, settingsList[[1]])},
+    settingsList[-1],
+    init = TRUE)) {
+    stop(paste0(settingName, "are not the same across models which is not supported yet"))
+  }
+}
+
+#' extractModelDesigns - Extract all modelDesigns from a list of plpModels
+#' @param plpModelList A list of plpModels
+#' @return A list of modelDesigns
+#' @keywords internal
+extractModelDesigns <- function(plpModelList) {
+  lapply(plpModelList, function(plpModel) {
+    if (is.character(plpModel)) {
+      modelDesign <- ParallelLogger::loadSettingsFromJson(
+        normalizePath(file.path(plpModel, "modelDesign.json"))
+      )
+      return(modelDesign)
+    } else {
+    plpModel$modelDesign
+    }
+  })
+}
+
+#' checkValidateExternalInputs - Check the inputs for validateExternal
+#' @param validationDesignList A list of validationDesign objects
+#' @param databaseDetails A list of databaseDetails objects
+#' @param logSettings An object of logSettings
+#' @param outputFolder The directory to save the validation results to
+#' @return A list of inputs that were modified
+#' @keywords internal
+checkValidateExternalInputs <- function(validationDesignList,
+                                        databaseDetails,
+                                        logSettings,
+                                        outputFolder) {
+  if (inherits(validationDesignList, "list")) {
+    lapply(validationDesignList, function(x) {
+      checkIsClass(x, "validationDesign")})
+  } else {
+    checkIsClass(validationDesignList, "validationDesign")
+    validationDesignList <- list(validationDesignList)
+  }
+ 
+  # check the class and make a list if a single database setting
+  if (inherits(databaseDetails, "list")) {
+    lapply(databaseDetails, function(x) {
+      checkIsClass(x, "databaseDetails")})
+  } else {
+    checkIsClass(databaseDetails, "databaseDetails")
+    databaseDetails <- list(databaseDetails)
+  }
+  results <- list(validationDesignList = validationDesignList,
+                  databaseDetails = databaseDetails)
+  return(results)
+}
+
+#' fromDesignOrModel - Check if the design has the setting, if not use the model's
+#' @param validationDesign The validationDesign object
+#' @param modelDesigns A list of modelDesign objects
+#' @param settingName The name of the setting to check
+#' @return The updated design
+#' @keywords internal
+fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
+  settingsFromModel <- lapply(modelDesigns, function(x) x[[settingName]])
+  if (is.null(validationDesign[[settingName]])) {
+    checkAllSameInModels(settingsFromModel, settingName)
+    validationDesign[[settingName]] <- settingsFromModel[[1]]
+    ParallelLogger::logInfo(paste0(settingName, " not set in design, using model's"))
+  } else {
+    if (any(unlist(lapply(modelDesigns, function(x) {
+            !identical(x[[settingName]], validationDesign[[settingName]])
+          })))) {
+      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
+    }
+  }
+  return(validationDesign)
+}
+
+#' getData - Get the plpData for the validation
+#' @param design The validationDesign object
+#' @param database The databaseDetails object
+#' @param outputFolder The directory to save the validation results to
+#' @param allCovSettings A list of covariateSettings from the models
+#' @return The plpData object
+#' @keywords internal
+getData <- function(design, database, outputFolder, allCovSettings) {
+  databaseName <- database$cdmDatabaseName
+  plpDataName <-
+    paste0("targetId_", design$targetId, "_L", "1")
+  plpDataLocation <-
+    file.path(outputFolder, databaseName, plpDataName)
+  if (!dir.exists(plpDataLocation)) {
+    plpData <- tryCatch({
+      do.call(
+        getPlpData,
+        list(
+          databaseDetails = database,
+          restrictPlpDataSettings = design$restrictPlpDataSettings,
+          covariateSettings = allCovSettings[[1]]
+        )
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logError(e)
+      return(NULL)
+    })   
+    if (!is.null(plpData)) {
+      if (!dir.exists(file.path(outputFolder, databaseName))) {
+        dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
+      }
+      savePlpData(plpData, file = plpDataLocation)
+    }
+  } else {
+    ParallelLogger::logInfo(paste0("Data already extracted for ",
+                            plpDataName, ": Loading from disk"))
+    plpData <- loadPlpData(plpDataLocation)
+  }
+  return(plpData)
+}
+
+#' getPopulation - Get the population for the validationDesign
+#' @param validationDesign The validationDesign objects
+#' @param modelDesigns A list of modelDesign objects
+#' @param plpData The plpData object
+#' @return The population dataframe
+#' @keywords internal
+getPopulation <- function(validationDesign, modelDesigns, plpData) {
+  design <- fromDesignOrModel(validationDesign, modelDesigns, "populationSettings")
+  population <- tryCatch({
+    do.call(
+      createStudyPopulation,
+      list(
+        plpData = plpData,
+        outcomeId = design$outcomeId,
+        populationSettings = design$populationSettings
+      )
+    )
+  },
+  error = function(e) {
+    ParallelLogger::logError(e)
+    return(NULL)
+  })
+  return(population)
+}
+
