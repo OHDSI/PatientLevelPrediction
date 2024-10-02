@@ -364,8 +364,8 @@ createValidationSettings <- function(recalibrate = NULL,
 createValidationDesign <-
   function(targetId,
            outcomeId,
-           populationSettings,
-           restrictPlpDataSettings,
+           populationSettings = NULL,
+           restrictPlpDataSettings = NULL,
            plpModelList,
            recalibrate = NULL,
            runCovariateSummary = TRUE) {
