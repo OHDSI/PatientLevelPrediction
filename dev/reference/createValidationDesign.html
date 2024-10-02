@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.8.9999</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.9.9999</span>
       </span>
     </div>
 
@@ -68,6 +68,9 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/ClinicalModels.html">Clinical Models</a>
+    </li>
+    <li>
       <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
     </li>
     <li>
@@ -94,6 +97,9 @@
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
+  <a href="../articles/ClinicalModels.html">Clinical Models</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -129,9 +135,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createValidationDesign</span><span class="op">(</span></span>
 <span>  <span class="va">targetId</span>,</span>
 <span>  <span class="va">outcomeId</span>,</span>
-<span>  <span class="va">plpModelList</span>,</span>
 <span>  populationSettings <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  restrictPlpDataSettings <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">plpModelList</span>,</span>
 <span>  recalibrate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -149,10 +155,6 @@
 <dd><p>The outcomeId of the outcome cohort to validate on</p></dd>
 
 
-<dt id="arg-plpmodellist">plpModelList<a class="anchor" aria-label="anchor" href="#arg-plpmodellist"></a></dt>
-<dd><p>A list of plpModels objects created by <code>runPlp</code> or a path to such objects</p></dd>
-
-
 <dt id="arg-populationsettings">populationSettings<a class="anchor" aria-label="anchor" href="#arg-populationsettings"></a></dt>
 <dd><p>A list of population restriction settings created
 by <code>createPopulationSettings</code>. Default is NULL and then this is taken
@@ -163,6 +165,10 @@ from the model</p></dd>
 <dd><p>A list of plpData restriction settings
 created by <code>createRestrictPlpDataSettings</code>. Default is NULL and then
 this is taken from the model.</p></dd>
+
+
+<dt id="arg-plpmodellist">plpModelList<a class="anchor" aria-label="anchor" href="#arg-plpmodellist"></a></dt>
+<dd><p>A list of plpModels objects created by <code>runPlp</code> or a path to such objects</p></dd>
 
 
 <dt id="arg-recalibrate">recalibrate<a class="anchor" aria-label="anchor" href="#arg-recalibrate"></a></dt>
@@ -190,7 +196,7 @@ this is taken from the model.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>

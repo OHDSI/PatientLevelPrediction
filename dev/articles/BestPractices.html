@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.8.9999</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.9.9999</span>
       </span>
     </div>
 
@@ -86,6 +86,9 @@
       <a href="../articles/BuildingPredictiveModels.html">Building patient-level predictive models</a>
     </li>
     <li>
+      <a href="../articles/ClinicalModels.html">Clinical Models</a>
+    </li>
+    <li>
       <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
     </li>
     <li>
@@ -113,6 +116,9 @@
 </li>
 <li>
   <a href="../articles/BestPractices.html">Best Practices</a>
+</li>
+<li>
+  <a href="../articles/ClinicalModels.html">Clinical Models</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -145,7 +151,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-08-06</h4>
+            <h4 data-toc-skip class="date">2024-10-02</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BestPractices.rmd" class="external-link"><code>vignettes/BestPractices.rmd</code></a></small>
       <div class="hidden name"><code>BestPractices.rmd</code></div>
@@ -162,116 +168,255 @@ Peter R. Rijnbeek</h4>
 <h2 id="best-practice-publications-using-the-ohdsi-patientlevelprediction-framework">Best practice publications using the OHDSI PatientLevelPrediction
 framework<a class="anchor" aria-label="anchor" href="#best-practice-publications-using-the-ohdsi-patientlevelprediction-framework"></a>
 </h2>
-<table style="width:100%;" class="table">
-<colgroup>
-<col width="8%">
-<col width="48%">
-<col width="42%">
-</colgroup>
-<thead><tr class="header">
-<th>Topic</th>
-<th>Research Summary</th>
-<th>Link</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Problem Specification</td>
-<td>When is prediction suitable in observational data?</td>
-<td>Guidelines needed</td>
+<table class="table">
+<tr>
+<th>
+Topic
+</th>
+<th>
+Research Summary
+</th>
+<th>
+Link
+</th>
 </tr>
-<tr class="even">
-<td>Data Creation</td>
-<td>Comparison of cohort vs case-control design</td>
-<td><a href="https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2" class="external-link">Journal
-of Big Data</a></td>
+<tr>
+<td>
+Problem Specification
+</td>
+<td>
+When is prediction suitable in observational data?
+</td>
+<td>
+Guidelines needed
+</td>
 </tr>
-<tr class="odd">
-<td>Data Creation</td>
-<td>Addressing loss to follow-up (right censoring)</td>
-<td><a href="https://link.springer.com/article/10.1186/s12911-021-01408-x" class="external-link">BMC
-medical informatics and decision makingk</a></td>
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Comparison of cohort vs case-control design
+</td>
+<td>
+<a href="https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2" class="external-link">Journal
+of Big Data</a>
+</td>
 </tr>
-<tr class="even">
-<td>Data Creation</td>
-<td>Investigating how to address left censoring in features
-construction</td>
-<td><a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2" class="external-link">BMC
-Medical Research Methodology</a></td>
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Addressing loss to follow-up (right censoring)
+</td>
+<td>
+<a href="https://link.springer.com/article/10.1186/s12911-021-01408-x" class="external-link">BMC
+medical informatics and decision makingk</a>
+</td>
 </tr>
-<tr class="odd">
-<td>Data Creation</td>
-<td>Impact of over/under-sampling</td>
-<td>Paper under review</td>
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Investigating how to address left censoring in features construction
+</td>
+<td>
+<a href="https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2" class="external-link">BMC
+Medical Research Methodology</a>
+</td>
 </tr>
-<tr class="even">
-<td>Data Creation</td>
-<td>Impact of phenotypes</td>
-<td>Study Done - Paper submitted</td>
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Impact of over/under-sampling
+</td>
+<td>
+<a href="https://link.springer.com/article/10.1186/s40537-023-00857-7" class="external-link">
+Journal of big data</a>
+</td>
 </tr>
-<tr class="odd">
-<td>Model development</td>
-<td>How much data do we need for prediction - Learning curves at
-scale</td>
-<td><a href="https://www.sciencedirect.com/science/article/pii/S1386505622000764" class="external-link">International
-Journal of Medical Informatics</a></td>
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Impact of phenotypes
+</td>
+<td>
+Study Done - Paper submitted
+</td>
 </tr>
-<tr class="even">
-<td>Model development</td>
-<td>What impact does test/train/validation design have on model
-performance</td>
-<td><a href="https://bmjopen.bmj.com/content/11/12/e050146" class="external-link">BMJ
-Open</a></td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+How much data do we need for prediction - Learning curves at scale
+</td>
+<td>
+<a href="https://www.sciencedirect.com/science/article/pii/S1386505622000764" class="external-link">International
+Journal of Medical Informatics </a>
+</td>
 </tr>
-<tr class="odd">
-<td>Model development</td>
-<td>What is the impact of the classifier</td>
-<td><a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true" class="external-link">JAMIA</a></td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+What impact does test/train/validation design have on model performance
+</td>
+<td>
+<a href="https://bmjopen.bmj.com/content/11/12/e050146" class="external-link">BMJ Open </a>
+</td>
 </tr>
-<tr class="even">
-<td>Model development</td>
-<td>Can we find hyper-parameter combinations per classifier that
-consistently lead to good performing models when using claims/EHR
-data?</td>
-<td>Study needs to be done</td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+What is the impact of the classifier
+</td>
+<td>
+<a href="https://academic.oup.com/jamia/article/25/8/969/4989437?login=true" class="external-link">JAMIA</a>
+</td>
 </tr>
-<tr class="odd">
-<td>Model development</td>
-<td>Can we use ensembles to combine different algorithm models within a
-database to improve models transportability?</td>
-<td>Study Complete</td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+Can we find hyper-parameter combinations per classifier that
+consistently lead to good performing models when using claims/EHR data?
+</td>
+<td>
+Study needs to be done
+</td>
 </tr>
-<tr class="even">
-<td>Model development</td>
-<td>Can we use ensembles to combine models developed using different
-databases to improve models transportability?</td>
-<td><a href="https://link.springer.com/article/10.1186/s12911-022-01879-6" class="external-link">BMC
-Medical Informatics and Decision Making</a></td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+Can we use ensembles to combine different algorithm models within a
+database to improve models transportability?
+</td>
+<td>
+<a href="https://ebooks.iospress.nl/doi/10.3233/SHTI230080" class="external-link"> Caring is
+Sharing–Exploiting the Value in Data for Health and Innovation </a>
+</td>
 </tr>
-<tr class="odd">
-<td>Evaluation</td>
-<td>How should we present model performance? (e.g., new
-visualizations)</td>
-<td><a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1" class="external-link">JAMIA
-Open</a></td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+Can we use ensembles to combine models developed using different
+databases to improve models transportability?
+</td>
+<td>
+<a href="https://link.springer.com/article/10.1186/s12911-022-01879-6" class="external-link">
+BMC Medical Informatics and Decision Making </a>
+</td>
 </tr>
-<tr class="even">
-<td>Evaluation</td>
-<td>How to interpret external validation performance (can we figure out
-why the performance drops or stays consistent)?</td>
-<td>Study needs to be done</td>
+<tr>
+<td>
+Model development
+</td>
+<td>
+Impact of regularization method
+</td>
+<td>
+<a href="https://academic.oup.com/jamia/article/31/7/1514/7676584" class="external-link">
+JAMIA </a>
+</td>
 </tr>
-<tr class="odd">
-<td>Evaluation</td>
-<td>Recalibration methods</td>
-<td>Study needs to be done</td>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Why prediction is not suitable for risk factor identification
+</td>
+<td>
+<a href="https://proceedings.mlr.press/v182/markus22a.html" class="external-link"> Machine
+Learning for Healthcare Conference </a>
+</td>
 </tr>
-<tr class="even">
-<td>Evaluation</td>
-<td>Is there a way to automatically simplify models?</td>
-<td><a href="https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html" class="external-link">Study
-protocol under development</a></td>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Iterative pairwise external validation to put validation into context
+</td>
+<td>
+<a href="https://link.springer.com/article/10.1007/s40264-022-01161-8" class="external-link">
+Drug Safety </a>
+</td>
 </tr>
-</tbody>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+A novel method to estimate external validation using aggregate
+statistics
+</td>
+<td>
+<a href=""> Study under review </a>
+</td>
+</tr>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How should we present model performance? (e.g., new visualizations)
+</td>
+<td>
+<a href="https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1" class="external-link">JAMIA
+Open</a>
+</td>
+</tr>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How to interpret external validation performance (can we figure out why
+the performance drops or stays consistent)?
+</td>
+<td>
+Study needs to be done
+</td>
+</tr>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Recalibration methods
+</td>
+<td>
+Study needs to be done
+</td>
+</tr>
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Is there a way to automatically simplify models?
+</td>
+<td>
+<a href="https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html" class="external-link">Study
+protocol under development </a>
+</td>
+</tr>
 </table>
 </div>
   </div>
@@ -291,7 +436,7 @@ protocol under development</a></td>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>

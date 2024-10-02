@@ -5,21 +5,21 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Benchmark Tasks • PatientLevelPrediction</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<title>Clinical Models • PatientLevelPrediction</title>
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/cosmo/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Benchmark Tasks">
-<meta property="og:description" content="PatientLevelPrediction">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Clinical Models">
+<meta name="robots" content="noindex">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">PatientLevelPrediction</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">6.3.9</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">6.3.9.9999</span>
       </span>
     </div>
 
@@ -42,7 +42,7 @@
 <li>
   <a href="../index.html">
     <span class="fa fa-home fa-lg"></span>
-     
+
   </a>
 </li>
 <li>
@@ -57,7 +57,7 @@
 <li class="dropdown">
   <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Articles
-     
+
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
@@ -131,7 +131,7 @@
 <li>
   <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">
     <span class="fa fa-github fa-lg"></span>
-     
+
   </a>
 </li>
       </ul>
@@ -142,19 +142,19 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Benchmark Tasks</h1>
+      <h1 data-toc-skip>Clinical Models</h1>
                         <h4 data-toc-skip class="author">Jenna Reps,
-Ross Williams, Peter R. Rijnbeek</h4>
+Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-09-09</h4>
+            <h4 data-toc-skip class="date">2024-10-02</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/HEAD/vignettes/BenchmarkTasks.Rmd" class="external-link"><code>vignettes/BenchmarkTasks.Rmd</code></a></small>
-      <div class="hidden name"><code>BenchmarkTasks.Rmd</code></div>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/ClinicalModels.rmd" class="external-link"><code>vignettes/ClinicalModels.rmd</code></a></small>
+      <div class="hidden name"><code>ClinicalModels.rmd</code></div>
 
     </div>
 
@@ -162,149 +162,79 @@ Ross Williams, Peter R. Rijnbeek</h4>
     
 <!--
 %\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Benchmark Tasks}
+%\VignetteIndexEntry{Clinical Models}
 -->
 <div class="section level2">
-<h2 id="benchmark-tasks-for-large-scale-empirical-analyses">Benchmark Tasks For Large-Scale Empirical Analyses<a class="anchor" aria-label="anchor" href="#benchmark-tasks-for-large-scale-empirical-analyses"></a>
+<h2 id="clinical-models-developed-using-the-ohdsi-patientlevelprediction-framework">Clinical models developed using the OHDSI PatientLevelPrediction
+framework<a class="anchor" aria-label="anchor" href="#clinical-models-developed-using-the-ohdsi-patientlevelprediction-framework"></a>
 </h2>
-<p>Here we provide a set of diverse prediction tasks that can be used
-when evaluating the impact of the model design choice when developing
-models using observational data.</p>
-<table style="width:100%;" class="table">
+<table class="table">
 <colgroup>
-<col width="71%">
-<col width="22%">
-<col width="4%">
-<col width="1%">
+<col width="75%">
+<col width="24%">
 </colgroup>
 <thead><tr class="header">
-<th>Target Cohort (index)</th>
-<th>Outcome</th>
-<th>Time-at-risk</th>
+<th>Title</th>
 <th>Link</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Patients with an outpatient visit in 2017 with no prior cancer
-(first visit in 2017)</td>
-<td>Lung cancer</td>
-<td>1 day - 3 years after index</td>
-<td></td>
+<td>Using Machine Learning Applied to Real-World Healthcare Data for
+Predictive Analytics: An Applied Example in Bariatric Surgery</td>
+<td><a href="https://www.sciencedirect.com/science/article/pii/S1098301519300737" class="external-link">Value
+in Health</a></td>
 </tr>
 <tr class="even">
-<td>Patients newly diagnosed with major depressive disorder (date of
-first record)</td>
-<td>Bipolar</td>
-<td>1 day - 365 day after index</td>
-<td></td>
+<td>Development and validation of a prognostic model predicting
+symptomatic hemorrhagic transformation in acute ischemic stroke at scale
+in the OHDSI network</td>
+<td><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0226718" class="external-link">PLoS
+One</a></td>
 </tr>
 <tr class="odd">
-<td>Patients with an outpatient visit in 2019</td>
-<td>Dementia</td>
-<td>1 day - 3 years after index</td>
-<td></td>
+<td>Wisdom of the CROUD: development and validation of a patient-level
+prediction model for opioid use disorder using population-level claims
+data</td>
+<td><a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0228632" class="external-link">PLoS
+One</a></td>
 </tr>
 <tr class="even">
-<td>Patients with an outpatient visit and a positive COVID test</td>
-<td>Hospitalization with pneumonia</td>
-<td>1 day - 30 days after index</td>
-<td></td>
+<td>Developing predictive models to determine Patients in End-of-life
+Care in Administrative datasets</td>
+<td><a href="https://link.springer.com/article/10.1007/s40264-020-00906-7" class="external-link">Drug
+Safety</a></td>
 </tr>
 <tr class="odd">
-<td>Patients with an outpatient visit and a positive COVID test</td>
-<td>Hospitalization with pneumonia that required intensive services
-(ventilation, intubation, tracheotomy, or extracorporeal membrane
-oxygenation) or death</td>
-<td>1 day - 30 days after index</td>
-<td></td>
+<td>Predictors of diagnostic transition from major depressive disorder
+to bipolar disorder: a retrospective observational network study</td>
+<td><a href="https://www.nature.com/articles/s41398-021-01760-6" class="external-link">Translational
+psychiatry</a></td>
 </tr>
 <tr class="even">
-<td>Patients with an outpatient visit and a positive COVID test</td>
-<td>Death</td>
-<td>1 day - 30 days after index</td>
-<td></td>
+<td>Seek COVER: using a disease proxy to rapidly develop and validate a
+personalized risk calculator for COVID-19 outcomes in an international
+network</td>
+<td><a href="https://link.springer.com/article/10.1186/s12874-022-01505-z" class="external-link">BMC
+Medical Research Methodology</a></td>
 </tr>
 <tr class="odd">
-<td>Patients with T2DM who were treated with metformin and who became
-new adult users of one of sulfonylureas, thiazolidinediones, dipeptidyl
-peptidase-4 inhibitors, glucagon-like peptide-1 receptor agonists, or
-sodium-glucose co-transporter-2 inhibitors (date of secondary drug).
-Patients with HF or patients treated with insulin on or prior to the
-index date were excluded from the analysis. Patients were required to
-have been enrolled for at least 365 days before cohort entry.</td>
-<td>Heart Failure</td>
-<td>1 to 365 days</td>
-<td></td>
+<td>90-Day all-cause mortality can be predicted following a total knee
+replacement: an international, network study to develop and validate a
+prediction model</td>
+<td><a href="https://link.springer.com/article/10.1007/s00167-021-06799-y" class="external-link">Knee
+Surgery, Sports Traumatology, Arthroscopy</a></td>
 </tr>
 <tr class="even">
-<td>Patients newly diagnosed with atrial fibrilation (date of initial
-afib record)</td>
-<td>Ischemic stroke</td>
-<td>1 to 365 days</td>
-<td></td>
+<td>Machine learning and real-world data to predict lung cancer risk in
+routine care</td>
+<td><a href="https://aacrjournals.org/cebp/article-abstract/32/3/337/718495" class="external-link">Cancer
+Epidemiology, Biomarkers &amp; Prevention</a></td>
 </tr>
 <tr class="odd">
-<td>Patients undergoing elective major non-cardiac surgery (date of
-surgery). Patients were required to have been enrolled for at least 365
-days before cohort entry.</td>
-<td>Earliest of AMI cardiac arrest or death (MACE)</td>
-<td>O to 30 days</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Patients starting intravitreal Anti-VEGF (date of
-administration)</td>
-<td>Kidney Failure</td>
-<td>1 to 365 days</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Pregnancy women (start of pregnancy)</td>
-<td>Preeclampsia</td>
-<td>During pregnancy</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Pregnancy women (start of pregnancy)</td>
-<td>Still birth</td>
-<td>During pregnancy</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Patients with COPD (first record)</td>
-<td>Cardiovascular event and death</td>
-<td>1-30 days and 1-90 days</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Patients starting menopause (first record)</td>
-<td>Depression</td>
-<td>1 day - 3-years</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Patients with anemia (date of first anemia record)</td>
-<td>Colorectal cancer</td>
-<td>1 day - 1-year</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Patients with quadriplegia (date of first quadriplegia record)</td>
-<td>Death</td>
-<td>1 day - 1-year</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Patient undergoing</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td></td>
-<td></td>
+<td>Development and validation of a patient-level model to predict
+dementia across a network of observational databases</td>
+<td><a href="https://link.springer.com/article/10.1186/s12916-024-03530-9" class="external-link">BMC
+medicine</a></td>
 </tr>
 </tbody>
 </table>
@@ -313,9 +243,7 @@ administration)</td>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -328,16 +256,16 @@ administration)</td>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>
