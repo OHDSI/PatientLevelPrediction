@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.3.9
+======================
+- Hotfix adding schema to DatabaseConnector::getTableNames when creating results tables
+
 PatientLevelPrediction 6.3.8
 ======================
 - Add support for R4.4 
@@ -18,7 +22,6 @@ PatientLevelPrediction 6.3.7
 runMultiplePlp
 - Speed up population generation when subjectId's are distinct
 - Fix bug when population was still generated when provided to runPlp
-
 
 PatientLevelPrediction 6.3.6
 ======================

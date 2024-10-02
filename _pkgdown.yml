@@ -23,6 +23,7 @@ navbar:
     - benchmarks
     - predictors
     - bestpractice
+    - clinicalmodels
     - news
     right: [hades, github]
   components:
@@ -41,6 +42,9 @@ navbar:
     bestpractice:
       text: Best Practices
       href: articles/BestPractices.html
+    clinicalmodels:
+      text: Clinical Models
+      href: articles/ClinicalModels.html
     benchmarks:
       text: Benchmarks
       href: articles/BenchmarkTasks.html

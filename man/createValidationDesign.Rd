@@ -7,9 +7,9 @@
 createValidationDesign(
   targetId,
   outcomeId,
-  plpModelList,
   populationSettings = NULL,
   restrictPlpDataSettings = NULL,
+  plpModelList,
   recalibrate = NULL,
   runCovariateSummary = TRUE
 )
@@ -19,8 +19,6 @@ createValidationDesign(
 
 \item{outcomeId}{The outcomeId of the outcome cohort to validate on}
 
-\item{plpModelList}{A list of plpModels objects created by \code{runPlp} or a path to such objects}
-
 \item{populationSettings}{A list of population restriction settings created 
 by \code{createPopulationSettings}. Default is NULL and then this is taken
 from the model}
@@ -28,6 +26,8 @@ from the model}
 \item{restrictPlpDataSettings}{A list of plpData restriction settings
 created by \code{createRestrictPlpDataSettings}. Default is NULL and then
 this is taken from the model.}
+
+\item{plpModelList}{A list of plpModels objects created by \code{runPlp} or a path to such objects}
 
 \item{recalibrate}{A vector of characters specifying the recalibration method to apply,}
 

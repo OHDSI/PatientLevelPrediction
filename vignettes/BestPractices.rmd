@@ -32,38 +32,260 @@ output:
 ```
 ## Best practice publications using the OHDSI PatientLevelPrediction framework
 
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Topic                 | Research Summary                                                                                                                     | Link                                                                                                                |
-+=======================+======================================================================================================================================+=====================================================================================================================+
-| Problem Specification | When is prediction suitable in observational data?                                                                                   | Guidelines needed                                                                                                   |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Data Creation         | Comparison of cohort vs case-control design                                                                                          | [Journal of Big Data](https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2)                |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Data Creation         | Addressing loss to follow-up (right censoring)                                                                                       | [BMC medical informatics and decision makingk](https://link.springer.com/article/10.1186/s12911-021-01408-x)        |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Data Creation         | Investigating how to address left censoring in features construction                                                                 | [BMC Medical Research Methodology](https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2) |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Data Creation         | Impact of over/under-sampling                                                                                                        | Paper under review                                                                                                  |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Data Creation         | Impact of phenotypes                                                                                                                 | Study Done - Paper submitted                                                                                        |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | How much data do we need for prediction - Learning curves at scale                                                                   | [International Journal of Medical Informatics](https://www.sciencedirect.com/science/article/pii/S1386505622000764) |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | What impact does test/train/validation design have on model performance                                                              | [BMJ Open](https://bmjopen.bmj.com/content/11/12/e050146)                                                           |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | What is the impact of the classifier                                                                                                 | [JAMIA](https://academic.oup.com/jamia/article/25/8/969/4989437?login=true)                                         |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | Can we find hyper-parameter combinations per classifier that consistently lead to good performing models when using claims/EHR data? | Study needs to be done                                                                                              |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | Can we use ensembles to combine different algorithm models within a database to improve models transportability?                     | Study Complete                                                                                                      |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Model development     | Can we use ensembles to combine models developed using different databases to improve models transportability?                       | [BMC Medical Informatics and Decision Making](https://link.springer.com/article/10.1186/s12911-022-01879-6)         |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Evaluation            | How should we present model performance? (e.g., new visualizations)                                                                  | [JAMIA Open](https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1)                         |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Evaluation            | How to interpret external validation performance (can we figure out why the performance drops or stays consistent)?                  | Study needs to be done                                                                                              |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Evaluation            | Recalibration methods                                                                                                                | Study needs to be done                                                                                              |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
-| Evaluation            | Is there a way to automatically simplify models?                                                                                     | [Study protocol under development](https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html)   |
-+-----------------------+--------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------+
+<table>
+<tr>
+<th>
+Topic
+</th>
+<th>
+Research Summary
+</th>
+<th>
+Link
+</th>
+</tr>
+
+
+<tr>
+<td>
+Problem Specification
+</td>
+<td>
+When is prediction suitable in observational data?
+</td>
+<td>
+Guidelines needed
+</td>
+</tr>
+
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Comparison of cohort vs case-control design
+</td>
+<td>
+<a href='https://journalofbigdata.springeropen.com/articles/10.1186/s40537-021-00501-2'>Journal of Big Data</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Addressing loss to follow-up (right censoring)	
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1186/s12911-021-01408-x'>BMC medical informatics and decision makingk</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation
+</td>
+<td>
+Investigating how to address left censoring in features construction
+</td>
+<td>
+<a href='https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-021-01370-2'>BMC Medical Research Methodology</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation	
+</td>
+<td>
+Impact of over/under-sampling
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1186/s40537-023-00857-7'> Journal of big data</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Data Creation	
+</td>
+<td>
+Impact of phenotypes
+</td>
+<td>
+Study Done - Paper submitted
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+How much data do we need for prediction - Learning curves at scale
+</td>
+<td>
+<a href='https://www.sciencedirect.com/science/article/pii/S1386505622000764'>International Journal of Medical Informatics </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+What impact does test/train/validation design have on model performance
+</td>
+<td>
+<a href='https://bmjopen.bmj.com/content/11/12/e050146'>BMJ Open </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+What is the impact of the classifier 
+</td>
+<td>
+<a href='https://academic.oup.com/jamia/article/25/8/969/4989437?login=true'>JAMIA</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Can we find hyper-parameter combinations per classifier that consistently lead to good performing models when using claims/EHR data?	
+</td>
+<td>
+Study needs to be done
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Can we use ensembles to combine different algorithm models within a database to improve models transportability? 
+</td>
+<td>
+<a href='https://ebooks.iospress.nl/doi/10.3233/SHTI230080'> Caring is Sharing–Exploiting the Value in Data for Health and Innovation  </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Can we use ensembles to combine models developed using different databases to improve models transportability?
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1186/s12911-022-01879-6'> BMC Medical Informatics and Decision Making </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Model development	
+</td>
+<td>
+Impact of regularization method 
+</td>
+<td>
+<a href='https://academic.oup.com/jamia/article/31/7/1514/7676584'> JAMIA </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+Why prediction is not suitable for risk factor identification  
+</td>
+<td>
+<a href='https://proceedings.mlr.press/v182/markus22a.html'> Machine Learning for Healthcare Conference </a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+Iterative pairwise external validation to put validation into context 
+</td>
+<td>
+<a href='https://link.springer.com/article/10.1007/s40264-022-01161-8'> Drug Safety </a>
+</td>
+</tr>
+
+
+<tr>
+<td>
+Evaluation 	
+</td>
+<td>
+A novel method to estimate external validation using aggregate statistics  
+</td>
+<td>
+<a href=''> Study under review </a>
+</td>
+</tr>    
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How should we present model performance? (e.g., new visualizations)
+</td>
+<td>
+<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>JAMIA Open</a>
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+How to interpret external validation performance (can we figure out why the performance drops or stays consistent)?	
+</td>
+<td>
+Study needs to be done
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Recalibration methods
+</td>
+<td>
+Study needs to be done
+</td>
+</tr>
+
+<tr>
+<td>
+Evaluation
+</td>
+<td>
+Is there a way to automatically simplify models?	
+</td>
+<td>
+<a href='https://ohdsi-studies.github.io/FeatureSelectionComparison/docs/Protocol.html'>Study protocol under development </a>
+</td>
+</tr>
+</table>
+
