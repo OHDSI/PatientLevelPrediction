@@ -388,12 +388,12 @@ createValidationDesign <-
     lapply(plpModelList, function(x) {
       checkIsClass(x, c("plpModel", "character"))
     })
-    checkIsClass(recalibrate, c('character', 'NULL'))
+    checkIsClass(recalibrate, c("character", "NULL"))
     if (!is.null(recalibrate)) {
-      if (sum(recalibrate %in% c('recalibrationInTheLarge', 'weakRecalibration')) !=
+      if (sum(recalibrate %in% c("recalibrationInTheLarge", "weakRecalibration")) !=
           length(recalibrate)) {
         ParallelLogger::logError(
-          'Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration'
+          "Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration"
         )
       }
     }
@@ -401,7 +401,7 @@ createValidationDesign <-
     
     # if restrictPlpDataSettings is a list make a list of designs with each
     # settings
-    if (is.list(restrictPlpDataSettings) && !inherits(restrictPlpDataSettings, "restrictPlpDataSettings"))) {
+    if (is.list(restrictPlpDataSettings) && !inherits(restrictPlpDataSettings, "restrictPlpDataSettings")) {
       design <- lapply(restrictPlpDataSettings, function(x) {
         design <- list(
           targetId = targetId,
