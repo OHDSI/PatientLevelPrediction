@@ -401,7 +401,7 @@ createValidationDesign <-
     
     # if restrictPlpDataSettings is a list make a list of designs with each
     # settings
-    if (is.list(restrictPlpDataSettings)) {
+    if (is.list(restrictPlpDataSettings) && !inherits(restrictPlpDataSettings, "restrictPlpDataSettings"))) {
       design <- lapply(restrictPlpDataSettings, function(x) {
         design <- list(
           targetId = targetId,
