@@ -1,3 +1,8 @@
+PatientLevelPrediction develop
+======================
+- Official maintainer updated to Egill Fridgeirsson
+
+
 PatientLevelPrediction 6.3.9
 ======================
 - Hotfix adding schema to DatabaseConnector::getTableNames when creating results tables
