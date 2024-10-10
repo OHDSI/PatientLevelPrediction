@@ -10,7 +10,7 @@ Authors@R: c(
     person("Martijn", "Schuemie", role = c("aut")),
     person("Marc", "Suchard", role = c("aut")),
     person("Patrick", "Ryan", role = c("aut")),
-    person("Peter", "Rijnbeek", role = c("aut")),
+    person("Peter", "Rijnbeek", role = c("aut"))
     )
 Description: A user friendly way to create patient level prediction models using the OMOP common data model. Given a
     cohort of interest and an outcome of interest, the package can use data in the
