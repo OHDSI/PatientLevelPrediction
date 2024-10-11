@@ -2,17 +2,16 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing patient level prediction using data in the OMOP Common Data
     Model
-Version: 6.3.8.9999
-Date: 2024-04-26
+Version: 6.3.9.9999
+Date: 2024-10-10
 Authors@R: c(
-    person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut", "cre")),
+    person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
+    person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),
     person("Martijn", "Schuemie", role = c("aut")),
     person("Marc", "Suchard", role = c("aut")),
     person("Patrick", "Ryan", role = c("aut")),
-    person("Peter", "Rijnbeek", role = c("aut")),
-    person("Egill", "Fridgeirsson", role = c("aut"))
+    person("Peter", "Rijnbeek", role = c("aut"))
     )
-Maintainer: Jenna Reps <jreps@its.jnj.com>
 Description: A user friendly way to create patient level prediction models using the OMOP common data model. Given a
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
@@ -72,6 +71,6 @@ Suggests:
 Remotes:
     ohdsi/BigKnn,
     ohdsi/ShinyAppBuilder,
-    ohdsi/ResultModelManager,
+    ohdsi/ResultModelManager
 RoxygenNote: 7.3.2
 Encoding: UTF-8

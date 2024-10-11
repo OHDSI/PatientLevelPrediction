@@ -132,6 +132,6 @@ PatientLevelPrediction is being developed in R Studio.
 
 # Acknowledgements
 
-- The package is maintained by Jenna Reps and Peter Rijnbeek and has been developed with major contributions from Martijn Schuemie, Patrick Ryan, and Marc Suchard.
-- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Egill Fridgeirsson, Alex Rekkas
+- The package is maintained by Egill Fridgeirsson and Jenna Reps and has been developed with major contributions from Peter Rijnbeek, Martijn Schuemie, Patrick Ryan, and Marc Suchard.
+- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Alex Rekkas
 - This project is supported in part through the National Science Foundation grant IIS 1251151.

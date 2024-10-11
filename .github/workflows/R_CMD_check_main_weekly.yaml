@@ -1,6 +1,8 @@
 on:
   schedule:
     - cron: '0 12 * * 6' # every Saturday at noon UTC
+  
+  workflow_dispatch:
     
 name: 'R check'
 
@@ -59,6 +61,9 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          
+      - name: Setup conda
+        uses: conda-incubator/setup-miniconda@v3
 
       - uses: r-lib/actions/check-r-package@v2
         with:

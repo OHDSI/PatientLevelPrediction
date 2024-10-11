@@ -364,13 +364,14 @@ createValidationSettings <- function(recalibrate = NULL,
 createValidationDesign <-
   function(targetId,
            outcomeId,
-           plpModelList,
            populationSettings = NULL,
            restrictPlpDataSettings = NULL,
+           plpModelList,
            recalibrate = NULL,
            runCovariateSummary = TRUE) {
     checkIsClass(targetId, c("numeric", "integer"))
     checkIsClass(outcomeId, c("numeric", "integer"))
+
     if (!is.null(populationSettings)) {
       checkIsClass(populationSettings, c("populationSettings"))
     }
@@ -387,12 +388,12 @@ createValidationDesign <-
     lapply(plpModelList, function(x) {
       checkIsClass(x, c("plpModel", "character"))
     })
-    checkIsClass(recalibrate, c('character', 'NULL'))
+    checkIsClass(recalibrate, c("character", "NULL"))
     if (!is.null(recalibrate)) {
-      if (sum(recalibrate %in% c('recalibrationInTheLarge', 'weakRecalibration')) !=
+      if (sum(recalibrate %in% c("recalibrationInTheLarge", "weakRecalibration")) !=
           length(recalibrate)) {
         ParallelLogger::logError(
-          'Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration'
+          "Incorrect recalibrate options used.  Must be recalibrationInTheLarge or weakRecalibration"
         )
       }
     }
@@ -400,7 +401,7 @@ createValidationDesign <-
     
     # if restrictPlpDataSettings is a list make a list of designs with each
     # settings
-    if (is.list(restrictPlpDataSettings)) {
+    if (is.list(restrictPlpDataSettings) && !inherits(restrictPlpDataSettings, "restrictPlpDataSettings")) {
       design <- lapply(restrictPlpDataSettings, function(x) {
         design <- list(
           targetId = targetId,
@@ -426,6 +427,7 @@ createValidationDesign <-
       )
       class(design) <- "validationDesign"
     } 
+
     return(design)
   }
 
@@ -445,13 +447,13 @@ validateExternal <- function(validationDesignList,
                              logSettings,
                              outputFolder) {
   # Input checks
-  #=======
   changedInputs <- checkValidateExternalInputs(validationDesignList,
                                                databaseDetails,
                                                logSettings,
                                                outputFolder)
   validationDesignList <- changedInputs[["validationDesignList"]]
   databaseDetails <- changedInputs[["databaseDetails"]]
+
   # create results list with the names of the databases to validate across
   result <- list()
   length(result) <- length(databaseDetails)
@@ -462,6 +464,7 @@ validateExternal <- function(validationDesignList,
   # Need to keep track of incremental analysisId's for each database
   databaseNames <- unlist(lapply(databaseDetails, function(x) {
     x$cdmDatabaseName}))
+
   analysisInfo <- list()
   for (name in databaseNames) {
     analysisInfo[name] <- 1
@@ -569,14 +572,15 @@ validateExternal <- function(validationDesignList,
             ParallelLogger::logInfo(paste0("Analysis ", analysisName, " already done",
                                            ", Proceeding to the next one."))
         }
+
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
     }
   }
   for (database in databaseDetails) {
     databaseName <- database$cdmDatabaseName
-    sqliteLocation <-
-      file.path(outputFolder, "sqlite")
+    sqliteLocation <- file.path(outputFolder, "sqlite")
+
     tryCatch({
       insertResultsToSqlite(
         resultLocation = file.path(outputFolder, databaseName),
@@ -604,9 +608,12 @@ validateModel <-
            outputFolder,
            databaseName,
            analysisName) {
+
+    
     if (is.character(plpModel)) {
       plpModel <- loadPlpModel(plpModel)
     }
+
     result <- externalValidatePlp(
       plpModel = plpModel,
       plpData = plpData,
@@ -619,6 +626,7 @@ validateModel <-
                     outputFolder,
                     databaseName,
                     analysisName,
+
                     "validationResult"
                   ))
     return(result)
@@ -788,3 +796,4 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
   })
   return(population)
 }
+
