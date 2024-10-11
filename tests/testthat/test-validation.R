@@ -173,7 +173,7 @@ test_that("createValidationDesigns correctly handles multiple restrictSettings",
   
   design <- createValidationDesign(
     targetId = targetId, 
-    outcomeId =outcomeId, 
+    outcomeId = outcomeId, 
     plpModelList = plpModelList, 
     restrictPlpDataSettings = restrictPlpDataSettings
     )
@@ -184,4 +184,24 @@ test_that("createValidationDesigns correctly handles multiple restrictSettings",
   expect_equal(design[[1]]$restrictPlpDataSettings, restrictPlpDataSettings[[1]])
   expect_equal(design[[2]]$restrictPlpDataSettings, restrictPlpDataSettings[[2]])
   expect_equal(length(design), length(restrictPlpDataSettings))
+})
+
+test_that("createValidationSettings errors with <10 outcomes", {
+  tinyRestrictPlpDataSettings <- createRestrictPlpDataSettings(
+    sampleSize = 30,
+  )
+
+  validationDesign <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 3,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = tinyRestrictPlpDataSettings
+  )
+
+  expect_output(validateExternal(validationDesignList = validationDesign, 
+                   databaseDetails = databaseDetails,
+                   logSettings = createLogSettings(),
+                    outputFolder = saveLocation),
+                "skipping validation for design and database")
+
 })
