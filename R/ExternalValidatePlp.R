@@ -477,37 +477,6 @@ validateExternal <- function(validationDesignList,
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
-  # create download tasks
-  extractUniqueCombinations <- function(validationDesignList) {
-    # todo add covariatesettings (currently only same covariateSettings for all models per design is supported)
-    # todo where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
-    ParallelLogger::logInfo("Extracting unique combinations of targetId and restrictPlpDataSettings for extracting data")
-    j <- 1
-    restrictContentMap <- list()
-    uniqueCombinations <- do.call(rbind, lapply(seq_along(validationDesignList), function(i) {
-      design <- validationDesignList[[i]]
-      restrictContent <- paste0(design$restrictPlpDataSettings, collapse = "|")
-      if (!(restrictContent %in% restrictContentMap)) {
-       restrictContentMap[[j]] <<- restrictContent
-        j <<- j + 1
-      }
-      data.frame(
-        targetId = design$targetId,
-        outcomeId = design$outcomeId,
-        restrictPlpIndex = which(restrictContent == restrictContentMap),
-        restrictPlpDataSettings = restrictContent
-      )
-    }))
-    uniqueCombinations <- uniqueCombinations %>% 
-      dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings) %>%
-        dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
-                         restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(restrictPlpDataSettings =
-        list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings)) %>%
-      dplyr::ungroup()
-    return(uniqueCombinations)
-  }
   downloadTasks <- extractUniqueCombinations(validationDesignList)
 
 
@@ -797,3 +766,41 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
   return(population)
 }
 
+#' extractUniqueCombinations 
+#' create download tasks based on unique combinations of targetId and
+#' restrictPlpDataSettings. This is used to avoid downloading the same data
+#' multiple times. 
+#' @param validationDesignList A list of validationDesign objects
+#' @return A list of download tasks
+#' @keywords internal
+extractUniqueCombinations <- function(validationDesignList) {
+    # TODO add covariatesettings (currently only same covariateSettings for all models per design is supported)
+    # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
+    ParallelLogger::logInfo("Extracting unique combinations of targetId and restrictPlpDataSettings for extracting data")
+    j <- 1
+    restrictContentMap <- list()
+    uniqueCombinations <- do.call(rbind,
+    lapply(seq_along(validationDesignList), function(i) {
+      design <- validationDesignList[[i]]
+      restrictContent <- paste0(design$restrictPlpDataSettings, collapse = "|")
+      if (!(restrictContent %in% restrictContentMap)) {
+       restrictContentMap[[j]] <<- restrictContent
+        j <<- j + 1 # increment j from parent environment
+      }
+      data.frame(
+        targetId = design$targetId,
+        outcomeId = design$outcomeId,
+        restrictPlpIndex = which(restrictContent == restrictContentMap),
+        restrictPlpDataSettings = restrictContent
+      )
+    }))
+    uniqueCombinations <- uniqueCombinations %>% 
+      dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings) %>%
+        dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
+                         restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
+      dplyr::rowwise() %>%
+      dplyr::mutate(restrictPlpDataSettings =
+        list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings)) %>%
+      dplyr::ungroup()
+    return(uniqueCombinations)
+  }
