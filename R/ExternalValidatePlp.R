@@ -490,7 +490,7 @@ validateExternal <- function(validationDesignList,
       modelDesigns <- extractModelDesigns(design$plpModelList)
       allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
       design <- fromDesignOrModel(design, modelDesigns, "restrictPlpDataSettings")
-      checkAllSameInModels(allCovSettings, "covariateSettings")
+      # checkAllSameInModels(allCovSettings, "covariateSettings")
       
       # get plpData
       plpData <- getData(design, database, outputFolder, allCovSettings, downloadTasks) 
@@ -696,10 +696,10 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 getData <- function(design, database, outputFolder, allCovSettings, downloadTasks) {
   # find task associated with design and the index of the task in downloadTasks
   task <- downloadTasks %>%
+    dplyr::filter(.data$targetId == design$targetId) %>% 
     dplyr::mutate(taskId = dplyr::row_number(),
                   collapsed = sapply(.data$restrictPlpDataSettings, paste0, collapse = "|")) %>%
-    dplyr::filter(.data$targetId == design$targetId,
-                  .data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
+    dplyr::filter(.data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
     dplyr::select(-.data$collapsed)
   
   databaseName <- database$cdmDatabaseName
@@ -716,7 +716,7 @@ getData <- function(design, database, outputFolder, allCovSettings, downloadTask
         list(
           databaseDetails = database,
           restrictPlpDataSettings = task$restrictPlpDataSettings[[1]],
-          covariateSettings = allCovSettings[[1]]
+          covariateSettings = task$covariateSettings[[1]]
         )
       )
     },
@@ -771,55 +771,57 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
 #' @return A list of download tasks
 #' @keywords internal
 extractUniqueCombinations <- function(validationDesignList) {
-    # TODO add covariatesettings (currently only same covariateSettings for all models per design is supported)
-    # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
-    ParallelLogger::logInfo("Extracting unique combinations of targetId, \
-    restrictPlpDataSettings and covariateSettings for extracting data")
-    j <- 1
-    contentMap <- list()
-    contentValues <- list()
-    uniqueCombinations <- do.call(rbind,
-    lapply(seq_along(validationDesignList), function(i) {
-      design <- validationDesignList[[i]]
-      restrictContent <- list(key = paste0(design$restrictPlpDataSettings, collapse = "|"),
-                              value = design$restrictPlpDataSettings)
-      covariateSettingsContent <- lapply(design$plpModelList, function(model) {
-        model <- loadPlpModel(model)
-        # if covariateSettings is a list, concatenate them all
-        covariateContent <- list(key = unlist(lapply(model$modelDesign$covariateSettings,
-      function(settings) paste0(settings, collapse = "|"))),
-        value = model$modelDesign$covariateSettings)
-        return(covariateContent)
-      })
-      combinedContent <- apply(expand.grid(vapply(restrictContent,
-                    function(x) x$key, character(1)),
-                    vapply(covariateSettingsContent,
-                    function(x) x$key, character(1))), 1, paste, collapse = "|")
-      validRows <- which(!(combinedContent %in% contentMap))
-      if (length(validRows) > 0) {
-       contentMap[[j]] <<- combinedContent[validRows]
-       contentValues[[j]] <<- list(covariateSettings)
-        j <<- j + 1 # increment j from parent environment
+  # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
+
+  ParallelLogger::logInfo("Extracting unique combinations of targetId, \
+  restrictPlpDataSettings and covariateSettings for extracting data")
+
+  rowsList <- list()
+  modelCache <- list()
+  for (design in validationDesignList) {
+    targetId <- design$targetId
+    outcomeId <- design$outcomeId
+    restrictPlpDataSettings <- design$restrictPlpDataSettings
+    plpModelList <- design$plpModelList
+    for (modelPath in plpModelList) {
+      if (!is.null(modelCache[[modelPath]])) {
+        model <- modelCache[[modelPath]]
+      } else {
+        model <- loadPlpModel(modelPath)
+        modelCache[[modelPath]] <- model
       }
-      do.call(rbind, lapply(seq_along(validRows), function(k) {
-        data.frame(
-          targetId = design$targetId,
-          outcomeId = design$outcomeId,
-          restrictPlpIndex = which(restrictContent == contentMap),
-          restrictPlpDataSettings = restrictContent
-        )
-      }))
-    }))
-    browser()
-    # uniqueCombinations <- uniqueCombinations %>% 
-    #   dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings,
-    # .data$covariateSettings) %>%
-    #     dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
-    #                      restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
-    #   dplyr::rowwise() %>%
-    #   dplyr::mutate(restrictPlpDataSettings =
-    #     list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings),
-    #     covariateSet %>%
-    #   dplyr::ungroup()
-    return(uniqueCombinations)
+      covariateSettings <- model$modelDesign$covariateSettings
+      row <- list(targetId = targetId,
+                  outcomeIds = outcomeId,
+                  restrictPlpDataSettings = list(restrictPlpDataSettings),
+                  covariateSettings = covariateSettings)
+      rowsList[[length(rowsList) + 1]] <- row
+    }
   }
+  rowsDf <- dplyr::bind_rows(rowsList)
+
+  rowsDf <- rowsDf %>% 
+    dplyr::rowwise() %>%
+    dplyr::mutate(restrictKey = digest::digest(restrictPlpDataSettings),
+                  covariateKey = digest::digest(covariateSettings)) %>%
+    dplyr::ungroup()
+  
+  uniqueCovariateSettings <- function(settingsList, settingsKeys) {
+    uniqueKeys <- unique(settingsKeys)
+    indices <- match(uniqueKeys, settingsKeys)
+    uniqueSettings <- settingsList[indices]
+    return(uniqueSettings)
+  }
+  
+  uniqueCombinations <- rowsDf %>% 
+    dplyr::group_by(.data$targetId, .data$restrictKey) %>%
+    dplyr::summarise(
+      outcomeIds = list(unique(.data$outcomeIds)),
+      restrictPlpDataSettings = .data$restrictPlpDataSettings[1],
+      covariateSettings = list(uniqueCovariateSettings(.data$covariateSettings, .data$covariateKey)),
+      .groups = "drop") %>% 
+    dplyr::select(c("targetId", "outcomeIds", "restrictPlpDataSettings",
+      "covariateSettings"))
+
+  return(uniqueCombinations)
+}
