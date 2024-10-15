@@ -479,9 +479,6 @@ validateExternal <- function(validationDesignList,
   
   downloadTasks <- extractUniqueCombinations(validationDesignList)
 
-
-
-
   results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
@@ -776,31 +773,53 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
 extractUniqueCombinations <- function(validationDesignList) {
     # TODO add covariatesettings (currently only same covariateSettings for all models per design is supported)
     # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
-    ParallelLogger::logInfo("Extracting unique combinations of targetId and restrictPlpDataSettings for extracting data")
+    ParallelLogger::logInfo("Extracting unique combinations of targetId, \
+    restrictPlpDataSettings and covariateSettings for extracting data")
     j <- 1
-    restrictContentMap <- list()
+    contentMap <- list()
+    contentValues <- list()
     uniqueCombinations <- do.call(rbind,
     lapply(seq_along(validationDesignList), function(i) {
       design <- validationDesignList[[i]]
-      restrictContent <- paste0(design$restrictPlpDataSettings, collapse = "|")
-      if (!(restrictContent %in% restrictContentMap)) {
-       restrictContentMap[[j]] <<- restrictContent
+      restrictContent <- list(key = paste0(design$restrictPlpDataSettings, collapse = "|"),
+                              value = design$restrictPlpDataSettings)
+      covariateSettingsContent <- lapply(design$plpModelList, function(model) {
+        model <- loadPlpModel(model)
+        # if covariateSettings is a list, concatenate them all
+        covariateContent <- list(key = unlist(lapply(model$modelDesign$covariateSettings,
+      function(settings) paste0(settings, collapse = "|"))),
+        value = model$modelDesign$covariateSettings)
+        return(covariateContent)
+      })
+      combinedContent <- apply(expand.grid(vapply(restrictContent,
+                    function(x) x$key, character(1)),
+                    vapply(covariateSettingsContent,
+                    function(x) x$key, character(1))), 1, paste, collapse = "|")
+      validRows <- which(!(combinedContent %in% contentMap))
+      if (length(validRows) > 0) {
+       contentMap[[j]] <<- combinedContent[validRows]
+       contentValues[[j]] <<- list(covariateSettings)
         j <<- j + 1 # increment j from parent environment
       }
-      data.frame(
-        targetId = design$targetId,
-        outcomeId = design$outcomeId,
-        restrictPlpIndex = which(restrictContent == restrictContentMap),
-        restrictPlpDataSettings = restrictContent
-      )
+      do.call(rbind, lapply(seq_along(validRows), function(k) {
+        data.frame(
+          targetId = design$targetId,
+          outcomeId = design$outcomeId,
+          restrictPlpIndex = which(restrictContent == contentMap),
+          restrictPlpDataSettings = restrictContent
+        )
+      }))
     }))
-    uniqueCombinations <- uniqueCombinations %>% 
-      dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings) %>%
-        dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
-                         restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
-      dplyr::rowwise() %>%
-      dplyr::mutate(restrictPlpDataSettings =
-        list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings)) %>%
-      dplyr::ungroup()
+    browser()
+    # uniqueCombinations <- uniqueCombinations %>% 
+    #   dplyr::group_by(.data$targetId, .data$restrictPlpDataSettings,
+    # .data$covariateSettings) %>%
+    #     dplyr::summarise(outcomeIds = list(unique(.data$outcomeId)),
+    #                      restrictPlpIndex = dplyr::first(.data$restrictPlpIndex), .groups = "drop") %>%
+    #   dplyr::rowwise() %>%
+    #   dplyr::mutate(restrictPlpDataSettings =
+    #     list(validationDesignList[[.data$restrictPlpIndex]]$restrictPlpDataSettings),
+    #     covariateSet %>%
+    #   dplyr::ungroup()
     return(uniqueCombinations)
   }
