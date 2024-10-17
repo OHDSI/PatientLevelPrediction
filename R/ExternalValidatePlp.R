@@ -701,7 +701,7 @@ getData <- function(design, database, outputFolder, downloadTasks) {
   covariateSettings <- task$covariateSettings[[1]]
   task$covariateSettings <- NULL
   if (length(covariateSettings) > 1) {
-    task$covariateSettings <- unlist(task$covariateSettings, recursive = FALSE)
+    task$covariateSettings <- unlist(covariateSettings, recursive = FALSE)
   } else {
     task$covariateSettings <- covariateSettings
   }
