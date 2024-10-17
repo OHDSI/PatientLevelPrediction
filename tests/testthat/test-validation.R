@@ -333,7 +333,7 @@ test_that("createDownloadTasks with multiple covSettings", {
   )
   result <- createDownloadTasks(list(design1, design2))
   expect_equal(nrow(result), 1)
-  expect_equal(length(result[1, ]$covariateSettings)[[1]], 2)
+  expect_equal(length(result[1, ]$covariateSettings[[1]]), 2)
 
 })
 
