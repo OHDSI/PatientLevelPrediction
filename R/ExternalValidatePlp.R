@@ -477,7 +477,7 @@ validateExternal <- function(validationDesignList,
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
-  downloadTasks <- extractUniqueCombinations(validationDesignList)
+  downloadTasks <- createDownloadTasks(validationDesignList)
 
   results <- NULL
   for (design in validationDesignList) {
@@ -488,12 +488,10 @@ validateExternal <- function(validationDesignList,
                                     "with targetId:", design$targetId, "and outcomeId:", design$outcomeId))
       
       modelDesigns <- extractModelDesigns(design$plpModelList)
-      allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
       design <- fromDesignOrModel(design, modelDesigns, "restrictPlpDataSettings")
-      # checkAllSameInModels(allCovSettings, "covariateSettings")
       
       # get plpData
-      plpData <- getData(design, database, outputFolder, allCovSettings, downloadTasks) 
+      plpData <- getData(design, database, outputFolder, downloadTasks) 
       if (is.null(plpData)) {
         ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceeding to the next one.")
         next
@@ -608,7 +606,7 @@ checkAllSameInModels <- function(settingsList, settingName) {
     identical(y, settingsList[[1]])},
     settingsList[-1],
     init = TRUE)) {
-    stop(paste0(settingName, "are not the same across models which is not supported yet"))
+    stop(paste0(settingName, "are not the same across models which is not supported"))
   }
 }
 
@@ -688,12 +686,11 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 #' @param design The validationDesign object
 #' @param database The databaseDetails object
 #' @param outputFolder The directory to save the validation results to
-#' @param allCovSettings A list of covariateSettings from the models
 #' @param downloadTasks A list of download tasks determined by unique
 #' combinations of targetId and restrictPlpDataSettings
 #' @return The plpData object
 #' @keywords internal
-getData <- function(design, database, outputFolder, allCovSettings, downloadTasks) {
+getData <- function(design, database, outputFolder, downloadTasks) {
   # find task associated with design and the index of the task in downloadTasks
   task <- downloadTasks %>%
     dplyr::filter(.data$targetId == design$targetId) %>% 
@@ -763,26 +760,31 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
   return(population)
 }
 
-#' extractUniqueCombinations 
+#' createDownloadTasks 
 #' create download tasks based on unique combinations of targetId and
-#' restrictPlpDataSettings. This is used to avoid downloading the same data
-#' multiple times. 
+#' restrictPlpDataSettings. It adds all covariateSettings and outcomes that
+#' have that targetId and restrictPlpDataSettings. This is used to avoid
+#' downloading the same data multiple times. 
 #' @param validationDesignList A list of validationDesign objects
-#' @return A list of download tasks
+#' @return A dataframe where each row is a downloadTask
 #' @keywords internal
-extractUniqueCombinations <- function(validationDesignList) {
-  # TODO currentl works for list of modelPaths, not with objects.
-  # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
-
+createDownloadTasks <- function(validationDesignList) {
   ParallelLogger::logInfo("Extracting unique combinations of targetId, \
   restrictPlpDataSettings and covariateSettings for extracting data")
 
   rowsList <- list()
   modelCache <- list()
+  
   for (design in validationDesignList) {
     targetId <- design$targetId
     outcomeId <- design$outcomeId
     restrictPlpDataSettings <- design$restrictPlpDataSettings
+    if (is.null(restrictPlpDataSettings)) {
+      restrictList <- lapply(design$plpModelList,
+        function(x) x$modelDesign$restrictPlpDataSettings)
+      checkAllSameInModels(restrictList, "restrictPlpDataSettings")
+      restrictPlpDataSettings <- restrictList[[1]]
+    }
     plpModelList <- design$plpModelList
     for (model in plpModelList) {
       if (is.character(model)) {
@@ -823,7 +825,7 @@ extractUniqueCombinations <- function(validationDesignList) {
     return(uniqueSettings)
   }
   
-  uniqueCombinations <- rowsDf %>% 
+  downloadTasks <- rowsDf %>% 
     dplyr::group_by(.data$targetId, .data$restrictKey) %>%
     dplyr::summarise(
       outcomeIds = list(unique(.data$outcomeIds)),
@@ -833,5 +835,5 @@ extractUniqueCombinations <- function(validationDesignList) {
     dplyr::select(c("targetId", "outcomeIds", "restrictPlpDataSettings",
       "covariateSettings"))
 
-  return(uniqueCombinations)
+  return(downloadTasks)
 }

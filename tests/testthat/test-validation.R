@@ -205,3 +205,145 @@ test_that("createValidationSettings errors with <10 outcomes", {
                 "skipping validation for design and database")
 
 })
+
+test_that("createDownloadTasks handles single design correctly", {
+  design <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  result <- createDownloadTasks(list(design))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1)
+  expect_equal(ncol(result), 4)
+})
+
+test_that("createDownloadTasks handles multiple designs correctly", {
+  design1 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  design2 <- createValidationDesign(
+    targetId = 3,
+    outcomeId = 4,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  result <- createDownloadTasks(list(design1, design2))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 2)
+  expect_equal(ncol(result), 4)
+})
+
+test_that("createDownloadTasks handles duplicated designs correctly", {
+  design <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  result <- createDownloadTasks(list(design, design))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1)
+  
+  design2 <- createValidationDesign(
+    targetId = 3,
+    outcomeId = 4,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+
+  results <- createDownloadTasks(list(design, design2, design))
+  expect_s3_class(results, "data.frame") 
+  expect_equal(nrow(results), 2)
+})
+
+test_that("createDownloadTasks with different restrictSettings", {
+  design <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  design2 <- createValidationDesign(
+    targetId = 3,
+    outcomeId = 4,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  design3 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(sampleSize = 100)
+  )
+
+  result <- createDownloadTasks(list(design, design2, design3))
+
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 3)
+})
+
+test_that("createDownloadTasks works with multiple outcomeIds", {
+  design1 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  design2 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 3,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  result <- createDownloadTasks(list(design1, design2))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 1)
+  expect_equal(length(result[1, ]$outcomeIds[[1]]), 2)
+
+  design3 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 3,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(sampleSize = 100)
+  )
+  result <- createDownloadTasks(list(design1, design2, design3))
+  expect_equal(nrow(result), 2)
+})
+
+test_that("createDownloadTasks with multiple covSettings", {
+  modelVal2 <- modelVal
+  design1 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  modelVal2$modelDesign$covariateSettings <-
+    FeatureExtraction::createCovariateSettings(useChads2 = TRUE)
+  design2 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal2),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  result <- createDownloadTasks(list(design1, design2))
+  expect_equal(nrow(result), 1)
+  expect_equal(length(result[1, ]$covariateSettings)[[1]], 2)
+
+})
+
+test_that("createDownloadTasks when restrictSettings come from models", {
+  design1 <- createValidationDesign(
+    targetId = 1,
+    outcomeId = 2,
+    plpModelList = list(modelVal)
+  )
+  result <- createDownloadTasks(list(design1))
+  expect_s3_class(result[1, ]$restrictPlpDataSettings[[1]], "restrictPlpDataSettings")
+
+})
