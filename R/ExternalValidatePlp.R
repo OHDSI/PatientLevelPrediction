@@ -788,11 +788,12 @@ createDownloadTasks <- function(validationDesignList) {
     plpModelList <- design$plpModelList
     for (model in plpModelList) {
       if (is.character(model)) {
-        if (!is.null(modelCache[[model]])) {
-          model <- modelCache[[model]]
+        modelKey <- model
+        if (!is.null(modelCache[[modelKey]])) {
+          model <- modelCache[[modelKey]]
         } else {
-          model <- loadPlpModel(model)
-          modelCache[[model]] <- model
+          model <- loadPlpModel(modelKey)
+          modelCache[[modelKey]] <- model
         }
       } else {
         modelKey <- digest::digest(model)
