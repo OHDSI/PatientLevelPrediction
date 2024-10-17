@@ -433,7 +433,9 @@ createStudyPopulation <- function(
       ParallelLogger::logWarn('No outcomes left...')
       return(NULL)
     }
-  
+  ParallelLogger::logInfo('Population created with: ', nrow(population),
+                          ' observations, ', length(unique(population$subjectId)),
+                          ' unique subjects and ', sum(population$outcomeCount), ' outcomes')
   population <- as.data.frame(population)
   
   attr(population, "metaData") <- metaData
