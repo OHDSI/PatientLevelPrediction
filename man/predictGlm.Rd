@@ -14,7 +14,7 @@ prediction model}
 data extracted from the CDM.}
 
 \item{cohort}{The population dataframe created using
-/code{createStudyPopulation} who will have their risks predicted or a cohort
+\code{createStudyPopulation} who will have their risks predicted or a cohort
 without the outcome known}
 }
 \value{
