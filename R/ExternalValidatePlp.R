@@ -771,6 +771,7 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
 #' @return A list of download tasks
 #' @keywords internal
 extractUniqueCombinations <- function(validationDesignList) {
+  # TODO currentl works for list of modelPaths, not with objects.
   # TODO where restrictPlpDatasettings is empty, take from model and take that into account when creating tasks
 
   ParallelLogger::logInfo("Extracting unique combinations of targetId, \
@@ -783,18 +784,27 @@ extractUniqueCombinations <- function(validationDesignList) {
     outcomeId <- design$outcomeId
     restrictPlpDataSettings <- design$restrictPlpDataSettings
     plpModelList <- design$plpModelList
-    for (modelPath in plpModelList) {
-      if (!is.null(modelCache[[modelPath]])) {
-        model <- modelCache[[modelPath]]
+    for (model in plpModelList) {
+      if (is.character(model)) {
+        if (!is.null(modelCache[[model]])) {
+          model <- modelCache[[model]]
+        } else {
+          model <- loadPlpModel(model)
+          modelCache[[model]] <- model
+        }
       } else {
-        model <- loadPlpModel(modelPath)
-        modelCache[[modelPath]] <- model
+        modelKey <- digest::digest(model)
+        if (!is.null(modelCache[[modelKey]])) {
+          model <- modelCache[[modelKey]]
+        } else {
+          modelCache[[modelKey]] <- model
+        } 
       }
       covariateSettings <- model$modelDesign$covariateSettings
       row <- list(targetId = targetId,
                   outcomeIds = outcomeId,
                   restrictPlpDataSettings = list(restrictPlpDataSettings),
-                  covariateSettings = covariateSettings)
+                  covariateSettings = list(covariateSettings))
       rowsList[[length(rowsList) + 1]] <- row
     }
   }
