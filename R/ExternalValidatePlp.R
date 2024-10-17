@@ -698,9 +698,12 @@ getData <- function(design, database, outputFolder, downloadTasks) {
                   collapsed = sapply(.data$restrictPlpDataSettings, paste0, collapse = "|")) %>%
     dplyr::filter(.data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
     dplyr::select(-"collapsed")
-  task$covariateSettings <- task$covariateSettings[[1]]
-  if (length(task$covariateSettings) > 1) {
+  covariateSettings <- task$covariateSettings[[1]]
+  task$covariateSettings <- NULL
+  if (length(covariateSettings) > 1) {
     task$covariateSettings <- unlist(task$covariateSettings, recursive = FALSE)
+  } else {
+    task$covariateSettings <- covariateSettings
   }
   
   databaseName <- database$cdmDatabaseName
