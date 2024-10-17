@@ -697,7 +697,7 @@ getData <- function(design, database, outputFolder, downloadTasks) {
     dplyr::mutate(taskId = dplyr::row_number(),
                   collapsed = sapply(.data$restrictPlpDataSettings, paste0, collapse = "|")) %>%
     dplyr::filter(.data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
-    dplyr::select(-.data$collapsed)
+    dplyr::select("collapsed")
   
   databaseName <- database$cdmDatabaseName
   database$targetId <- task$targetId
