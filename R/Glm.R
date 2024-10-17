@@ -25,7 +25,7 @@
 #' @param data An object of type \code{plpData} - the patient level prediction
 #' data extracted from the CDM.
 #' @param cohort The population dataframe created using
-#' /code{createStudyPopulation} who will have their risks predicted or a cohort
+#' \code{createStudyPopulation} who will have their risks predicted or a cohort
 #' without the outcome known
 #' @export
 #' @return A dataframe containing the prediction for each person in the 
@@ -75,7 +75,7 @@ predictGlm <- function(plpModel, data, cohort) {
 #' PatientLevelPrediction package.
 #' @param coefficients A dataframe containing two columns, coefficients and
 #' covariateId, both of type numeric. The covariateId column must contain
-#' valid covariateIds that match those used in the /code{FeatureExtraction}
+#' valid covariateIds that match those used in the \code{FeatureExtraction}
 #' package.
 #' @param intercept A numeric value representing the intercept of the model.
 #' @param finalMapping A string representing the final mapping from the 
