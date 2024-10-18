@@ -732,6 +732,10 @@ getData <- function(design, database, outputFolder, downloadTasks) {
       if (!dir.exists(file.path(outputFolder, databaseName))) {
         dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
       }
+      if (length(covariateSettings) > 1) {
+        plpData$covariateData <-
+          deDuplicateCovariateData(plpData$covariateData)
+      }
       savePlpData(plpData, file = plpDataLocation)
     }
   } else {
@@ -844,4 +848,18 @@ createDownloadTasks <- function(validationDesignList) {
       "covariateSettings"))
 
   return(downloadTasks)
+}
+
+#' deplucateCovariateData - Remove duplicate covariate data
+#' when downloading data with multiple different covariateSettings sometimes
+#' there will be duplicated analysisIds which need to be removed
+#' @param covariateData The covariate data Andromeda object
+#' @return The deduplicated covariate data
+#' @keywords internal
+deDuplicateCovariateData <- function(covariateData) {
+  covariateData$covariateRef <- covariateData$covariateRef %>% 
+    dplyr::distinct()
+  covariateData$covariates <- covariateData$covariates %>% 
+    dplyr::distinct()
+  return(covariateData)
 }
