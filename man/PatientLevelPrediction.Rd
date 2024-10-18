@@ -18,15 +18,15 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Jenna Reps \email{jreps@its.jnj.com}
+\strong{Maintainer}: Egill Fridgeirsson \email{e.fridgeirsson@erasmusmc.nl}
 
 Authors:
 \itemize{
+  \item Jenna Reps \email{jreps@its.jnj.com}
   \item Martijn Schuemie
   \item Marc Suchard
   \item Patrick Ryan
   \item Peter Rijnbeek
-  \item Egill Fridgeirsson
 }
 
 }

@@ -9,7 +9,7 @@ createGlmModel(coefficients, intercept = 0, finalMapping = "logistic")
 \arguments{
 \item{coefficients}{A dataframe containing two columns, coefficients and
 covariateId, both of type numeric. The covariateId column must contain
-valid covariateIds that match those used in the /code{FeatureExtraction}
+valid covariateIds that match those used in the \code{FeatureExtraction}
 package.}
 
 \item{intercept}{A numeric value representing the intercept of the model.}
