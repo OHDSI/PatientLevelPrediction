@@ -156,7 +156,7 @@ test_that("plotNetBenefit returns a grob object", {
 })
 
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
-  tempDir <- tempdir()
+  tempDir <- tempfile()
   plotNetBenefit(plpResult, saveLocation = tempDir, fileName = "netBenefit.png", evalType = "Test")
   expect_true(file.exists(file.path(tempDir, "netBenefit.png")))
   #Clean up
