@@ -1279,7 +1279,7 @@ plotNetBenefit <- function(plpResult,
         )
       ) +
       ggplot2::labs(
-        x = "Predicted Probability",
+        x = "Prediction Threshold",
         y = "Net Benefit"
       ) +
       ggplot2::ggtitle(evalType) +
