@@ -76,6 +76,7 @@
 <url><loc>/reference/getCohortCovariateData.html</loc></url>
 <url><loc>/reference/getData.html</loc></url>
 <url><loc>/reference/getDemographicSummary.html</loc></url>
+<url><loc>/reference/getNetBenefit.html</loc></url>
 <url><loc>/reference/getPlpData.html</loc></url>
 <url><loc>/reference/getPopulation.html</loc></url>
 <url><loc>/reference/getPredictionDistribution.html</loc></url>
@@ -105,6 +106,7 @@
 <url><loc>/reference/plotF1Measure.html</loc></url>
 <url><loc>/reference/plotGeneralizability.html</loc></url>
 <url><loc>/reference/plotLearningCurve.html</loc></url>
+<url><loc>/reference/plotNetBenefit.html</loc></url>
 <url><loc>/reference/plotPlp.html</loc></url>
 <url><loc>/reference/plotPrecisionRecall.html</loc></url>
 <url><loc>/reference/plotPredictedPDF.html</loc></url>
