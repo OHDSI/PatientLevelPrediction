@@ -34,7 +34,7 @@ this is taken from the model.}
 \item{runCovariateSummary}{whether to run the covariate summary for the validation data}
 }
 \value{
-A validation design object of class \code{validationDesign}
+A validation design object of class \code{validationDesign} or a list of such objects
 }
 \description{
 createValidationDesign - Define the validation design for external validation
