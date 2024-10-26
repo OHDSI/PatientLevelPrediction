@@ -31,6 +31,8 @@ jobs:
           extra-packages: any::pkgdown, ohdsi/OhdsiRTools
           needs: website
 
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+
       - name: Build site
         run: Rscript -e 'pkgdown::build_site_github_pages(new_process = FALSE, install = TRUE)'
         
