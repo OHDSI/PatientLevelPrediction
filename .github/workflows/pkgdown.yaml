@@ -32,6 +32,8 @@ jobs:
           needs: website
 
       - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          file-extension: 'md, rmd, Rmd'
 
       - name: Build site
         run: Rscript -e 'pkgdown::build_site_github_pages(new_process = FALSE, install = TRUE)'
