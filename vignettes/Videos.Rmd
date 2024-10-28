@@ -1,0 +1,67 @@
+---
+title: "Demo Videos"
+author: "Jenna Reps, Peter R. Rijnbeek"
+date: '`r Sys.Date()`'
+header-includes:
+    - \usepackage{fancyhdr}
+    - \pagestyle{fancy}
+    - \fancyhead{}
+    - \fancyhead[CO,CE]{Installation Guide}
+    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[LE,RO]{\thepage}
+    - \renewcommand{\headrulewidth}{0.4pt}
+    - \renewcommand{\footrulewidth}{0.4pt}
+output:
+  pdf_document:
+    includes:
+      in_header: preamble.tex
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+  html_document:
+    number_sections: yes
+    toc: yes
+---
+
+```{=html}
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Demo Videos}
+-->
+```
+## What is a cohort table?
+
+| Click To Launch                                                                                                                              | Description of Demo                                                 |
+|-----------------------------------------------|------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/BEukCbT8UoA/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/GY2ZTcizY90) | Learn what a cohort table looks like and what columns are required. |
+
+## Setting up a connection between your database and R
+
+| Click To Launch                                                                                                                              | Description of Demo                                                                                           |
+|----------------------------------------|--------------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/BEukCbT8UoA/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/8F2X5SKN64w) | Learn how to configure the connection to your OMOP CDM data from R using the OHDSI DatabaseConnector package. |
+
+## Running a single PatientLevelPrediction model
+
+| Click To Launch                                                                                                                              | Description of Demo                                                      |
+|-----------------------------------------------|-------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/7AraOsTynD4/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/7AraOsTynD4) | Learn how to develop and validate a single PatientLevelPrediction model. |
+
+## Running multiple PatientLevelPrediction models study
+
+| Click To Launch                                                                                                                              | Description of Demo                                                       |
+|-----------------------------------------------|-------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/7wUilx580PE/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/7wUilx580PE) | Learn how to develop and validate multiple PatientLevelPrediction models. |
+
+## Exploring the results in the shiny app
+
+| Click To Launch                                                                                                                              | Description of Demo                                                                                                   |
+|---------------------------------------|---------------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/BulmuH32y_Y/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/BulmuH32y_Y) | Learn how to interactively explore the model performance and model via the shiny apps viewPlp() and viewMultiplePlp() |
+
+## Validating existing models on OMOP CDM data
+
+| Click To Launch                                                                                                                              | Description of Demo                                                                                                                                                                                                                                           |
+|--------------------------|----------------------------------------------|
+| [![Video Vignette PLP Package](http://img.youtube.com/vi/BEukCbT8UoA/0.jpg){alt="Video Vignette PLP Package"}](https://youtu.be/oBsfg9hfrpI) | This demo shows how you can add any existing score or logistic model and validate the model on new OMOP CDM data. This is useful for benchmarking when developing new models or to perform extensive external validation of a model across the OHDSI network. |
