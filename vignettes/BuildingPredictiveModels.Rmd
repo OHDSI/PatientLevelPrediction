@@ -24,12 +24,11 @@ output:
     toc: yes
 ---
 
-```{=html}
 <!--
 %\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
-```
+
 ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
@@ -68,13 +67,13 @@ This vignette describes how you can use the `PatientLevelPrediction` package to 
 
 We have to clearly specify our study upfront to be able to implement it. This means we need to define the prediction problem we like to address, in which population we will build the model, which model we will build and how we will evaluate its performance. To guide you through this process we will use a "Disease onset and progression" prediction type as an example.
 
-## Problem definition 1: Stroke in afibrilation patients
+## Problem definition 1: Stroke in atrial fibrilation patients
 
 Atrial fibrillation is a disease characterized by an irregular heart rate that can cause poor blood flow. Patients with atrial fibrillation are at increased risk of ischemic stroke. Anticoagulation is a recommended prophylaxis treatment strategy for patients at high risk of stroke, though the underuse of anticoagulants and persistent severity of ischemic stroke represents a substantial unmet medical need. Various strategies have been developed to predict risk of ischemic stroke in patients with atrial fibrillation. CHADS2 (Gage JAMA 2001) was developed as a risk score based on history of congestive heart failure, hypertension, age\>=75, diabetes and stroke. CHADS2 was initially derived using Medicare claims data, where it achieved good discrimination (AUC=0.82). However, subsequent external validation studies revealed the CHADS2 had substantially lower predictive accuracy (Keogh Thromb Haemost 2011). Subsequent stroke risk calculators have been developed and evaluated, including the extension of CHADS2Vasc. The management of atrial fibrillation has evolved substantially over the last decade, for various reasons that include the introduction of novel oral anticoagulants. With these innovations has come a renewed interest in greater precision medicine for stroke prevention.
 
 We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:
 
-Amongst patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year?
+Amongt patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year?
 
 We will define 'patients who are newly diagnosed with Atrial Fibrillation' as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. We will define 'Ischemic stroke events' as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes.
 
@@ -84,7 +83,7 @@ Angiotensin converting enzyme inhibitors (ACE inhibitors) are medications used b
 
 We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:
 
-Amongst patients who are newly dispensed an ACE inhibitor, which patients will go on to have angioedema within 1 year?
+Amongt patients who are newly dispensed an ACE inhibitor, which patients will go on to have angioedema within 1 year?
 
 We will define 'patients who are newly dispensed an ACE inhibitor' as the first drug record of sny ACE inhibitor, [...]which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. We will define 'angioedema' as an angioedema condition record.
 
@@ -100,7 +99,7 @@ The final study population in which we will develop our model is often a subset 
 
 -   *How do we define the period in which we will predict our outcome relative to the target cohort start?* We actually have to make two decisions to answer that question. First, does the time-at-risk window start at the date of the start of the target cohort or later? Arguments to make it start later could be that you want to avoid outcomes that were entered late in the record that actually occurred before the start of the target cohort or you want to leave a gap where interventions to prevent the outcome could theoretically be implemented. Second, you need to define the time-at-risk by setting the risk window end, as some specification of days offset relative to the target cohort start or end dates. For our problem we will predict in a ‘time-at-risk’ window starting 1 day after the start of the target cohort up to 365 days later (to look for 1-year risk following atrial fibrillation diagnosis).
 
--   *Do we require a minimum amount of time-at-risk?* We have to decide if we want to include patients that did not experience the outcome but did leave the database earlier than the end of our time-at-risk period. These patients may experience the outcome when we do not observe them. For our prediction problem we decide to answer this question with ‘Yes, require a mimimum time-at-risk’ for that reason. Furthermore, we have to decide if this constraint also applies to persons who experienced the outcome or we will include all persons with the outcome irrespective of their total time at risk. For example, if the outcome is death, then persons with the outcome are likely censored before the full time-at-risk period is complete.
+-   *Do we require a minimum amount of time-at-risk?* We have to decide if we want to include patients that did not experience the outcome but did leave the database earlier than the end of our time-at-risk period. These patients may experience the outcome when we do not observe them. For our prediction problem we decide to answer this question with ‘Yes, require a minimum time-at-risk’ for that reason. Furthermore, we have to decide if this constraint also applies to persons who experienced the outcome or we will include all persons with the outcome irrespective of their total time at risk. For example, if the outcome is death, then persons with the outcome are likely censored before the full time-at-risk period is complete.
 
 ## Model development settings
 
@@ -134,35 +133,35 @@ Finally, we have to define how we will train and test our model on our data, i.e
 
 We now completely defined our studies and implement them:
 
--   [See example 1: Stroke in afibrilation patients](#example1)
--   [See example 2: Agioedema in ACE inhibitor new users](#example2)
+-   [See example 1: Stroke in Atrial fibrillation patients](#example1)
+-   [See example 2: Angioedema in ACE inhibitor new users](#example2)
 
-# Example 1: Stroke in afibrilation patients {#example1}
+# Example 1: Stroke in Atrial fibrillation patients {#example1}
 
 ## Study Specification
 
 For our first prediction model we decide to start with a Regularized Logistic Regression and will use the default parameters. We will do a 75%-25% split by person.
 
-| Definition                                | Value                                                                                                                                                                                                                                                                                           |
-|-----------------|-------------------------------------------------------|
-| **Problem Definition**                    |                                                                                                                                                                                                                                                                                                 |
-| Target Cohort (T)                         | 'Patients who are newly diagnosed with Atrial Fibrillation' defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. |
-| Outcome Cohort (O)                        | 'Ischemic stroke events' defined as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes.                                                                                                              |
-| Time-at-risk (TAR)                        | 1 day till 365 days from cohort start                                                                                                                                                                                                                                                           |
-|                                           |                                                                                                                                                                                                                                                                                                 |
-| **Population Definition**                 |                                                                                                                                                                                                                                                                                                 |
-| Washout Period                            | 1095                                                                                                                                                                                                                                                                                            |
-| Enter the target cohort multiple times?   | No                                                                                                                                                                                                                                                                                              |
-| Allow prior outcomes?                     | Yes                                                                                                                                                                                                                                                                                             |
-| Start of time-at-risk                     | 1 day                                                                                                                                                                                                                                                                                           |
-| End of time-at-risk                       | 365 days                                                                                                                                                                                                                                                                                        |
-| Require a minimum amount of time-at-risk? | Yes (364 days)                                                                                                                                                                                                                                                                                  |
-|                                           |                                                                                                                                                                                                                                                                                                 |
-| **Model Development**                     |                                                                                                                                                                                                                                                                                                 |
-| Algorithm                                 | Regularized Logistic Regression                                                                                                                                                                                                                                                                 |
-| Hyper-parameters                          | variance = 0.01 (Default)                                                                                                                                                                                                                                                                       |
-| Covariates                                | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count                                                                                                                                                                                                |
-| Data split                                | 75% train, 25% test. Randomly assigned by person                                                                                                                                                                                                                                                |
+| Definition | Value |
+|------------------------------------|------------------------------------|
+| **Problem Definition** |  |
+| Target Cohort (T) | 'Patients who are newly diagnosed with Atrial Fibrillation' defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. |
+| Outcome Cohort (O) | 'Ischemic stroke events' defined as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes. |
+| Time-at-risk (TAR) | 1 day till 365 days from cohort start |
+|  |  |
+| **Population Definition** |  |
+| Washout Period | 1095 |
+| Enter the target cohort multiple times? | No |
+| Allow prior outcomes? | Yes |
+| Start of time-at-risk | 1 day |
+| End of time-at-risk | 365 days |
+| Require a minimum amount of time-at-risk? | Yes (364 days) |
+|  |  |
+| **Model Development** |  |
+| Algorithm | Regularized Logistic Regression |
+| Hyper-parameters | variance = 0.01 (Default) |
+| Covariates | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count |
+| Data split | 75% train, 25% test. Randomly assigned by person |
 
 According to the best practices we need to make a protocol that completely specifies how we plan to execute our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.
 
@@ -197,8 +196,8 @@ ATLAS allows you to define cohorts interactively by specifying cohort entry and 
 
 The T and O cohorts can be found here:
 
--   Atrial Fibrillaton (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769447>
--   Stroke (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769448>
+<!-- -   Atrial Fibrillaton (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769447> -->
+<!-- -   Stroke (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769448> -->
 
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
@@ -218,10 +217,10 @@ File AfStrokeCohorts.sql
 Create a table to store the persons in the T and C cohort
 */
 
-IF OBJECT_ID('@resultsDatabaseSchema.PLPAFibStrokeCohort', 'U') IS NOT NULL 
-DROP TABLE @resultsDatabaseSchema.PLPAFibStrokeCohort;
+IF OBJECT_ID('@cohortsDatabaseSchema.AFibStrokeCohort', 'U') IS NOT NULL 
+DROP TABLE @cohortsDatabaseSchema.AFibStrokeCohort;
 
-CREATE TABLE @resultsDatabaseSchema.PLPAFibStrokeCohort 
+CREATE TABLE @cohortsDatabaseSchema.AFibStrokeCohort 
 ( 
 cohort_definition_id INT, 
 subject_id BIGINT,
@@ -238,7 +237,7 @@ any descendants, indexed at the first diagnosis
 - who have >1095 days of prior observation before their first diagnosis
 - and have no warfarin exposure any time prior to first AFib diagnosis
 */
-INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
+INSERT INTO @cohortsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
 subject_id, 
 cohort_start_date, 
 cohort_end_date)
@@ -280,7 +279,7 @@ FROM
   'cerebral infarction' and descendants, 'cerebral thrombosis', 
   'cerebral embolism', 'cerebral artery occlusion' 
   */
-  INSERT INTO @resultsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
+  INSERT INTO @cohortsDatabaseSchema.AFibStrokeCohort (cohort_definition_id, 
   subject_id, 
   cohort_start_date, 
   cohort_end_date)
@@ -312,30 +311,29 @@ FROM
 
 This is parameterized SQL which can be used by the [`SqlRender`](http://github.com/OHDSI/SqlRender) package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
-To execute this sql against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](http://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
+To execute this `sql` against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](http://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails()`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
 
 ```{r tidy=FALSE,eval=FALSE}
+  library(DatabaseConnector)
   connectionDetails <- createConnectionDetails(dbms = "postgresql", 
   server = "localhost/ohdsi", 
   user = "joe", 
   password = "supersecret")
   
-  cdmDatabaseSchema <- "my_cdm_data"
-  cohortsDatabaseSchema <- "my_results"
+  cdmDatabaseSchema <- "cdm"
+  cohortsDatabaseSchema <- "cohorts"
   cdmVersion <- "5"
 ```
 
-The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables, as well as the CDM version. We will use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, databaseschemas need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
+The last three lines define the `cdmDatabaseSchema` and `cohortsDatabaseSchema` variables, as well as the CDM version. We will use these later to tell R where the data in CDM format live, where we want to create the cohorts of interest, and what version CDM is used. Note that for Microsoft SQL Server, you need to specify both the database and the schema, so for example `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ```{r tidy=FALSE,eval=FALSE}
   library(SqlRender)
   sql <- readSql("AfStrokeCohorts.sql")
-  sql <- renderSql(sql,
-  cdmDatabaseSchema = cdmDatabaseSchema,
-  cohortsDatabaseSchema = cohortsDatabaseSchema,
-  post_time = 30,
-  pre_time = 365)$sql
-  sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+  sql <- render(sql,
+                cdmDatabaseSchema = cdmDatabaseSchema,
+                cohortsDatabaseSchema = cohortsDatabaseSchema)
+  sql <- translate(sql, targetDialect = connectionDetails$dbms)
   
   connection <- connect(connectionDetails)
   executeSql(connection, sql)
@@ -349,8 +347,8 @@ If all went well, we now have a table with the events of interest. We can see ho
   sql <- paste("SELECT cohort_definition_id, COUNT(*) AS count",
   "FROM @cohortsDatabaseSchema.AFibStrokeCohort",
   "GROUP BY cohort_definition_id")
-  sql <- renderSql(sql, cohortsDatabaseSchema = cohortsDatabaseSchema)$sql
-  sql <- translateSql(sql, targetDialect = connectionDetails$dbms)$sql
+  sql <- render(sql, cohortsDatabaseSchema = cohortsDatabaseSchema)
+  sql <- translate(sql, targetDialect = connectionDetails$dbms)
   
   querySql(connection, sql)
 ```
@@ -365,32 +363,33 @@ In this section we assume that our cohorts have been created either by using ATL
 
 ### Data extraction
 
-Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtractionPackage`](https://github.com/OHDSI/FeatureExtraction). In short the FeatureExtractionPackage allows you to specify which features (covariates) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom covariates. For more detailed information on the FeatureExtraction package see its [vignettes](https://github.com/OHDSI/FeatureExtraction). For our example study we decided to use these settings:
+Now we can tell `PatientLevelPrediction` to extract all necessary data for our analysis. This is done using the [`FeatureExtraction`](https://github.com/OHDSI/FeatureExtraction) package. In short the `FeatureExtraction` package allows you to specify which features (`covariates`) need to be extracted, e.g. all conditions and drug exposures. It also supports the creation of custom `covariates`. For more detailed information on the `FeatureExtraction` package see its [vignettes](https://github.com/OHDSI/FeatureExtraction). For our example study we decided to use these settings:
 
 ```{r tidy=FALSE,eval=FALSE}
+  library(FeatureExtraction)
   covariateSettings <- createCovariateSettings(useDemographicsGender = TRUE,
-  useDemographicsAge = TRUE,
-  useConditionGroupEraLongTerm = TRUE,
-  useConditionGroupEraAnyTimePrior = TRUE,
-  useDrugGroupEraLongTerm = TRUE,
-  useDrugGroupEraAnyTimePrior = TRUE,
-  useVisitConceptCountLongTerm = TRUE,
-  longTermStartDays = -365,
-  endDays = -1)
+                                               useDemographicsAge = TRUE,
+                                               useConditionGroupEraLongTerm = TRUE,
+                                               useConditionGroupEraAnyTimePrior = TRUE,
+                                               useDrugGroupEraLongTerm = TRUE,
+                                               useDrugGroupEraAnyTimePrior = TRUE,
+                                               useVisitConceptCountLongTerm = TRUE,
+                                               longTermStartDays = -365,
+                                               endDays = -1)
 ```
 
-The final step for extracting the data is to run the `getPlpData` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the washoutPeriod which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings.
+The final step for extracting the data is to run the `getPlpData()` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the `washoutPeriod` which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings.
 
 ```{r tidy=FALSE,eval=FALSE}
-
+library(PatientLevelPrediction)
 databaseDetails <- createDatabaseDetails(
   connectionDetails = connectionDetails,
   cdmDatabaseSchema = cdmDatabaseSchema,
   cdmDatabaseName = '',
-  cohortDatabaseSchema = resultsDatabaseSchema,
+  cohortDatabaseSchema = cohortsDatabaseSchema,
   cohortTable = 'AFibStrokeCohort',
-  cohortId = 1,
-  outcomeDatabaseSchema = resultsDatabaseSchema,
+  targetId = 1,
+  outcomeDatabaseSchema = cohortsDatabaseSchema,
   outcomeTable = 'AFibStrokeCohort',
   outcomeIds = 2,
   cdmVersion = 5
@@ -401,14 +400,13 @@ databaseDetails <- createDatabaseDetails(
 # or restricting to first index date (if people can be in target cohort multiple times)
 restrictPlpDataSettings <- createRestrictPlpDataSettings(sampleSize = 10000)
 
-  plpData <- getPlpData(
-    databaseDetails = databaseDetails, 
-    covariateSettings = covariateSettings,
-    restrictPlpDataSettings = restrictPlpDataSettings
-  )
+plpData <- getPlpData(databaseDetails = databaseDetails, 
+                      covariateSettings = covariateSettings,
+                      restrictPlpDataSettings = restrictPlpDataSettings
+                      )
 ```
 
-Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `createRestrictPlpDataSettings` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `Andromeda` (which uses [SQLite](https://www.sqlite.org/index.html)) to store information in a way that ensures R does not run out of memory, even when the data are large.
+Note that if the cohorts are created in ATLAS its corresponding cohort database schema needs to be selected. There are many additional parameters for the `getPlpData()` function which are all documented in the `PatientLevelPrediction` manual. The resulting `plpData` object uses the package `Andromeda` (which uses [SQLite](https://www.sqlite.org/index.html)) to store information in a way that ensures R does not run out of memory, even when the data are large.
 
 Creating the `plpData` object can take considerable computing time, and it is probably a good idea to save it for future sessions. Because `plpData` uses `Andromeda`, we cannot use R's regular save function. Instead, we'll have to use the `savePlpData()` function:
 
@@ -420,9 +418,7 @@ We can use the `loadPlpData()` function to load the data in a future session.
 
 ### Additional inclusion criteria
 
-To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minumim time at risk can be enforced (`requireTimeAtRisk, minTimeAtRisk`) and we can specify if this also applies to patients with the outcome (`includeAllOutcomes`). Here we also specify the start and end of the risk window relative to target cohort start. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set `riskWindowStart = 30` and `riskWindowEnd = 365`. In some cases the risk window needs to start at the cohort end date. This can be achieved by setting `addExposureToStart = TRUE` which adds the cohort (exposure) time to the start date.
-
-In Appendix 1, we demonstrate the effect of these settings on the subset of the persons in the target cohort that end up in the final study population.
+To completely define the prediction problem the final study population is obtained by applying additional constraints on the two earlier defined cohorts, e.g., a minimum time at risk can be enforced (`requireTimeAtRisk`, `minTimeAtRisk`) and we can specify if this also applies to patients with the outcome (`includeAllOutcomes`). Here we also specify the start and end of the risk window relative to target cohort start. For example, if we like the risk window to start 30 days after the at-risk cohort start and end a year later we can set `riskWindowStart = 30` and `riskWindowEnd = 365`.
 
 In the example below all the settings we defined for our study are imposed:
 
@@ -446,9 +442,9 @@ In the example below all the settings we defined for our study are imposed:
 
 When developing a prediction model using supervised learning (when you have features paired with labels for a set of patients), the first step is to design the development/internal validation process. This requires specifying how to select the model hyper-parameters, how to learn the model parameters and how to fairly evaluate the model. In general, the validation set is used to pick hyper-parameters, the training set is used to learn the model parameters and the test set is used to perform fair internal validation. However, cross-validation can be implemented to pick the hyper-parameters on the training data (so a validation data set is not required). Cross validation can also be used to estimate internal validation (so a testing data set is not required).
 
-In small data the best approach for internal validation has been shown to be boostrapping. However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is just important to have some form of fair evaluation (use a test set or cross validation). For full details see [our BMJ open paper](add%20link).
+In small data the best approach for internal validation has been shown to be bootstrapping. However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is adequate to have some form of fair evaluation (use a test set or cross validation). For full details see [our BMJ open paper](https://bmjopen.bmj.com/content/11/12/e050146.abstract).
 
-In the PatientLevelPrediction package, the splitSettings define how the plpData are partitioned into training/validation/testing data. Cross validation is always done, but using a test set is optional (when the data are small, it may be optimal to not use a test set). For the splitSettings we can use the type (stratified/time/subject) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
+In the `PatientLevelPrediction` package, the `splitSettings` define how the `plpData` are partitioned into training/validation/testing data. They are created with `createDefaultSplitSetting()`. Cross validation is always done, but using a test set is optional (when the data are small, it may be optimal to not use a test set). For the `splitSettings` we can use the type (`stratified`/`time`/`subject`) and `testFraction` parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
 
 ```{r tidy=FALSE,eval=FALSE}
   splitSettings <- createDefaultSplitSetting(
@@ -460,7 +456,7 @@ In the PatientLevelPrediction package, the splitSettings define how the plpData 
     )
 ```
 
-Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf).
+Note: it is possible to add a custom method to specify how the `plpData` are partitioned into training/validation/testing data, see `R vignette('AddingCustomSplitting')`
 
 ### Preprocessing the training data
 
@@ -561,26 +557,26 @@ To load the full results structure use:
 
 ## Study Specification
 
-| Definition                                | Value                                                                                                     |
-|----------------------|--------------------------------------------------|
-| **Problem Definition**                    |                                                                                                           |
-| Target Cohort (T)                         | 'Patients who are newly dispensed an ACE inhibitor' defined as the first drug record of any ACE inhibitor |
-| Outcome Cohort (O)                        | 'Angioedema' defined as an angioedema condition record during an inpatient or ER visit                    |
-| Time-at-risk (TAR)                        | 1 day till 365 days from cohort start                                                                     |
-|                                           |                                                                                                           |
-| **Population Definition**                 |                                                                                                           |
-| Washout Period                            | 365                                                                                                       |
-| Enter the target cohort multiple times?   | No                                                                                                        |
-| Allow prior outcomes?                     | No                                                                                                        |
-| Start of time-at-risk                     | 1 day                                                                                                     |
-| End of time-at-risk                       | 365 days                                                                                                  |
-| Require a minimum amount of time-at-risk? | Yes (364 days)                                                                                            |
-|                                           |                                                                                                           |
-| **Model Development**                     |                                                                                                           |
-| Algorithm                                 | Gradient Boosting Machine                                                                                 |
-| Hyper-parameters                          | ntree:5000, max depth:4 or 7 or 10 and learning rate: 0.001 or 0.01 or 0.1 or 0.9                         |
-| Covariates                                | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count          |
-| Data split                                | 75% train, 25% test. Randomly assigned by person                                                          |
+| Definition | Value |
+|------------------------------------|------------------------------------|
+| **Problem Definition** |  |
+| Target Cohort (T) | 'Patients who are newly dispensed an ACE inhibitor' defined as the first drug record of any ACE inhibitor |
+| Outcome Cohort (O) | 'Angioedema' defined as an angioedema condition record during an inpatient or ER visit |
+| Time-at-risk (TAR) | 1 day till 365 days from cohort start |
+|  |  |
+| **Population Definition** |  |
+| Washout Period | 365 |
+| Enter the target cohort multiple times? | No |
+| Allow prior outcomes? | No |
+| Start of time-at-risk | 1 day |
+| End of time-at-risk | 365 days |
+| Require a minimum amount of time-at-risk? | Yes (364 days) |
+|  |  |
+| **Model Development** |  |
+| Algorithm | Gradient Boosting Machine |
+| Hyper-parameters | ntree:5000, max depth:4 or 7 or 10 and learning rate: 0.001 or 0.01 or 0.1 or 0.9 |
+| Covariates | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count |
+| Data split | 75% train, 25% test. Randomly assigned by person |
 
 According to the best practices we need to make a protocol that completely specifies how we plan to execute our study. This protocol will be assessed by the governance boards of the participating data sources in your network study. For this a template could be used but we prefer to automate this process as much as possible by adding functionality to automatically generate study protocol from a study specification. We will discuss this in more detail later.
 
@@ -615,8 +611,8 @@ ATLAS allows you to define cohorts interactively by specifying cohort entry and 
 
 The T and O cohorts can be found here:
 
--   Ace inhibitors (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770617>
--   Angioedema (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770616>
+<!-- -   Ace inhibitors (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770617> -->
+<!-- -   Angioedema (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770616> -->
 
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
@@ -988,8 +984,8 @@ The script we created manually above can also be automatically created using a p
     <dd>![](atlasplp4.web)</dd>
 
     </dl>
-]
-\newpage
+
+    ] \newpage
 
 ATLAS can build a R package for you that will execute the full study against you CDM. Below the steps are explained how to do this in ATLAS.
 
@@ -1229,14 +1225,14 @@ This will extract the new plpData from the specified schemas and cohort tables. 
 
 The package has much more functionality than described in this vignette and contributions have been made my many persons in the OHDSI community. The table below provides an overview:
 
-| Functionality                        | Description                                                                                                                                                                                                                                                                  | Vignette                                                                                                              |
-|-----------------|--------------------------------------|-----------------|
-| Builing Multiple Models              | This vignette describes how you can run multiple models automatically                                                                                                                                                                                                        | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf) |
-| Custom Models                        | This vignette describes how you can add your own custom algorithms in the framework                                                                                                                                                                                          | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf)               |
-| Custom Splitting Functions           | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework                                                                                                                                                     | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf)            |
-| Custom Sampling Functions            | This vignette describes how you can add your own custom sampling functions in the framework                                                                                                                                                                                  | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf)              |
-| Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework                                                                                                                                                         | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf)   |
-| Learning curves                      | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf)         |
+| Functionality | Description | Vignette |
+|------------------------|------------------------|------------------------|
+| Builing Multiple Models | This vignette describes how you can run multiple models automatically | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf) |
+| Custom Models | This vignette describes how you can add your own custom algorithms in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf) |
+| Custom Splitting Functions | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf) |
+| Custom Sampling Functions | This vignette describes how you can add your own custom sampling functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf) |
+| Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf) |
+| Learning curves | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`Vignette`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf) |
 
 # Demos
 
@@ -1294,10 +1290,9 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     </dl>
 
-```{=tex}
 \newpage
 3
-```
+
 )
 
 <dl>
@@ -1316,10 +1311,9 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     </dl>
 
-```{=tex}
 \newpage
 5
-```
+
 )
 
 <dl>
