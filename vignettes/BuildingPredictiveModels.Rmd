@@ -118,8 +118,8 @@ tabl <- "
 | Naive Bayes | The Naive Bayes algorithm applies the Bayes theorem with the 'naive' assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained.  | none |
 | AdaBoost | AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn 'AdaboostClassifier' implementation in Python. | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators) |
 | Decision Tree | A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach.  It aims to find partitions that have the highest information gain to separate the classes.  The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn 'DecisionTreeClassifier' implementation in Python. | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight ('Balance' or 'None') |
-| Multilayer Perception | Neural networks contain multiple layers that weight their inputs using a non-linear function.  The first layer is the input layer, the last layer is the output layer the between are the hidden layers.  Neural networks are generally trained using feed forward back-propagation.  This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error.  This can also be performed as a batch, where multiple data-points are fee| size (the number of hidden nodes), alpha (the l2 regularisation), seed |
-| Deep Learning (now in seperate DeepPatientLevelPrediction R package) | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. In the seperate BuildingDeepLearningModels vignette we describe these models and hyper-parameters in more detail | see OHDSI/DeepPatientLevelPrediction|
+| Multilayer Perception | Neural networks contain multiple layers that weight their inputs using a non-linear function.  The first layer is the input layer, the last layer is the output layer the between are the hidden layers.  Neural networks are generally trained using feed forward back-propagation.  This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error.  | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
+| Deep Learning (now in seperate DeepPatientLevelPrediction R package) | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. | see: https://github.com/OHDSI/DeepPatientLevelPrediction|
 "
 cat(tabl) # output the table in a format good for HTML/PDF/docx conversion
 ```
@@ -145,7 +145,7 @@ For our first prediction model we decide to start with a Regularized Logistic Re
 | Definition | Value |
 |------------------------------------|------------------------------------|
 | **Problem Definition** |  |
-| Target Cohort (T) | 'Patients who are newly diagnosed with Atrial Fibrillation' defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. |
+| Target Cohort (T) | 'Patients who are newly diagnosed with Atrial Fibrillation' defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmia, or a procedure to treat arrhythmia. |
 | Outcome Cohort (O) | 'Ischemic stroke events' defined as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes. |
 | Time-at-risk (TAR) | 1 day till 365 days from cohort start |
 |  |  |
@@ -188,24 +188,23 @@ Both methods are described below for our example prediction problem.
 
 ### ATLAS cohort builder
 
-![Target Cohort Atrial Fibrillation](example1/ATLAS_T.webp)
+![Figure 4: Target Cohort Atrial Fibrillation](example1/ATLAS_T.webp)
 
 ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 4 shows how we created the Atrial Fibrillation cohort and Figure 5 shows how we created the stroke cohort in ATLAS.
 
-![Outcome Cohort Stroke](example1/ATLAS_O.webp)
+![Figure 5: Outcome Cohort Stroke](example1/ATLAS_O.webp)
 
 The T and O cohorts can be found here:
 
-
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
-Note that when a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found at the top of the ATLAS screen, e.g. 1769447 in Figure 4.
+Note that when a cohort is created in ATLAS the `cohortId` is needed to extract the data in R. The `cohortId` can be found at the top of the ATLAS screen, e.g. 1769447 in Figure 4.
 
 ### Custom cohorts
 
 It is also possible to create cohorts without the use of ATLAS. Using custom cohort code (SQL) you can make more advanced cohorts if needed.
 
-For our example study, we need to create at table to hold the cohort data and we need to create SQL code to instantiate this table for both the AF and Stroke cohorts. Therefore, we create a file called *AfStrokeCohorts.sql* with the following contents:
+For our example study, we need to create at table to hold the cohort data and we need to create SQL code to instantiate this table for both the AF and Stroke cohorts. Therefore, we create a file called *`AfStrokeCohorts.sql`* with the following contents:
 
 ```{sql, eval=FALSE}
 /***********************************
@@ -376,7 +375,7 @@ Now we can tell `PatientLevelPrediction` to extract all necessary data for our a
                                                endDays = -1)
 ```
 
-The final step for extracting the data is to run the `getPlpData()` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the `washoutPeriod` which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed covariate settings.
+The final step for extracting the data is to run the `getPlpData()` function and input the connection details, the database schema where the cohorts are stored, the cohort definition ids for the cohort and outcome, and the `washoutPeriod` which is the minimum number of days prior to cohort index date that the person must have been observed to be included into the data, and finally input the previously constructed `covariateSettings`.
 
 ```{r tidy=FALSE,eval=FALSE}
 library(PatientLevelPrediction)
@@ -436,7 +435,7 @@ In the example below all the settings we defined for our study are imposed:
   )
 ```
 
-### Spliting the data into training/validation/testing datasets
+### Splitting the data into training/validation/testing datasets
 
 When developing a prediction model using supervised learning (when you have features paired with labels for a set of patients), the first step is to design the development/internal validation process. This requires specifying how to select the model hyper-parameters, how to learn the model parameters and how to fairly evaluate the model. In general, the validation set is used to pick hyper-parameters, the training set is used to learn the model parameters and the test set is used to perform fair internal validation. However, cross-validation can be implemented to pick the hyper-parameters on the training data (so a validation data set is not required). Cross validation can also be used to estimate internal validation (so a testing data set is not required).
 
@@ -454,7 +453,7 @@ In the `PatientLevelPrediction` package, the `splitSettings` define how the `plp
     )
 ```
 
-Note: it is possible to add a custom method to specify how the `plpData` are partitioned into training/validation/testing data, see `R vignette('AddingCustomSplitting')`
+Note: it is possible to add a custom method to specify how the `plpData` are partitioned into training/validation/testing data, see  `vignette('AddingCustomSplitting')`
 
 ### Preprocessing the training data
 
@@ -608,7 +607,6 @@ ATLAS allows you to define cohorts interactively by specifying cohort entry and 
 ![Outcome Cohort Angioedema](example2/angioedema.webp)
 
 The T and O cohorts can be found here:
-
 
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
