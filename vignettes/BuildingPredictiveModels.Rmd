@@ -196,8 +196,6 @@ ATLAS allows you to define cohorts interactively by specifying cohort entry and 
 
 The T and O cohorts can be found here:
 
-<!-- -   Atrial Fibrillaton (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769447> -->
-<!-- -   Stroke (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1769448> -->
 
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
@@ -611,8 +609,6 @@ ATLAS allows you to define cohorts interactively by specifying cohort entry and 
 
 The T and O cohorts can be found here:
 
-<!-- -   Ace inhibitors (T): <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770617> -->
-<!-- -   Angioedema (O) : <http://www.ohdsi.org/web/atlas/#/cohortdefinition/1770616> -->
 
 In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
