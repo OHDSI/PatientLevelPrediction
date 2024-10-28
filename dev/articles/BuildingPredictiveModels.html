@@ -493,8 +493,7 @@ networks are generally trained using feed forward back-propagation. This
 is when you go through the network with a data-point and calculate the
 error between the true label and predicted label, then go backwards
 through the network and update the linear function weights based on the
-error. This can also be performed as a batch, where multiple data-points
-are fee</td>
+error.</td>
 <td>size (the number of hidden nodes), alpha (the l2 regularisation),
 seed</td>
 </tr>
@@ -504,9 +503,9 @@ package)</td>
 <td>Deep learning such as deep nets, convolutional neural networks or
 recurrent neural networks are similar to a neural network but have
 multiple hidden layers that aim to learn latent representations useful
-for prediction. In the seperate BuildingDeepLearningModels vignette we
-describe these models and hyper-parameters in more detail</td>
-<td>see OHDSI/DeepPatientLevelPrediction</td>
+for prediction.</td>
+<td>see: <a href="https://github.com/OHDSI/DeepPatientLevelPrediction" class="external-link uri">https://github.com/OHDSI/DeepPatientLevelPrediction</a>
+</td>
 </tr>
 </tbody>
 </table>
@@ -570,8 +569,8 @@ Logistic Regression and will use the default parameters. We will do a
 <td>‘Patients who are newly diagnosed with Atrial Fibrillation’ defined
 as the first condition record of cardiac arrhythmia, which is followed
 by another cardiac arrhythmia condition record, at least two drug
-records for a drug used to treat arrhythmias, or a procedure to treat
-arrhythmias.</td>
+records for a drug used to treat arrhythmia, or a procedure to treat
+arrhythmia.</td>
 </tr>
 <tr class="odd">
 <td>Outcome Cohort (O)</td>
@@ -696,7 +695,8 @@ problem.</p>
 <h4 id="atlas-cohort-builder">ATLAS cohort builder<a class="anchor" aria-label="anchor" href="#atlas-cohort-builder"></a>
 </h4>
 <div class="float">
-<img src="example1%2FATLAS_T.webp" alt="Target Cohort Atrial Fibrillation"><div class="figcaption">Target Cohort Atrial Fibrillation</div>
+<img src="example1%2FATLAS_T.webp" alt="Figure 4: Target Cohort Atrial Fibrillation"><div class="figcaption">Figure 4: Target Cohort Atrial
+Fibrillation</div>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort
 entry and cohort exit criteria. Cohort entry criteria involve selecting
@@ -709,14 +709,14 @@ end date is less relevant. As an example, Figure 4 shows how we created
 the Atrial Fibrillation cohort and Figure 5 shows how we created the
 stroke cohort in ATLAS.</p>
 <div class="float">
-<img src="example1%2FATLAS_O.webp" alt="Outcome Cohort Stroke"><div class="figcaption">Outcome Cohort Stroke</div>
+<img src="example1%2FATLAS_O.webp" alt="Figure 5: Outcome Cohort Stroke"><div class="figcaption">Figure 5: Outcome Cohort Stroke</div>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <p>In depth explanation of cohort creation in ATLAS is out of scope of
 this vignette but can be found on the OHDSI wiki pages <a href="http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas" class="external-link">(link)</a>.</p>
-<p>Note that when a cohort is created in ATLAS the cohortid is needed to
-extract the data in R. The cohortid can be found at the top of the ATLAS
-screen, e.g. 1769447 in Figure 4.</p>
+<p>Note that when a cohort is created in ATLAS the <code>cohortId</code>
+is needed to extract the data in R. The <code>cohortId</code> can be
+found at the top of the ATLAS screen, e.g. 1769447 in Figure 4.</p>
 </div>
 <div class="section level4">
 <h4 id="custom-cohorts">Custom cohorts<a class="anchor" aria-label="anchor" href="#custom-cohorts"></a>
@@ -727,7 +727,8 @@ needed.</p>
 <p>For our example study, we need to create at table to hold the cohort
 data and we need to create SQL code to instantiate this table for both
 the AF and Stroke cohorts. Therefore, we create a file called
-<em>AfStrokeCohorts.sql</em> with the following contents:</p>
+<em><code>AfStrokeCohorts.sql</code></em> with the following
+contents:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co">/***********************************</span></span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">File AfStrokeCohorts.sql </span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">***********************************/</span></span>
@@ -922,7 +923,7 @@ database schema where the cohorts are stored, the cohort definition ids
 for the cohort and outcome, and the <code>washoutPeriod</code> which is
 the minimum number of days prior to cohort index date that the person
 must have been observed to be included into the data, and finally input
-the previously constructed covariate settings.</p>
+the previously constructed <code>covariateSettings</code>.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction" class="external-link">PatientLevelPrediction</a></span><span class="op">)</span></span>
 <span><span class="va">databaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span></span>
@@ -996,7 +997,7 @@ imposed:</p>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="spliting-the-data-into-trainingvalidationtesting-datasets">Spliting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#spliting-the-data-into-trainingvalidationtesting-datasets"></a>
+<h4 id="splitting-the-data-into-trainingvalidationtesting-datasets">Splitting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#splitting-the-data-into-trainingvalidationtesting-datasets"></a>
 </h4>
 <p>When developing a prediction model using supervised learning (when
 you have features paired with labels for a set of patients), the first
@@ -1036,7 +1037,7 @@ split and run the patient-level prediction pipeline:</p>
 <span>    <span class="op">)</span></span></code></pre></div>
 <p>Note: it is possible to add a custom method to specify how the
 <code>plpData</code> are partitioned into training/validation/testing
-data, see <code>R vignette('AddingCustomSplitting')</code></p>
+data, see <code><a href="../articles/AddingCustomSplitting.html">vignette('AddingCustomSplitting')</a></code></p>
 </div>
 <div class="section level4">
 <h4 id="preprocessing-the-training-data">Preprocessing the training data<a class="anchor" aria-label="anchor" href="#preprocessing-the-training-data"></a>
@@ -1577,7 +1578,7 @@ imposed:</p>
 <span>    <span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="spliting-the-data-into-trainingvalidationtesting-datasets-1">Spliting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#spliting-the-data-into-trainingvalidationtesting-datasets-1"></a>
+<h4 id="spliting-the-data-into-trainingvalidationtesting-datasets">Spliting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#spliting-the-data-into-trainingvalidationtesting-datasets"></a>
 </h4>
 <p>When developing a prediction model using supervised learning (when
 you have features paired with labels for a set of patients), the first
