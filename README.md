@@ -98,8 +98,7 @@ Please read the main vignette for the package:
 In addition we have created vignettes that describe advanced functionality in more detail:
 
 - [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf)
-- [Implementing Existing Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/ImplementingExistingModels.pdf)
-- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomAlgorithms.pdf)
+- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf)
 - [Building Deep Learning Models](https://github.com/OHDSI/DeepPatientLevelPrediction)
 - [Building Ensemble Models](https://github.com/OHDSI/EnsemblePatientLevelPrediction)
 - [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf)

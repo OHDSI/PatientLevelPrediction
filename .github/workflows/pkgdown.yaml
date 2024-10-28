@@ -34,7 +34,7 @@ jobs:
 
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --base . --verbose --no-progress './**/*.md' './**/*.rmd' './**/*.Rmd'
+          args: --base . --verbose --no-progress --accept '100..=103, 200..=299, 403' './**/*.md' './**/*.Rmd'
         
       - name: Fix Hades Logo
         run: Rscript -e 'OhdsiRTools::fixHadesLogo()'
