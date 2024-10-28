@@ -104,7 +104,7 @@ The final study population in which we will develop our model is often a subset 
 
 ## Model development settings
 
-To develop the model we have to decide which algorithm(s) we like to train. We see the selection of the best algorithm for a certain prediction problem as an empirical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomModels`](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomModels.pdf) vignette.
+To develop the model we have to decide which algorithm(s) we like to train. We see the selection of the best algorithm for a certain prediction problem as an empirical question, i.e. you need to let the data speak for itself and try different approaches to find the best one. There is no algorithm that will work best for all problems (no free lunch). In our package we therefore aim to implement many algorithms. Furthermore, we made the system modular so you can add your own custom algorithms as described in more detail in the [`AddingCustomModels`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf) vignette.
 
 Our package currently contains the following algorithms to choose from:
 
@@ -460,7 +460,7 @@ In the PatientLevelPrediction package, the splitSettings define how the plpData 
     )
 ```
 
-Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf).
+Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf).
 
 ### Preprocessing the training data
 
@@ -472,7 +472,7 @@ The default sample settings does nothing, it simply returns the trainData as inp
   sampleSettings <- createSampleSettings()
 ```
 
-However, the current package contains methods of under-sampling the non-outcome patients. To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome). It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf).
+However, the current package contains methods of under-sampling the non-outcome patients. To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome). It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf).
 
 It is possible to specify a combination of feature engineering functions that take as input the trainData and output a new trainData with different features. The default feature engineering setting does nothing:
 
@@ -480,7 +480,7 @@ It is possible to specify a combination of feature engineering functions that ta
   featureEngineeringSettings <- createFeatureEngineeringSettings()
 ```
 
-However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomFeatureEngineering.pdf).
+However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf).
 
 Finally, the preprocessing setting is required. For this setting the user can define `minFraction`, this removes any features that is observed in the training data for less than 0.01 fraction of the patients. So, if `minFraction = 0.01` then any feature that is seen in less than 1 percent of the target population is removed. The input `normalize` specifies whether the features are scaled between 0 and 1, this is required for certain models (e.g., LASSO logistic regression). The input `removeRedundancy` specifies whether features that are observed in all of the target population are removed.
 
@@ -850,7 +850,7 @@ In the PatientLevelPrediction package, the splitSettings define how the plpData 
     )
 ```
 
-Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSplitting.pdf).
+Note: it is possible to add a custom method to specify how the plpData are partitioned into training/validation/testing data, see [vignette for custom splitting](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf).
 
 ### Preprocessing the training data
 
@@ -862,7 +862,7 @@ The default sample settings does nothing, it simply returns the trainData as inp
   sampleSettings <- createSampleSettings()
 ```
 
-However, the current package contains methods of under-sampling the non-outcome patients. To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome). It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomSamples.pdf).
+However, the current package contains methods of under-sampling the non-outcome patients. To perform undersampling, the `type` input should be 'underSample' and `numberOutcomestoNonOutcomes` must be specified (an integer specifying the number of non-outcomes per outcome). It is possible to add any custom function for over/under sampling, see [vignette for custom sampling](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf).
 
 It is possible to specify a combination of feature engineering functions that take as input the trainData and output a new trainData with different features. The default feature engineering setting does nothing:
 
@@ -870,7 +870,7 @@ It is possible to specify a combination of feature engineering functions that ta
   featureEngineeringSettings <- createFeatureEngineeringSettings()
 ```
 
-However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/AddingCustomfeatureEngineering.pdf).
+However, it is possible to add custom feature engineering functions into the pipeline, see [vignette for custom feature engineering](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf).
 
 Finally, the preprocessing setting is required. For this setting the user can define `minFraction`, this removes any features that is observed in the training data for less than 0.01 fraction of the patients. So, if `minFraction = 0.01` then any feature that is seen in less than 1 percent of the target population is removed. The input `normalize` specifies whether the features are scaled between 0 and 1, this is required for certain models (e.g., LASSO logistic regression). The input `removeRedundancy` specifies whether features that are observed in all of the target population are removed.
 
