@@ -73,7 +73,7 @@ Atrial fibrillation is a disease characterized by an irregular heart rate that c
 
 We will apply the PatientLevelPrediction package to observational healthcare data to address the following patient-level prediction question:
 
-Amongt patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year?
+Among patients who are newly diagnosed with Atrial Fibrillation, which patients will go on to have Ischemic Stroke within 1 year?
 
 We will define 'patients who are newly diagnosed with Atrial Fibrillation' as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmias, or a procedure to treat arrhythmias. We will define 'Ischemic stroke events' as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes.
 
