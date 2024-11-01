@@ -152,7 +152,7 @@
             
             <h4 data-toc-skip class="date">2024-11-01</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/broken_links/vignettes/AddingCustomSamples.Rmd" class="external-link"><code>vignettes/AddingCustomSamples.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/AddingCustomSamples.Rmd" class="external-link"><code>vignettes/AddingCustomSamples.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomSamples.Rmd</code></div>
 
     </div>
@@ -170,8 +170,8 @@
 sampling the target population in the Observational Health Data Sciencs
 and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This vignette assumes you have read and are comfortable with
-building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
-vignette</a>.</p>
+building single patient level prediction models as described in the
+<code><a href="../articles/BuildingPredictiveModels.html">vignette('BuildingPredictiveModels')</a></code>.</p>
 <p><strong>We invite you to share your new sample functions with the
 OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
 repository</a>.</strong></p>
@@ -213,29 +213,25 @@ patients from the trainData. Therefore, the inputs for this are: *
 sample * <code>sampleSeed</code> an integer/double specifying the seed
 for reproducibility</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">createRandomSampleSettings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
-<span>                     <span class="va">n</span> <span class="op">=</span> <span class="fl">10000</span>,</span>
-<span>                     <span class="va">sampleSeed</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">10000</span>,<span class="fl">1</span><span class="op">)</span></span>
-<span>                     <span class="op">)</span><span class="op">{</span></span>
-<span>  </span>
+<code class="sourceCode R"><span><span class="va">createRandomSampleSettings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>                                       <span class="va">sampleSeed</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">10000</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># add input checks</span></span>
-<span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'numeric'</span>,<span class="st">'integer'</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">n</span>,<span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">sampleSeed</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'numeric'</span>,<span class="st">'integer'</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
+<span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numeric"</span>, <span class="st">"integer"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu">checkHigher</span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>  <span class="fu">checkIsClass</span><span class="op">(</span><span class="va">sampleSeed</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"numeric"</span>, <span class="st">"integer"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
 <span>  <span class="co"># create list of inputs to implement function</span></span>
 <span>  <span class="va">sampleSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    n <span class="op">=</span> <span class="va">n</span>,</span>
-<span>    sampleSeed  <span class="op">=</span> <span class="va">sampleSeed</span> </span>
-<span>    <span class="op">)</span></span>
-<span>  </span>
+<span>    sampleSeed <span class="op">=</span> <span class="va">sampleSeed</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
 <span>  <span class="co"># specify the function that will implement the sampling</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">sampleSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementRandomSampleSettings"</span></span>
 <span></span>
 <span>  <span class="co"># make sure the object returned is of class "sampleSettings"</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">sampleSettings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"sampleSettings"</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">sampleSettings</span><span class="op">)</span></span>
-<span>  </span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>We now need to create the ‘implement’ function
 <code>implementRandomSampleSettings()</code></p>
@@ -251,44 +247,43 @@ folds.</p>
 return a list with ‘n’ and ‘sampleSeed’. The sampleSettings therefore
 contains these.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">implementRandomSampleSettings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">sampleSettings</span><span class="op">)</span><span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">implementRandomSampleSettings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">trainData</span>, <span class="va">sampleSettings</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="va">sampleSettings</span><span class="op">$</span><span class="va">n</span></span>
+<span>  <span class="va">sampleSeed</span> <span class="op">&lt;-</span> <span class="va">sampleSettings</span><span class="op">$</span><span class="va">sampleSeed</span></span>
 <span></span>
-<span>  <span class="va">n</span> <span class="op">&lt;-</span> <span class="va">sampleSetting</span><span class="op">$</span><span class="va">n</span></span>
-<span>  <span class="va">sampleSeed</span> <span class="op">&lt;-</span> <span class="va">sampleSetting</span><span class="op">$</span><span class="va">sampleSeed</span></span>
-<span>  </span>
-<span>  <span class="kw">if</span><span class="op">(</span><span class="va">n</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">'Sample n bigger than training population'</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="va">n</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Sample n bigger than training population"</span><span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># set the seed for the randomization</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">sampleSeed</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># now implement the code to do your desired sampling</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="va">sampleRowIds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">labels</span><span class="op">$</span><span class="va">rowId</span>, <span class="va">n</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="va">sampleTrainData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">sampleRowIds</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span></span>
+<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">labels</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">sampleRowIds</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">folds</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">folds</span> <span class="op">%&gt;%</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">sampleRowIds</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
+<span></span>
+<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">folds</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">folds</span> <span class="op">%&gt;%</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">sampleRowIds</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu">Andromeda</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Andromeda/man/andromeda_constructor.html" class="external-link">andromeda</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span> <span class="op">&lt;-</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span></span>
+<span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariateRef</span></span>
 <span>  <span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">&lt;-</span> <span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">$</span><span class="va">covariates</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">rowId</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">sampleRowIds</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="co">#update metaData$populationSize </span></span>
-<span>  <span class="va">metaData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span></span>
-<span>  <span class="va">metaData</span><span class="op">$</span><span class="va">populationSize</span> <span class="op">=</span> <span class="va">n</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">'metaData'</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">metaData</span></span>
-<span>  </span>
+<span></span>
+<span>  <span class="co"># update metaData$populationSize</span></span>
+<span>  <span class="va">metaData</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">trainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span></span>
+<span>  <span class="va">metaData</span><span class="op">$</span><span class="va">populationSize</span> <span class="op">&lt;-</span> <span class="va">n</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">metaData</span></span>
+<span></span>
 <span>  <span class="co"># make the cocvariateData the correct class</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">'CovariateData'</span></span>
-<span>  </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">sampleTrainData</span><span class="op">$</span><span class="va">covariateData</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"CovariateData"</span></span>
+<span></span>
 <span>  <span class="co"># return the updated trainData</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">sampleTrainData</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>

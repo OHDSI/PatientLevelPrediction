@@ -153,7 +153,7 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2024-11-01</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/broken_links/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingPredictiveModels.Rmd</code></div>
 
     </div>
@@ -227,7 +227,7 @@ example those presented in Figure 3.</p>
 predictive models. The package enables data extraction, model building,
 and model evaluation using data from databases that are translated into
 the OMOP CDM. In this vignette we assume you have installed the package
-correctly using the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/InstallationGuide.pdf" class="external-link"><code>InstallationGuide</code></a>.</p>
+correctly using the <code><a href="../articles/InstallationGuide.html">vignette('InstallationGuide')</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="study-specification">Study specification<a class="anchor" aria-label="anchor" href="#study-specification"></a>
@@ -375,8 +375,8 @@ data speak for itself and try different approaches to find the best one.
 There is no algorithm that will work best for all problems (no free
 lunch). In our package we therefore aim to implement many algorithms.
 Furthermore, we made the system modular so you can add your own custom
-algorithms as described in more detail in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf" class="external-link"><code>AddingCustomModels</code></a>
-vignette.</p>
+algorithms as described in more detail in
+<code><a href="../articles/AddingCustomModels.html">vignette('AddingCustomModels')</a></code>.</p>
 <p>Our package currently contains the following algorithms to choose
 from:</p>
 <table class="table">
@@ -848,15 +848,17 @@ package, which provides a function called
 for the various database management systems (DBMS). For example, one
 might connect to a PostgreSQL database using this code:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/DatabaseConnector/" class="external-link">DatabaseConnector</a></span><span class="op">)</span></span>
-<span>  <span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">createConnectionDetails</a></span><span class="op">(</span>dbms <span class="op">=</span> <span class="st">"postgresql"</span>, </span>
-<span>  server <span class="op">=</span> <span class="st">"localhost/ohdsi"</span>, </span>
-<span>  user <span class="op">=</span> <span class="st">"joe"</span>, </span>
-<span>  password <span class="op">=</span> <span class="st">"supersecret"</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"cdm"</span></span>
-<span>  <span class="va">cohortsDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"cohorts"</span></span>
-<span>  <span class="va">cdmVersion</span> <span class="op">&lt;-</span> <span class="st">"5"</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/DatabaseConnector/" class="external-link">DatabaseConnector</a></span><span class="op">)</span></span>
+<span><span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">createConnectionDetails</a></span><span class="op">(</span></span>
+<span>  dbms <span class="op">=</span> <span class="st">"postgresql"</span>,</span>
+<span>  server <span class="op">=</span> <span class="st">"localhost/ohdsi"</span>,</span>
+<span>  user <span class="op">=</span> <span class="st">"joe"</span>,</span>
+<span>  password <span class="op">=</span> <span class="st">"supersecret"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"cdm"</span></span>
+<span><span class="va">cohortsDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"cohorts"</span></span>
+<span><span class="va">cdmVersion</span> <span class="op">&lt;-</span> <span class="st">"5"</span></span></code></pre></div>
 <p>The last three lines define the <code>cdmDatabaseSchema</code> and
 <code>cohortsDatabaseSchema</code> variables, as well as the CDM
 version. We will use these later to tell R where the data in CDM format
@@ -865,15 +867,16 @@ CDM is used. Note that for Microsoft SQL Server, you need to specify
 both the database and the schema, so for example
 <code>cdmDatabaseSchema &lt;- "my_cdm_data.dbo"</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/SqlRender/" class="external-link">SqlRender</a></span><span class="op">)</span></span>
-<span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/readSql.html" class="external-link">readSql</a></span><span class="op">(</span><span class="st">"AfStrokeCohorts.sql"</span><span class="op">)</span></span>
-<span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>,</span>
-<span>                cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
-<span>                cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
-<span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="va">connection</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/connect.html" class="external-link">connect</a></span><span class="op">(</span><span class="va">connectionDetails</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/executeSql.html" class="external-link">executeSql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/SqlRender/" class="external-link">SqlRender</a></span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/readSql.html" class="external-link">readSql</a></span><span class="op">(</span><span class="st">"AfStrokeCohorts.sql"</span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>,</span>
+<span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
+<span>  cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">connection</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/connect.html" class="external-link">connect</a></span><span class="op">(</span><span class="va">connectionDetails</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/executeSql.html" class="external-link">executeSql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
 <p>In this code, we first read the SQL from the file into memory. In the
 next line, we replace four parameter names with the actual values. We
 then translate the SQL into the dialect appropriate for the DBMS we
@@ -882,13 +885,15 @@ connect to the server, and submit the rendered and translated SQL.</p>
 <p>If all went well, we now have a table with the events of interest. We
 can see how many events per type:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,</span>
+<code class="sourceCode R"><span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>  <span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,</span>
 <span>  <span class="st">"FROM @cohortsDatabaseSchema.AFibStrokeCohort"</span>,</span>
-<span>  <span class="st">"GROUP BY cohort_definition_id"</span><span class="op">)</span></span>
-<span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>, cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
-<span>  <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
-<span>  </span>
-<span>  <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/querySql.html" class="external-link">querySql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="st">"GROUP BY cohort_definition_id"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>, cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/querySql.html" class="external-link">querySql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   cohort_definition_id  count</span></span>
 <span><span class="co">## 1                    1 527616</span></span>
 <span><span class="co">## 2                    2 221555</span></span></code></pre>
@@ -913,16 +918,18 @@ creation of custom <code>covariates</code>. For more detailed
 information on the <code>FeatureExtraction</code> package see its <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">vignettes</a>. For our
 example study we decided to use these settings:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">FeatureExtraction</a></span><span class="op">)</span></span>
-<span>  <span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useDemographicsAge <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useConditionGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useDrugGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               useVisitConceptCountLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                               longTermStartDays <span class="op">=</span> <span class="op">-</span><span class="fl">365</span>,</span>
-<span>                                               endDays <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">FeatureExtraction</a></span><span class="op">)</span></span>
+<span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span></span>
+<span>  useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDemographicsAge <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useConditionGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDrugGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useVisitConceptCountLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  longTermStartDays <span class="op">=</span> <span class="op">-</span><span class="fl">365</span>,</span>
+<span>  endDays <span class="op">=</span> <span class="op">-</span><span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>The final step for extracting the data is to run the
 <code><a href="../reference/getPlpData.html">getPlpData()</a></code> function and input the connection details, the
 database schema where the cohorts are stored, the cohort definition ids
@@ -935,25 +942,26 @@ the previously constructed <code>covariateSettings</code>.</p>
 <span><span class="va">databaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span></span>
 <span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,</span>
 <span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
-<span>  cdmDatabaseName <span class="op">=</span> <span class="st">''</span>,</span>
+<span>  cdmDatabaseName <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span>,</span>
-<span>  cohortTable <span class="op">=</span> <span class="st">'AFibStrokeCohort'</span>,</span>
+<span>  cohortTable <span class="op">=</span> <span class="st">"AFibStrokeCohort"</span>,</span>
 <span>  targetId <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span>,</span>
-<span>  outcomeTable <span class="op">=</span> <span class="st">'AFibStrokeCohort'</span>,</span>
+<span>  outcomeTable <span class="op">=</span> <span class="st">"AFibStrokeCohort"</span>,</span>
 <span>  outcomeIds <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  cdmVersion <span class="op">=</span> <span class="fl">5</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># here you can define whether you want to sample the target cohort and add any</span></span>
 <span><span class="co"># restrictions based on minimum prior observation, index date restrictions</span></span>
 <span><span class="co"># or restricting to first index date (if people can be in target cohort multiple times)</span></span>
 <span><span class="va">restrictPlpDataSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createRestrictPlpDataSettings.html">createRestrictPlpDataSettings</a></span><span class="op">(</span>sampleSize <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span><span class="op">(</span>databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>, </span>
-<span>                      covariateSettings <span class="op">=</span> <span class="va">covariateSettings</span>,</span>
-<span>                      restrictPlpDataSettings <span class="op">=</span> <span class="va">restrictPlpDataSettings</span></span>
-<span>                      <span class="op">)</span></span></code></pre></div>
+<span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span><span class="op">(</span></span>
+<span>  databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>,</span>
+<span>  covariateSettings <span class="op">=</span> <span class="va">covariateSettings</span>,</span>
+<span>  restrictPlpDataSettings <span class="op">=</span> <span class="va">restrictPlpDataSettings</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Note that if the cohorts are created in ATLAS its corresponding
 cohort database schema needs to be selected. There are many additional
 parameters for the <code><a href="../reference/getPlpData.html">getPlpData()</a></code> function which are all
@@ -988,19 +996,19 @@ and end a year later we can set <code>riskWindowStart = 30</code> and
 <p>In the example below all the settings we defined for our study are
 imposed:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
 <span>  washoutPeriod <span class="op">=</span> <span class="fl">1095</span>,</span>
 <span>  firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  priorOutcomeLookback <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  riskWindowStart <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,</span>
-<span>  startAnchor <span class="op">=</span>  <span class="st">'cohort start'</span>,</span>
-<span>  endAnchor <span class="op">=</span>  <span class="st">'cohort start'</span>,</span>
+<span>  startAnchor <span class="op">=</span> <span class="st">"cohort start"</span>,</span>
+<span>  endAnchor <span class="op">=</span> <span class="st">"cohort start"</span>,</span>
 <span>  minTimeAtRisk <span class="op">=</span> <span class="fl">364</span>,</span>
 <span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  includeAllOutcomes <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="splitting-the-data-into-trainingvalidationtesting-datasets">Splitting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#splitting-the-data-into-trainingvalidationtesting-datasets"></a>
@@ -1034,13 +1042,13 @@ can use the type
 <code>testFraction</code> parameters to split the data in a 75%-25%
 split and run the patient-level prediction pipeline:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span></span>
-<span>    trainFraction <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span>    testFraction <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>    type <span class="op">=</span> <span class="st">'stratified'</span>,</span>
-<span>    nfold <span class="op">=</span> <span class="fl">2</span>, </span>
-<span>    splitSeed <span class="op">=</span> <span class="fl">1234</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span></span>
+<span>  trainFraction <span class="op">=</span> <span class="fl">0.75</span>,</span>
+<span>  testFraction <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"stratified"</span>,</span>
+<span>  nfold <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  splitSeed <span class="op">=</span> <span class="fl">1234</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Note: it is possible to add a custom method to specify how the
 <code>plpData</code> are partitioned into training/validation/testing
 data, see <code><a href="../articles/AddingCustomSplitting.html">vignette('AddingCustomSplitting')</a></code></p>
@@ -1059,23 +1067,23 @@ data (this is required for some models)</p>
 <p>The default sample settings does nothing, it simply returns the
 trainData as input, see below:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">sampleSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createSampleSettings.html">createSampleSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">sampleSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createSampleSettings.html">createSampleSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>However, the current package contains methods of under-sampling the
 non-outcome patients. To perform undersampling, the <code>type</code>
 input should be ‘underSample’ and
 <code>numberOutcomestoNonOutcomes</code> must be specified (an integer
 specifying the number of non-outcomes per outcome). It is possible to
-add any custom function for over/under sampling, see <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf" class="external-link">vignette
-for custom sampling</a>.</p>
+add any custom function for over/under sampling, see
+<code><a href="../articles/AddingCustomSamples.html">vignette('AddingCustomSamples')</a></code>.</p>
 <p>It is possible to specify a combination of feature engineering
 functions that take as input the trainData and output a new trainData
 with different features. The default feature engineering setting does
 nothing:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>However, it is possible to add custom feature engineering functions
-into the pipeline, see <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf" class="external-link">vignette
-for custom feature engineering</a>.</p>
+into the pipeline, see
+<code><a href="../articles/AddingCustomFeatureEngineering.html">vignette('AddingCustomFeatureEngineering')</a></code>.</p>
 <p>Finally, the preprocessing setting is required. For this setting the
 user can define <code>minFraction</code>, this removes any features that
 is observed in the training data for less than 0.01 fraction of the
@@ -1087,11 +1095,11 @@ logistic regression). The input <code>removeRedundancy</code> specifies
 whether features that are observed in all of the target population are
 removed.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">preprocessSettingsSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span></span>
-<span>    minFraction <span class="op">=</span> <span class="fl">0.01</span>, </span>
-<span>    normalize <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>    removeRedundancy <span class="op">=</span> <span class="cn">T</span></span>
-<span>      <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">preprocessSettingsSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span></span>
+<span>  minFraction <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  removeRedundancy <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="model-development">Model Development<a class="anchor" aria-label="anchor" href="#model-development"></a>
@@ -1119,28 +1127,28 @@ the settings: <code>populationSettings</code>,
 <code>featureEngineeringSettings</code>, <code>preprocessSettings</code>
 and <code>modelSettings</code> to train and evaluate the model.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">lrResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span></span>
-<span>    plpData <span class="op">=</span> <span class="va">plpData</span>,</span>
-<span>    outcomeId <span class="op">=</span> <span class="fl">2</span>, </span>
-<span>    analysisId <span class="op">=</span> <span class="st">'singleDemo'</span>,</span>
-<span>    analysisName <span class="op">=</span> <span class="st">'Demonstration of runPlp for training single PLP models'</span>,</span>
-<span>    populationSettings <span class="op">=</span> <span class="va">populationSettings</span>, </span>
-<span>    splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,</span>
-<span>    sampleSettings <span class="op">=</span> <span class="va">sampleSettings</span>, </span>
-<span>    featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>, </span>
-<span>    preprocessSettings <span class="op">=</span> <span class="va">preprocessSettings</span>,</span>
-<span>    modelSettings <span class="op">=</span> <span class="va">lrModel</span>,</span>
-<span>    logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>, </span>
-<span>    executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span></span>
-<span>      runSplitData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runSampleData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runfeatureEngineering <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runPreprocessData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runModelDevelopment <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runCovariateSummary <span class="op">=</span> <span class="cn">T</span></span>
-<span>    <span class="op">)</span>, </span>
-<span>    saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">'singlePlp'</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">lrResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span></span>
+<span>  plpData <span class="op">=</span> <span class="va">plpData</span>,</span>
+<span>  outcomeId <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  analysisId <span class="op">=</span> <span class="st">"singleDemo"</span>,</span>
+<span>  analysisName <span class="op">=</span> <span class="st">"Demonstration of runPlp for training single PLP models"</span>,</span>
+<span>  populationSettings <span class="op">=</span> <span class="va">populationSettings</span>,</span>
+<span>  splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,</span>
+<span>  sampleSettings <span class="op">=</span> <span class="va">sampleSettings</span>,</span>
+<span>  featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>,</span>
+<span>  preprocessSettings <span class="op">=</span> <span class="va">preprocessSettings</span>,</span>
+<span>  modelSettings <span class="op">=</span> <span class="va">lrModel</span>,</span>
+<span>  logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span></span>
+<span>    runSplitData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runSampleData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runfeatureEngineering <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runPreprocessData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlp"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Under the hood the package will now use the <a href="www.github.com/OHDSI/Cyclops"><code>Cyclops</code></a> package to
 fit a large-scale regularized regression using 75% of the data and will
 evaluate the model on the remaining 25%. A results data structure is
@@ -1436,14 +1444,16 @@ package, which provides a function called
 for the various database management systems (DBMS). For example, one
 might connect to a PostgreSQL database using this code:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>    <span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">createConnectionDetails</a></span><span class="op">(</span>dbms <span class="op">=</span> <span class="st">"postgresql"</span>, </span>
-<span>                                                 server <span class="op">=</span> <span class="st">"localhost/ohdsi"</span>, </span>
-<span>                                                 user <span class="op">=</span> <span class="st">"joe"</span>, </span>
-<span>                                                 password <span class="op">=</span> <span class="st">"supersecret"</span><span class="op">)</span></span>
-<span>    </span>
-<span>    <span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"my_cdm_data"</span></span>
-<span>    <span class="va">cohortsDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"my_results"</span></span>
-<span>    <span class="va">cdmVersion</span> <span class="op">&lt;-</span> <span class="st">"5"</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">connectionDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">createConnectionDetails</a></span><span class="op">(</span></span>
+<span>  dbms <span class="op">=</span> <span class="st">"postgresql"</span>,</span>
+<span>  server <span class="op">=</span> <span class="st">"localhost/ohdsi"</span>,</span>
+<span>  user <span class="op">=</span> <span class="st">"joe"</span>,</span>
+<span>  password <span class="op">=</span> <span class="st">"supersecret"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"my_cdm_data"</span></span>
+<span><span class="va">cohortsDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"my_results"</span></span>
+<span><span class="va">cdmVersion</span> <span class="op">&lt;-</span> <span class="st">"5"</span></span></code></pre></div>
 <p>The last three lines define the <code>cdmDatabaseSchema</code> and
 <code>cohortsDatabaseSchema</code> variables, as well as the CDM
 version. We will use these later to tell R where the data in CDM format
@@ -1452,15 +1462,16 @@ CDM is used. Note that for Microsoft SQL Server, databaseschemas need to
 specify both the database and the schema, so for example
 <code>cdmDatabaseSchema &lt;- "my_cdm_data.dbo"</code>.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>    <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/SqlRender/" class="external-link">SqlRender</a></span><span class="op">)</span></span>
-<span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/readSql.html" class="external-link">readSql</a></span><span class="op">(</span><span class="st">"AceAngioCohorts.sql"</span><span class="op">)</span></span>
-<span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>,</span>
-<span>                  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
-<span>                  cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
-<span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
-<span>    </span>
-<span>    <span class="va">connection</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/connect.html" class="external-link">connect</a></span><span class="op">(</span><span class="va">connectionDetails</span><span class="op">)</span></span>
-<span>    <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/executeSql.html" class="external-link">executeSql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/SqlRender/" class="external-link">SqlRender</a></span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/readSql.html" class="external-link">readSql</a></span><span class="op">(</span><span class="st">"AceAngioCohorts.sql"</span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>,</span>
+<span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
+<span>  cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">connection</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/connect.html" class="external-link">connect</a></span><span class="op">(</span><span class="va">connectionDetails</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/executeSql.html" class="external-link">executeSql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
 <p>In this code, we first read the SQL from the file into memory. In the
 next line, we replace four parameter names with the actual values. We
 then translate the SQL into the dialect appropriate for the DBMS we
@@ -1469,13 +1480,15 @@ connect to the server, and submit the rendered and translated SQL.</p>
 <p>If all went well, we now have a table with the events of interest. We
 can see how many events per type:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,</span>
-<span>                 <span class="st">"FROM @cohortsDatabaseSchema.AceAngioCohort"</span>,</span>
-<span>                 <span class="st">"GROUP BY cohort_definition_id"</span><span class="op">)</span></span>
-<span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>, cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
-<span>    <span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
-<span>    </span>
-<span>    <span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/querySql.html" class="external-link">querySql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>  <span class="st">"SELECT cohort_definition_id, COUNT(*) AS count"</span>,</span>
+<span>  <span class="st">"FROM @cohortsDatabaseSchema.AceAngioCohort"</span>,</span>
+<span>  <span class="st">"GROUP BY cohort_definition_id"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/render.html" class="external-link">render</a></span><span class="op">(</span><span class="va">sql</span>, cohortsDatabaseSchema <span class="op">=</span> <span class="va">cohortsDatabaseSchema</span><span class="op">)</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ohdsi.github.io/SqlRender/reference/translate.html" class="external-link">translate</a></span><span class="op">(</span><span class="va">sql</span>, targetDialect <span class="op">=</span> <span class="va">connectionDetails</span><span class="op">$</span><span class="va">dbms</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://ohdsi.github.io/DatabaseConnector/reference/querySql.html" class="external-link">querySql</a></span><span class="op">(</span><span class="va">connection</span>, <span class="va">sql</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   cohort_definition_id count</span></span>
 <span><span class="co">## 1                    1     0</span></span>
 <span><span class="co">## 2                    2     0</span></span></code></pre>
@@ -1499,15 +1512,17 @@ exposures. It also supports the creation of custom covariates. For more
 detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">vignettes</a>. For our
 example study we decided to use these settings:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>    <span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span>useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useDemographicsAge <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useConditionGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useDrugGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 useVisitConceptCountLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>                                                 longTermStartDays <span class="op">=</span> <span class="op">-</span><span class="fl">365</span>,</span>
-<span>                                                 endDays <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span></span>
+<span>  useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDemographicsAge <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useConditionGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDrugGroupEraLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  useVisitConceptCountLongTerm <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  longTermStartDays <span class="op">=</span> <span class="op">-</span><span class="fl">365</span>,</span>
+<span>  endDays <span class="op">=</span> <span class="op">-</span><span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>The final step for extracting the data is to run the
 <code>getPlpData</code> function and input the connection details, the
 database schema where the cohorts are stored, the cohort definition ids
@@ -1520,22 +1535,22 @@ constructed covariate settings.</p>
 <span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,</span>
 <span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
 <span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">resultsDatabaseSchema</span>,</span>
-<span>  cohortTable <span class="op">=</span> <span class="st">'AceAngioCohort'</span>,</span>
+<span>  cohortTable <span class="op">=</span> <span class="st">"AceAngioCohort"</span>,</span>
 <span>  cohortId <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">resultsDatabaseSchema</span>,</span>
-<span>  outcomeTable <span class="op">=</span> <span class="st">'AceAngioCohort'</span>,</span>
+<span>  outcomeTable <span class="op">=</span> <span class="st">"AceAngioCohort"</span>,</span>
 <span>  outcomeIds <span class="op">=</span> <span class="fl">2</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">restrictPlpDataSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createRestrictPlpDataSettings.html">createRestrictPlpDataSettings</a></span><span class="op">(</span></span>
 <span>  sampleSize <span class="op">=</span> <span class="fl">10000</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getPlpData.html">getPlpData</a></span><span class="op">(</span></span>
-<span>  databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>, </span>
-<span>  covariateSettings <span class="op">=</span> <span class="va">covariateSettings</span>, </span>
+<span>  databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>,</span>
+<span>  covariateSettings <span class="op">=</span> <span class="va">covariateSettings</span>,</span>
 <span>  restrictPlpDataSettings <span class="op">=</span> <span class="va">restrictPlpDataSettings</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Note that if the cohorts are created in ATLAS its corresponding
 cohort database schema needs to be selected. There are many additional
 parameters for the <code>getPlpData</code> function which are all
@@ -1575,19 +1590,19 @@ study population.</p>
 <p>In the example below all the settings we defined for our study are
 imposed:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>    <span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
-<span>      washoutPeriod <span class="op">=</span> <span class="fl">364</span>,</span>
-<span>      firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>      removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>      priorOutcomeLookback <span class="op">=</span> <span class="fl">9999</span>,</span>
-<span>      riskWindowStart <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>      riskWindowEnd <span class="op">=</span> <span class="fl">365</span>, </span>
-<span>      minTimeAtRisk <span class="op">=</span> <span class="fl">364</span>,</span>
-<span>      startAnchor <span class="op">=</span> <span class="st">'cohort start'</span>,</span>
-<span>      endAnchor <span class="op">=</span> <span class="st">'cohort start'</span>,</span>
-<span>      requireTimeAtRisk <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>      includeAllOutcomes <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
+<span>  washoutPeriod <span class="op">=</span> <span class="fl">364</span>,</span>
+<span>  firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  priorOutcomeLookback <span class="op">=</span> <span class="fl">9999</span>,</span>
+<span>  riskWindowStart <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  riskWindowEnd <span class="op">=</span> <span class="fl">365</span>,</span>
+<span>  minTimeAtRisk <span class="op">=</span> <span class="fl">364</span>,</span>
+<span>  startAnchor <span class="op">=</span> <span class="st">"cohort start"</span>,</span>
+<span>  endAnchor <span class="op">=</span> <span class="st">"cohort start"</span>,</span>
+<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  includeAllOutcomes <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="spliting-the-data-into-trainingvalidationtesting-datasets">Spliting the data into training/validation/testing datasets<a class="anchor" aria-label="anchor" href="#spliting-the-data-into-trainingvalidationtesting-datasets"></a>
@@ -1617,16 +1632,16 @@ splitSettings we can use the type (stratified/time/subject) and
 testFraction parameters to split the data in a 75%-25% split and run the
 patient-level prediction pipeline:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span></span>
-<span>    trainFraction <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span>    testFraction <span class="op">=</span> <span class="fl">0.25</span>,</span>
-<span>    type <span class="op">=</span> <span class="st">'stratified'</span>,</span>
-<span>    nfold <span class="op">=</span> <span class="fl">2</span>, </span>
-<span>    splitSeed <span class="op">=</span> <span class="fl">1234</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span></span>
+<span>  trainFraction <span class="op">=</span> <span class="fl">0.75</span>,</span>
+<span>  testFraction <span class="op">=</span> <span class="fl">0.25</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"stratified"</span>,</span>
+<span>  nfold <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  splitSeed <span class="op">=</span> <span class="fl">1234</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Note: it is possible to add a custom method to specify how the
-plpData are partitioned into training/validation/testing data, see <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf" class="external-link">vignette
-for custom splitting</a>.</p>
+plpData are partitioned into training/validation/testing data, see
+<code><a href="../articles/AddingCustomSplitting.html">vignette('AddingCustomSplitting')</a></code>.</p>
 </div>
 <div class="section level4">
 <h4 id="preprocessing-the-training-data-1">Preprocessing the training data<a class="anchor" aria-label="anchor" href="#preprocessing-the-training-data-1"></a>
@@ -1642,23 +1657,23 @@ data (this is required for some models)</p>
 <p>The default sample settings does nothing, it simply returns the
 trainData as input, see below:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">sampleSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createSampleSettings.html">createSampleSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">sampleSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createSampleSettings.html">createSampleSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>However, the current package contains methods of under-sampling the
 non-outcome patients. To perform undersampling, the <code>type</code>
 input should be ‘underSample’ and
 <code>numberOutcomestoNonOutcomes</code> must be specified (an integer
 specifying the number of non-outcomes per outcome). It is possible to
-add any custom function for over/under sampling, see <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf" class="external-link">vignette
-for custom sampling</a>.</p>
+add any custom function for over/under sampling, see
+<code><a href="../articles/AddingCustomSamples.html">vignette('AddingCustomSamples')</a></code>.</p>
 <p>It is possible to specify a combination of feature engineering
 functions that take as input the trainData and output a new trainData
 with different features. The default feature engineering setting does
 nothing:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">featureEngineeringSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>However, it is possible to add custom feature engineering functions
-into the pipeline, see <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf" class="external-link">vignette
-for custom feature engineering</a>.</p>
+into the pipeline, see
+<code><a href="../articles/AddingCustomFeatureEngineering.html">vignette('AddingCustomFeatureEngineering')</a></code>.</p>
 <p>Finally, the preprocessing setting is required. For this setting the
 user can define <code>minFraction</code>, this removes any features that
 is observed in the training data for less than 0.01 fraction of the
@@ -1670,11 +1685,11 @@ logistic regression). The input <code>removeRedundancy</code> specifies
 whether features that are observed in all of the target population are
 removed.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">preprocessSettingsSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span></span>
-<span>    minFraction <span class="op">=</span> <span class="fl">0.01</span>, </span>
-<span>    normalize <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>    removeRedundancy <span class="op">=</span> <span class="cn">T</span></span>
-<span>      <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">preprocessSettingsSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span></span>
+<span>  minFraction <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>  normalize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  removeRedundancy <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="model-development-1">Model Development<a class="anchor" aria-label="anchor" href="#model-development-1"></a>
@@ -1703,28 +1718,28 @@ the settings: <code>populationSettings</code>,
 <code>featureEngineeringSettings</code>, <code>preprocessSettings</code>
 and <code>modelSettings</code> to train and evaluate the model.</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">gbmResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span></span>
-<span>    plpData <span class="op">=</span> <span class="va">plpData</span>,</span>
-<span>    outcomeId <span class="op">=</span> <span class="fl">2</span>, </span>
-<span>    analysisId <span class="op">=</span> <span class="st">'singleDemo2'</span>,</span>
-<span>    analysisName <span class="op">=</span> <span class="st">'Demonstration of runPlp for training single PLP models'</span>,</span>
-<span>    populationSettings <span class="op">=</span> <span class="va">populationSettings</span>, </span>
-<span>    splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,</span>
-<span>    sampleSettings <span class="op">=</span> <span class="va">sampleSettings</span>, </span>
-<span>    featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>, </span>
-<span>    preprocessSettings <span class="op">=</span> <span class="va">preprocessSettings</span>,</span>
-<span>    modelSettings <span class="op">=</span> <span class="va">gbmModel</span>,</span>
-<span>    logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>, </span>
-<span>    executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span></span>
-<span>      runSplitData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runSampleData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runfeatureEngineering <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runPreprocessData <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runModelDevelopment <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>      runCovariateSummary <span class="op">=</span> <span class="cn">T</span></span>
-<span>    <span class="op">)</span>, </span>
-<span>    saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">'singlePlpExample2'</span><span class="op">)</span></span>
-<span>    <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">gbmResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlp.html">runPlp</a></span><span class="op">(</span></span>
+<span>  plpData <span class="op">=</span> <span class="va">plpData</span>,</span>
+<span>  outcomeId <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  analysisId <span class="op">=</span> <span class="st">"singleDemo2"</span>,</span>
+<span>  analysisName <span class="op">=</span> <span class="st">"Demonstration of runPlp for training single PLP models"</span>,</span>
+<span>  populationSettings <span class="op">=</span> <span class="va">populationSettings</span>,</span>
+<span>  splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,</span>
+<span>  sampleSettings <span class="op">=</span> <span class="va">sampleSettings</span>,</span>
+<span>  featureEngineeringSettings <span class="op">=</span> <span class="va">featureEngineeringSettings</span>,</span>
+<span>  preprocessSettings <span class="op">=</span> <span class="va">preprocessSettings</span>,</span>
+<span>  modelSettings <span class="op">=</span> <span class="va">gbmModel</span>,</span>
+<span>  logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span></span>
+<span>    runSplitData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runSampleData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runfeatureEngineering <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runPreprocessData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlpExample2"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>Under the hood the package will now use the R xgboost package to fit
 a a gradient boosting machine model using 75% of the data and will
 evaluate the model on the remaining 25%. A results data structure is
@@ -1977,19 +1992,18 @@ subjects with the outcome compared to those without.</p>
 </dd>
 <div style="page-break-after: always;"></div>
 <p>## Precision recall</p>
-<p>Precision (P) is defined as the number of true positives (Tp) over
-the number of true positives plus the number of false positives
-(Fp).</p>
+<p>Precision is defined as the number of true positives (Tp) over the
+number of true positives plus the number of false positives (Fp).</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">P</span> <span class="op">&lt;-</span> <span class="va">Tp</span><span class="op">/</span><span class="op">(</span><span class="va">Tp</span> <span class="op">+</span> <span class="va">Fp</span><span class="op">)</span></span></code></pre></div>
-<p>Recall (R) is defined as the number of true positives (Tp) over the
+<code class="sourceCode R"><span><span class="va">precision</span> <span class="op">&lt;-</span> <span class="va">Tp</span><span class="op">/</span><span class="op">(</span><span class="va">Tp</span> <span class="op">+</span> <span class="va">Fp</span><span class="op">)</span></span></code></pre></div>
+<p>Recall is defined as the number of true positives (Tp) over the
 number of true positives plus the number of false negatives (Fn).</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">R</span> <span class="op">&lt;-</span> <span class="va">Tp</span><span class="op">/</span><span class="op">(</span><span class="va">Tp</span> <span class="op">+</span> <span class="va">Fn</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">recall</span> <span class="op">&lt;-</span> <span class="va">Tp</span><span class="op">/</span><span class="op">(</span><span class="va">Tp</span> <span class="op">+</span> <span class="va">Fn</span><span class="op">)</span></span></code></pre></div>
 <p>These quantities are also related to the (F1) score, which is defined
 as the harmonic mean of precision and recall.</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">F1</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">P</span> <span class="op">*</span> <span class="va">R</span><span class="op">/</span><span class="op">(</span><span class="va">P</span> <span class="op">+</span> <span class="va">R</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">f1Score</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">P</span> <span class="op">*</span> <span class="va">R</span><span class="op">/</span><span class="op">(</span><span class="va">P</span> <span class="op">+</span> <span class="va">R</span><span class="op">)</span></span></code></pre></div>
 <p>Note that the precision can either decrease or increase if the
 threshold is lowered. Lowering the threshold of a classifier may
 increase the denominator, by increasing the number of results returned.
@@ -2025,7 +2039,7 @@ final model on as much new datasets as feasible and evaluate its
 performance.</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># load the trained model</span></span>
-<span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,<span class="st">'model'</span><span class="op">)</span></span>
+<span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># add details of new database</span></span>
 <span><span class="va">validationDatabaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -2036,8 +2050,8 @@ performance.</p>
 <span>  validationDatabaseDetails <span class="op">=</span> <span class="va">validationDatabaseDetails</span>,</span>
 <span>  validationRestrictPlpDataSettings <span class="op">=</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">settings</span><span class="op">$</span><span class="va">plpDataSettings</span>,</span>
 <span>  settings <span class="op">=</span> <span class="fu"><a href="../reference/createValidationSettings.html">createValidationSettings</a></span><span class="op">(</span></span>
-<span>    recalibrate <span class="op">=</span> <span class="st">'weakRecalibration'</span></span>
-<span>    <span class="op">)</span>,</span>
+<span>    recalibrate <span class="op">=</span> <span class="st">"weakRecalibration"</span></span>
+<span>  <span class="op">)</span>,</span>
 <span>  outputFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>This will extract the new plpData from the specified schemas and
@@ -2073,31 +2087,31 @@ community. The table below provides an overview:</p>
 <td>Builing Multiple Models</td>
 <td>This vignette describes how you can run multiple models
 automatically</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/BuildingMultiplePredictiveModels.html">vignette('BuildingMultiplePredictiveModels')</a></code></td>
 </tr>
 <tr class="even">
 <td>Custom Models</td>
 <td>This vignette describes how you can add your own custom algorithms
 in the framework</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/AddingCustomModels.html">vignette('AddingCustomModels')</a></code></td>
 </tr>
 <tr class="odd">
 <td>Custom Splitting Functions</td>
 <td>This vignette describes how you can add your own custom
 training/validation/testing splitting functions in the framework</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSplitting.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/AddingCustomSplitting.html">vignette('AddingCustomSplitting')</a></code></td>
 </tr>
 <tr class="even">
 <td>Custom Sampling Functions</td>
 <td>This vignette describes how you can add your own custom sampling
 functions in the framework</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomSamples.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/AddingCustomSamples.html">vignette('AddingCustomSamples')</a></code></td>
 </tr>
 <tr class="odd">
 <td>Custom Feature Engineering/Selection</td>
 <td>This vignette describes how you can add your own custom feature
 engineering and selection functions in the framework</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomFeatureEngineering.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/AddingCustomFeatureEngineering.html">vignette('AddingCustomFeatureEngineering')</a></code></td>
 </tr>
 <tr class="even">
 <td>Learning curves</td>
@@ -2105,7 +2119,7 @@ engineering and selection functions in the framework</td>
 performance by training a sequence of prediction models on successively
 larger subsets of the training set. A learning curve plot can also help
 in diagnosing a bias or variance problem as explained below.</td>
-<td><a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf" class="external-link"><code>Vignette</code></a></td>
+<td><code><a href="../articles/CreatingLearningCurves.html">vignette('CreatingLearningCurves')</a></code></td>
 </tr>
 </tbody>
 </table>
@@ -2116,7 +2130,7 @@ in diagnosing a bias or variance problem as explained below.</td>
 <p>We have added several demos in the package that run on simulated
 data:</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Show all demos in our package: </span></span>
+<code class="sourceCode R"><span><span class="co"># Show all demos in our package:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/demo.html" class="external-link">demo</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"PatientLevelPrediction"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># For example, to run the SingleModelDemo that runs Lasso and shows you how to run the Shiny App use this call</span></span>

@@ -152,7 +152,7 @@
             
             <h4 data-toc-skip class="date">2024-11-01</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/broken_links/vignettes/AddingCustomSplitting.Rmd" class="external-link"><code>vignettes/AddingCustomSplitting.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/AddingCustomSplitting.Rmd" class="external-link"><code>vignettes/AddingCustomSplitting.Rmd</code></a></small>
       <div class="hidden name"><code>AddingCustomSplitting.Rmd</code></div>
 
     </div>
@@ -170,10 +170,10 @@
 splitting the labelled data into training data and validation data in
 the Observational Health Data Sciencs and Informatics (OHDSI) <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This vignette assumes you have read and are comfortable with
-building single patient level prediction models as described in the <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
-vignette</a>.</p>
-<p><strong>We invite you to share your new data splitting functions with
-the OHDSI community through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
+building single patient level prediction models as described in the
+<code>vignette('BuildingPredictiveModels)</code>. <strong>We invite you
+to share your new data splitting functions with the OHDSI community
+through our <a href="http://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
 repository</a>.</strong></p>
 </div>
 <div class="section level2">
@@ -211,19 +211,16 @@ folds used in cross validation. Therefore create a function with a
 single nfold input that returns a list of class ‘splitSettings’ with the
 ‘fun’ attribute specifying the ‘implement’ function we will use.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">createGenderSplit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">nfold</span><span class="op">)</span></span>
-<span>  <span class="op">{</span></span>
-<span>  </span>
+<code class="sourceCode R"><span><span class="va">createGenderSplit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">nfold</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># create list of inputs to implement function</span></span>
 <span>  <span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>nfold <span class="op">=</span> <span class="va">nfold</span><span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># specify the function that will implement the sampling</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">splitSettings</span>, <span class="st">"fun"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"implementGenderSplit"</span></span>
 <span></span>
 <span>  <span class="co"># make sure the object returned is of class "sampleSettings"</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">splitSettings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"splitSettings"</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">splitSettings</span><span class="op">)</span></span>
-<span>  </span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>We now need to create the ‘implement’ function
 <code>implementGenderSplit()</code></p>
@@ -241,20 +238,19 @@ in the train set, the value corresponds to the cross validation fold.
 For example, if rowId 2 is assigned index 5, then it means the patient
 with the rowId 2 is used to train the model and is in fold 5.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">implementGenderSplit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">population</span>, <span class="va">splitSettings</span><span class="op">)</span><span class="op">{</span></span>
-<span></span>
+<code class="sourceCode R"><span><span class="va">implementGenderSplit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">population</span>, <span class="va">splitSettings</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># find the people who are male:</span></span>
 <span>  <span class="va">males</span> <span class="op">&lt;-</span> <span class="va">population</span><span class="op">$</span><span class="va">rowId</span><span class="op">[</span><span class="va">population</span><span class="op">$</span><span class="va">gender</span> <span class="op">==</span> <span class="fl">8507</span><span class="op">]</span></span>
 <span>  <span class="va">females</span> <span class="op">&lt;-</span> <span class="va">population</span><span class="op">$</span><span class="va">rowId</span><span class="op">[</span><span class="va">population</span><span class="op">$</span><span class="va">gender</span> <span class="op">==</span> <span class="fl">8532</span><span class="op">]</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="va">splitIds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    rowId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">males</span>, <span class="va">females</span><span class="op">)</span>,</span>
 <span>    index <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">males</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">splitSettings</span><span class="op">$</span><span class="va">nfold</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">females</span><span class="op">)</span>, replace <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">splitSettings</span><span class="op">$</span><span class="va">nfold</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">females</span><span class="op">)</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span>  </span>
+<span></span>
 <span>  <span class="co"># return the updated trainData</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">splitIds</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>

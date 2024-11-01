@@ -154,7 +154,7 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2024-11-01</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/broken_links/vignettes/BuildingMultiplePredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingMultiplePredictiveModels.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingMultiplePredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingMultiplePredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingMultiplePredictiveModels.Rmd</code></div>
 
     </div>
@@ -183,8 +183,7 @@ package to automatically build multiple patient-level predictive models,
 e.g. different population settings, covariate settings, and
 modelsetting. This vignette assumes you have read and are comfortable
 with building single patient level prediction models as described in the
-<a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf" class="external-link"><code>BuildingPredictiveModels</code>
-vignette</a>.</p>
+<code><a href="../articles/BuildingPredictiveModels.html">vignette('BuildingPredictiveModels')</a></code>.</p>
 <p>Note that it is also possible to generate a Study Package directly in
 Atlas that allows for multiple patient-level prediction analyses this is
 out-of-scope for this vignette.</p>
@@ -263,28 +262,28 @@ conditions as features. The model can be specified by:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Model 1 is only using data between 2018-2020:</span></span>
 <span><span class="va">restrictPlpDataSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createRestrictPlpDataSettings.html">createRestrictPlpDataSettings</a></span><span class="op">(</span></span>
-<span>  studyStartDate <span class="op">=</span> <span class="st">'20180101'</span>, </span>
-<span>  studyEndDate <span class="op">=</span> <span class="st">'20191231'</span></span>
+<span>  studyStartDate <span class="op">=</span> <span class="st">"20180101"</span>, </span>
+<span>  studyEndDate <span class="op">=</span> <span class="st">"20191231"</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># predict outcome within 1 to 180 days after index</span></span>
 <span><span class="co"># remove people with outcome prior and with &lt; 365 days observation</span></span>
 <span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
-<span>  binary <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  firstExposureOnly <span class="op">=</span> <span class="cn">T</span>, </span>
+<span>  binary <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  firstExposureOnly <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>  washoutPeriod <span class="op">=</span> <span class="fl">365</span>, </span>
-<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  priorOutcomeLookback <span class="op">=</span> <span class="fl">9999</span>,</span>
-<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">F</span>, </span>
+<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>  riskWindowStart <span class="op">=</span> <span class="fl">1</span>, </span>
 <span>  riskWindowEnd <span class="op">=</span> <span class="fl">180</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># use age/gender in groups and condition groups as features</span></span>
 <span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span></span>
-<span>  useDemographicsGender <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span></span>
+<span>  useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">modelDesign1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createModelDesign.html">createModelDesign</a></span><span class="op">(</span></span>
@@ -316,22 +315,22 @@ groups) and conditions as features. The model can be specified by:</p>
 <span><span class="co"># predict outcome within 1 to 730 days after index</span></span>
 <span><span class="co"># remove people with outcome prior and with &lt; 365 days observation</span></span>
 <span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
-<span>  binary <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  firstExposureOnly <span class="op">=</span> <span class="cn">T</span>, </span>
+<span>  binary <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  firstExposureOnly <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>  washoutPeriod <span class="op">=</span> <span class="fl">365</span>, </span>
-<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  priorOutcomeLookback <span class="op">=</span> <span class="fl">9999</span>,</span>
-<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">F</span>, </span>
+<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>  riskWindowStart <span class="op">=</span> <span class="fl">1</span>, </span>
 <span>  riskWindowEnd <span class="op">=</span> <span class="fl">730</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># use age/gender in groups and condition/drug groups as features</span></span>
 <span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span></span>
-<span>  useDemographicsGender <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">T</span> </span>
+<span>  useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useConditionGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useDrugGroupEraAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span> </span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">modelDesign2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createModelDesign.html">createModelDesign</a></span><span class="op">(</span></span>
@@ -363,22 +362,22 @@ features. The model can be specified by:</p>
 <span><span class="co"># predict outcome during target cohort start/end </span></span>
 <span><span class="co"># remove people with  &lt; 365 days observation</span></span>
 <span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span></span>
-<span>  binary <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  firstExposureOnly <span class="op">=</span> <span class="cn">T</span>, </span>
+<span>  binary <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  firstExposureOnly <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>  washoutPeriod <span class="op">=</span> <span class="fl">365</span>, </span>
-<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">F</span>, </span>
+<span>  removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>, </span>
 <span>  riskWindowStart <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  startAnchor <span class="op">=</span>  <span class="st">'cohort start'</span>,</span>
+<span>  startAnchor <span class="op">=</span>  <span class="st">"cohort start"</span>,</span>
 <span>  riskWindowEnd <span class="op">=</span> <span class="fl">0</span>, </span>
-<span>  endAnchor <span class="op">=</span> <span class="st">'cohort end'</span></span>
+<span>  endAnchor <span class="op">=</span> <span class="st">"cohort end"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># use age/gender in groups and measurement indicators as features</span></span>
 <span><span class="va">covariateSettings</span> <span class="op">&lt;-</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createCovariateSettings.html" class="external-link">createCovariateSettings</a></span><span class="op">(</span></span>
-<span>  useDemographicsGender <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">T</span>, </span>
-<span>  useMeasurementAnyTimePrior <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  useDemographicsGender <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useDemographicsAgeGroup <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>  useMeasurementAnyTimePrior <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  endDays <span class="op">=</span> <span class="op">-</span><span class="fl">1</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -421,34 +420,35 @@ database is found and workDatabaseSchema where your target population
 and outcome cohorts are and you need to specify a label for the database
 name: a string with a shareable name of the database (this will be shown
 to OHDSI researchers if the results get transported).</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>cdmDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>workDatabaseSchema <span class="ot">&lt;-</span> <span class="st">"your workDatabaseSchema"</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>cdmDatabaseName <span class="ot">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>cohortTable <span class="ot">&lt;-</span> <span class="st">"your cohort table"</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>databaseDetails <span class="ot">&lt;-</span> <span class="fu">createDatabaseDetails</span>(</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">connectionDetails =</span> connectionDetails, </span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">cdmDatabaseSchema =</span> cdmDatabaseSchema, </span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">cdmDatabaseName =</span> cdmDatabaseName , </span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">cohortDatabaseSchema =</span> workDatabaseSchema, </span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">cohortTable =</span> cohortTable, </span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">outcomeDatabaseSchema =</span> workDatabaseSchema, </span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">outcomeTable =</span> cohortTable </span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">cdmVersion =</span> <span class="dv">5</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>    )</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cdmDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"your cdmDatabaseSchema"</span></span>
+<span><span class="va">workDatabaseSchema</span> <span class="op">&lt;-</span> <span class="st">"your workDatabaseSchema"</span></span>
+<span><span class="va">cdmDatabaseName</span> <span class="op">&lt;-</span> <span class="st">"your cdmDatabaseName"</span></span>
+<span><span class="va">cohortTable</span> <span class="op">&lt;-</span> <span class="st">"your cohort table"</span></span>
+<span></span>
+<span><span class="va">databaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span></span>
+<span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, </span>
+<span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>, </span>
+<span>  cdmDatabaseName <span class="op">=</span> <span class="va">cdmDatabaseName</span>, </span>
+<span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>, </span>
+<span>  cohortTable <span class="op">=</span> <span class="va">cohortTable</span>, </span>
+<span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>, </span>
+<span>  outcomeTable <span class="op">=</span> <span class="va">cohortTable</span>,</span>
+<span>  cdmVersion <span class="op">=</span> <span class="fl">5</span></span>
+<span>    <span class="op">)</span></span></code></pre></div>
 <p>Now you can run the multiple patient-level prediction analysis:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runMultiplePlp.html">runMultiplePlp</a></span><span class="op">(</span></span>
-<span>  databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>, </span>
+<span>  databaseDetails <span class="op">=</span> <span class="va">databaseDetails</span>,</span>
 <span>  modelDesignList <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="va">modelDesign1</span>, </span>
-<span>    <span class="va">modelDesign2</span>, </span>
+<span>    <span class="va">modelDesign1</span>,</span>
+<span>    <span class="va">modelDesign2</span>,</span>
 <span>    <span class="va">modelDesign3</span></span>
-<span>    <span class="op">)</span>, </span>
-<span>  onlyFetchData <span class="op">=</span> <span class="cn">F</span>, </span>
-<span>  logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>, </span>
-<span>  saveDirectory <span class="op">=</span>  <span class="st">"./PlpMultiOutput"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span>  <span class="op">)</span>,</span>
+<span>  onlyFetchData <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  logSettings <span class="op">=</span> <span class="fu"><a href="../reference/createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  saveDirectory <span class="op">=</span> <span class="st">"./PlpMultiOutput"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <p>This will then save all the plpData objects from the study into
 “./PlpMultiOutput/plpData_T1_L<i>” and the results into
 “./PlpMultiOutput/Analysis_<i>”. The csv file named settings.csv found
@@ -466,15 +466,15 @@ not restart until you remove the output folder.</p>
 different schemas you could evaluate accross these using this call:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">validationDatabaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span></span>
-<span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>, </span>
-<span>  cdmDatabaseSchema <span class="op">=</span> <span class="st">'new cdm schema'</span>, </span>
-<span>  cdmDatabaseName <span class="op">=</span> <span class="st">'validation database'</span>, </span>
-<span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>, </span>
-<span>  cohortTable <span class="op">=</span> <span class="va">cohortTable</span>, </span>
-<span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>, </span>
-<span>  outcomeTable <span class="op">=</span> <span class="va">cohortTable</span>, </span>
+<span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,</span>
+<span>  cdmDatabaseSchema <span class="op">=</span> <span class="st">"new cdm schema"</span>,</span>
+<span>  cdmDatabaseName <span class="op">=</span> <span class="st">"validation database"</span>,</span>
+<span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>,</span>
+<span>  cohortTable <span class="op">=</span> <span class="va">cohortTable</span>,</span>
+<span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">workDatabaseSchema</span>,</span>
+<span>  outcomeTable <span class="op">=</span> <span class="va">cohortTable</span>,</span>
 <span>  cdmVersion <span class="op">=</span> <span class="fl">5</span></span>
-<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">val</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validateMultiplePlp.html">validateMultiplePlp</a></span><span class="op">(</span></span>
 <span>  analysesLocation <span class="op">=</span> <span class="st">"./PlpMultiOutput"</span>,</span>
@@ -482,7 +482,7 @@ different schemas you could evaluate accross these using this call:</p>
 <span>  validationRestrictPlpDataSettings <span class="op">=</span> <span class="fu"><a href="../reference/createRestrictPlpDataSettings.html">createRestrictPlpDataSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  recalibrate <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  saveDirectory <span class="op">=</span> <span class="st">"./PlpMultiOutput/Validation"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 <p>This then saves the external validation results in the
 <code>Validation</code> folder of the main study (the outputLocation you
 used in runPlpAnalyses).</p>
@@ -492,7 +492,7 @@ used in runPlpAnalyses).</p>
 </h2>
 <p>To view the results for the multiple prediction analysis:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/viewMultiplePlp.html">viewMultiplePlp</a></span><span class="op">(</span>analysesLocation<span class="op">=</span><span class="st">"./PlpMultiOutput"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/viewMultiplePlp.html">viewMultiplePlp</a></span><span class="op">(</span>analysesLocation <span class="op">=</span> <span class="st">"./PlpMultiOutput"</span><span class="op">)</span></span></code></pre></div>
 <p>If the validation directory in “./PlpMultiOutput” has a sqlite
 results database, the external validation will also be displayed.</p>
 </div>
