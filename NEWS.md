@@ -1,5 +1,9 @@
 PatientLevelPrediction develop
 ======================
+- Fixed linting errors and R codestyle in docs to conform to HADES style
+- Remove links to pdf's, point to website instead.
+- Fix broken links in Readme and BuildingPredictiveModels vignette
+- Added an action to detect broken links in repo
 - Official maintainer updated to Egill Fridgeirsson
 
 

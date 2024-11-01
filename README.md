@@ -83,7 +83,7 @@ install Python 3.9 or higher using Anaconda (https://www.continuum.io/downloads)
 Getting Started
 ===============
 
-- To install the package please read the [Package Installation guide](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/InstallationGuide.pdf)
+- To install the package please read the [Package Installation guide](https://ohdsi.github.io/PatientLevelPrediction/articles/InstallationGuide.html)
 
 - Have a look at the video below for an extensive demo of the package.
 
@@ -93,23 +93,21 @@ alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Please read the main vignette for the package:
 
-- [Building Single Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf)
+- [Building Single Patient-Level Predictive Models](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingPredictiveModels.html)
 
 In addition we have created vignettes that describe advanced functionality in more detail:
 
-- [Building Multiple Patient-Level Predictive Models](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingMultiplePredictiveModels.pdf)
-- [Adding Custom Machine Learning Algorithms](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/AddingCustomModels.pdf)
+- [Building Multiple Patient-Level Predictive Models](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingMultiplePredictiveModels.html)
+- [Adding Custom Machine Learning Algorithms](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomModels.html)
 - [Building Deep Learning Models](https://github.com/OHDSI/DeepPatientLevelPrediction)
 - [Building Ensemble Models](https://github.com/OHDSI/EnsemblePatientLevelPrediction)
-- [Creating Learning Curves](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/CreatingLearningCurves.pdf)
+- [Creating Learning Curves](https://ohdsi.github.io/PatientLevelPrediction/articles/CreatingLearningCurves.html)
 
-Package manual: [PatientLevelPrediction.pdf](https://github.com/OHDSI/PatientLevelPrediction/blob/main/extras/PatientLevelPrediction.pdf)
+Package function reference: [Reference](https://ohdsi.github.io/PatientLevelPrediction/reference/index.html)
 
 User Documentation
 ==================
 Documentation can be found on the [package website](https://ohdsi.github.io/PatientLevelPrediction).
-
-PDF versions of the documentation are also available, as mentioned above.
 
 Support
 =======
@@ -132,5 +130,5 @@ PatientLevelPrediction is being developed in R Studio.
 # Acknowledgements
 
 - The package is maintained by Egill Fridgeirsson and Jenna Reps and has been developed with major contributions from Peter Rijnbeek, Martijn Schuemie, Patrick Ryan, and Marc Suchard.
-- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Alex Rekkas
+- We like to thank the following persons for their contributions to the package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan, James Wiggins, Alexandros Rekkas
 - This project is supported in part through the National Science Foundation grant IIS 1251151.

@@ -40,15 +40,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:
-if (file.exists(vignetteDataFolder)){
-  plpModel <- loadPlpModel(vignetteDataFolder,'model')
-  lrResults <- loadPlpModel(file.path(vignetteDataFolder,'results'))
+if (file.exists(vignetteDataFolder)) {
+  plpModel <- loadPlpModel(vignetteDataFolder, "model")
+  lrResults <- loadPlpModel(file.path(vignetteDataFolder, "results"))
 }
 ```
 
 # Introduction
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
 Prediction models will show overly-optimistic performance when predicting on the same data as used for training. Therefore, best-practice is to partition our data into a training set and testing set. We then train our prediction model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set.
 
@@ -78,7 +78,6 @@ plpData <- simulatePlpData(
   plpDataSimulationProfile,
   n = sampleSize
 )
-
 ```
 
 Specify the population settings (this does additional exclusions such as requiring minimum prior observation or no prior outcome as well as specifying the time-at-risk period to enable labels to be created):
@@ -103,18 +102,16 @@ Specify the prediction algorithm to be used.
 ```{r eval=FALSE}
 # Use LASSO logistic regression
 modelSettings <- setLassoLogisticRegression()
-
 ```
 
 Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of `trainFractions`, you can provide a sequence of training events (`trainEvents`) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.
 
 ```{r eval = FALSE}
-
-splitSettings = createDefaultSplitSetting(
-  testFraction = 0.2,  
-  type = 'stratified',
+splitSettings <- createDefaultSplitSetting(
+  testFraction = 0.2,
+  type = "stratified",
   splitSeed = 1000
-  )
+)
 
 trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
 
@@ -127,31 +124,29 @@ Create the learning curve object.
 ```{r eval=FALSE}
 learningCurve <- createLearningCurve(
   plpData = plpData,
-  outcomeId = 2,  
-  parallel = T,
+  outcomeId = 2,
+  parallel = TRUE,
   cores = 4,
   modelSettings = modelSettings,
   saveDirectory = getwd(),
-  analysisId = 'learningCurve',
+  analysisId = "learningCurve",
   populationSettings = populationSettings,
   splitSettings = splitSettings,
   trainFractions = trainFractions,
   trainEvents = NULL,
   preprocessSettings = createPreprocessSettings(
     minFraction = 0.001,
-    normalize = T
+    normalize = TRUE
   ),
   executeSettings = createExecuteSettings(
-    runSplitData = T, 
-    runSampleData = F,
-    runfeatureEngineering = F,
-    runPreprocessData = T,
-    runModelDevelopment = T,
-    runCovariateSummary = F
-    )
+    runSplitData = TRUE,
+    runSampleData = FALSE,
+    runfeatureEngineering = FALSE,
+    runPreprocessData = TRUE,
+    runModelDevelopment = TRUE,
+    runCovariateSummary = FALSE
+  )
 )
-  
-                                  
 ```
 
 Plot the learning curve object (Figure 4). Specify one of the available metrics: `AUROC`, `AUPRC`, `sBrier`. Moreover, you can specify what metric to put on the abscissa, number of `observations` or number of `events`. We recommend the latter, because `events` are determinant of model performance and allow you to better compare learning curves across different prediction problems and databases.
@@ -159,10 +154,10 @@ Plot the learning curve object (Figure 4). Specify one of the available metrics:
 ```{r eval=FALSE}
 plotLearningCurve(
   learningCurve,
-  metric = 'AUROC',
-  abscissa = 'events',
-  plotTitle = 'Learning Curve',
-  plotSubtitle = 'AUROC performance'
+  metric = "AUROC",
+  abscissa = "events",
+  plotTitle = "Learning Curve",
+  plotSubtitle = "AUROC performance"
 )
 ```
 
@@ -179,11 +174,11 @@ When running in parrallel, R will find the number of available processing cores 
 We have added a demo of the learningcurve:
 
 ```{r eval=FALSE}
-# Show all demos in our package: 
- demo(package = "PatientLevelPrediction")
+# Show all demos in our package:
+demo(package = "PatientLevelPrediction")
 
 # Run the learning curve
- demo("LearningCurveDemo", package = "PatientLevelPrediction")
+demo("LearningCurveDemo", package = "PatientLevelPrediction")
 ```
 
 Do note that running this demo can take a considerable amount of time (15 min on Quad core running in parallel)!
