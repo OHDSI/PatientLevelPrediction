@@ -451,11 +451,14 @@ averagePrecision <- function(prediction){
 }
 
 
-
-calibrationInLarge <- function(prediction){
+#' Calculate the calibration in large
+#' @param prediction            A prediction dataframe
+#' @return data.frame with meanPredictionRisk, observedRisk, and N
+#' @internal
+calibrationInLarge <- function(prediction) {
   
   result <- data.frame(meanPredictionRisk = mean(prediction$value),
-    observedRisk = sum(prediction$outcomeCount)/nrow(prediction),
+    observedRisk = sum(prediction$outcomeCount) / nrow(prediction),
     N = nrow(prediction)
   )
   
