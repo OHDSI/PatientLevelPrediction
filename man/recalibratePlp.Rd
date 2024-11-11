@@ -21,12 +21,14 @@ recalibratePlp(
 \item{method}{Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )}
 }
 \value{
-An object of class \code{runPlp} that is recalibrated on the new data
+A prediction dataframe with the recalibrated predictions added
 }
 \description{
-Train various models using a default parameter gird search or user specified parameters
+Recalibrating a model using the recalibrationInTheLarge or weakRecalibration methods
 }
 \details{
-The user can define the machine learning model to train (regularised logistic regression, random forest,
-gradient boosting machine, neural network and )
+'recalibrationInTheLarge' calculates a single correction factor for the 
+average predicted risks to match the average observed risks.
+'weakRecalibration' fits a glm model to the logit of the predicted risks,
+also known as Platt scaling/logistic recalibration.
 }

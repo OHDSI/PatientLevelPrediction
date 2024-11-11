@@ -187,7 +187,7 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' An prediction dataframe with the recalibrated predictions added
-#' @internal
+#' @keywords internal
 recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
   if (attr(prediction, "metaData")$modelType == "binary") {
     misCal <- calibrationInLarge(prediction)
@@ -196,7 +196,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
     correctionFactor <- log(obsOdds / predOdds)
 
     recalibrated <- prediction
-    recalibrated$value <- plogis(qlogis(recalibrated$value) + correctionFactor)
+    recalibrated$value <- stats::plogis(stats::qlogis(recalibrated$value) + correctionFactor)
 
     recalibrated[, columnType] <- "recalibrationInTheLarge"
     prediction <- rbind(prediction, recalibrated)
@@ -221,7 +221,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 #' @param columnType                    The column name where the strata types are specified
 #' @return 
 #' An prediction dataframe with the recalibrated predictions added
-#' @internal
+#' @keywords internal
 weakRecalibration <- function(prediction, columnType = "evaluationType") {
   # if binary:
   if (attr(prediction, "metaData")$modelType == "binary") {
@@ -232,10 +232,10 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     y <- ifelse(recalibrated$outcomeCount > 0, 1, 0)
 
     # convert risk probailities to logits
-    inverseLog <- qlogis(recalibrated$value)
+    inverseLog <- stats::qlogis(recalibrated$value)
     refit <- suppressWarnings(stats::glm(y ~ inverseLog, family = "binomial"))
 
-    recalibrated$value <- plogis((inverseLog * refit$coefficients[2]) + refit$coefficients[1])
+    recalibrated$value <- stats::plogis((inverseLog * refit$coefficients[2]) + refit$coefficients[1])
 
     recalibrated[, columnType] <- "weakRecalibration"
     prediction <- rbind(prediction, recalibrated)

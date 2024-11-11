@@ -4,7 +4,7 @@
 \alias{recalibratePlpRefit}
 \title{recalibratePlpRefit}
 \usage{
-recalibratePlpRefit(plpModel, newPopulation, newData)
+recalibratePlpRefit(plpModel, newPopulation, newData, returnModel = FALSE)
 }
 \arguments{
 \item{plpModel}{The trained plpModel (runPlp$model)}
@@ -13,14 +13,12 @@ recalibratePlpRefit(plpModel, newPopulation, newData)
 
 \item{newData}{An object of type \code{plpData} - the patient level prediction
 data extracted from the CDM.}
+
+\item{returnModel}{Logical: return the refitted model}
 }
 \value{
-An object of class \code{runPlp} that is recalibrated on the new data
+An prediction dataframe with the predictions of the recalibrated model added
 }
 \description{
-Train various models using a default parameter gird search or user specified parameters
-}
-\details{
-The user can define the machine learning model to train (regularised logistic regression, random forest,
-gradient boosting machine, neural network and )
+Recalibrating a model by refitting it
 }
