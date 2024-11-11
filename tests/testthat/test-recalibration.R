@@ -21,16 +21,16 @@ context("Recalibration")
 
 prediction <- data.frame(
   rowId = 1:100,
-  value = c(runif(20)/30,runif(80)/300),
-  outcomeCount = c(runif(20)>0.5, runif(80)>0.9)*1,
+  value = c(runif(20) / 30, runif(80) / 300),
+  outcomeCount = c(runif(20) > 0.5, runif(80) > 0.9) * 1,
   gender = sample(c(8507, 1111), 100, replace = T),
-  ageYear = sample(1:100,100, replace = T ),
-  survivalTime = rep(365,100),
-  evaluationType = rep('Test', 100)
-  )
+  ageYear = sample(1:100, 100, replace = T),
+  survivalTime = rep(365, 100),
+  evaluationType = rep("Test", 100)
+)
 
 metaData <- list(
-  modelType = "binary", 
+  modelType = "binary",
   targetId = 1,
   outcomeId = outcomeId,
   timepoint = 365
@@ -39,51 +39,59 @@ metaData <- list(
 attr(prediction, "metaData") <- metaData
 
 test_that("recalibrationInTheLarge", {
-  
-  test <- recalibratePlp(prediction, analysisId = 'Analysis_1',
-                 method = 'recalibrationInTheLarge')
-  
-  testthat::expect_true(sum(test$evaluationType == 'recalibrationInTheLarge') == 100)
-  
+  test <- recalibratePlp(prediction,
+    analysisId = "Analysis_1",
+    method = "recalibrationInTheLarge"
+  )
+
+  testthat::expect_true(sum(test$evaluationType == "recalibrationInTheLarge") == 100)
 })
 
 
-#'weakRecalibration'
+#' weakRecalibration'
 test_that("weakRecalibration", {
+  test <- recalibratePlp(prediction,
+    analysisId = "Analysis_1",
+    method = "weakRecalibration"
+  )
 
-test <- recalibratePlp(prediction, analysisId = 'Analysis_1',
-                       method = 'weakRecalibration')
-
-testthat::expect_true(sum(test$evaluationType == 'weakRecalibration') == 100)
-
+  testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })
-
-
 
 
 test_that("recalibratePlpRefit", {
-  
-  newPop <- plpResult$prediction %>% dplyr::select(-"value") %>% dplyr::filter(.data$evaluationType %in% c('Test','Train'))
-  attr(newPop, 'metaData') <- list(
-    targetId = 1, 
+  newPop <- plpResult$prediction %>%
+    dplyr::select(-"value") %>%
+    dplyr::filter(.data$evaluationType %in% c("Test", "Train"))
+  attr(newPop, "metaData") <- list(
+    targetId = 1,
     outcomeId = outcomeId,
     restrictPlpDataSettings = PatientLevelPrediction::createRestrictPlpDataSettings(),
     populationSettings = PatientLevelPrediction::createStudyPopulationSettings()
   )
-  
+
   testRecal <- recalibratePlpRefit(
-    plpModel = plpResult$model, 
-    newPopulation = newPop, 
+    plpModel = plpResult$model,
+    newPopulation = newPop,
     newData = plpData
   )
-  
-  if(!is.null(testRecal)){
+
+  if (!is.null(testRecal)) {
     testthat::expect_true(
-      sum(testRecal$evaluationType == 'recalibrationRefit')>0
+      sum(testRecal$evaluationType == "recalibrationRefit") > 0
     )
-    
-    testthat::expect_s3_class(testRecal, 'data.frame')
+    testthat::expect_s3_class(testRecal, "data.frame")
   }
+  
+  testRecalWithModel <- recalibratePlpRefit(
+    plpModel = plpResult$model,
+    newPopulation = newPop,
+    newData = plpData,
+    returnModel = TRUE
+  )
+  expect_type(testRecalWithModel, "list")
+  expect_s3_class(testRecalWithModel$model, "plpModel")
+  expect_s3_class(testRecalWithModel$prediction, "data.frame")
   
   # add more test...
 })
@@ -91,23 +99,20 @@ test_that("recalibratePlpRefit", {
 
 
 test_that("survival", {
-# survival
-metaData <- list(
-  modelType = "survival", 
-  targetId = 1,
-  outcomeId = outcomeId,
-  timepoint = 365
-)
+  # survival
+  metaData <- list(
+    modelType = "survival",
+    targetId = 1,
+    outcomeId = outcomeId,
+    timepoint = 365
+  )
 
-attr(prediction, "metaData") <- metaData
+  attr(prediction, "metaData") <- metaData
 
-  test <- recalibratePlp(prediction, analysisId = 'Analysis_1',
-    method = 'weakRecalibration')
+  test <- recalibratePlp(prediction,
+    analysisId = "Analysis_1",
+    method = "weakRecalibration"
+  )
 
-  testthat::expect_true(sum(test$evaluationType == 'weakRecalibration') == 100)
-  
+  testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })
-
-
-
-

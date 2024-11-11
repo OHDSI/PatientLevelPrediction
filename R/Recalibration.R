@@ -26,6 +26,7 @@
 #' @param newPopulation                    The population created using createStudyPopulation() who will have their risks predicted
 #' @param newData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
+#' @param returnModel                      Logical: return the refitted model
 #' @return
 #' An prediction dataframe with the predictions of the recalibrated model added
 #'
@@ -33,16 +34,14 @@
 recalibratePlpRefit <- function(
     plpModel,
     newPopulation,
-    newData) {
-  if (is.null(newPopulation)) {
-    stop("NULL population")
-  }
-  if (!inherits(x = newData, what = "plpData")) {
-    stop("Incorrect plpData class")
-  }
-  if (!inherits(x = plpModel, what = "plpModel")) {
-    stop("plpModel is not of class plpModel")
-  }
+    newData, 
+    returnModel = FALSE) {
+  checkNotNull(plpModel)
+  checkNotNull(newPopulation)
+  checkNotNull(newData)
+  checkIsClass(plpModel, "plpModel")
+  checkIsClass(newData, "plpData")
+  checkBoolean(returnModel)
 
   # get selected covariates
   includeCovariateIds <- plpModel$covariateImportance %>%
@@ -130,8 +129,12 @@ recalibratePlpRefit <- function(
   newIntercept <- newModel$model$coefficients[names(newModel$model$coefficients) == "(Intercept)"]
 
   attr(prediction, "metaData")$recalibratePlpRefit <- list(adjust = adjust, newIntercept = newIntercept)
-
-  return(prediction)
+  
+  if (returnModel) {
+    return(list(prediction = prediction, model = newModel))
+  } else {
+    return(prediction)
+  }
 }
 
 
@@ -141,7 +144,10 @@ recalibratePlpRefit <- function(
 #' Recalibrating a model using the recalibrationInTheLarge or weakRecalibration methods 
 #' 
 #' @details
-#' TODO: Add more details about available methods
+#' 'recalibrationInTheLarge' calculates a single correction factor for the 
+#' average predicted risks to match the average observed risks.
+#' 'weakRecalibration' fits a glm model to the logit of the predicted risks,
+#' also known as Platt scaling/logistic recalibration.
 #'
 #' @param prediction                      A prediction dataframe
 #' @param analysisId                      The model analysisId
@@ -208,7 +214,9 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 #' weakRecalibration
 #' 
 #' @description 
-#' Recalibrate a model using the weakRecalibration method which fits a glm model to the logit of the predicted risks
+#' Recalibrate a model using the weakRecalibration method which fits a glm model
+#' to the logit of the predicted risks.
+#' Alsi known as Platt scaling/logistic recalibration
 #' @param prediction                    A prediction dataframe
 #' @param columnType                    The column name where the strata types are specified
 #' @return 
