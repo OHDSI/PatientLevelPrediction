@@ -9,11 +9,7 @@ recalibrationInTheLarge(prediction, columnType = "evaluationType")
 \arguments{
 \item{prediction}{A prediction dataframe}
 
-\item{analysisId}{The model analysisId}
-
-\item{typeColumn}{The column name where the strata types are specified}
-
-\item{method}{Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )}
+\item{columnType}{The column name where the strata types are specified}
 }
 \value{
 An prediction dataframe with the recalibrated predictions added

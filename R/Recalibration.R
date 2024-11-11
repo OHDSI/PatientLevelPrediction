@@ -182,9 +182,7 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' for the average predicted risks to match the average observed risks
 #' 
 #' @param prediction                      A prediction dataframe
-#' @param analysisId                      The model analysisId
-#' @param typeColumn                      The column name where the strata types are specified
-#' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
+#' @param columnType                      The column name where the strata types are specified
 #' @return
 #' An prediction dataframe with the recalibrated predictions added
 #' @keywords internal
