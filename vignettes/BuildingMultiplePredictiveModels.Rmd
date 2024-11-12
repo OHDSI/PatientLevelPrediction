@@ -34,7 +34,7 @@ output:
 
 In our [`paper`](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP CDM and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to enforce existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
 
-One our best practices is that we see the selection of models and all study setting as an emperical question, i.e. we should use a data-driven approach in which we try many settings. This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models, e.g. different population settings, covariate settings, and modelsetting. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
+One our best practices is that we see the selection of models and all study setting as an emperical question, i.e. we should use a data-driven approach in which we try many settings. This vignette describes how you can use the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to automatically build multiple patient-level predictive models, e.g. different population settings, covariate settings, and modelsetting. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
 Note that it is also possible to generate a Study Package directly in Atlas that allows for multiple patient-level prediction analyses this is out-of-scope for this vignette.
 
@@ -47,15 +47,15 @@ library(knitr)
 kable(
   data.frame(
   input = c(
-    'targetId',
-    'outcomeId',
-    'restrictPlpDataSettings',
-    'populationSettings',
-    'covariateSettings',
-    'sampleSettings',
-    'featureEngineeringSettings',
-    'preprocessSettings',
-    'modelSettings'
+    "targetId",
+    "outcomeId",
+    "restrictPlpDataSettings",
+    "populationSettings",
+    "covariateSettings",
+    "sampleSettings",
+    "featureEngineeringSettings",
+    "preprocessSettings",
+    "modelSettings"
   ),
   
   Description = c(
@@ -71,7 +71,7 @@ kable(
   )
   
   ), 
-  caption = 'The inputs for the model design'
+  caption = "The inputs for the model design"
   )
 ```
 
@@ -83,28 +83,28 @@ For example, if we wanted to predict the outcome (id 2) occuring for the first t
 
 # Model 1 is only using data between 2018-2020:
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
-  studyStartDate = '20180101', 
-  studyEndDate = '20191231'
+  studyStartDate = "20180101", 
+  studyEndDate = "20191231"
   )
 
 # predict outcome within 1 to 180 days after index
 # remove people with outcome prior and with < 365 days observation
 populationSettings <- createStudyPopulationSettings(
-  binary = T, 
-  firstExposureOnly = T, 
+  binary = TRUE, 
+  firstExposureOnly = TRUE, 
   washoutPeriod = 365, 
-  removeSubjectsWithPriorOutcome = T,
+  removeSubjectsWithPriorOutcome = TRUE,
   priorOutcomeLookback = 9999,
-  requireTimeAtRisk = F, 
+  requireTimeAtRisk = FALSE, 
   riskWindowStart = 1, 
   riskWindowEnd = 180
 )
 
 # use age/gender in groups and condition groups as features
 covariateSettings <- FeatureExtraction::createCovariateSettings(
-  useDemographicsGender = T, 
-  useDemographicsAgeGroup = T, 
-  useConditionGroupEraAnyTimePrior = T
+  useDemographicsGender = TRUE, 
+  useDemographicsAgeGroup = TRUE, 
+  useConditionGroupEraAnyTimePrior = TRUE
 )
 
 modelDesign1 <- createModelDesign(
@@ -135,22 +135,22 @@ restrictPlpDataSettings <- createRestrictPlpDataSettings(
 # predict outcome within 1 to 730 days after index
 # remove people with outcome prior and with < 365 days observation
 populationSettings <- createStudyPopulationSettings(
-  binary = T, 
-  firstExposureOnly = T, 
+  binary = TRUE, 
+  firstExposureOnly = TRUE, 
   washoutPeriod = 365, 
-  removeSubjectsWithPriorOutcome = T,
+  removeSubjectsWithPriorOutcome = TRUE,
   priorOutcomeLookback = 9999,
-  requireTimeAtRisk = F, 
+  requireTimeAtRisk = FALSE, 
   riskWindowStart = 1, 
   riskWindowEnd = 730
 )
 
 # use age/gender in groups and condition/drug groups as features
 covariateSettings <- FeatureExtraction::createCovariateSettings(
-  useDemographicsGender = T, 
-  useDemographicsAgeGroup = T, 
-  useConditionGroupEraAnyTimePrior = T, 
-  useDrugGroupEraAnyTimePrior = T 
+  useDemographicsGender = TRUE, 
+  useDemographicsAgeGroup = TRUE, 
+  useConditionGroupEraAnyTimePrior = TRUE, 
+  useDrugGroupEraAnyTimePrior = TRUE 
 )
 
 modelDesign2 <- createModelDesign(
@@ -181,22 +181,22 @@ restrictPlpDataSettings <- createRestrictPlpDataSettings(
 # predict outcome during target cohort start/end 
 # remove people with  < 365 days observation
 populationSettings <- createStudyPopulationSettings(
-  binary = T, 
-  firstExposureOnly = T, 
+  binary = TRUE, 
+  firstExposureOnly = TRUE, 
   washoutPeriod = 365, 
-  removeSubjectsWithPriorOutcome = F,
-  requireTimeAtRisk = F, 
+  removeSubjectsWithPriorOutcome = FALSE,
+  requireTimeAtRisk = FALSE, 
   riskWindowStart = 0,
-  startAnchor =  'cohort start',
+  startAnchor =  "cohort start",
   riskWindowEnd = 0, 
-  endAnchor = 'cohort end'
+  endAnchor = "cohort end"
 )
 
 # use age/gender in groups and measurement indicators as features
 covariateSettings <- FeatureExtraction::createCovariateSettings(
-  useDemographicsGender = T, 
-  useDemographicsAgeGroup = T, 
-  useMeasurementAnyTimePrior = T,
+  useDemographicsGender = TRUE, 
+  useDemographicsAgeGroup = TRUE, 
+  useMeasurementAnyTimePrior = TRUE,
   endDays = -1
 )
 
@@ -243,16 +243,16 @@ Next you need to specify the cdmDatabaseSchema where your cdm database is found 
 cdmDatabaseSchema <- "your cdmDatabaseSchema"
 workDatabaseSchema <- "your workDatabaseSchema"
 cdmDatabaseName <- "your cdmDatabaseName"
-cohortTable <- "your cohort table",
+cohortTable <- "your cohort table"
 
 databaseDetails <- createDatabaseDetails(
   connectionDetails = connectionDetails, 
   cdmDatabaseSchema = cdmDatabaseSchema, 
-  cdmDatabaseName = cdmDatabaseName , 
+  cdmDatabaseName = cdmDatabaseName, 
   cohortDatabaseSchema = workDatabaseSchema, 
   cohortTable = cohortTable, 
   outcomeDatabaseSchema = workDatabaseSchema, 
-  outcomeTable = cohortTable 
+  outcomeTable = cohortTable,
   cdmVersion = 5
     )
 
@@ -262,17 +262,16 @@ Now you can run the multiple patient-level prediction analysis:
 
 ```{r tidy=FALSE,eval=FALSE}
 results <- runMultiplePlp(
-  databaseDetails = databaseDetails, 
+  databaseDetails = databaseDetails,
   modelDesignList = list(
-    modelDesign1, 
-    modelDesign2, 
+    modelDesign1,
+    modelDesign2,
     modelDesign3
-    ), 
-  onlyFetchData = F, 
-  logSettings = createLogSettings(), 
-  saveDirectory =  "./PlpMultiOutput"
-  )
-
+  ),
+  onlyFetchData = FALSE,
+  logSettings = createLogSettings(),
+  saveDirectory = "./PlpMultiOutput"
+)
 ```
 
 This will then save all the plpData objects from the study into "./PlpMultiOutput/plpData_T1_L<i>" and the results into "./PlpMultiOutput/Analysis\_<i>". The csv file named settings.csv found in "./PlpMultiOutput" has a row for each prediction model developed and points to the plpData and settings used for the model development, it also has descriptions of the cohorts if these are input by the user.
@@ -284,17 +283,16 @@ Note that if for some reason the run is interrupted, e.g. because of an error, a
 If you have access to multiple databases on the same server in different schemas you could evaluate accross these using this call:
 
 ```{r tidy=FALSE,eval=FALSE}
-
 validationDatabaseDetails <- createDatabaseDetails(
-  connectionDetails = connectionDetails, 
-  cdmDatabaseSchema = 'new cdm schema', 
-  cdmDatabaseName = 'validation database', 
-  cohortDatabaseSchema = workDatabaseSchema, 
-  cohortTable = cohortTable, 
-  outcomeDatabaseSchema = workDatabaseSchema, 
-  outcomeTable = cohortTable, 
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = "new cdm schema",
+  cdmDatabaseName = "validation database",
+  cohortDatabaseSchema = workDatabaseSchema,
+  cohortTable = cohortTable,
+  outcomeDatabaseSchema = workDatabaseSchema,
+  outcomeTable = cohortTable,
   cdmVersion = 5
-  )
+)
 
 val <- validateMultiplePlp(
   analysesLocation = "./PlpMultiOutput",
@@ -302,8 +300,7 @@ val <- validateMultiplePlp(
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   recalibrate = NULL,
   saveDirectory = "./PlpMultiOutput/Validation"
-  )
-
+)
 ```
 
 This then saves the external validation results in the `Validation` folder of the main study (the outputLocation you used in runPlpAnalyses).
@@ -313,7 +310,7 @@ This then saves the external validation results in the `Validation` folder of th
 To view the results for the multiple prediction analysis:
 
 ```{r tidy=FALSE,eval=FALSE}
-viewMultiplePlp(analysesLocation="./PlpMultiOutput")
+viewMultiplePlp(analysesLocation = "./PlpMultiOutput")
 ```
 
 If the validation directory in "./PlpMultiOutput" has a sqlite results database, the external validation will also be displayed.

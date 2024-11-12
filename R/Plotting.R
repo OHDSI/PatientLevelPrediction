@@ -1216,6 +1216,125 @@ plotSmoothCalibration <- function(plpResult,
   return(plots)
 }
 
+#' Plot the net benefit 
+#' @param plpResult A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param typeColumn The name of the column specifying the evaluation type
+#' @param saveLocation Directory to save plot (if NULL plot is not saved)
+#' @param fileName Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.
+#' @param evalType Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted
+#' @param ylim The y limits for the plot, if NULL the limits are calculated from the data
+#' @param xlim The x limits for the plot, if NULL the limits are calculated from the data
+#' @return A list of ggplot objects
+#' @export
+plotNetBenefit <- function(plpResult,
+                           typeColumn = "evaluation",
+                           saveLocation = NULL,
+                           fileName = "netBenefit.png",
+                           evalType = NULL,
+                           ylim = NULL,
+                           xlim = NULL
+) {
+  if (is.null(evalType)) {
+    evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[, typeColumn])
+  } else {
+    evalTypes <- evalType
+    }
+  
+  plots <- list()
+  length(plots) <- length(evalTypes)
+  for (i in 1:length(evalTypes)) {
+    evalType <- evalTypes[i]
+    # calculate net benefit straight from predictions instead of thresholdSummary.
+    nbData <- getNetBenefit(plpResult, evalType)
+    if (is.null(ylim)) {
+      ylim <- c(min(nbData$netBenefit),
+                max(nbData$netBenefit))
+    }
+    if (is.null(xlim)) {
+      # match limit in Smooth Calibration by default
+      xlim <- c(min(nbData$threshold),
+                max(max(plpResult$performanceEvaluation$calibrationSummary$averagePredictedProbability),
+                    max(plpResult$performanceEvaluation$calibrationSummary$observedIncidence)))
+      
+    }
+    
+    plots[[i]] <- ggplot2::ggplot(data = nbData, ggplot2::aes(x = .data$threshold)) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$treatAll, color = "Treat All", linetype = "Treat All")) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$treatNone, color = "Treat None", linetype = "Treat None")) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$netBenefit, color = "Net Benefit", linetype = "Net Benefit")) +
+      ggplot2::scale_color_manual(
+        name = "Strategies",
+        values = c(
+          "Model" = "blue",
+          "Treat all" = "red",
+          "Treat None" = "brown"
+        )
+      ) +
+      ggplot2::scale_linetype_manual(
+        name = "Strategies",
+        values = c(
+          "Net Benefit" = "solid",
+          "Treat All" = "dashed",
+          "Treat None" = "dashed"
+        )
+      ) +
+      ggplot2::labs(
+        x = "Prediction Threshold",
+        y = "Net Benefit"
+      ) +
+      ggplot2::ggtitle(evalType) +
+      ggplot2::coord_cartesian(xlim = xlim, ylim = ylim)
+  }
+  
+  plot <- gridExtra::marrangeGrob(plots, nrow = length(plots), ncol = 1)
+  
+  if (!is.null(saveLocation)) {
+    if (!dir.exists(saveLocation)) {
+      dir.create(saveLocation, recursive = TRUE)
+    }
+    ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
+  }
+  return(plot)
+}
+
+#' Calculate net benefit in an efficient way
+#' @param plpResult A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param evalType The evaluation type column
+#' @return A data frame with the net benefit, treat all and treat none values
+#' @keywords internal
+getNetBenefit <- function(plpResult, evalType) {
+  prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
+  if (nrow(prediction) == 0) {
+    stop("No prediction data found for evaluation type ", evalType)
+  }
+  prediction <- prediction %>% dplyr::arrange(dplyr::desc(.data$value)) %>%
+    dplyr::mutate(
+      cumsumTrue = cumsum(.data$outcomeCount),
+      cumsumFalse = cumsum(1 - .data$outcomeCount)
+    )
+  trueCount <- sum(prediction$outcomeCount)
+  n <- nrow(prediction)
+  falseCount <- n - trueCount
+  outcomeRate <- trueCount / n
+  
+  nbData <- prediction %>% 
+    dplyr::group_by(.data$value) %>% 
+    dplyr::summarise(
+      threshold = unique(.data$value),
+      TP = max(.data$cumsumTrue),
+      FP = max(.data$cumsumFalse),
+    ) %>% 
+    dplyr::ungroup()
+  
+  nbData <- nbData %>%
+    dplyr::mutate(
+      netBenefit = (.data$TP / n) - (.data$FP / n) * (.data$threshold / (1 - .data$threshold)),
+      treatAll = outcomeRate - (1 - outcomeRate) * .data$threshold / (1 - .data$threshold),
+      treatNone = 0
+    )
+  return(nbData)
+}
+
 plotSmoothCalibrationLoess <- function(data, span = 0.75) {
   fit <- stats::loess(y ~ p, data = data, degree = 2, span = span)
   predictedFit <- stats::predict(fit, se = TRUE)

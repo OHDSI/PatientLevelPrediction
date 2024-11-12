@@ -80,8 +80,7 @@ Many of the classifiers in the `PatientLevelPrediction` use a Python backend. To
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
 library(PatientLevelPrediction)
 reticulate::install_miniconda()
-configurePython(envname='r-reticulate', envtype='conda')
-
+configurePython(envname = "r-reticulate", envtype = "conda")
 ```
 
 # Installation issues
@@ -107,13 +106,13 @@ usethis::edit_r_profile()
 and add
 
 ```{r eval=FALSE}
-Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep=":"))
+Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep = ":"))
 ```
 
 to the file then save. Where your python bin location is the location returned by
 
 ```{r eval=FALSE}
-reticulate::conda_list() 
+reticulate::conda_list()
 ```
 
 e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:\

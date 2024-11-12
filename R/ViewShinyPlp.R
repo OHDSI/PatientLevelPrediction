@@ -163,7 +163,7 @@ viewPlps <- function(databaseSettings){
       )
       databaseSettings$plpTablePrefix = databaseSettings$tablePrefix
       databaseSettings$cgTablePrefix = databaseSettings$tablePrefix
-      databaseSettings$databaseTable = 'database_meta_table'
+      databaseSettings$databaseTable = 'database_meta_data'
       databaseSettings$databaseTablePrefix = databaseSettings$tablePrefix
     ShinyAppBuilder::viewShiny(
       config = config, 

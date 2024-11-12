@@ -191,6 +191,7 @@ reference:
       - plotSmoothCalibration
       - plotSparseCalibration
       - plotSparseCalibration2
+      - plotNetBenefit
       - plotDemographicSummary
       - plotF1Measure
       - plotGeneralizability
