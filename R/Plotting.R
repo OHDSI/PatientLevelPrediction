@@ -1259,14 +1259,14 @@ plotNetBenefit <- function(plpResult,
     }
     
     plots[[i]] <- ggplot2::ggplot(data = nbData, ggplot2::aes(x = .data$threshold)) +
-      ggplot2::geom_line(ggplot2::aes(y = treatAll, color = "Treat All", linetype = "Treat All")) +
-      ggplot2::geom_line(ggplot2::aes(y = treatNone, color = "Treat None", linetype = "Treat None")) +
-      ggplot2::geom_line(ggplot2::aes(y = netBenefit, color = "Net Benefit", linetype = "Net Benefit")) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$treatAll, color = "Treat All", linetype = "Treat All")) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$treatNone, color = "Treat None", linetype = "Treat None")) +
+      ggplot2::geom_line(ggplot2::aes(y = .data$netBenefit, color = "Net Benefit", linetype = "Net Benefit")) +
       ggplot2::scale_color_manual(
         name = "Strategies",
         values = c(
-          "Net Benefit" = "blue",
-          "Treat All" = "red",
+          "Model" = "blue",
+          "Treat all" = "red",
           "Treat None" = "brown"
         )
       ) +
@@ -1290,7 +1290,7 @@ plotNetBenefit <- function(plpResult,
   
   if (!is.null(saveLocation)) {
     if (!dir.exists(saveLocation)) {
-      dir.create(saveLocation, recursive = T)
+      dir.create(saveLocation, recursive = TRUE)
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
