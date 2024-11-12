@@ -26,6 +26,7 @@
 <url><loc>/reference/addRunPlpToDatabase.html</loc></url>
 <url><loc>/reference/averagePrecision.html</loc></url>
 <url><loc>/reference/brierScore.html</loc></url>
+<url><loc>/reference/calibrationInLarge.html</loc></url>
 <url><loc>/reference/calibrationLine.html</loc></url>
 <url><loc>/reference/checkAllSameInModels.html</loc></url>
 <url><loc>/reference/checkValidateExternalInputs.html</loc></url>
@@ -126,6 +127,7 @@
 <url><loc>/reference/preprocessData.html</loc></url>
 <url><loc>/reference/recalibratePlp.html</loc></url>
 <url><loc>/reference/recalibratePlpRefit.html</loc></url>
+<url><loc>/reference/recalibrationInTheLarge.html</loc></url>
 <url><loc>/reference/runMultiplePlp.html</loc></url>
 <url><loc>/reference/runPlp.html</loc></url>
 <url><loc>/reference/savePlpAnalysesJson.html</loc></url>
@@ -159,5 +161,6 @@
 <url><loc>/reference/viewDatabaseResultPlp.html</loc></url>
 <url><loc>/reference/viewMultiplePlp.html</loc></url>
 <url><loc>/reference/viewPlp.html</loc></url>
+<url><loc>/reference/weakRecalibration.html</loc></url>
 </urlset>
 
