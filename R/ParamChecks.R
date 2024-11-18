@@ -29,7 +29,7 @@ checkBoolean <- function(parameter) {
 
 checkHigherEqual <- function(parameter, value) {
   name <- deparse(substitute(parameter))
-  if (!is.numeric(parameter) || parameter < value) {
+  if (!is.numeric(parameter) || any(parameter < value)) {
     ParallelLogger::logError(paste0(name, " needs to be >= ", value))
     stop(paste0(name, " needs to be >= ", value))
   }
@@ -38,7 +38,7 @@ checkHigherEqual <- function(parameter, value) {
 
 checkLowerEqual <- function(parameter, value) {
   name <- deparse(substitute(parameter))
-  if (!is.numeric(parameter) || parameter > value) {
+  if (!is.numeric(parameter) || any(parameter > value)) {
     ParallelLogger::logError(paste0(name, " needs to be <= ", value))
     stop(paste0(name, " needs to be <= ", value))
   }
@@ -47,7 +47,7 @@ checkLowerEqual <- function(parameter, value) {
 
 checkHigher <- function(parameter, value) {
   name <- deparse(substitute(parameter))
-  if (!is.numeric(parameter) || parameter <= value) {
+  if (!is.numeric(parameter) || any(parameter <= value)) {
     ParallelLogger::logError(paste0(name, " needs to be > ", value))
     stop(paste0(name, " needs to be > ", value))
   }
@@ -56,7 +56,7 @@ checkHigher <- function(parameter, value) {
 
 checkLower <- function(parameter, value) {
   name <- deparse(substitute(parameter))
-  if (!is.numeric(parameter) || parameter >= value) {
+  if (!is.numeric(parameter) || any(parameter >= value)) {
     ParallelLogger::logError(paste0(name, " needs to be < ", value))
     stop(paste0(name, " needs to be < ", value))
   }
