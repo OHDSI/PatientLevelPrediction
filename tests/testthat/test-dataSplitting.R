@@ -281,7 +281,7 @@ test_that("Data stratified splitting", {
     nfold = 4
   )
   test <- randomSplitter(population = dsPopulation3, splitSettings = splitSettings)
-  test <- merge(DSpopulation3, test)
+  test <- merge(dsPopulation3, test)
   test <- table(test$outcomeCount, test$index)
   expect_that(sum(test), equals(size))
 
@@ -390,7 +390,7 @@ test_that("Data splitting by subject", {
     test = 0.3,
     nfold = 3
   )
-  expect_error(subjectSplitter(population = DSpopulation1, splitSettings = splitSettings))
+  expect_error(subjectSplitter(population = dsPopulation1, splitSettings = splitSettings))
 
   dsPopulation2 <- data.frame(rowId = 1:200, subjectId = 1:200, outcomeCount = c(rep(1, 42), rep(0, 158)))
   splitSettings <- defaultSetting(
@@ -398,8 +398,8 @@ test_that("Data splitting by subject", {
     test = 0.2,
     nfold = 4
   )
-  test <- subjectSplitter(population = DSpopulation2, splitSettings = splitSettings)
-  test <- merge(DSpopulation2, test)
+  test <- subjectSplitter(population = dsPopulation2, splitSettings = splitSettings)
+  test <- merge(dsPopulation2, test)
   test <- table(test$outcomeCount, test$index)
   testReturned <- paste(test, collapse = "-")
   testExpected <- paste(matrix(c(32, 32, 32, 31, 31, 8, 9, 9, 8, 8), ncol = 5, byrow = TRUE), collapse = "-")
@@ -412,8 +412,8 @@ test_that("Data splitting by subject", {
     test = 0.25,
     nfold = 3
   )
-  test <- subjectSplitter(population = DSpopulation3, splitSettings = splitSettings)
-  test <- merge(DSpopulation3, test)
+  test <- subjectSplitter(population = dsPopulation3, splitSettings = splitSettings)
+  test <- merge(dsPopulation3, test)
 
   expect_equal(unique(table(test$subjectId[test$index == -1])), 4)
   expect_equal(unique(table(test$subjectId[test$index == 2])), 4)
