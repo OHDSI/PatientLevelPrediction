@@ -266,7 +266,7 @@ test_that("Data stratified splitting", {
   )
   # fold creation check 1 (fixed)
   test <- randomSplitter(population = dsPopulation2, splitSettings = splitSettings)
-  test <- merge(DsPopulation2, test)
+  test <- merge(dsPopulation2, test)
   test <- table(test$outcomeCount, test$index)
   testReturned <- paste(test, collapse = "-")
   testExpected <- paste(matrix(c(47, 28, 28, 28, 27, 12, 8, 8, 7, 7), ncol = 5, byrow = TRUE), collapse = "-")
