@@ -1,5 +1,7 @@
 PatientLevelPrediction develop
 ======================
+- Added existingSplit settings where users can split data bases on an 
+existing split
 - Fixed linting errors and R codestyle in docs to conform to HADES style
 - Remove links to pdf's, point to website instead.
 - Fix broken links in Readme and BuildingPredictiveModels vignette
