@@ -420,5 +420,40 @@ test_that("Data splitting by subject", {
   expect_equal(unique(table(test$subjectId[test$index == 3])), 4)
   expect_equal(unique(table(test$subjectId[test$index == 1])), 4)
 
+  # test that no subject is not assigned a fold
+  expect_equal(sum(test$index == 0), 0)
+})
+
+test_that("Existing data splitter works", {
+  # split by age
+  age <- population$ageYear
+  # create empty index same lengths as age
+  index <- rep(0, length(age))
+  index[age > 43] <- -1 # test set
+  index[age <= 35] <- 1 # train fold 1
+  index[age > 35 & age <= 43] <- 2 # train fold 2
+  splitIds <- data.frame(rowId = population$rowId, index = index)
+  splitSettings <- createExistingSplitSettings(splitIds)
+  ageSplit <- splitData(
+    plpData = plpData,
+    population = population,
+    splitSettings = splitSettings
+  )
+  
+  # test only old people in test
+  expect_equal(
+    length(ageSplit$Test$labels$rowId),
+    sum(age > 43)
+  )
+  # only young people in train
+  expect_equal(
+    length(ageSplit$Train$labels$rowId),
+    sum(age <= 43)
+  )
+  # no overlap
+  expect_equal(
+    length(intersect(ageSplit$Test$labels$rowId, ageSplit$Train$labels$rowId)),
+    0
+  )
 
 })

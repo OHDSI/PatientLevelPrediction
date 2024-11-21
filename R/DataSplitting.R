@@ -93,6 +93,26 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
   return(splitSettings)
 }
 
+#' Create the settings for defining how the plpData are split into
+#' test/validation/train sets using an existing split - good to use for 
+#' reproducing results from a different run 
+#' @param splitIds (data.frame) A data frame with rowId and index columns of 
+#' type integer/numeric. Index is -1 for test set, positive integer for train 
+#' set folds
+#' @return An object of class \code{splitSettings}
+#' @export
+createExistingSplitSettings <- function(splitIds) {
+  checkIsClass(splitIds, "data.frame")
+  checkColumnNames(splitIds, c("rowId", "index"))
+  checkIsClass(splitIds$rowId, c("integer", "numeric"))
+  checkIsClass(splitIds$index, c("integer", "numeric"))
+  checkHigherEqual(splitIds$index, -1)
+
+  splitSettings <- list(splitIds = splitIds)
+  attr(splitSettings, "fun") <- "existingSplitter"
+  class(splitSettings) <- "splitSettings"
+  return(splitSettings)
+}
 
 
 #' Split the plpData into test/train sets using a splitting settings of class 
@@ -561,7 +581,16 @@ checkInputsSplit <- function(test, train, nfold, seed) {
   ParallelLogger::logDebug(paste0("nfold: ", nfold))
   checkIsClass(nfold, c("numeric", "integer"))
   checkHigher(nfold, 1)
-  
-  ParallelLogger::logInfo(paste0('seed: ', seed))
-  checkIsClass(seed, c('numeric','integer'))
+
+  ParallelLogger::logInfo(paste0("seed: ", seed))
+  checkIsClass(seed, c("numeric", "integer"))
+}
+
+existingSplitter <- function(population, splitSettings) {
+  splitIds <- splitSettings$splitIds
+  # check all row Ids are in population
+  if (sum(!splitIds$rowId %in% population$rowId) > 0) {
+    stop("Not all rowIds in splitIds are in the population")
+  }
+  return(splitIds)
 }
