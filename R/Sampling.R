@@ -26,7 +26,7 @@
 #'                                         \item 'underSample' Undersample the non-outcome class to make the data more ballanced
 #'                                         \item 'overSample' Oversample the outcome class by adding in each outcome multiple times
 #'                                         } 
-#' @param numberOutcomestoNonOutcomes   (numeric) An numeric specifying the require number of non-outcomes per outcome 
+#' @param numberOutcomestoNonOutcomes   (numeric) An numeric specifying the require number of outcomes per non-outcomes 
 #' @param sampleSeed         (numeric) A seed to use when splitting the data for reproducibility (if not set a random number will be generated)
 #'
 #' @return
