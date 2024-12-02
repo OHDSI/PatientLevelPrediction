@@ -44,6 +44,10 @@ createSampleSettings <- function(type = 'none',
     stop('Incorrect type.  Pick: none/underSample/overSample')
   }
   
+  if(type %in% c('underSample', 'overSample')){
+    ParallelLogger::logWarn('The previous documentation for `numberOutcomestoNonOutcomes` used to not reflect the functionality and has now been changed. The user needs to make sure the code is not relying on what was in the docs previously.')
+  }
+  
   sampleSettings <- list(
     numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes,
     sampleSeed  = ifelse(type == 'none', 1, sampleSeed) # to make it the same for none
