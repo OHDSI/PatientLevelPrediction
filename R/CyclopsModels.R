@@ -101,9 +101,9 @@ fitCyclopsModel <- function(
       noiseLevel = "silent",
       threads = settings$threads,
       maxIterations = settings$maxIterations,
-      seed = settings$seed
+      seed = settings$seed,
+      useKKTSwindle = FALSE
       )
-    
     fit <- tryCatch({
       ParallelLogger::logInfo('Running Cyclops')
       Cyclops::fitCyclopsModel(
