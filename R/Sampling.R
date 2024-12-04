@@ -23,10 +23,10 @@
 #'
 #' @param type              (character) Choice of:  \itemize{
 #'                                         \item 'none' No sampling is applied - this is the default
-#'                                         \item 'underSample' Undersample the non-outcome class to make the data more ballanced
+#'                                         \item 'underSample' Undersample the non-outcome class to make the data more balanced
 #'                                         \item 'overSample' Oversample the outcome class by adding in each outcome multiple times
 #'                                         } 
-#' @param numberOutcomestoNonOutcomes   (numeric) An numeric specifying the require number of non-outcomes per outcome 
+#' @param numberOutcomestoNonOutcomes   (numeric) A numeric specifying the required number of outcomes per non-outcomes 
 #' @param sampleSeed         (numeric) A seed to use when splitting the data for reproducibility (if not set a random number will be generated)
 #'
 #' @return
@@ -42,6 +42,10 @@ createSampleSettings <- function(type = 'none',
   checkIsClass(type, c('character'))
   if(! type %in% c('none', 'underSample', 'overSample')){
     stop('Incorrect type.  Pick: none/underSample/overSample')
+  }
+  
+  if(type %in% c('underSample', 'overSample')){
+    ParallelLogger::logWarn('The previous documentation for `numberOutcomestoNonOutcomes` used to not reflect the functionality and has now been changed. The user needs to make sure the code is not relying on what was in the docs previously.')
   }
   
   sampleSettings <- list(
