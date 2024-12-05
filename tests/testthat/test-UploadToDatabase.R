@@ -38,7 +38,7 @@ if (Sys.getenv("CI") == "true" &&
   }
 }
 test_that("test createDatabaseSchemaSettings works", {
-  skip_on_ci("not run on CI")
+  skip_on_ci()
   skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema,
@@ -93,7 +93,7 @@ test_that("test createDatabaseDetails works", {
 
 
 test_that("database creation", {
-  skip_on_ci("not run on CI")
+  skip_on_ci()
   skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
@@ -114,7 +114,7 @@ test_that("database creation", {
 
 
 test_that("results uploaded to database", {
-  skip_on_ci("not run on CI")
+  skip_on_ci()
   skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
   resultsLoc <- file.path(saveLoc, "dbUp")
 
@@ -164,7 +164,7 @@ test_that("results uploaded to database", {
 })
 
 test_that("database deletion", {
-  skip_on_ci("not run on CI")
+  skip_on_ci()
   skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
