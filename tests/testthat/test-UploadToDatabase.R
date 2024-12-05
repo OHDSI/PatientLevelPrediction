@@ -18,7 +18,7 @@ context("UploadToDatabase")
 
 # only run this during CI in main repo
 if (Sys.getenv("CI") == "true" && 
-  Sys.getenv("GITHUB_REPOSITORY") == "ohdsi/PatientLevelPrediction") {
+  Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
   cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
   ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
   connectionRedshift <- DatabaseConnector::createConnectionDetails(
@@ -39,7 +39,7 @@ if (Sys.getenv("CI") == "true" &&
 }
 test_that("test createDatabaseSchemaSettings works", {
   skip_on_ci()
-  skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
+  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "ohdsi/PatientLevelPrediction", "not run in fork")
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema,
     tablePrefix = "",
@@ -94,7 +94,7 @@ test_that("test createDatabaseDetails works", {
 
 test_that("database creation", {
   skip_on_ci()
-  skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
+  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
     resultSchema = ohdsiDatabaseSchema,
@@ -115,7 +115,7 @@ test_that("database creation", {
 
 test_that("results uploaded to database", {
   skip_on_ci()
-  skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
+  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   resultsLoc <- file.path(saveLoc, "dbUp")
 
   plpResult$model$trainDetails$developmentDatabase <- "test"
@@ -165,7 +165,7 @@ test_that("results uploaded to database", {
 
 test_that("database deletion", {
   skip_on_ci()
-  skip_if(Sys.getenv("GITHUB_REPO") != "ohdsi/PatientLevelPrediction", "not run in fork")
+  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "ohdsi/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
     resultSchema = ohdsiDatabaseSchema,
@@ -184,7 +184,7 @@ test_that("database deletion", {
 })
 
 # disconnect
-if (Sys.getenv("CI") == "true" && Sys.getenv("GITHUB_REPOSITORY") == "ohdsi/PatientLevelPrediction") {
+if (Sys.getenv("CI") == "true" && Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
   DatabaseConnector::disconnect(conn)
 }
 
