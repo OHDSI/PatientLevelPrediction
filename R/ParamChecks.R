@@ -99,3 +99,12 @@ checkColumnNames <- function(parameter, columnNames) {
   }
   return(TRUE)
 }
+
+checkIsEqual <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!identical(parameter, value)) {
+    ParallelLogger::logError(paste0(name, " should be equal to ", value))
+    stop(paste0(name, " is not equal to ", value))
+  }
+  return(TRUE)
+}
