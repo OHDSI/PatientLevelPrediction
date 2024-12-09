@@ -73,12 +73,14 @@ test_that("getPlpData checks covariateSettings object", {
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings2)
   )
-  expect_equal(plpData$covariateData$covariateRef %>% dplyr::pull(.data$analysisId %>% length()), 3)
+  expect_equal(plpData$covariateData$covariateRef %>% 
+                 dplyr::pull(.data$analysisId) %>% length(), 
+               3)
 
   settings3 <- list(covariateId = 3)
   class(settings3) <- "NotCovariateSettings"
 
-  expect_Error(getPlpData(
+  expect_error(getPlpData(
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings3)
   ))

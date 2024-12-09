@@ -254,20 +254,24 @@ getPlpData <- function(
   )
 
   renderedSql <- readChar(pathToSql, file.info(pathToSql)$size)
-  renderedSql <- SqlRender::render(
-    sql = renderedSql,
+  renderArgs <- list(sql = renderedSql,
     cdm_database_schema = databaseDetails$cdmDatabaseSchema,
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
     cdm_version = databaseDetails$cdmVersion,
-    target_id = databaseDetails$targetId,
-    study_start_date = restrictPlpDataSettings$studyStartDate,
-    study_end_date = restrictPlpDataSettings$studyEndDate,
-    first_only = restrictPlpDataSettings$firstExposureOnly,
-    washout_period = restrictPlpDataSettings$washoutPeriod,
-    use_sample = !is.null(restrictPlpDataSettings$sampleSize),
-    sample_number = restrictPlpDataSettings$sampleSize
-  )
+    target_id = databaseDetails$targetId)
+  
+  if (!is.null(restrictPlpDataSettings$sampleSize)) {
+    renderArgs$study_start_date <- restrictPlpDataSettings$studyStartDate
+    renderArgs$study_end_date <- restrictPlpDataSettings$studyEndDate
+    renderArgs$first_only <- restrictPlpDataSettings$firstExposureOnly
+    renderArgs$washout_period <- restrictPlpDataSettings$washoutPeriod
+    renderArgs$use_sample <- !is.null(restrictPlpDataSettings$sampleSize)
+    renderArgs$sample_number <- restrictPlpDataSettings$sampleSize
+  }
+  
+  renderedSql <- do.call(SqlRender::render, renderArgs)
+  
   renderedSql <- SqlRender::translate(
     sql = renderedSql,
     targetDialect = dbms,
