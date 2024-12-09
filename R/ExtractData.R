@@ -221,8 +221,9 @@ getPlpData <- function(
       checkIsClass(covariateSettings[[i]], "covariateSettings")
     }
   }
-
-  checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+  if (!is.null(restrictPlpDataSettings)) {
+    checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
+  }
 
 
 
@@ -448,7 +449,7 @@ summary.plpData <- function(object, ...) {
     eventCount = 0,
     personCount = 0
   )
-  for (i in seq_along(outcomeCounts)) {
+  for (i in seq_len(nrow(outcomeCounts))) {
     outcomeCounts$eventCount[i] <- sum(object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i])
     outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
   }
