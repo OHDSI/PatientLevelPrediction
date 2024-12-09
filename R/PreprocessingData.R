@@ -114,6 +114,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
         min = min(.data$covariateValue, na.rm = TRUE)
       ) %>%
       dplyr::collect()
+    on.exit(trainData$covariateData$minMaxs <- NULL, add = TRUE)
 
     # save the normalization
     attr(featureEngineeringSettings, "minMaxs") <-
@@ -193,6 +194,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
       dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
       dplyr::select(-c("q75", "q25")) %>%
       dplyr::collect()
+    on.exit(trainData$covariateData$quantiles <- NULL, add = TRUE)
 
     # save the normalization
     attr(featureEngineeringSettings, "quantiles") <-
@@ -213,7 +215,6 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
         .data$covariateValue
       )) %>%
       dplyr::select(-c("median", "iqr"))
-    trainData$covariateData$quantiles <- NULL
     normalized <- TRUE
   } else {
     # apply the normalization to test data by using saved normalization values
