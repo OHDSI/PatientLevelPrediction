@@ -98,7 +98,7 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
 }
 
 
-adaBoostClassifierInputs <- function(classifier, param) {
+AdaBoostClassifierInputs <- function(classifier, param) {
   model <- classifier(
     n_estimators = param[[which.max(names(param) == "nEstimators")]],
     learning_rate = param[[which.max(names(param) == "learningRate")]],
@@ -330,7 +330,7 @@ setDecisionTree <- function(criterion = list("gini"),
 }
 
 
-decisionTreeClassifierInputs <- function(classifier, param) {
+DecisionTreeClassifierInputs <- function(classifier, param) {
   model <- classifier(
     criterion = param[[which.max(names(param) == "criterion")]],
     splitter = param[[which.max(names(param) == "splitter")]],
@@ -568,7 +568,7 @@ setNaiveBayes <- function() {
   return(result)
 }
 
-gaussianNBInputs <- function(classifier, param) {
+GaussianNBInputs <- function(classifier, param) {
   model <- classifier()
 
   return(model)
@@ -727,7 +727,7 @@ setRandomForest <- function(ntrees = list(100, 500),
 }
 
 
-randomForestClassifierInputs <- function(classifier, param) {
+RandomForestClassifierInputs <- function(classifier, param) {
   model <- classifier(
     n_estimators = param[[which.max(names(param) == "ntrees")]],
     criterion = param[[which.max(names(param) == "criterion")]],

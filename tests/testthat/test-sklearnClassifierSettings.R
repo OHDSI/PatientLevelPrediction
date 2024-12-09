@@ -20,7 +20,7 @@ test_that("setAdaBoost settings work checks", {
   expect_equal(attr(adset$param, "settings")$pythonClass, "AdaBoostClassifier")
 
 
-  inputs <- adaBoostClassifierInputs(list, adset$param[[1]])
+  inputs <- AdaBoostClassifierInputs(list, adset$param[[1]])
   expect_equal(
     names(inputs),
     c("n_estimators", "learning_rate", "algorithm", "random_state")
@@ -101,7 +101,7 @@ test_that("setNaiveBayes settings work checks", {
   expect_equal(attr(nbset$param, "settings")$pythonModule, "sklearn.naive_bayes")
   expect_equal(attr(nbset$param, "settings")$pythonClass, "GaussianNB")
 
-  inputs <- gaussianNBInputs(list, nbset$param[[1]])
+  inputs <- GaussianNBInputs(list, nbset$param[[1]])
   expect_equal(names(inputs), NULL)
 })
 
@@ -137,7 +137,7 @@ test_that("setRandomForest settings work checks", {
   expect_equal(attr(rfset$param, "settings")$pythonModule, "sklearn.ensemble")
   expect_equal(attr(rfset$param, "settings")$pythonClass, "RandomForestClassifier")
 
-  inputs <- randomForestClassifierInputs(list, rfset$param[[1]])
+  inputs <- RandomForestClassifierInputs(list, rfset$param[[1]])
   expect_equal(
     names(inputs),
     c(
