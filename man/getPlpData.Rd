@@ -2,18 +2,19 @@
 % Please edit documentation in R/ExtractData.R
 \name{getPlpData}
 \alias{getPlpData}
-\title{Get the patient level prediction data from the server}
+\title{Extract the patient level prediction data from the server}
 \usage{
-getPlpData(databaseDetails, covariateSettings, restrictPlpDataSettings)
+getPlpData(databaseDetails, covariateSettings, restrictPlpDataSettings = NULL)
 }
 \arguments{
 \item{databaseDetails}{The cdm database details created using \code{createDatabaseDetails()}}
 
-\item{covariateSettings}{An object of type \code{covariateSettings} as created using the
+\item{covariateSettings}{An object of type \code{covariateSettings} or a list of such objects as created using the
 \code{createCovariateSettings} function in the
 \code{FeatureExtraction} package.}
 
-\item{restrictPlpDataSettings}{Extra settings to apply to the target population while extracting data.  Created using \code{createRestrictPlpDataSettings()}.}
+\item{restrictPlpDataSettings}{Extra settings to apply to the target population while extracting data.
+Created using \code{createRestrictPlpDataSettings()}. This is optional.}
 }
 \value{
 Returns an object of type \code{plpData}, containing information on the cohorts, their
@@ -23,11 +24,11 @@ efficiency reasons. This object is a list with the following components: \descri
 the outcome id. Outcomes are not yet filtered based on risk window, since this is done at
 a later stage.} \item{cohorts}{A data frame listing the persons in each cohort, listing their
 exposure status as well as the time to the end of the observation period and time to the end of the
-cohort (usually the end of the exposure era).} \item{covariates}{An ffdf object listing the
+cohort (usually the end of the exposure era).} \item{covariates}{An Andromeda object listing the
 baseline covariates per person in the two cohorts. This is done using a sparse representation:
-covariates with a value of 0 are omitted to save space.} \item{covariateRef}{An ffdf object describing the covariates that have been extracted.}
-\item{metaData}{A list of objects with information on how the cohortMethodData object was
-constructed.} } The generic \code{()} and \code{summary()} functions have been implemented for this object.
+covariates with a value of 0 are omitted to save space. Usually has three columns,
+rowId, covariateId and covariateValue'.} \item{covariateRef}{An Andromeda object describing the covariates that have been extracted.}
+\item{AnalysisRef}{An Andromeda object with information about which analysisIds from 'FeatureExtraction' were used.} }
 }
 \description{
 This function executes a large set of SQL statements against the database in OMOP CDM format to
@@ -37,7 +38,7 @@ extract the data needed to perform the analysis.
 Based on the arguments, the at risk cohort data is retrieved, as well as outcomes
 occurring in these subjects. The at risk cohort is identified  through
 user-defined cohorts in a cohort table either inside the CDM instance or in a separate schema.
-Similarly, outcomes are identified 
+Similarly, outcomes are identified
 through user-defined cohorts in a cohort table either inside the CDM instance or in a separate
 schema. Covariates are automatically extracted from the appropriate tables within the CDM.
 If you wish to exclude concepts from covariates you will need to
