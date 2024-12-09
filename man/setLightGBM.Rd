@@ -16,7 +16,7 @@ setLightGBM(
   lambdaL2 = c(0),
   scalePosWeight = 1,
   isUnbalance = FALSE,
-  seed = sample(1e+07, 1)
+  seed = sample(10000000, 1)
 )
 }
 \arguments{

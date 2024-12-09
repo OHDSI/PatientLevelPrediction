@@ -8,14 +8,14 @@ setMLP(
   hiddenLayerSizes = list(c(100), c(20)),
   activation = list("relu"),
   solver = list("adam"),
-  alpha = list(0.3, 0.01, 1e-04, 1e-06),
+  alpha = list(0.3, 0.01, 0.0001, 0.000001),
   batchSize = list("auto"),
   learningRate = list("constant"),
   learningRateInit = list(0.001),
   powerT = list(0.5),
   maxIter = list(200, 100),
   shuffle = list(TRUE),
-  tol = list(1e-04),
+  tol = list(0.0001),
   warmStart = list(TRUE),
   momentum = list(0.9),
   nesterovsMomentum = list(TRUE),
@@ -23,9 +23,9 @@ setMLP(
   validationFraction = list(0.1),
   beta1 = list(0.9),
   beta2 = list(0.999),
-  epsilon = list(1e-08),
+  epsilon = list(0.00000001),
   nIterNoChange = list(10),
-  seed = sample(1e+05, 1)
+  seed = sample(100000, 1)
 )
 }
 \arguments{
