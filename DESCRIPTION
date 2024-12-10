@@ -27,6 +27,7 @@ Imports:
     Andromeda,
     Cyclops (>= 3.0.0),
     DatabaseConnector (>= 6.0.0),
+    digest,
     dplyr,
     FeatureExtraction (>= 3.0.0),
     ggplot2,
