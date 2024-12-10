@@ -182,37 +182,37 @@ setCoxModel <- function(
 #' @examples
 #' model.lr <- setLassoLogisticRegression()
 #' @export
-setIterativeHardThresholding<- function(
+setIterativeHardThresholding <- function(
   K = 10, 
   penalty = "bic", 
-  seed = sample(100000,1), 
+  seed = sample(100000, 1), 
   exclude = c(), 
-  forceIntercept = F,
+  forceIntercept = FALSE,
   fitBestSubset = FALSE,
-  initialRidgeVariance = 10000,
+  initialRidgeVariance = 0.1,
   tolerance = 1e-08,
   maxIterations = 10000,
   threshold = 1e-06, 
   delta = 0
-  ){
+  ) {
   
   ensure_installed("IterativeHardThresholding")
   
-  if(K<1)
-    stop('Invalid maximum number of predictors')
-  if(!(penalty %in% c("aic", "bic") || is.numeric(penalty)))
+  if (K < 1)
+    stop("Invalid maximum number of predictors")
+  if (!(penalty %in% c("aic", "bic") || is.numeric(penalty)))
     stop('Penalty must be "aic", "bic" or numeric')
-  if(!is.logical(forceIntercept))
+  if (!is.logical(forceIntercept))
     stop("forceIntercept must be of type: logical")
-  if(!is.logical(fitBestSubset))
+  if (!is.logical(fitBestSubset))
     stop("fitBestSubset must be of type: logical")
-  if(!inherits(x = seed, what = c('numeric','NULL','integer')))
-    stop('Invalid seed')
+  if (!inherits(x = seed, what = c("numeric", "NULL", "integer")))
+    stop("Invalid seed")
 
 
   # set seed
-  if(is.null(seed[1])){
-    seed <- as.integer(sample(100000000,1))
+  if (is.null(seed[1])) {
+    seed <- as.integer(sample(100000000, 1))
   }
   
   param <- list(
@@ -230,19 +230,19 @@ setIterativeHardThresholding<- function(
     )
   )
   
-  attr(param, 'settings') <- list(
-    priorfunction = 'IterativeHardThresholding::createIhtPrior',
+  attr(param, "settings") <- list(
+    priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
-    crossValidationInPrior = F,
-    modelType = 'logistic',
-    addIntercept = F,
-    useControl = F,
+    crossValidationInPrior = FALSE,
+    modelType = "logistic",
+    addIntercept = FALSE,
+    useControl = FALSE,
     seed = seed[1],
     name = "Iterative Hard Thresholding"
   )
   
-  attr(param, 'modelType') <- 'binary' 
-  attr(param, 'saveType') <- 'RtoJson'
+  attr(param, "modelType") <- "binary" 
+  attr(param, "saveType") <- "RtoJson"
   
   result <- list(
     fitFunction = "fitCyclopsModel",
@@ -252,4 +252,3 @@ setIterativeHardThresholding<- function(
   
   return(result)
 }
-

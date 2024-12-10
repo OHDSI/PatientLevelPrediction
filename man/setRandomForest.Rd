@@ -65,7 +65,9 @@ Create setting for random forest model with python (very fast)
 }
 \examples{
 \dontrun{
-model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100),
-                           maxDepth=c(5,20))
+model.rf <- setRandomForest(
+  mtries = list("auto", 5, 20), ntrees = c(10, 100),
+  maxDepth = c(5, 20)
+)
 }
 }

@@ -264,16 +264,16 @@ predictCyclops <- function(plpModel, data, cohort ) {
   )
   
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
-  if(attr(plpModel, 'modelType') == 'survival'){
-    if(!is.null(plpModel$model$baselineSurvival)){
-      if(is.null(attr(cohort, 'timepoint'))){
-        timepoint <- attr(cohort,'metaData')$populationSettings$riskWindowEnd
-      } else{
-        timepoint <- attr(cohort, 'timepoint')
+  if (attr(plpModel, "modelType") == "survival") {
+    if (!is.null(plpModel$model$baselineSurvival)) {
+      if (is.null(attr(cohort, "timepoint"))) {
+        timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
+      } else {
+        timepoint <- attr(cohort, "timepoint")
       }
-      bhind <- which.min(abs(plpModel$model$baselineSurvival$time-timepoint))
+      bhind <- which.min(abs(plpModel$model$baselineSurvival$time - timepoint))
       # 1- baseline survival(time)^ (exp(betas*values))
-      prediction$value <- 1-plpModel$model$baselineSurvival$surv[bhind]^prediction$value
+      prediction$value <- 1 - plpModel$model$baselineSurvival$surv[bhind]^prediction$value
       
       
       metaData <- list()
@@ -281,7 +281,7 @@ predictCyclops <- function(plpModel, data, cohort ) {
       metaData$baselineSurvival <- plpModel$model$baselineSurvival$surv[bhind]
       metaData$offset <- 0
       
-      attr(prediction, 'metaData') <- metaData
+      attr(prediction, "metaData") <- metaData
     }
   }
   
@@ -291,54 +291,54 @@ predictCyclops <- function(plpModel, data, cohort ) {
 }
 
 predictCyclopsType <- function(coefficients, population, covariateData, modelType = "logistic") {
-  if (!(modelType %in% c("logistic", "poisson", "survival","cox"))) {
+  if (!(modelType %in% c("logistic", "poisson", "survival", "cox"))) {
     stop(paste("Unknown modelType:", modelType))
   }
-  if (!FeatureExtraction::isCovariateData(covariateData)){
+  if (!FeatureExtraction::isCovariateData(covariateData)) {
     stop("Needs correct covariateData")
   }
   
-  intercept <- coefficients$betas[coefficients$covariateId%in%'(Intercept)']
-  if(length(intercept)==0) intercept <- 0
-  betas <- coefficients$betas[!coefficients$covariateIds%in%'(Intercept)']
+  intercept <- coefficients$betas[coefficients$covariateIds %in% "(Intercept)"]
+  if (length(intercept) == 0) intercept <- 0
+  betas <- coefficients$betas[!coefficients$covariateIds %in% "(Intercept)"]
   coefficients <- data.frame(beta = betas,
-    covariateId = coefficients$covariateIds[coefficients$covariateIds!='(Intercept)']
+    covariateId = coefficients$covariateIds[coefficients$covariateIds != "(Intercept)"]
   )
   coefficients <- coefficients[coefficients$beta != 0, ]
-  if(sum(coefficients$beta != 0)>0){
+  if (sum(coefficients$beta != 0) > 0) {
     covariateData$coefficients <- coefficients
     on.exit(covariateData$coefficients <- NULL, add = TRUE)
     
     prediction <- covariateData$covariates %>% 
-      dplyr::inner_join(covariateData$coefficients, by= 'covariateId') %>% 
-      dplyr::mutate(values = .data$covariateValue*.data$beta) %>%
+      dplyr::inner_join(covariateData$coefficients, by = "covariateId") %>% 
+      dplyr::mutate(values = .data$covariateValue * .data$beta) %>%
       dplyr::group_by(.data$rowId) %>%
       dplyr::summarise(value = sum(.data$values, na.rm = TRUE)) %>%
       dplyr::select("rowId", "value")
     
     prediction <- as.data.frame(prediction)
-    prediction <- merge(population, prediction, by ="rowId", all.x = TRUE, fill = 0)
+    prediction <- merge(population, prediction, by = "rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
     prediction$value <- prediction$value + intercept
-  } else{
-    warning('Model had no non-zero coefficients so predicted same for all population...')
+  } else {
+    warning("Model had no non-zero coefficients so predicted same for all population...")
     prediction <- population
     prediction$value <- rep(0, nrow(population)) + intercept
   }
   if (modelType == "logistic") {
     link <- function(x) {
-      return(1/(1 + exp(0 - x)))
+      return(1 / (1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-    attr(prediction, "metaData")$modelType <- 'binary'
+    attr(prediction, "metaData")$modelType <- "binary"
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     
     # add baseline hazard stuff
     
     prediction$value <- exp(prediction$value)
-    attr(prediction, "metaData")$modelType <- 'survival'
-    if(modelType == "survival"){ # is this needed?
-      attr(prediction, 'metaData')$timepoint <- max(population$survivalTime, na.rm = T)
+    attr(prediction, "metaData")$modelType <- "survival"
+    if (modelType == "survival") { # is this needed?
+      attr(prediction, "metaData")$timepoint <- max(population$survivalTime, na.rm = TRUE)
     }
     
   }

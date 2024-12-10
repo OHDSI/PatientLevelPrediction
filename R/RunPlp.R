@@ -247,7 +247,7 @@ runPlp <- function(
   }
   
   # log the start time:
-  ExecutionDateTime <- Sys.time()
+  executionDateTime <- Sys.time()
   
   # print the header in the log
   tryCatch({
@@ -257,7 +257,7 @@ runPlp <- function(
       outcomeId, 
       analysisId, 
       analysisName,
-      ExecutionDateTime
+      executionDateTime
     )
   })
   
@@ -468,7 +468,7 @@ runPlp <- function(
   #  ExecutionSummary details:
   # log the end time:
   endTime <- Sys.time()
-  TotalExecutionElapsedTime <- difftime(endTime, ExecutionDateTime, units='mins')
+  TotalExecutionElapsedTime <- difftime(endTime, executionDateTime, units='mins')
   
   executionSummary <- list(
     PackageVersion = list(
@@ -481,7 +481,7 @@ runPlp <- function(
       RAM = memuse::Sys.meminfo()[1]
       ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
-    ExecutionDateTime = ExecutionDateTime,
+    ExecutionDateTime = executionDateTime,
     Log = logSettings$logFileName # location for now
     #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )

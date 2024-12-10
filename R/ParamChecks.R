@@ -19,73 +19,92 @@
 # Functions used to check parameter values
 
 checkBoolean <- function(parameter) {
-  name = deparse(substitute(parameter))
+  name <- deparse(substitute(parameter))
   if (!is.logical(parameter)) {
-    ParallelLogger::logError(paste0(name, ' needs to be a boolean'))      
-    stop(paste0(name, ' not defined correctly'))
-  }
-  return(TRUE)
-}  
-
-checkHigherEqual <- function(parameter,value) {
-  name = deparse(substitute(parameter))
-  if (!is.numeric(parameter) | parameter<value) {
-    ParallelLogger::logError(paste0(name, ' needs to be >= ',value))      
-    stop(paste0(name, ' needs to be >= ', value))
-  }
-  return(TRUE)
-} 
-
-checkLowerEqual <- function(parameter,value) {
-  name = deparse(substitute(parameter))
-  if (!is.numeric(parameter) | parameter>value) {
-    ParallelLogger::logError(paste0(name, ' needs to be <= ',value))      
-    stop(paste0(name, ' needs to be <= ', value))
-  }
-  return(TRUE)
-} 
-
-checkHigher <- function(parameter,value) {
-  name = deparse(substitute(parameter))
-  if (!is.numeric(parameter) | parameter<=value) {
-    ParallelLogger::logError(paste0(name, ' needs to be > ',value))      
-    stop(paste0(name, ' needs to be > ', value))
+    ParallelLogger::logError(paste0(name, " needs to be a boolean"))
+    stop(paste0(name, " not defined correctly"))
   }
   return(TRUE)
 }
 
-checkLower <- function(parameter,value) {
-  name = deparse(substitute(parameter))
-  if (!is.numeric(parameter) | parameter>=value) {
-    ParallelLogger::logError(paste0(name, ' needs to be < ',value))      
-    stop(paste0(name, ' needs to be < ', value))
+checkHigherEqual <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!is.numeric(parameter) || any(parameter < value)) {
+    ParallelLogger::logError(paste0(name, " needs to be >= ", value))
+    stop(paste0(name, " needs to be >= ", value))
+  }
+  return(TRUE)
+}
+
+checkLowerEqual <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!is.numeric(parameter) || any(parameter > value)) {
+    ParallelLogger::logError(paste0(name, " needs to be <= ", value))
+    stop(paste0(name, " needs to be <= ", value))
+  }
+  return(TRUE)
+}
+
+checkHigher <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!is.numeric(parameter) || any(parameter <= value)) {
+    ParallelLogger::logError(paste0(name, " needs to be > ", value))
+    stop(paste0(name, " needs to be > ", value))
+  }
+  return(TRUE)
+}
+
+checkLower <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!is.numeric(parameter) || any(parameter >= value)) {
+    ParallelLogger::logError(paste0(name, " needs to be < ", value))
+    stop(paste0(name, " needs to be < ", value))
   }
   return(TRUE)
 }
 
 checkNotNull <- function(parameter) {
-  name = deparse(substitute(parameter))
+  name <- deparse(substitute(parameter))
   if (is.null(parameter)) {
-    ParallelLogger::logError(paste0(name, ' cannot be empty'))      
-    stop(paste0(name, ' cannot be empty'))
+    ParallelLogger::logError(paste0(name, " cannot be empty"))
+    stop(paste0(name, " cannot be empty"))
   }
   return(TRUE)
 }
 
-checkIsClass<- function(parameter,classes) {
-  name = deparse(substitute(parameter))
+checkIsClass <- function(parameter, classes) {
+  name <- deparse(substitute(parameter))
   if (!inherits(x = parameter, what = classes)) {
-    ParallelLogger::logError(paste0(name, ' should be of class:', classes))      
-    stop(paste0(name, ' is wrong class'))
+    ParallelLogger::logError(paste0(name, " should be of class:", classes))
+    stop(paste0(name, " is wrong class"))
   }
   return(TRUE)
 }
 
-checkInStringVector<- function(parameter,values) {
-  name = deparse(substitute(parameter))
-  if (!parameter%in%values) {
-    ParallelLogger::logError(paste0(name, ' should be ', paste0(as.character(values), collapse="or ")))      
-    stop(paste0(name, ' has incorrect value'))
+checkInStringVector <- function(parameter, values) {
+  name <- deparse(substitute(parameter))
+  if (!parameter %in% values) {
+    ParallelLogger::logError(paste0(name, " should be ", paste0(as.character(values), collapse = "or ")))
+    stop(paste0(name, " has incorrect value"))
+  }
+  return(TRUE)
+}
+
+# check column names of dataframe
+checkColumnNames <- function(parameter, columnNames) {
+  name <- deparse(substitute(parameter))
+  if (!all(columnNames %in% names(parameter))) {
+    ParallelLogger::logError(paste0("Column names of ", name, " are not correct"))
+    stop(paste0("Column names of ", name, " are not correct"))
+  }
+  return(TRUE)
+}
+
+checkIsEqual <- function(parameter, value) {
+  name <- deparse(substitute(parameter))
+  if (!identical(parameter, value)) {
+    ParallelLogger::logError(paste0(name, " should be equal to ", value))
+    stop(paste0(name, " is not equal to ", value))
   }
   return(TRUE)
 }
