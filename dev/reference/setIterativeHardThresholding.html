@@ -135,14 +135,14 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">setIterativeHardThresholding</span><span class="op">(</span></span>
 <span>  K <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="st">"bic"</span>,</span>
-<span>  seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+05</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  exclude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  forceIntercept <span class="op">=</span> <span class="cn">F</span>,</span>
+<span>  forceIntercept <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  fitBestSubset <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  initialRidgeVariance <span class="op">=</span> <span class="fl">10000</span>,</span>
-<span>  tolerance <span class="op">=</span> <span class="fl">0.00000001</span>,</span>
+<span>  initialRidgeVariance <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  tolerance <span class="op">=</span> <span class="fl">1e-08</span>,</span>
 <span>  maxIterations <span class="op">=</span> <span class="fl">10000</span>,</span>
-<span>  threshold <span class="op">=</span> <span class="fl">0.000001</span>,</span>
+<span>  threshold <span class="op">=</span> <span class="fl">1e-06</span>,</span>
 <span>  delta <span class="op">=</span> <span class="fl">0</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
