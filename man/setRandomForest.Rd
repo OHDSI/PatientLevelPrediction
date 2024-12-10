@@ -19,7 +19,7 @@ setRandomForest(
   oobScore = list(FALSE),
   nJobs = list(NULL),
   classWeight = list(NULL),
-  seed = sample(100000, 1)
+  seed = sample(1e+05, 1)
 )
 }
 \arguments{
