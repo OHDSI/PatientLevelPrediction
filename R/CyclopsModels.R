@@ -264,16 +264,16 @@ predictCyclops <- function(plpModel, data, cohort ) {
   )
   
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
-  if(attr(plpModel, 'modelType') == 'survival'){
-    if(!is.null(plpModel$model$baselineSurvival)){
-      if(is.null(attr(cohort, 'timepoint'))){
-        timepoint <- attr(cohort,'metaData')$populationSettings$riskWindowEnd
-      } else{
-        timepoint <- attr(cohort, 'timepoint')
+  if (attr(plpModel, "modelType") == "survival") {
+    if (!is.null(plpModel$model$baselineSurvival)) {
+      if (is.null(attr(cohort, "timepoint"))) {
+        timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
+      } else {
+        timepoint <- attr(cohort, "timepoint")
       }
-      bhind <- which.min(abs(plpModel$model$baselineSurvival$time-timepoint))
+      bhind <- which.min(abs(plpModel$model$baselineSurvival$time - timepoint))
       # 1- baseline survival(time)^ (exp(betas*values))
-      prediction$value <- 1-plpModel$model$baselineSurvival$surv[bhind]^prediction$value
+      prediction$value <- 1 - plpModel$model$baselineSurvival$surv[bhind]^prediction$value
       
       
       metaData <- list()
@@ -281,7 +281,7 @@ predictCyclops <- function(plpModel, data, cohort ) {
       metaData$baselineSurvival <- plpModel$model$baselineSurvival$surv[bhind]
       metaData$offset <- 0
       
-      attr(prediction, 'metaData') <- metaData
+      attr(prediction, "metaData") <- metaData
     }
   }
   
