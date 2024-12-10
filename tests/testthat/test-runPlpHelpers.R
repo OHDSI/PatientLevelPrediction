@@ -25,7 +25,7 @@ test_that("check printHeader runs", {
     outcomeId = outcomeId, 
     analysisId = 123, 
     analysisName = 'test', 
-    ExecutionDateTime = Sys.time()
+    executionDateTime = Sys.time()
     )
   expect_is(header, "logical")
   

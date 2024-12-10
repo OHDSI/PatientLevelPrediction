@@ -42,7 +42,7 @@ printHeader <- function(plpData,
   ParallelLogger::logInfo(sprintf("%-20s%s", "Covariates: ",
     plpData$covariateData$covariateRef %>% 
       dplyr::pull(.data$covariateId) %>% 
-      dplyr::tally()))
+      length()))
   return(invisible(TRUE))
 }
 
