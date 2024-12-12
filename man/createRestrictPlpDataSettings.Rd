@@ -7,7 +7,7 @@
 createRestrictPlpDataSettings(
   studyStartDate = "",
   studyEndDate = "",
-  firstExposureOnly = F,
+  firstExposureOnly = FALSE,
   washoutPeriod = 0,
   sampleSize = NULL
 )

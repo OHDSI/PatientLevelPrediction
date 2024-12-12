@@ -69,6 +69,6 @@ A list with the the database specific settings (this is used by the runMultipleP
 Create a setting that holds the details about the cdmDatabase connection for data extraction
 }
 \details{
-This function simply stores the settings for communicating with the cdmDatabase when extracting 
+This function simply stores the settings for communicating with the cdmDatabase when extracting
 the target cohort and outcomes
 }

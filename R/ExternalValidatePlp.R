@@ -359,7 +359,7 @@ createValidationSettings <- function(recalibrate = NULL,
 #' @param plpModelList A list of plpModels objects created by \code{runPlp} or a path to such objects
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data
-#' @return A validation design object of class \code{validationDesign}
+#' @return A validation design object of class \code{validationDesign} or a list of such objects
 #' @export
 createValidationDesign <-
   function(targetId,
@@ -477,24 +477,21 @@ validateExternal <- function(validationDesignList,
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
+  downloadTasks <- createDownloadTasks(validationDesignList)
+
   results <- NULL
   for (design in validationDesignList) {
     for (database in databaseDetails) {
       databaseName <- database$cdmDatabaseName
       
-      ParallelLogger::logInfo(paste("Validating model on", database$cdmDatabaseName))
-      
-      database$targetId <- design$targetId
-      
-      database$outcomeIds <- design$outcomeId
+      ParallelLogger::logInfo(paste("Validating models on", database$cdmDatabaseName,
+                                    "with targetId:", design$targetId, "and outcomeId:", design$outcomeId))
       
       modelDesigns <- extractModelDesigns(design$plpModelList)
-      allCovSettings <- lapply(modelDesigns, function(x) x$covariateSettings)
       design <- fromDesignOrModel(design, modelDesigns, "restrictPlpDataSettings")
-      checkAllSameInModels(allCovSettings, "covariateSettings")
       
       # get plpData
-      plpData <- getData(design, database, outputFolder, allCovSettings) 
+      plpData <- getData(design, database, outputFolder, downloadTasks) 
       if (is.null(plpData)) {
         ParallelLogger::logInfo("Couldn't extract plpData for the given design and database, proceeding to the next one.")
         next
@@ -502,6 +499,18 @@ validateExternal <- function(validationDesignList,
       # create study population
       population <- getPopulation(design, modelDesigns, plpData)
 
+      if (sum(population$outcomeCount) < 10) {
+        ParallelLogger::logInfo(
+          paste(
+            "Outcome size is less than 10, skipping validation for design and database:",
+            databaseName,
+            "and targetId:", design$targetId,
+            "outcomeId", design$outcomeId
+          )
+        )
+        next
+      }
+      
       results <- lapply(design$plpModelList, function(model) {
         analysisName <- paste0("Analysis_", analysisInfo[databaseName])
         analysisDone <- file.exists(
@@ -597,7 +606,7 @@ checkAllSameInModels <- function(settingsList, settingName) {
     identical(y, settingsList[[1]])},
     settingsList[-1],
     init = TRUE)) {
-    stop(paste0(settingName, "are not the same across models which is not supported yet"))
+    stop(paste0(settingName, "are not the same across models which is not supported"))
   }
 }
 
@@ -666,7 +675,8 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
     if (any(unlist(lapply(modelDesigns, function(x) {
             !identical(x[[settingName]], validationDesign[[settingName]])
           })))) {
-      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign") 
+      ParallelLogger::logWarn(settingName, " are not the same in models and validationDesign,
+                              using from design") 
     }
   }
   return(validationDesign)
@@ -676,13 +686,31 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 #' @param design The validationDesign object
 #' @param database The databaseDetails object
 #' @param outputFolder The directory to save the validation results to
-#' @param allCovSettings A list of covariateSettings from the models
+#' @param downloadTasks A list of download tasks determined by unique
+#' combinations of targetId and restrictPlpDataSettings
 #' @return The plpData object
 #' @keywords internal
-getData <- function(design, database, outputFolder, allCovSettings) {
+getData <- function(design, database, outputFolder, downloadTasks) {
+  # find task associated with design and the index of the task in downloadTasks
+  task <- downloadTasks %>%
+    dplyr::filter(.data$targetId == design$targetId) %>% 
+    dplyr::mutate(taskId = dplyr::row_number(),
+                  collapsed = sapply(.data$restrictPlpDataSettings, paste0, collapse = "|")) %>%
+    dplyr::filter(.data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
+    dplyr::select(-"collapsed")
+  covariateSettings <- task$covariateSettings[[1]]
+  task$covariateSettings <- NULL
+  if (length(covariateSettings) > 1) {
+    task$covariateSettings <- list(unlist(covariateSettings, recursive = FALSE))
+  } else {
+    task$covariateSettings <- covariateSettings
+  }
+  
   databaseName <- database$cdmDatabaseName
+  database$targetId <- task$targetId
+  database$outcomeIds <- task$outcomeIds[[1]]
   plpDataName <-
-    paste0("targetId_", design$targetId, "_L", "1")
+    paste0("targetId_", design$targetId, "_L", task$taskId)
   plpDataLocation <-
     file.path(outputFolder, databaseName, plpDataName)
   if (!dir.exists(plpDataLocation)) {
@@ -691,8 +719,8 @@ getData <- function(design, database, outputFolder, allCovSettings) {
         getPlpData,
         list(
           databaseDetails = database,
-          restrictPlpDataSettings = design$restrictPlpDataSettings,
-          covariateSettings = allCovSettings[[1]]
+          restrictPlpDataSettings = task$restrictPlpDataSettings[[1]],
+          covariateSettings = task$covariateSettings[[1]]
         )
       )
     },
@@ -703,6 +731,10 @@ getData <- function(design, database, outputFolder, allCovSettings) {
     if (!is.null(plpData)) {
       if (!dir.exists(file.path(outputFolder, databaseName))) {
         dir.create(file.path(outputFolder, databaseName), recursive = TRUE)
+      }
+      if (length(covariateSettings) > 1) {
+        plpData$covariateData <-
+          deDuplicateCovariateData(plpData$covariateData)
       }
       savePlpData(plpData, file = plpDataLocation)
     }
@@ -739,3 +771,95 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
   return(population)
 }
 
+#' createDownloadTasks 
+#' create download tasks based on unique combinations of targetId and
+#' restrictPlpDataSettings. It adds all covariateSettings and outcomes that
+#' have that targetId and restrictPlpDataSettings. This is used to avoid
+#' downloading the same data multiple times. 
+#' @param validationDesignList A list of validationDesign objects
+#' @return A dataframe where each row is a downloadTask
+#' @keywords internal
+createDownloadTasks <- function(validationDesignList) {
+  ParallelLogger::logInfo("Extracting unique combinations of targetId, \
+  restrictPlpDataSettings and covariateSettings for extracting data")
+
+  rowsList <- list()
+  modelCache <- list()
+  
+  for (design in validationDesignList) {
+    targetId <- design$targetId
+    outcomeId <- design$outcomeId
+    restrictPlpDataSettings <- design$restrictPlpDataSettings
+    if (is.null(restrictPlpDataSettings)) {
+      restrictList <- lapply(design$plpModelList,
+        function(x) x$modelDesign$restrictPlpDataSettings)
+      checkAllSameInModels(restrictList, "restrictPlpDataSettings")
+      restrictPlpDataSettings <- restrictList[[1]]
+    }
+    plpModelList <- design$plpModelList
+    for (model in plpModelList) {
+      if (is.character(model)) {
+        modelKey <- model
+        if (!is.null(modelCache[[modelKey]])) {
+          model <- modelCache[[modelKey]]
+        } else {
+          model <- loadPlpModel(modelKey)
+          modelCache[[modelKey]] <- model
+        }
+      } else {
+        modelKey <- digest::digest(model)
+        if (!is.null(modelCache[[modelKey]])) {
+          model <- modelCache[[modelKey]]
+        } else {
+          modelCache[[modelKey]] <- model
+        } 
+      }
+      covariateSettings <- model$modelDesign$covariateSettings
+      row <- list(targetId = targetId,
+                  outcomeIds = outcomeId,
+                  restrictPlpDataSettings = list(restrictPlpDataSettings),
+                  covariateSettings = list(covariateSettings))
+      rowsList[[length(rowsList) + 1]] <- row
+    }
+  }
+  rowsDf <- dplyr::bind_rows(rowsList)
+
+  rowsDf <- rowsDf %>% 
+    dplyr::rowwise() %>%
+    dplyr::mutate(restrictKey = digest::digest(restrictPlpDataSettings),
+                  covariateKey = digest::digest(covariateSettings)) %>%
+    dplyr::ungroup()
+  
+  uniqueCovariateSettings <- function(settingsList, settingsKeys) {
+    uniqueKeys <- unique(settingsKeys)
+    indices <- match(uniqueKeys, settingsKeys)
+    uniqueSettings <- settingsList[indices]
+    return(uniqueSettings)
+  }
+  
+  downloadTasks <- rowsDf %>% 
+    dplyr::group_by(.data$targetId, .data$restrictKey) %>%
+    dplyr::summarise(
+      outcomeIds = list(unique(.data$outcomeIds)),
+      restrictPlpDataSettings = .data$restrictPlpDataSettings[1],
+      covariateSettings = list(uniqueCovariateSettings(.data$covariateSettings, .data$covariateKey)),
+      .groups = "drop") %>% 
+    dplyr::select(c("targetId", "outcomeIds", "restrictPlpDataSettings",
+      "covariateSettings"))
+
+  return(downloadTasks)
+}
+
+#' deplucateCovariateData - Remove duplicate covariate data
+#' when downloading data with multiple different covariateSettings sometimes
+#' there will be duplicated analysisIds which need to be removed
+#' @param covariateData The covariate data Andromeda object
+#' @return The deduplicated covariate data
+#' @keywords internal
+deDuplicateCovariateData <- function(covariateData) {
+  covariateData$covariateRef <- covariateData$covariateRef %>% 
+    dplyr::distinct()
+  covariateData$covariates <- covariateData$covariates %>% 
+    dplyr::distinct()
+  return(covariateData)
+}

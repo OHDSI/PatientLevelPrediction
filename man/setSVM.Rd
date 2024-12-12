@@ -43,6 +43,6 @@ Create setting for the python sklearn SVM (SVC function)
 }
 \examples{
 \dontrun{
-model.svm <- setSVM(kernel='rbf', seed = NULL)
+model.svm <- setSVM(kernel = "rbf", seed = NULL)
 }
 }

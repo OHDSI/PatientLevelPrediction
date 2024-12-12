@@ -497,7 +497,7 @@ test_that("population creation parameters", {
 
 testthat::test_that("Providing an existing population and skipping population creation works", {
   popSize <- 400
-  newPopulation <- population[sample.int(nrow.default(population), popSize), ]
+  newPopulation <- population[sample.int(nrow(population), popSize), ]
   
   tinyPlpData$population <- newPopulation
   
@@ -517,9 +517,9 @@ testthat::test_that("Providing an existing population and skipping population cr
   )
   
   trainPredictions <- plpResults$prediction %>%
-    dplyr::filter(.data$evaluationType == "Train") %>% nrow.default()
+    dplyr::filter(.data$evaluationType == "Train") %>% nrow()
   testPredictions <- plpResults$prediction %>%
-    dplyr::filter(.data$evaluationType == "Test") %>% nrow.default()
+    dplyr::filter(.data$evaluationType == "Test") %>% nrow()
   expect_equal(popSize, trainPredictions + testPredictions)
 })
 

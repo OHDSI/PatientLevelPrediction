@@ -20,90 +20,96 @@
 #' @param nEstimators    (list) The maximum number of estimators at which boosting is terminated. In case of perfect fit, the learning procedure is stopped early.
 #' @param learningRate   (list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 #'                       There is a trade-off between learningRate and nEstimators.
-#' @param algorithm      (list) If ‘SAMME.R’ then use the SAMME.R real boosting algorithm. base_estimator must support calculation of class probabilities. If ‘SAMME’ then use the SAMME discrete boosting algorithm. The SAMME.R algorithm typically converges faster than SAMME, achieving a lower test error with fewer boosting iterations.
+#' @param algorithm      Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.
 #' @param seed           A seed for the model
 #'
 #' @examples
 #' \dontrun{
-#' model.adaBoost <- setAdaBoost(nEstimators = list(10,50,200), learningRate = list(1, 0.5, 0.1),
-#'                               algorithm = list('SAMME.R'), seed = sample(1000000,1)
-#'                               )
+#' model.adaBoost <- setAdaBoost(
+#'   nEstimators = list(10, 50, 200), learningRate = list(1, 0.5, 0.1),
+#'   algorithm = list("SAMME.R"), seed = sample(1000000, 1)
+#' )
 #' }
 #' @export
 setAdaBoost <- function(nEstimators = list(10, 50, 200),
                         learningRate = list(1, 0.5, 0.1),
-                        algorithm = list('SAMME.R'),
+                        algorithm = list("SAMME"),
                         seed = sample(1000000, 1)) {
   checkIsClass(seed[[1]], c("numeric", "integer"))
-  checkIsClass(nEstimators, 'list')
-  checkIsClass(learningRate, 'list')
-  checkIsClass(algorithm, 'list')
-  
-  lapply(1:length(nEstimators), function(i)
-    checkIsClass(nEstimators[[i]] , c("integer", "numeric")))
-  lapply(1:length(nEstimators), function(i)
-    checkHigher(nEstimators[[i]] , 0))
-  
+  checkIsClass(nEstimators, "list")
+  checkIsClass(learningRate, "list")
+  checkIsClass(algorithm, "list")
+
+  lapply(1:length(nEstimators), function(i) {
+    checkIsClass(nEstimators[[i]], c("integer", "numeric"))
+  })
+  lapply(1:length(nEstimators), function(i) {
+    checkHigher(nEstimators[[i]], 0)
+  })
+
   for (i in 1:length(nEstimators)) {
     if (inherits(x = nEstimators[[i]], what = c("numeric", "integer"))) {
       nEstimators[[i]] <- as.integer(nEstimators[[i]])
     }
   }
-  
-  lapply(1:length(learningRate), function(i)
-    checkIsClass(learningRate[[i]] , c("numeric")))
-  lapply(1:length(learningRate), function(i)
-    checkHigher(learningRate[[i]] , 0))
-  
-  lapply(1:length(algorithm), function(i)
-    checkIsClass(algorithm[[i]] , c("character")))
-  
-  # test python is available and the required dependancies are there:
-  ##checkPython()
-  
+
+  lapply(1:length(learningRate), function(i) {
+    checkIsClass(learningRate[[i]], c("numeric"))
+  })
+  lapply(1:length(learningRate), function(i) {
+    checkHigher(learningRate[[i]], 0)
+  })
+
+  lapply(1:length(algorithm), function(i) {
+    checkIsClass(algorithm[[i]], c("character"))
+    checkIsEqual(algorithm[[i]], "SAMME")
+  })
+
   paramGrid <- list(
     nEstimators = nEstimators,
     learningRate = learningRate,
     algorithm = algorithm,
     seed = list(as.integer(seed[[1]]))
   )
-  
+
   param <- listCartesian(paramGrid)
-  
-  attr(param, 'settings') <- list(
-    modelType = 'adaBoost',
+
+  attr(param, "settings") <- list(
+    modelType = "adaBoost",
     seed = seed[[1]],
     paramNames = names(paramGrid),
-    #use this for logging params
-    requiresDenseMatrix = F,
+    # use this for logging params
+    requiresDenseMatrix = FALSE,
     name = "AdaBoost",
     pythonModule = "sklearn.ensemble",
     pythonClass = "AdaBoostClassifier"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 
 AdaBoostClassifierInputs <- function(classifier, param) {
   model <- classifier(
-    n_estimators = param[[which.max(names(param) == 'nEstimators')]],
-    learning_rate = param[[which.max(names(param) == 'learningRate')]],
-    algorithm = param[[which.max(names(param) == 'algorithm')]],
-    random_state = param[[which.max(names(param) == 'seed')]]
+    n_estimators = param[[which.max(names(param) == "nEstimators")]],
+    learning_rate = param[[which.max(names(param) == "learningRate")]],
+    algorithm = param[[which.max(names(param) == "algorithm")]],
+    random_state = param[[which.max(names(param) == "seed")]]
   )
-  
+
   return(model)
 }
 
-#' Create setting for the scikit-learn 1.0.1 DecisionTree with python
+#' Create setting for the scikit-learn DecisionTree with python
 #' @param criterion The function to measure the quality of a split. Supported criteria are “gini” for the Gini impurity and “entropy” for the information gain.
 #' @param splitter The strategy used to choose the split at each node. Supported strategies are “best” to choose the best split and “random” to choose the best random split.
 #' @param maxDepth    (list) The maximum depth of the tree. If NULL, then nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.
@@ -118,144 +124,174 @@ AdaBoostClassifierInputs <- function(classifier, param) {
 #'
 #' @examples
 #' \dontrun{
-#' model.decisionTree <- setDecisionTree(maxDepth=10,minSamplesLeaf=10, seed=NULL )
+#' model.decisionTree <- setDecisionTree(maxDepth = 10, minSamplesLeaf = 10, seed = NULL)
 #' }
 #' @export
-setDecisionTree <- function(criterion = list('gini'),
-                            splitter = list('best'),
+setDecisionTree <- function(criterion = list("gini"),
+                            splitter = list("best"),
                             maxDepth = list(as.integer(4), as.integer(10), NULL),
                             minSamplesSplit = list(2, 10),
                             minSamplesLeaf = list(10, 50),
                             minWeightFractionLeaf = list(0),
-                            maxFeatures = list(100, 'sqrt', NULL),
+                            maxFeatures = list(100, "sqrt", NULL),
                             maxLeafNodes = list(NULL),
-                            minImpurityDecrease = list(10 ^ -7),
+                            minImpurityDecrease = list(10^-7),
                             classWeight = list(NULL),
                             seed = sample(1000000, 1)) {
-  if (!inherits(x = seed[[1]], what = c('numeric', 'integer'))) {
-    stop('Invalid seed')
+  if (!inherits(x = seed[[1]], what = c("numeric", "integer"))) {
+    stop("Invalid seed")
   }
-  
-  checkIsClass(criterion, 'list')
-  checkIsClass(splitter, 'list')
-  checkIsClass(maxDepth, 'list')
-  checkIsClass(minSamplesSplit, 'list')
-  checkIsClass(minSamplesLeaf, 'list')
-  checkIsClass(minWeightFractionLeaf, 'list')
-  checkIsClass(maxFeatures, 'list')
-  checkIsClass(maxLeafNodes, 'list')
-  checkIsClass(minImpurityDecrease, 'list')
-  checkIsClass(classWeight, 'list')
-  
-  lapply(1:length(criterion), function(i)
-    checkIsClass(criterion[[i]] , 'character'))
-  lapply(1:length(splitter), function(i)
-    checkIsClass(splitter[[i]] , 'character'))
-  
-  
-  lapply(1:length(criterion),
-         function(i) {
-           if (!criterion[[i]] %in% c('gini', 'entropy')) {
-             stop('Incorrect criterion')
-           }
-         })
-  
-  
-  lapply(1:length(maxDepth), function(i)
-    checkIsClass(maxDepth[[i]] , c("numeric", "integer", "NULL")))
-  lapply(1:length(maxDepth), function(i)
-    checkHigher(ifelse(is.null(maxDepth[[i]]), 1, maxDepth[[i]]) , 0))
+
+  checkIsClass(criterion, "list")
+  checkIsClass(splitter, "list")
+  checkIsClass(maxDepth, "list")
+  checkIsClass(minSamplesSplit, "list")
+  checkIsClass(minSamplesLeaf, "list")
+  checkIsClass(minWeightFractionLeaf, "list")
+  checkIsClass(maxFeatures, "list")
+  checkIsClass(maxLeafNodes, "list")
+  checkIsClass(minImpurityDecrease, "list")
+  checkIsClass(classWeight, "list")
+
+  lapply(1:length(criterion), function(i) {
+    checkIsClass(criterion[[i]], "character")
+  })
+  lapply(1:length(splitter), function(i) {
+    checkIsClass(splitter[[i]], "character")
+  })
+
+
+  lapply(
+    1:length(criterion),
+    function(i) {
+      if (!criterion[[i]] %in% c("gini", "entropy")) {
+        stop("Incorrect criterion")
+      }
+    }
+  )
+
+
+  lapply(1:length(maxDepth), function(i) {
+    checkIsClass(maxDepth[[i]], c("numeric", "integer", "NULL"))
+  })
+  lapply(1:length(maxDepth), function(i) {
+    checkHigher(ifelse(is.null(maxDepth[[i]]), 1, maxDepth[[i]]), 0)
+  })
   for (i in 1:length(maxDepth)) {
-    if (inherits(x = maxDepth[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxDepth[[i]], what = c("numeric", "integer"))) {
       maxDepth[[i]] <- as.integer(maxDepth[[i]])
     }
   }
-  
-  lapply(1:length(minSamplesSplit),
-         function(i)
-           checkIsClass(minSamplesSplit[[i]] , c("numeric", "integer", "NULL")))
-  lapply(1:length(minSamplesSplit),
-         function(i)
-           checkHigher(ifelse(
-             is.null(minSamplesSplit[[i]]), 1, minSamplesSplit[[i]]
-           ) , 0))
-  
+
+  lapply(
+    1:length(minSamplesSplit),
+    function(i) {
+      checkIsClass(minSamplesSplit[[i]], c("numeric", "integer", "NULL"))
+    }
+  )
+  lapply(
+    1:length(minSamplesSplit),
+    function(i) {
+      checkHigher(ifelse(
+        is.null(minSamplesSplit[[i]]), 1, minSamplesSplit[[i]]
+      ), 0)
+    }
+  )
+
   # convert to integer if >= 1
   for (i in 1:length(minSamplesSplit)) {
     if (minSamplesSplit[[i]] >= 1) {
       minSamplesSplit[[i]] <- as.integer(minSamplesSplit[[i]])
     }
   }
-  
-  
-  lapply(1:length(minSamplesLeaf),
-         function(i)
-           checkIsClass(minSamplesLeaf[[i]] , c("numeric", "integer")))
-  lapply(1:length(minSamplesLeaf),
-         function(i)
-           checkHigher(minSamplesLeaf[[i]] , 0))
-  
+
+
+  lapply(
+    1:length(minSamplesLeaf),
+    function(i) {
+      checkIsClass(minSamplesLeaf[[i]], c("numeric", "integer"))
+    }
+  )
+  lapply(
+    1:length(minSamplesLeaf),
+    function(i) {
+      checkHigher(minSamplesLeaf[[i]], 0)
+    }
+  )
+
   # convert to integer if >= 1
   for (i in 1:length(minSamplesLeaf)) {
     if (minSamplesLeaf[[i]] >= 1) {
       minSamplesLeaf[[i]] <- as.integer(minSamplesLeaf[[i]])
     }
   }
-  
-  lapply(1:length(minWeightFractionLeaf),
-         function(i)
-           checkIsClass(minWeightFractionLeaf[[i]] , c("numeric")))
-  lapply(1:length(minWeightFractionLeaf),
-         function(i)
-           checkHigherEqual(minWeightFractionLeaf[[i]] , 0))
-  
-  lapply(1:length(maxFeatures),
-         function(i)
-           checkIsClass(maxFeatures[[i]] , c(
-             "numeric", "integer", "character", "NULL"
-           )))
-  
+
+  lapply(
+    1:length(minWeightFractionLeaf),
+    function(i) {
+      checkIsClass(minWeightFractionLeaf[[i]], c("numeric"))
+    }
+  )
+  lapply(
+    1:length(minWeightFractionLeaf),
+    function(i) {
+      checkHigherEqual(minWeightFractionLeaf[[i]], 0)
+    }
+  )
+
+  lapply(
+    1:length(maxFeatures),
+    function(i) {
+      checkIsClass(maxFeatures[[i]], c(
+        "numeric", "integer", "character", "NULL"
+      ))
+    }
+  )
+
   for (i in 1:length(maxFeatures)) {
-    if (inherits(x = maxFeatures[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxFeatures[[i]], what = c("numeric", "integer"))) {
       maxFeatures[[i]] <- as.integer(maxFeatures[[i]])
     }
   }
-  
-  lapply(1:length(maxLeafNodes),
-         function(i)
-           checkIsClass(maxLeafNodes[[i]], c("integer", "NULL")))
-  lapply(1:length(maxLeafNodes),
-         function(i)
-           checkHigher(ifelse(
-             is.null(maxLeafNodes[[i]]), 1, maxLeafNodes[[i]]
-           ) , 0))
-  
+
+  lapply(
+    1:length(maxLeafNodes),
+    function(i) {
+      checkIsClass(maxLeafNodes[[i]], c("integer", "NULL"))
+    }
+  )
+  lapply(
+    1:length(maxLeafNodes),
+    function(i) {
+      checkHigher(ifelse(
+        is.null(maxLeafNodes[[i]]), 1, maxLeafNodes[[i]]
+      ), 0)
+    }
+  )
+
   for (i in 1:length(maxLeafNodes)) {
-    if (inherits(x = maxLeafNodes[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxLeafNodes[[i]], what = c("numeric", "integer"))) {
       maxLeafNodes[[i]] <- as.integer(maxLeafNodes[[i]])
     }
   }
-  
-  lapply(1:length(minImpurityDecrease),
-         function(i)
-           checkIsClass(minImpurityDecrease[[i]] , c("numeric")))
-  lapply(1:length(minImpurityDecrease),
-         function(i)
-           checkHigherEqual(minImpurityDecrease[[i]], 0))
-  
-  lapply(1:length(classWeight), function(i)
-    checkIsClass(classWeight[[i]] , c('character', 'NULL')))
-  
-  # test python is available and the required dependancies are there:
-  ##checkPython()
-  
-  # scikit-learn 1.0.1 inputs:
-  # criterion='gini', splitter='best', max_depth=None, min_samples_split=2,
-  # min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None,
-  # max_leaf_nodes=None, min_impurity_decrease=0.0, class_weight=None, ccp_alpha=0.0
-  
-  # must be correct order for python classifier as I can't find a way to do.call a named list
-  # using reticulate
+
+  lapply(
+    1:length(minImpurityDecrease),
+    function(i) {
+      checkIsClass(minImpurityDecrease[[i]], c("numeric"))
+    }
+  )
+  lapply(
+    1:length(minImpurityDecrease),
+    function(i) {
+      checkHigherEqual(minImpurityDecrease[[i]], 0)
+    }
+  )
+
+  lapply(1:length(classWeight), function(i) {
+    checkIsClass(classWeight[[i]], c("character", "NULL"))
+  })
+
   paramGrid <- list(
     criterion = criterion,
     splitter = splitter,
@@ -270,44 +306,45 @@ setDecisionTree <- function(criterion = list('gini'),
     classWeight = classWeight
   )
   param <- listCartesian(paramGrid)
-  
-  attr(param, 'settings') <- list(
-    modelType = 'decisionTree',
+
+  attr(param, "settings") <- list(
+    modelType = "decisionTree",
     seed = seed[[1]],
     paramNames = names(paramGrid),
-    #use this for logging params
-    requiresDenseMatrix = F,
+    requiresDenseMatrix = FALSE,
     name = "Decision Tree",
     pythonModule = "sklearn.tree",
     pythonClass = "DecisionTreeClassifier"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 
 DecisionTreeClassifierInputs <- function(classifier, param) {
   model <- classifier(
-    criterion = param[[which.max(names(param) == 'criterion')]],
-    splitter = param[[which.max(names(param) == 'splitter')]],
-    max_depth = param[[which.max(names(param) == 'maxDepth')]],
-    min_samples_split = param[[which.max(names(param) == 'minSamplesSplit')]],
-    min_samples_leaf = param[[which.max(names(param) == 'minSamplesLeaf')]],
-    min_weight_fraction_leaf = param[[which.max(names(param) == 'minWeightFractionLeaf')]],
-    max_features = param[[which.max(names(param) == 'maxFeatures')]],
-    random_state = param[[which.max(names(param) == 'seed')]],
-    max_leaf_nodes = param[[which.max(names(param) == 'maxLeafNodes')]],
-    min_impurity_decrease = param[[which.max(names(param) == 'minImpurityDecrease')]],
-    class_weight = param[[which.max(names(param) == 'classWeight')]]
+    criterion = param[[which.max(names(param) == "criterion")]],
+    splitter = param[[which.max(names(param) == "splitter")]],
+    max_depth = param[[which.max(names(param) == "maxDepth")]],
+    min_samples_split = param[[which.max(names(param) == "minSamplesSplit")]],
+    min_samples_leaf = param[[which.max(names(param) == "minSamplesLeaf")]],
+    min_weight_fraction_leaf = param[[which.max(names(param) == "minWeightFractionLeaf")]],
+    max_features = param[[which.max(names(param) == "maxFeatures")]],
+    random_state = param[[which.max(names(param) == "seed")]],
+    max_leaf_nodes = param[[which.max(names(param) == "maxLeafNodes")]],
+    min_impurity_decrease = param[[which.max(names(param) == "minImpurityDecrease")]],
+    class_weight = param[[which.max(names(param) == "classWeight")]]
   )
-  
+
   return(model)
 }
 
@@ -348,12 +385,12 @@ DecisionTreeClassifierInputs <- function(classifier, param) {
 #' }
 #' @export
 setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
-                   #must be integers
-                   activation = list('relu'),
-                   solver = list('adam'),
+                   # must be integers
+                   activation = list("relu"),
+                   solver = list("adam"),
                    alpha = list(0.3, 0.01, 0.0001, 0.000001),
-                   batchSize = list('auto'),
-                   learningRate = list('constant'),
+                   batchSize = list("auto"),
+                   learningRate = list("constant"),
                    learningRateInit = list(0.001),
                    powerT = list(0.5),
                    maxIter = list(200, 100),
@@ -369,52 +406,52 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
                    epsilon = list(0.00000001),
                    nIterNoChange = list(10),
                    seed = sample(100000, 1)) {
-  checkIsClass(seed, c('numeric', 'integer'))
-  checkIsClass(hiddenLayerSizes, c('list'))
-  checkIsClass(activation, c('list'))
-  checkIsClass(solver, c('list'))
-  checkIsClass(alpha, c('list'))
-  checkIsClass(batchSize, c('list'))
-  checkIsClass(learningRate, c('list'))
-  checkIsClass(learningRateInit, c('list'))
-  checkIsClass(powerT, c('list'))
-  checkIsClass(maxIter, c('list'))
-  checkIsClass(shuffle, c('list'))
-  checkIsClass(tol, c('list'))
-  checkIsClass(warmStart, c('list'))
-  checkIsClass(momentum, c('list'))
-  checkIsClass(nesterovsMomentum, c('list'))
-  checkIsClass(earlyStopping, c('list'))
-  checkIsClass(validationFraction, c('list'))
-  checkIsClass(beta1, c('list'))
-  checkIsClass(beta2, c('list'))
-  checkIsClass(epsilon, c('list'))
-  checkIsClass(nIterNoChange, c('list'))
-  
-  
+  checkIsClass(seed, c("numeric", "integer"))
+  checkIsClass(hiddenLayerSizes, c("list"))
+  checkIsClass(activation, c("list"))
+  checkIsClass(solver, c("list"))
+  checkIsClass(alpha, c("list"))
+  checkIsClass(batchSize, c("list"))
+  checkIsClass(learningRate, c("list"))
+  checkIsClass(learningRateInit, c("list"))
+  checkIsClass(powerT, c("list"))
+  checkIsClass(maxIter, c("list"))
+  checkIsClass(shuffle, c("list"))
+  checkIsClass(tol, c("list"))
+  checkIsClass(warmStart, c("list"))
+  checkIsClass(momentum, c("list"))
+  checkIsClass(nesterovsMomentum, c("list"))
+  checkIsClass(earlyStopping, c("list"))
+  checkIsClass(validationFraction, c("list"))
+  checkIsClass(beta1, c("list"))
+  checkIsClass(beta2, c("list"))
+  checkIsClass(epsilon, c("list"))
+  checkIsClass(nIterNoChange, c("list"))
+
+
   for (i in 1:length(hiddenLayerSizes)) {
     hiddenLayerSizes[[i]] <- as.integer(hiddenLayerSizes[[i]])
   }
-  
-  
+
+
   for (i in 1:length(batchSize)) {
-    if (inherits(x = batchSize[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = batchSize[[i]], what = c("numeric", "integer"))) {
       batchSize[[i]] <- as.integer(batchSize[[i]])
     }
   }
-  
+
   for (i in 1:length(maxIter)) {
-    if (inherits(x = maxIter[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxIter[[i]], what = c("numeric", "integer"))) {
       maxIter[[i]] <- as.integer(maxIter[[i]])
     }
   }
-  
+
   for (i in 1:length(nIterNoChange)) {
-    if (inherits(x = nIterNoChange[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = nIterNoChange[[i]], what = c("numeric", "integer"))) {
       nIterNoChange[[i]] <- as.integer(nIterNoChange[[i]])
     }
   }
-  
+
   # add lapply for values...
   paramGrid <- list(
     hiddenLayerSizes = hiddenLayerSizes,
@@ -436,60 +473,62 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
     earlyStopping = earlyStopping,
     validationFraction = validationFraction,
     beta1 = beta1,
-    beta2 = beta2 ,
+    beta2 = beta2,
     epsilon = epsilon,
     nIterNoChange = nIterNoChange
   )
-  
+
   param <- listCartesian(paramGrid)
-  
-  attr(param, 'settings') <- list(
-    modelType = 'mlp',
+
+  attr(param, "settings") <- list(
+    modelType = "mlp",
     seed = seed[[1]],
     paramNames = names(paramGrid),
-    #use this for logging params
-    requiresDenseMatrix = F,
+    # use this for logging params
+    requiresDenseMatrix = FALSE,
     name = "Neural Network",
     pythonModule = "sklearn.neural_network",
     pythonClass = "MLPClassifier"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 MLPClassifierInputs <- function(classifier, param) {
   model <- classifier(
-    hidden_layer_sizes = param[[which.max(names(param) == 'hiddenLayerSizes')]],
-    activation = param[[which.max(names(param) == 'activation')]],
-    solver = param[[which.max(names(param) == 'solver')]],
-    alpha = param[[which.max(names(param) == 'alpha')]],
-    batch_size = param[[which.max(names(param) == 'batchSize')]],
-    learning_rate = param[[which.max(names(param) == 'learningRate')]],
-    learning_rate_init = param[[which.max(names(param) == 'learningRateInit')]],
-    power_t = param[[which.max(names(param) == 'powerT')]],
-    max_iter = param[[which.max(names(param) == 'maxIter')]],
-    shuffle = param[[which.max(names(param) == 'shuffle')]],
-    random_state = param[[which.max(names(param) == 'seed')]],
-    tol = param[[which.max(names(param) == 'tol')]],
-    verbose = F,
-    warm_start = param[[which.max(names(param) == 'warmStart')]],
-    momentum = param[[which.max(names(param) == 'momentum')]],
-    nesterovs_momentum = param[[which.max(names(param) == 'nesterovsMomentum')]],
-    early_stopping = param[[which.max(names(param) == 'earlyStopping')]],
-    validation_fraction = param[[which.max(names(param) == 'validationFraction')]],
-    beta_1 = param[[which.max(names(param) == 'beta1')]],
-    beta_2 = param[[which.max(names(param) == 'beta2')]],
-    epsilon = param[[which.max(names(param) == 'epsilon')]],
-    n_iter_no_change = param[[which.max(names(param) == 'nIterNoChange')]]
+    hidden_layer_sizes = param[[which.max(names(param) == "hiddenLayerSizes")]],
+    activation = param[[which.max(names(param) == "activation")]],
+    solver = param[[which.max(names(param) == "solver")]],
+    alpha = param[[which.max(names(param) == "alpha")]],
+    batch_size = param[[which.max(names(param) == "batchSize")]],
+    learning_rate = param[[which.max(names(param) == "learningRate")]],
+    learning_rate_init = param[[which.max(names(param) == "learningRateInit")]],
+    power_t = param[[which.max(names(param) == "powerT")]],
+    max_iter = param[[which.max(names(param) == "maxIter")]],
+    shuffle = param[[which.max(names(param) == "shuffle")]],
+    random_state = param[[which.max(names(param) == "seed")]],
+    tol = param[[which.max(names(param) == "tol")]],
+    verbose = FALSE,
+    warm_start = param[[which.max(names(param) == "warmStart")]],
+    momentum = param[[which.max(names(param) == "momentum")]],
+    nesterovs_momentum = param[[which.max(names(param) == "nesterovsMomentum")]],
+    early_stopping = param[[which.max(names(param) == "earlyStopping")]],
+    validation_fraction = param[[which.max(names(param) == "validationFraction")]],
+    beta_1 = param[[which.max(names(param) == "beta1")]],
+    beta_2 = param[[which.max(names(param) == "beta2")]],
+    epsilon = param[[which.max(names(param) == "epsilon")]],
+    n_iter_no_change = param[[which.max(names(param) == "nIterNoChange")]]
   )
-  
+
   return(model)
 }
 
@@ -503,35 +542,35 @@ MLPClassifierInputs <- function(classifier, param) {
 #' }
 #' @export
 setNaiveBayes <- function() {
-  # test python is available and the required dependancies are there:
-  ##checkPython()
-  
-  param <- list(none = 'true')
-  
-  attr(param, 'settings') <- list(
-    modelType = 'naiveBayes',
+  param <- list(none = "true")
+
+  attr(param, "settings") <- list(
+    modelType = "naiveBayes",
     seed = as.integer(0),
     paramNames = c(),
-    #use this for logging params
-    requiresDenseMatrix = T,
+    # use this for logging params
+    requiresDenseMatrix = TRUE,
     name = "Naive Bayes",
     pythonModule = "sklearn.naive_bayes",
     pythonClass = "GaussianNB"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 GaussianNBInputs <- function(classifier, param) {
   model <- classifier()
-  
+
   return(model)
 }
 
@@ -563,17 +602,19 @@ GaussianNBInputs <- function(classifier, param) {
 #'
 #' @examples
 #' \dontrun{
-#' model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100),
-#'                            maxDepth=c(5,20))
+#' model.rf <- setRandomForest(
+#'   mtries = list("auto", 5, 20), ntrees = c(10, 100),
+#'   maxDepth = c(5, 20)
+#' )
 #' }
 #' @export
-setRandomForest <- function(ntrees =  list(100, 500),
-                            criterion = list('gini'),
+setRandomForest <- function(ntrees = list(100, 500),
+                            criterion = list("gini"),
                             maxDepth = list(4, 10, 17),
                             minSamplesSplit = list(2, 5),
                             minSamplesLeaf = list(1, 10),
                             minWeightFractionLeaf = list(0),
-                            mtries = list('sqrt', 'log2'),
+                            mtries = list("sqrt", "log2"),
                             maxLeafNodes = list(NULL),
                             minImpurityDecrease = list(0),
                             bootstrap = list(TRUE),
@@ -582,22 +623,22 @@ setRandomForest <- function(ntrees =  list(100, 500),
                             nJobs = list(NULL),
                             classWeight = list(NULL),
                             seed = sample(100000, 1)) {
-  checkIsClass(seed, c('numeric', 'integer'))
-  checkIsClass(ntrees, c('list'))
-  checkIsClass(criterion, c('list'))
-  checkIsClass(maxDepth, c('list'))
-  checkIsClass(minSamplesSplit, c('list'))
-  checkIsClass(minSamplesLeaf, c('list'))
-  checkIsClass(minWeightFractionLeaf, c('list'))
-  checkIsClass(mtries, c('list'))
-  checkIsClass(maxLeafNodes, c('list'))
-  checkIsClass(minImpurityDecrease, c('list'))
-  checkIsClass(bootstrap, c('list'))
-  checkIsClass(maxSamples, c('list'))
-  checkIsClass(oobScore, c('list'))
-  checkIsClass(nJobs, c('list'))
-  checkIsClass(classWeight, c('list'))
-  
+  checkIsClass(seed, c("numeric", "integer"))
+  checkIsClass(ntrees, c("list"))
+  checkIsClass(criterion, c("list"))
+  checkIsClass(maxDepth, c("list"))
+  checkIsClass(minSamplesSplit, c("list"))
+  checkIsClass(minSamplesLeaf, c("list"))
+  checkIsClass(minWeightFractionLeaf, c("list"))
+  checkIsClass(mtries, c("list"))
+  checkIsClass(maxLeafNodes, c("list"))
+  checkIsClass(minImpurityDecrease, c("list"))
+  checkIsClass(bootstrap, c("list"))
+  checkIsClass(maxSamples, c("list"))
+  checkIsClass(oobScore, c("list"))
+  checkIsClass(nJobs, c("list"))
+  checkIsClass(classWeight, c("list"))
+
   # convert to integer when needed
   for (i in 1:length(ntrees)) {
     if (inherits(x = ntrees[[i]], what = c("numeric", "integer"))) {
@@ -605,46 +646,46 @@ setRandomForest <- function(ntrees =  list(100, 500),
     }
   }
   for (i in 1:length(maxDepth)) {
-    if (inherits(x = maxDepth[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxDepth[[i]], what = c("numeric", "integer"))) {
       maxDepth[[i]] <- as.integer(maxDepth[[i]])
     }
   }
-  
+
   for (i in 1:length(minSamplesSplit)) {
     if (minSamplesSplit[[i]] >= 1) {
       minSamplesSplit[[i]] <- as.integer(minSamplesSplit[[i]])
     }
   }
-  
+
   for (i in 1:length(minSamplesLeaf)) {
     if (minSamplesLeaf[[i]] >= 1) {
       minSamplesLeaf[[i]] <- as.integer(minSamplesLeaf[[i]])
     }
   }
-  
+
   for (i in 1:length(maxLeafNodes)) {
-    if (inherits(x = maxLeafNodes[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxLeafNodes[[i]], what = c("numeric", "integer"))) {
       maxLeafNodes[[i]] <- as.integer(maxLeafNodes[[i]])
     }
   }
-  
+
   for (i in 1:length(nJobs)) {
-    if (inherits(x = nJobs[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = nJobs[[i]], what = c("numeric", "integer"))) {
       nJobs[[i]] <- as.integer(nJobs[[i]])
     }
   }
-  
+
   for (i in 1:length(maxSamples)) {
-    if (inherits(x = maxSamples[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = maxSamples[[i]], what = c("numeric", "integer"))) {
       if (maxSamples[[i]] >= 1) {
         maxSamples[[i]] <- as.integer(maxSamples[[i]])
       }
     }
   }
-  
+
   # add value checks
-  paramGrid = list(
-    ntrees =  ntrees,
+  paramGrid <- list(
+    ntrees = ntrees,
     criterion = criterion,
     maxDepth = maxDepth,
     minSamplesSplit = minSamplesSplit,
@@ -661,50 +702,52 @@ setRandomForest <- function(ntrees =  list(100, 500),
     maxSamples = maxSamples
   )
   param <- listCartesian(paramGrid)
-  
-  attr(param, 'settings') <- list(
-    modelType = 'randomForest',
+
+  attr(param, "settings") <- list(
+    modelType = "randomForest",
     seed = seed[[1]],
     paramNames = names(paramGrid),
-    #use this for logging params
-    requiresDenseMatrix = F,
+    # use this for logging params
+    requiresDenseMatrix = FALSE,
     name = "Random forest",
     pythonModule = "sklearn.ensemble",
     pythonClass = "RandomForestClassifier"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 
 RandomForestClassifierInputs <- function(classifier, param) {
   model <- classifier(
-    n_estimators = param[[which.max(names(param) == 'ntrees')]],
-    criterion = param[[which.max(names(param) == 'criterion')]],
-    max_depth = param[[which.max(names(param) == 'maxDepth')]],
-    min_samples_split = param[[which.max(names(param) == 'minSamplesSplit')]],
-    min_samples_leaf = param[[which.max(names(param) == 'minSamplesLeaf')]],
-    min_weight_fraction_leaf = param[[which.max(names(param) == 'minWeightFractionLeaf')]],
-    max_features = param[[which.max(names(param) == 'mtries')]],
-    max_leaf_nodes = param[[which.max(names(param) == 'maxLeafNodes')]],
-    min_impurity_decrease = param[[which.max(names(param) == 'minImpurityDecrease')]],
-    bootstrap = param[[which.max(names(param) == 'bootstrap')]],
-    max_samples = param[[which.max(names(param) == 'maxSamples')]],
-    oob_score = param[[which.max(names(param) == 'oobScore')]],
-    n_jobs = param[[which.max(names(param) == 'nJobs')]],
-    random_state = param[[which.max(names(param) == 'seed')]],
+    n_estimators = param[[which.max(names(param) == "ntrees")]],
+    criterion = param[[which.max(names(param) == "criterion")]],
+    max_depth = param[[which.max(names(param) == "maxDepth")]],
+    min_samples_split = param[[which.max(names(param) == "minSamplesSplit")]],
+    min_samples_leaf = param[[which.max(names(param) == "minSamplesLeaf")]],
+    min_weight_fraction_leaf = param[[which.max(names(param) == "minWeightFractionLeaf")]],
+    max_features = param[[which.max(names(param) == "mtries")]],
+    max_leaf_nodes = param[[which.max(names(param) == "maxLeafNodes")]],
+    min_impurity_decrease = param[[which.max(names(param) == "minImpurityDecrease")]],
+    bootstrap = param[[which.max(names(param) == "bootstrap")]],
+    max_samples = param[[which.max(names(param) == "maxSamples")]],
+    oob_score = param[[which.max(names(param) == "oobScore")]],
+    n_jobs = param[[which.max(names(param) == "nJobs")]],
+    random_state = param[[which.max(names(param) == "seed")]],
     verbose = 0L,
-    warm_start = F,
-    class_weight = param[[which.max(names(param) == 'classWeight')]]
+    warm_start = FALSE,
+    class_weight = param[[which.max(names(param) == "classWeight")]]
   )
-  
+
   return(model)
 }
 
@@ -724,37 +767,37 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #'
 #' @examples
 #' \dontrun{
-#' model.svm <- setSVM(kernel='rbf', seed = NULL)
+#' model.svm <- setSVM(kernel = "rbf", seed = NULL)
 #' }
 #' @export
 setSVM <- function(C = list(1, 0.9, 2, 0.1),
-                   kernel = list('rbf'),
+                   kernel = list("rbf"),
                    degree = list(1, 3, 5),
-                   gamma = list('scale', 1e-04, 3e-05, 0.001, 0.01, 0.25),
+                   gamma = list("scale", 1e-04, 3e-05, 0.001, 0.01, 0.25),
                    coef0 = list(0.0),
                    shrinking = list(TRUE),
                    tol = list(0.001),
                    classWeight = list(NULL),
-                   cacheSize  = 500,
+                   cacheSize = 500,
                    seed = sample(100000, 1)) {
-  checkIsClass(seed, c('numeric', 'integer'))
-  checkIsClass(cacheSize, c('numeric', 'integer'))
-  checkIsClass(C, c('list'))
-  checkIsClass(kernel, c('list'))
-  checkIsClass(degree, c('list'))
-  checkIsClass(gamma, c('list'))
-  checkIsClass(coef0, c('list'))
-  checkIsClass(shrinking, c('list'))
-  checkIsClass(tol, c('list'))
-  checkIsClass(classWeight, c('list'))
-  
+  checkIsClass(seed, c("numeric", "integer"))
+  checkIsClass(cacheSize, c("numeric", "integer"))
+  checkIsClass(C, c("list"))
+  checkIsClass(kernel, c("list"))
+  checkIsClass(degree, c("list"))
+  checkIsClass(gamma, c("list"))
+  checkIsClass(coef0, c("list"))
+  checkIsClass(shrinking, c("list"))
+  checkIsClass(tol, c("list"))
+  checkIsClass(classWeight, c("list"))
+
   for (i in 1:length(degree)) {
-    if (inherits(x = degree[[i]], what =  c("numeric", "integer"))) {
+    if (inherits(x = degree[[i]], what = c("numeric", "integer"))) {
       degree[[i]] <- as.integer(degree[[i]])
     }
   }
-  
-  paramGrid = list(
+
+  paramGrid <- list(
     C = C,
     kernel = kernel,
     degree = degree,
@@ -766,49 +809,51 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
     classWeight = classWeight,
     seed = list(as.integer(seed[[1]]))
   )
-  
+
   param <- listCartesian(paramGrid)
-  
-  
-  attr(param, 'settings') <- list(
-    modelType = 'svm',
+
+
+  attr(param, "settings") <- list(
+    modelType = "svm",
     seed = seed[[1]],
     paramNames = names(paramGrid),
-    #use this for logging params
-    requiresDenseMatrix = F,
+    # use this for logging params
+    requiresDenseMatrix = FALSE,
     name = "Support Vector Machine",
     pythonModule = "sklearn.svm",
     pythonClass = "SVC"
   )
-  
-  attr(param, 'saveToJson') <- T
-  attr(param, 'saveType') <- 'file'
-  
-  result <- list(fitFunction = "fitSklearn",
-                 param = param)
+
+  attr(param, "saveToJson") <- TRUE
+  attr(param, "saveType") <- "file"
+
+  result <- list(
+    fitFunction = "fitSklearn",
+    param = param
+  )
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
 SVCInputs <- function(classifier, param) {
   model <- classifier(
-    C  = param[[which.max(names(param) == 'C')]],
-    kernel = param[[which.max(names(param) == 'kernel')]],
-    degree  = param[[which.max(names(param) == 'degree')]],
-    gamma  = param[[which.max(names(param) == 'gamma')]],
-    coef0 = param[[which.max(names(param) == 'coef0')]],
-    shrinking = param[[which.max(names(param) == 'shrinking')]],
-    probability = T,
-    tol = param[[which.max(names(param) == 'tol')]],
-    cache_size = param[[which.max(names(param) == 'cacheSize')]],
-    class_weight = param[[which.max(names(param) == 'classWeight')]],
-    verbose = F,
+    C = param[[which.max(names(param) == "C")]],
+    kernel = param[[which.max(names(param) == "kernel")]],
+    degree = param[[which.max(names(param) == "degree")]],
+    gamma = param[[which.max(names(param) == "gamma")]],
+    coef0 = param[[which.max(names(param) == "coef0")]],
+    shrinking = param[[which.max(names(param) == "shrinking")]],
+    probability = TRUE,
+    tol = param[[which.max(names(param) == "tol")]],
+    cache_size = param[[which.max(names(param) == "cacheSize")]],
+    class_weight = param[[which.max(names(param) == "classWeight")]],
+    verbose = FALSE,
     max_iter = as.integer(-1),
-    decision_function_shape = 'ovr',
-    break_ties = F,
-    random_state = param[[which.max(names(param) == 'seed')]]
+    decision_function_shape = "ovr",
+    break_ties = FALSE,
+    random_state = param[[which.max(names(param) == "seed")]]
   )
-  
+
   return(model)
 }

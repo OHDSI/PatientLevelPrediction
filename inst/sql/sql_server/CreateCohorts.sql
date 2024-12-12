@@ -1,5 +1,5 @@
 /************************************************************************
-@file GetCohorts.sql
+@file CreateCohorts.sql
 Copyright 2021 Observational Health Data Sciences and Informatics
 This file is part of CohortMethod
 Licensed under the Apache License, Version 2.0 (the "License");
