@@ -15,6 +15,184 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' @title Create Iterative Imputer settings
+#' @description This function creates the settings for an iterative imputer
+#' which first removes features with more than `missingThreshold` missing values
+#' and then imputes the missing values iteratively using chained equations
+#' @param missingThreshold The threshold for missing values to remove a feature
+#' @param method The method to use for imputation, currently only "pmm" is supported
+#' @return The settings for the single imputer of class `featureEngineeringSettings`
+#' @export
+createIterativeImputer <- function(missingThreshold = 0.3,
+                                   method = "pmm") {
+  featureEngineeringSettings <- list(
+    missingThreshold = missingThreshold,
+    method = method
+  )
+  if (method == "pmm") {
+    # at the moment this requires glmnet
+    rlang::check_installed("glmnet")
+  }
+  attr(featureEngineeringSettings, "fun") <- "iterativeImpute"
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' @title Create Simple Imputer settings
+#' @description This function creates the settings for a simple imputer
+#' which imputes missing values with the mean or median
+#' @param method The method to use for imputation, either "mean" or "median"
+#' @return The settings for the single imputer of class `featureEngineeringSettings`
+#' @export
+createSimpleImputer <- function(method = "mean",
+                                missingThreshold = 0.3) {
+  checkIsClass(method, "character")
+  checkInStringVector(method, c("mean", "median"))
+  featureEngineeringSettings <- list(
+    method = method,
+    missingThreshold = missingThreshold
+  )
+  attr(featureEngineeringSettings, "fun") <- "simpleImpute"
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' @title Simple Imputation
+#' @description This function does single imputation with the mean or median
+#' @param trainData The data to be imputed
+#' @param featureEngineeringSettings The settings for the imputation
+#' @param done Whether the imputation has already been done (bool)
+#' @return The imputed data
+simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
+  if (!done) {
+    missingInfo <- extractMissingInfo(trainData)
+    trainData$covariateData$missingInfo <- missingInfo$missingInfo
+    continuousFeatures <- missingInfo$continuousFeatures
+    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
+    
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
+      dplyr::filter(is.na(.data$missing) ||
+        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::select(-"missing")
+
+    # separate the continuous and binary features
+    featureData <- separateFeatures(trainData, continuousFeatures)
+    numericData <- featureData[[1]]
+    on.exit(numericData <- NULL, add = TRUE)
+  
+    allRowIds <- numericData$covariates %>%
+      dplyr::pull(.data$rowId) %>%
+      unique() %>%
+      sort()
+    allColumnIds <- numericData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique() %>%
+      sort()
+    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
+    numericData$covariates <- merge(completeIds, numericData$covariates,
+      all.x = TRUE
+    )
+
+    if (featureEngineeringSettings$method == "mean") {
+      numericData$imputedValues <- numericData$covariates %>%
+          dplyr::group_by(.data$covariateId) %>%
+          dplyr::summarise(imputedValues = mean(.data$covariateValue, na.rm = TRUE))
+    } else if (featureEngineeringSettings$method == "median") {
+      numericData$imputedValues <- numericData$covariates %>%
+          dplyr::group_by(.data$covariateId) %>%
+          dplyr::collect() %>% # median not possible in sql
+          dplyr::summarise(imputedValues = median(.data$covariateValue, na.rm = TRUE))
+    }
+      
+      
+      numericData$imputedCovariates <- numericData$covariates %>%
+        dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
+          .data$imputedValues,
+          .data$covariateValue
+        )) %>% 
+        dplyr::select(-c("imputedValues"))
+    Andromeda::appendToTable(
+      trainData$covariateData$covariates,
+      numericData$imputedCovariates %>%
+        dplyr::filter(is.na(.data$covariateValue)) %>%
+        dplyr::mutate(covariateValue = .data$imputedValue) %>%
+        dplyr::select(-c("imputedValue"))
+    )
+    attr(featureEngineeringSettings, "missingInfo") <-
+      trainData$covariateData$missingInfo %>%
+      dplyr::collect()
+    attr(featureEngineeringSettings, "imputer") <- 
+      numericData$imputedValues %>% dplyr::collect()
+    done <- TRUE
+  } else {
+    trainData$covariateData$missingInfo <- attr(
+      featureEngineeringSettings,
+      "missingInfo"
+    )
+    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
+      dplyr::filter(is.na(.data$missing) ||
+        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::select(-"missing")
+
+    continuousFeatures <- trainData$covariateData$analysisRef %>%
+      dplyr::filter(.data$isBinary == "N") %>%
+      dplyr::select("analysisId") %>%
+      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::pull(.data$covariateId)
+    featureData <- separateFeatures(trainData, continuousFeatures)
+    numericData <- featureData[[1]]
+    on.exit(numericData <- NULL, add = TRUE)
+    # impute missing values
+    allRowIds <- numericData$covariates %>%
+      dplyr::pull(.data$rowId) %>%
+      unique() %>%
+      sort()
+    allColumnIds <- numericData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique() %>%
+      sort()
+    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
+    numericData$covariates <- merge(completeIds, numericData$covariates,
+      all.x = TRUE
+    ) 
+    numericData$imputedValues <- attr(featureEngineeringSettings, "imputer")
+    numericData$imputedCovariates <- numericData$covariates %>%
+        dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
+          .data$imputedValues,
+          .data$covariateValue
+        )) %>% 
+        dplyr::select(-c("imputedValues"))
+    Andromeda::appendToTable(
+      trainData$covariateData$covariates,
+      numericData$imputedCovariates %>%
+        dplyr::filter(is.na(.data$covariateValue)) %>%
+        dplyr::mutate(covariateValue = .data$imputedValue) %>%
+        dplyr::select(-c("imputedValue"))
+    )
+
+  }
+  featureEngineering <- list(
+    funct = "simpleImpute",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      done = done
+    )
+  )
+  attr(trainData, "metaData")$featureEngineering[["simpleImputer"]] <-
+    featureEngineering
+  return(trainData)
+}
+
+
 #' @title Imputation
 #' @description This function does single imputation with predictive mean matchin
 #' @param trainData The data to be imputed
@@ -192,26 +370,6 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
   attr(trainData, "metaData")$featureEngineering[["iterativeImputer"]] <-
     featureEngineering
   return(trainData)
-}
-
-#' @title Create Iterative Imputer settings
-#' @description This function creates the settings for an iterative imputer
-#' which first removes features with more than `missingThreshold` missing values
-#' and then imputes the missing values iteratively using chained equations
-#' @param missingThreshold The threshold for missing values to remove a feature
-#' @param method The method to use for imputation, currently only "pmm" is supported
-#' @return The settings for the single imputer of class `featureEngineeringSettings`
-#' @export
-createIterativeImputer <- function(missingThreshold = 0.3,
-                                   method = "pmm") {
-  featureEngineeringSettings <- list(
-    missingThreshold = missingThreshold,
-    method = method
-  )
-  attr(featureEngineeringSettings, "fun") <- "iterativeImpute"
-
-  class(featureEngineeringSettings) <- "featureEngineeringSettings"
-  return(featureEngineeringSettings)
 }
 
 #' @title Predictive mean matching using lasso

@@ -239,13 +239,12 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering[['robustNormalize']] <-
+  attr(trainData, "metaData")$featureEngineering[["robustNormalize"]] <-
     featureEngineering
   return(trainData)
 }
 
-#' Create the settings for normalizing the data
-#' @param type The type of normalization to use, either "minmax" or "robust"
+#' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
 #' @return An object of class \code{featureEngineeringSettings}
 #' @export
 createNormalization <- function(type = "minmax") {
