@@ -50,6 +50,7 @@ Suggests:
     BigKnn (>= 1.0.0),
     devtools,
     Eunomia,
+    glmnet,
     IterativeHardThresholding,
     knitr,
     markdown,

@@ -180,8 +180,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     # get (25, 75)% quantiles of each feature
     # sqlite (used by Andromeda) doesn't have quantile function, so we need to load the extension
     # to get upper_quartile and lower_quartile_functions
-    con <- trainData$covariateData$covariates %>% dbplyr::remote_con()
-    RSQLite::initExtension(con)
+    RSQLite::initExtension(trainData$covariateData, "math")
 
     trainData$covariateData$quantiles <- trainData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% continousFeatures) %>%
@@ -285,12 +284,18 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare =
 
     trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
       dplyr::filter(!.data$covariateId %in% rareFeatures)
+    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+      dplyr::filter(!.data$covariateId %in% rareFeatures)
 
     attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
 
     findRare <- TRUE
   } else {
     trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(
+        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
+      )
+    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
       )
@@ -302,7 +307,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare =
       findRare = findRare
     )
   )
-  attr(trainData, "metaData")$featureEngineering[['removeRare']] <- 
+  attr(trainData, "metaData")$featureEngineering[["removeRare"]] <- 
     featureEngineering
   return(trainData)
 }
@@ -313,6 +318,9 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare =
 #' @return An object of class \code{featureEngineeringSettings}
 #' @export
 createRareFeatureRemover <- function(ratio = 0.001) {
+  checkIsClass(ratio, c("numeric"))
+  checkHigherEqual(ratio, 0)
+  checkLower(ratio, 1)
   featureEngineeringSettings <- list(
     ratio = ratio
   )
