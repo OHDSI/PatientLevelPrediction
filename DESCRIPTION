@@ -61,7 +61,7 @@ Suggests:
     rmarkdown,
     RSQLite,
     scoring,
-    OhdsiShinyAppBuilder (>= 1.1.1),
+    OhdsiShinyAppBuilder (>= 1.0.0),
     survival,
     survminer,
     testthat,
