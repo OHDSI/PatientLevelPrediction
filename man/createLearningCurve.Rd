@@ -50,7 +50,7 @@ data extracted from the CDM.}
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
 \item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
-specifies how the data class labels are defined and addition any exclusions to apply to the 
+specifies how the data class labels are defined and addition any exclusions to apply to the
 plpData cohort}
 
 \item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
@@ -73,11 +73,11 @@ The default is none.}
 
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
-\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
-target population who must have a covariate for it to be included in the model training                            
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
+target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
 
-\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
@@ -94,12 +94,14 @@ Creates a learning curve object, which can be plotted using the
 \examples{
 \dontrun{
 # define model
-modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
+modelSettings <- PatientLevelPrediction::setLassoLogisticRegression()
 
 # create learning curve
-learningCurve <- PatientLevelPrediction::createLearningCurve(population,
-                                                             plpData,
-                                                             modelSettings)
+learningCurve <- PatientLevelPrediction::createLearningCurve(
+  population,
+  plpData,
+  modelSettings
+)
 # plot learning curve
 PatientLevelPrediction::plotLearningCurve(learningCurve)
 }

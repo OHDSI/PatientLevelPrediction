@@ -126,7 +126,7 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
-  rlang::check_installed("ShinyAppBuilder")
+  rlang::check_installed("OhdsiShinyAppBuilder")
   rlang::check_installed("ResultModelManager")
   connectionDetails <- do.call(
     DatabaseConnector::createConnectionDetails, 
@@ -135,7 +135,7 @@ viewPlps <- function(databaseSettings){
   connection <- ResultModelManager::ConnectionHandler$new(connectionDetails)
   databaseSettings$connectionDetailSettings <- NULL
   
-  shinyAppVersion <- strsplit(x = as.character(utils::packageVersion('ShinyAppBuilder')), split = '\\.')[[1]]
+  shinyAppVersion <- strsplit(x = as.character(utils::packageVersion('OhdsiShinyAppBuilder')), split = '\\.')[[1]]
   
   if((shinyAppVersion[1] <= 1 & shinyAppVersion[2] < 2)){
     # Old code to be backwards compatable
