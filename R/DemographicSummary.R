@@ -70,6 +70,10 @@ getDemographicSummary_binary <- function(prediction, evalColumn, ...) {
 
 
 getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = NULL, ...) {
+  rlang::check_installed(
+    pkg = c("survival"),
+    reason = "getDemographicSummary_survival requires the survival package to be installed"
+  )
   result <- c()
   evalTypes <- unique(as.data.frame(prediction)[, evalColumn])
 
