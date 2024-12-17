@@ -41,7 +41,6 @@ Imports:
     utils
 Suggests:
     AUC,
-    BigKnn (>= 1.0.0),
     devtools,
     Eunomia (>= 2.0.0),
     ggplot2,
@@ -62,7 +61,7 @@ Suggests:
     rmarkdown,
     RSQLite,
     scoring,
-    ShinyAppBuilder (>= 1.1.1),
+    OhdsiShinyAppBuilder (>= 1.1.1),
     survival,
     survminer,
     testthat,
