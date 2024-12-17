@@ -146,7 +146,7 @@ test_that("set cox regression inputs", {
 
   maxIterations <- sample(100, 1)
   modelSet <- setCoxModel(maxIterations = maxIterations)
-  expect_equal(attr(model_set$param, "settings")$maxIterations, maxIterations)
+  expect_equal(attr(modelSet$param, "settings")$maxIterations, maxIterations)
 })
 
 
