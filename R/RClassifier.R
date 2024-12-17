@@ -60,7 +60,7 @@ fitRclassifier <- function(
     model = cvResult$model,
     
     preprocessing = list(
-      featureEngineering = attr(trainData, "metaData")$featureEngineering,
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
       requireDenseMatrix = F
     ),

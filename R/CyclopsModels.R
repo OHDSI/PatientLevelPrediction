@@ -188,7 +188,7 @@ fitCyclopsModel <- function(
     model = modelTrained,
     
     preprocessing = list(
-      featureEngineering = attr(trainData, "metaData")$featureEngineering,#learned mapping
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,#learned mapping
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,  #learned mapping
       requireDenseMatrix = F
     ),

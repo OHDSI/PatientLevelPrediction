@@ -91,7 +91,7 @@ fitSklearn <- function(trainData,
   result <- list(
     model = file.path(outLoc),
     preprocessing = list(
-      featureEngineering = attr(trainData, "metaData")$featureEngineering,
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
       requireDenseMatrix = attr(param, "settings")$requiresDenseMatrix
     ),
