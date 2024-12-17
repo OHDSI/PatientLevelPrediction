@@ -14,7 +14,7 @@ setGradientBoostingMachine(
   scalePosWeight = 1,
   lambda = 1,
   alpha = 0,
-  seed = sample(1e+07, 1)
+  seed = sample(10000000, 1)
 )
 }
 \arguments{

@@ -12,7 +12,7 @@ setCoxModel(
   threads = -1,
   upperLimit = 20,
   lowerLimit = 0.01,
-  tolerance = 2e-07,
+  tolerance = 0.0000002,
   maxIterations = 3000
 )
 }

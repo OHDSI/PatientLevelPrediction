@@ -8,7 +8,7 @@ setAdaBoost(
   nEstimators = list(10, 50, 200),
   learningRate = list(1, 0.5, 0.1),
   algorithm = list("SAMME"),
-  seed = sample(1e+06, 1)
+  seed = sample(1000000, 1)
 )
 }
 \arguments{

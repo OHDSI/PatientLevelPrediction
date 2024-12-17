@@ -7,14 +7,14 @@
 setIterativeHardThresholding(
   K = 10,
   penalty = "bic",
-  seed = sample(1e+05, 1),
+  seed = sample(100000, 1),
   exclude = c(),
   forceIntercept = FALSE,
   fitBestSubset = FALSE,
   initialRidgeVariance = 0.1,
-  tolerance = 1e-08,
+  tolerance = 0.00000001,
   maxIterations = 10000,
-  threshold = 1e-06,
+  threshold = 0.000001,
   delta = 0
 )
 }
