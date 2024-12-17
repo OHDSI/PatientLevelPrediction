@@ -24,8 +24,8 @@ test_that("createTempModelLoc", {
   testthat::expect_equal(class(PatientLevelPrediction:::createTempModelLoc()), "character")
 })
 
-list1 <- list(a=1:2, b=5:6)
-list2 <- list(c=1:5)
+list1 <- list(a = 1:2, b = 5:6)
+list2 <- list(c = 1:5)
 test_that("listAppend", {
   testthat::expect_equal(length(listAppend(list1, list2)), 3)
 })
@@ -33,16 +33,18 @@ test_that("listAppend", {
 # how to test configurePython?
 
 test_that("setPythonEnvironment", {
-  testthat::expect_error(setPythonEnvironment(envname='madeup34343'))
-  testthat::expect_equal(class(setPythonEnvironment(envname='madeup34343', envtype = 'conda')), "character")
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  testthat::expect_error(setPythonEnvironment(envname = "madeup34343"))
+  testthat::expect_equal(class(setPythonEnvironment(envname = "madeup34343", envtype = "conda")), "character")
 })
 
 test_that("Borrowed cut2", {
-   x <- c(1, rep(2, 2), rep(4, 4), rep(5, 5), rep(6, 6)) 
-   groups <- PatientLevelPrediction:::cut2(x, g = 3)
-   expect_true(
-     all(levels(groups) == c("[1,5)", "5", "6"))
-   )
+  x <- c(1, rep(2, 2), rep(4, 4), rep(5, 5), rep(6, 6))
+  groups <- PatientLevelPrediction:::cut2(x, g = 3)
+  expect_true(
+    all(levels(groups) == c("[1,5)", "5", "6"))
+  )
 })
 
 # getOs test?
