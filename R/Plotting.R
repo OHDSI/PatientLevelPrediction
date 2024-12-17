@@ -54,8 +54,7 @@ outcomeSurvivalPlot <- function(
   yLabel = 'Fraction of those who are outcome free in target population'
 )
 {
-  
-  ensure_installed("survminer")
+  rlang::check_installed("survminer") 
   if(missing(plpData)){
     stop('plpData missing')
   }

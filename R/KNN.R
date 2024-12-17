@@ -28,7 +28,7 @@
 #' }
 #' @export
 setKNN <- function(k=1000, indexFolder=file.path(getwd(),'knn'), threads = 1  ){
-  ensure_installed("BigKnn")
+  rlang::check_installed("BigKnn")
   
   checkIsClass(indexFolder, c('character'))
   

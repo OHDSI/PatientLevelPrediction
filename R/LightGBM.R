@@ -49,7 +49,7 @@ setLightGBM <- function(nthread = 20,
                         scalePosWeight = 1,
                         isUnbalance = FALSE,
                         seed = sample(10000000, 1)) {
-  ensure_installed("lightgbm")
+  rlang::check_installed("lightgbm")
   checkIsClass(seed, c("numeric", "integer"))
   
   if (length(nthread) > 1) {

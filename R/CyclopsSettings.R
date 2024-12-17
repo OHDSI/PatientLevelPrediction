@@ -195,8 +195,7 @@ setIterativeHardThresholding <- function(
   threshold = 1e-06, 
   delta = 0
   ) {
-  
-  ensure_installed("IterativeHardThresholding")
+  rlang::check_installed("IterativeHardThresholding") 
   
   if (K < 1)
     stop("Invalid maximum number of predictors")

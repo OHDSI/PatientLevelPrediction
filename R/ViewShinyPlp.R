@@ -126,9 +126,8 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
-  ensure_installed("ShinyAppBuilder") 
-  ensure_installed("ResultModelManager")
-  
+  rlang::check_installed("ShinyAppBuilder")
+  rlang::check_installed("ResultModelManager")
   connectionDetails <- do.call(
     DatabaseConnector::createConnectionDetails, 
     databaseSettings$connectionDetailSettings

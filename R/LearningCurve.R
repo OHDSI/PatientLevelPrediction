@@ -133,7 +133,7 @@ createLearningCurve <- function(
   ExecutionDateTime <- Sys.time()
   
   if(parallel){
-    ensure_installed('parallel')
+    rlang::check_installed("parallel")
     if(is.null(cores)){
       ParallelLogger::logInfo(paste0('Number of cores not specified'))
       cores <- parallel::detectCores()

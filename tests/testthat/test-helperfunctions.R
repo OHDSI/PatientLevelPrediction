@@ -17,15 +17,6 @@
 library("testthat")
 context("HelperFunctions")
 
-test_that("is_installed", {
-  testthat::expect_equal(PatientLevelPrediction:::is_installed('FeatureExtraction'), T)
-  testthat::expect_equal(PatientLevelPrediction:::is_installed('MadeUp4u834t3f'), F)
-})
-
-test_that("ensure_installed", {
-  testthat::expect_equal(PatientLevelPrediction:::ensure_installed('FeatureExtraction'), NULL)
-})
-
 # how to test checkPlpInstallation?
 
 

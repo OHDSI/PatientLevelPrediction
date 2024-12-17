@@ -291,10 +291,10 @@ loadPlpModel <- function(dirPath) {
   
   
   if(attr(plpModel, 'saveType') == "xgboost"){
-    ensure_installed("xgboost")
+    rlang::check_installed("xgboost")
     plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
   } else if(attr(plpModel, 'saveType') == "lightgbm"){
-    ensure_installed("lightgbm")
+    rlang::check_installed("lightgbm")
     plpModel$model <- lightgbm::lgb.load(file.path(dirPath, "model.json"))
   } else if(attr(plpModel, 'saveType') %in% c("RtoJson")){
     plpModel$model <- ParallelLogger::loadSettingsFromJson(file.path(dirPath, "model.json"))
@@ -579,7 +579,7 @@ extractDatabaseToCsv <- function(
   fileAppend = NULL
   ){
   
-  ensure_installed('readr')
+  rlang::check_installed("readr")
   
   # check inputs
   if(!is.null(fileAppend)){

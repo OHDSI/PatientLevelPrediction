@@ -99,7 +99,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
   savePlpData(plpData, file = plpDataLocation)
   
   if(is.null(cores)){
-    ensure_installed('parallel')
+    rlang::check_installed("parallel")
     ParallelLogger::logInfo(paste0('Number of cores not specified'))
     cores <- parallel::detectCores()
     ParallelLogger::logInfo(paste0('Using all ', cores))
