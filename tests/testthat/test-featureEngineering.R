@@ -200,7 +200,7 @@ test_that("createSplineSettings correct class", {
     continousCovariateId = 12101,
     knots = knots
   )
-
+  data(plpDataSimulationProfile)
   trainData <- simulatePlpData(plpDataSimulationProfile, n = 200)
 
   N <- 50
