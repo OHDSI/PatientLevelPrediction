@@ -111,7 +111,7 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' An object of class \code{featureEngineeringSettings}
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
-  rlang::CheckInstalled(
+  rlang::check_installed(
     "reticulate",
     reason = "This function requires the reticulate package to be installed"
   )

@@ -37,12 +37,6 @@ if (Sys.getenv("GITHUB_ACTIONS") == "true") {
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
-
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# simulated data Tests
-# @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-data("plpDataSimulationProfile")
-
 # PLPDATA
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 Eunomia::createCohorts(connectionDetails)
