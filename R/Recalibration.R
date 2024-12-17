@@ -247,6 +247,8 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
 
   # add if survival
   if (attr(prediction, "metaData")$modelType == "survival") {
+    rlang::check_installed("survival",
+    reason = "weakRecalibration for survival models requires the survival package to be installed")
     recalibrated <- prediction
 
     # this will make the recalibration work if the baselineSurvival is missing

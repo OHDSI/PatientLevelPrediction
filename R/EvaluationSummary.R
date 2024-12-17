@@ -163,6 +163,10 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
   if (is.null(prediction$survivalTime)) {
     stop("No survival time column present")
   }
+  rlang::check_installed(
+    pkg = c("survival", "polspline"),
+    reason = "This function requires these package to be installed"
+  )
 
   result <- c()
   evalTypes <- unique(as.data.frame(prediction)[, evalColumn])
@@ -178,7 +182,6 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
 
     # ============================
 
-    ## timepoint <- attr(prediction, 'metaData')$timepoint #max(prediction$survivalTime)
     ParallelLogger::logInfo(paste0("Evaluating survival model at time: ", timepoint, " days"))
 
     t <- predictionOfInterest$survivalTime
