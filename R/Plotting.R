@@ -972,14 +972,23 @@ plotSmoothCalibration <- function(plpResult,
                                   scatter = FALSE,
                                   bins = 20,
                                   sample = TRUE,
-                                  typeColumn = 'evaluation',
+                                  typeColumn = "evaluation",
                                   saveLocation = NULL,
                                   fileName = "smoothCalibration.pdf") {
   
-  if (!smooth %in% c("loess", "rcs")) stop(ParallelLogger::logError("Smooth type must be either 'loess' or 'rcs"))
-  if (nKnots < 3) stop(ParallelLogger::logError("Number of knots must be larger than 3"))
+  if (!smooth %in% c("loess", "rcs")) {
+    stop(ParallelLogger::logError("Smooth type must be either 'loess' or 'rcs"))
+  }
+  if (nKnots < 3) {
+    stop(ParallelLogger::logError("Number of knots must be larger than 3"))
+  }
+  if (smooth == "rcs") {
+    rlang::check_installed("mgcv", 
+      reason = "mgcv is required for restricted cubic spline smoothing")
+  }
 
-  evalTypes <- unique(plpResult$performanceEvaluation$calibrationSummary[,typeColumn])
+  evalTypes <- 
+    unique(plpResult$performanceEvaluation$calibrationSummary[, typeColumn])
   plots <- list()
   length(plots) <- length(evalTypes)
   
@@ -989,7 +998,7 @@ plotSmoothCalibration <- function(plpResult,
     evalType <- evalTypes[i]
     ParallelLogger::logInfo(paste("Smooth calibration plot for "), evalType)
   
-    if('prediction'%in%names(plpResult)) {
+    if ("prediction" %in% names(plpResult)) {
       x <- plpResult$performanceEvaluation$calibrationSummary %>% 
         dplyr::filter(.data[[typeColumn]] == evalType) %>% 
         dplyr::select("averagePredictedProbability", "observedIncidence")
@@ -1015,7 +1024,7 @@ plotSmoothCalibration <- function(plpResult,
       y <- y[nma]
       p <- p[nma]
 
-      logit <- log(p/(1 - p))  # delete cases with 0 and 1 probs
+      logit <- log(p / (1 - p))  # delete cases with 0 and 1 probs
       nonInf <- !is.infinite(logit)
       sumNonInf <- sum(!nonInf)
       if (sumNonInf > 0)
@@ -1027,13 +1036,13 @@ plotSmoothCalibration <- function(plpResult,
       p <- p[order(p)]
 
       if (smooth == "loess") {
-        if(sample){
-          if(length(p)>40000){
-            inds <- unique(c(0,seq(0, length(p), by = floor(length(p)/20000)), 
-              length(p)))
+        if (sample) {
+          if (length(p) > 40000) {
+            inds <- unique(c(0, seq(0, length(p),
+              by = floor(length(p) / 20000)), length(p)))
             p <- p[inds]
             y <- y[inds]
-          } else if(length(p)>20000){
+          } else if (length(p) > 20000) {
             inds <- sample(length(p), 20000)
             p <- p[inds]
             y <- y[inds] 
@@ -1041,7 +1050,6 @@ plotSmoothCalibration <- function(plpResult,
         }
         # loess
         smoothData <- data.frame(y, p)
-        # xlim <- ylim <- c(0, 1)
         smoothPlot <- plotSmoothCalibrationLoess(data = smoothData, span = span) +
           ggplot2::coord_cartesian(
             xlim = c(0, maxes),
@@ -1130,15 +1138,19 @@ plotSmoothCalibration <- function(plpResult,
       
       # Histogram object detailing the distibution of event/noevent for each probability interval
       
-      popData1 <- sparsePred[, c('averagePredictedProbability', 'PersonCountWithOutcome')]
+      popData1 <- sparsePred[, c("averagePredictedProbability", "PersonCountWithOutcome")]
       popData1$Label <- "Outcome"
-      colnames(popData1) <- c('averagePredictedProbability', 'PersonCount', "Label")
-      popData2 <- sparsePred[,c('averagePredictedProbability', 'PersonCountAtRisk')]
+      colnames(popData1) <- c("averagePredictedProbability", "PersonCount",
+        "Label")
+      popData2 <- sparsePred[, c("averagePredictedProbability",
+        "PersonCountAtRisk")]
       popData2$Label <- "No Outcome"
       popData2$PersonCountAtRisk <- -1 * (popData2$PersonCountAtRisk - popData1$PersonCount)
-      colnames(popData2) <- c('averagePredictedProbability', 'PersonCount', "Label")
+      colnames(popData2) <- c("averagePredictedProbability", "PersonCount",
+        "Label")
       popData <- rbind(popData1, popData2)
-      popData$averagePredictedProbability <- factor(popData$averagePredictedProbability)
+      popData$averagePredictedProbability <-
+        factor(popData$averagePredictedProbability)
       histPlot <- ggplot2::ggplot(
         data = popData,
         ggplot2::aes(
@@ -1148,20 +1160,20 @@ plotSmoothCalibration <- function(plpResult,
         )
       ) + 
         ggplot2::geom_bar(
-          data = popData[popData$Label == "Outcome",],
+          data = popData[popData$Label == "Outcome", ],
           stat = "identity"
         ) + 
         ggplot2::geom_bar(
-          data = popData[popData$Label == "No Outcome",],
+          data = popData[popData$Label == "No Outcome", ],
           stat = "identity"
         ) +
         ggplot2::geom_bar(stat = "identity") + 
         ggplot2::scale_x_continuous(labels = abs) + 
-        ggplot2::coord_flip( ) +
+        ggplot2::coord_flip() +
         ggplot2::theme(
-          axis.title.x=ggplot2::element_blank(),
-          axis.text.x=ggplot2::element_blank(),
-          axis.ticks.x=ggplot2::element_blank()
+          axis.title.x = ggplot2::element_blank(),
+          axis.text.x = ggplot2::element_blank(),
+          axis.ticks.x = ggplot2::element_blank()
         )
     }
   
@@ -1174,8 +1186,8 @@ plotSmoothCalibration <- function(plpResult,
   names(plots) <- tolower(evalTypes)
   
   if (!is.null(saveLocation)) {
-    if(!dir.exists(saveLocation)) {
-      dir.create(saveLocation, recursive = T)
+    if (!dir.exists(saveLocation)) {
+      dir.create(saveLocation, recursive = TRUE)
     }
     for (i in seq_along(evalTypes)) {
       if (!failedEvalType[i]) {
@@ -1184,7 +1196,7 @@ plotSmoothCalibration <- function(plpResult,
           plots[[i]]$histPlot,
           ncol = 1,
           nrow = 2,
-          heights=c(2,1)
+          heights = c(2, 1)
         )
         fileNameComponents <- unlist(strsplit(fileName, split = "\\."))
         n <- length(fileNameComponents)
@@ -1194,7 +1206,7 @@ plotSmoothCalibration <- function(plpResult,
             collapse = "."
           )
         } else {
-          actualFileName = fileNameComponents[1]
+          actualFileName <- fileNameComponents[1]
         }
         saveFileName <- paste0(
           actualFileName,
