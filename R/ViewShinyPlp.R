@@ -147,7 +147,7 @@ viewPlps <- function(databaseSettings){
     )
     # set database settings into system variables
   Sys.setenv("resultDatabaseDetails_prediction" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
-  ShinyAppBuilder::viewShiny(
+  OhdsiShinyAppBuilder::viewShiny(
     config = config, 
     connection = connection
     )
@@ -164,7 +164,7 @@ viewPlps <- function(databaseSettings){
       databaseSettings$cgTablePrefix = databaseSettings$tablePrefix
       databaseSettings$databaseTable = 'database_meta_data'
       databaseSettings$databaseTablePrefix = databaseSettings$tablePrefix
-    ShinyAppBuilder::viewShiny(
+    OhdsiShinyAppBuilder::viewShiny(
       config = config, 
       connection = connection, 
       resultDatabaseSettings = databaseSettings
