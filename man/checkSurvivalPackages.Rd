@@ -9,3 +9,4 @@ checkSurvivalPackages()
 \description{
 Check if the required packages for survival analysis are installed
 }
+\keyword{internal}

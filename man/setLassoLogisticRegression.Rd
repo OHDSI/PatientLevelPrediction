@@ -13,7 +13,7 @@ setLassoLogisticRegression(
   forceIntercept = FALSE,
   upperLimit = 20,
   lowerLimit = 0.01,
-  tolerance = 0.000002,
+  tolerance = 2e-06,
   maxIterations = 3000,
   priorCoefs = NULL
 )
