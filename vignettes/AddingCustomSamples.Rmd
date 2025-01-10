@@ -6,11 +6,11 @@ header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
-    - \fancyfoot[LE,RO]{\thepage}
+    - \fancyhead[C]{Custom Sampling}
+    - \fancyfoot[C]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
 output:
   pdf_document:
     number_sections: yes
@@ -18,14 +18,11 @@ output:
   html_document:
     number_sections: yes
     toc: yes
-editor_options: 
-  markdown: 
-    wrap: 72
 ---
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Adding Custom Sampling}
 -->
 ```

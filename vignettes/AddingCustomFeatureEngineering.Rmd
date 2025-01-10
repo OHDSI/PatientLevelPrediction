@@ -6,9 +6,9 @@ header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
+    - \fancyhead[C]{Custom FeatureEngineering}
+    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[C]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
 output:
@@ -22,10 +22,11 @@ output:
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Adding Custom Feature Engineering}
 -->
 ```
+
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```

@@ -6,18 +6,14 @@ header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Installation Guide}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
+    - \fancyhead[C]{Benchmark Tasks}
+    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[C]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
 output:
   pdf_document:
-    includes:
-      in_header: preamble.tex
     number_sections: yes
-    toc: yes
-  word_document:
     toc: yes
   html_document:
     number_sections: yes
@@ -26,7 +22,7 @@ output:
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Benchmark Tasks}
 -->
 ```
