@@ -34,7 +34,7 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...) {
     ParallelLogger::logInfo("=============")
 
     ParallelLogger::logTrace("Calculating AUC")
-    auc <- computeAuc(predictionOfInterest, confidenceInterval = T)
+    auc <- computeAuc(predictionOfInterest, confidenceInterval = TRUE)
 
     result <- rbind(
       result,
@@ -398,16 +398,13 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
 
   if (length(unique(c(0, q))) == 2) {
     warning("Prediction not spread")
-    # res <- c(0,0)
-    # lmData <- NULL
-    # hosmerlemeshow <-  c(0,0,0)
     prediction$strata <- cut(prediction$value,
-      breaks = c(-0.1, 0.5, 1), # ,max(prediction$value)),
+      breaks = c(-0.1, 0.5, 1), 
       labels = FALSE
     )
   } else {
     prediction$strata <- cut(prediction$value,
-      breaks = unique(c(-0.1, q)), # ,max(prediction$value)),
+      breaks = unique(c(-0.1, q)), 
       labels = FALSE
     )
   }
@@ -431,15 +428,13 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
   nhoslem <- merge(obs.count2, expected.count2, by = "group")
   Xsquared <- sum((hoslem$observed - hoslem$expected)^2 / hoslem$expected) +
     sum((nhoslem$observed - nhoslem$expected)^2 / nhoslem$expected)
-  pvalue <- stats::pchisq(Xsquared, df = numberOfStrata - 2, lower.tail = F)
+  pvalue <- stats::pchisq(Xsquared, df = numberOfStrata - 2, lower.tail = FALSE)
   hosmerlemeshow <- data.frame(Xsquared = Xsquared, df = numberOfStrata - 2, pvalue = pvalue)
 
   # linear model fitting obs to pred:
   lmData <- merge(obs.Points, pred.Points, by = "group")
   model <- stats::lm(obs ~ pred, data = lmData)
 
-  ## graphics::plot(lmData$pred, lmData$obs)
-  ## graphics::abline(a = model$coefficients[1], b = model$coefficients[2], col='red')
   res <- model$coefficients
   names(res) <- c("Intercept", "Gradient")
   #
@@ -515,12 +510,6 @@ calibrationWeak <- function(prediction) {
 
   inverseLog <- log(prediction$value / (1 - prediction$value))
   y <- ifelse(prediction$outcomeCount > 0, 1, 0)
-
-  # intercept <- suppressWarnings(stats::glm(y ~ offset(1*inverseLog), family = 'binomial'))
-  # intercept <- intercept$coefficients[1]
-  # gradient <- suppressWarnings(stats::glm(y ~ inverseLog+0, family = 'binomial',
-  #                       offset = rep(intercept,length(inverseLog))))
-  # gradient <- gradient$coefficients[1]
 
   vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = "binomial"))
 

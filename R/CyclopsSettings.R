@@ -122,8 +122,6 @@ setCoxModel <- function(
 
   checkHigherEqual(upperLimit, lowerLimit)
 
-  # selectorType = "byRow",
-
   param <- list(
     priorParams = list(
       priorType = "laplace",

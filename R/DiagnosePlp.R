@@ -19,51 +19,48 @@
 #' Run a list of predictions diagnoses
 #'
 #' @details
-#' This function will run all specified prediction design diagnoses as defined using . 
+#' This function will run all specified prediction design diagnoses as defined using .
 #'
 #' @param databaseDetails               The database settings created using \code{createDatabaseDetails()}
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
 #' @param logSettings                    The setting spexcifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
-#' 
+#'
 #' @return
 #' A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
 #' for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
-#' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
+#' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 #'
 #' @export
 diagnoseMultiplePlp <- function(
-  databaseDetails = createDatabaseDetails(),
-  modelDesignList = list(
-    createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-    createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
-  ),
-  cohortDefinitions = NULL,
-  logSettings = createLogSettings(
-    verbosity = "DEBUG", 
-    timeStamp = T, 
-    logName = "diagnosePlp Log"
-  ),
-  saveDirectory = getwd()
-){
-  
-  #input checks
-  checkIsClass(databaseDetails, c('databaseDetails'))
-  checkIsClass(modelDesignList, c('list', 'modelDesign'))
-  checkIsClass(logSettings, 'logSettings')
-  checkIsClass(saveDirectory, 'character')
-  if(!dir.exists(saveDirectory)){
-    dir.create(saveDirectory, recursive = T)
+    databaseDetails = createDatabaseDetails(),
+    modelDesignList = list(
+      createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()),
+      createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+    ),
+    cohortDefinitions = NULL,
+    logSettings = createLogSettings(
+      verbosity = "DEBUG",
+      timeStamp = TRUE,
+      logName = "diagnosePlp Log"
+    ),
+    saveDirectory = getwd()) {
+  # input checks
+  checkIsClass(databaseDetails, c("databaseDetails"))
+  checkIsClass(modelDesignList, c("list", "modelDesign"))
+  checkIsClass(logSettings, "logSettings")
+  checkIsClass(saveDirectory, "character")
+  if (!dir.exists(saveDirectory)) {
+    dir.create(saveDirectory, recursive = TRUE)
   }
-  
-  if(is.null(cohortDefinitions)){
-    
+
+  if (is.null(cohortDefinitions)) {
     cohortIds <- unlist(
       lapply(
-        X = 1:length(modelDesignList), 
-        FUN = function(i){
+        X = 1:length(modelDesignList),
+        FUN = function(i) {
           c(
             modelDesignList[[i]]$targetId,
             modelDesignList[[i]]$outcomeId
@@ -71,91 +68,94 @@ diagnoseMultiplePlp <- function(
         }
       )
     )
-    
+
     cohortDefinitions <- lapply(
-      X = cohortIds, 
-      FUN = function(x){
+      X = cohortIds,
+      FUN = function(x) {
         list(
-          id = x, 
-          name = paste0('Cohort: ', x)
+          id = x,
+          name = paste0("Cohort: ", x)
         )
       }
     )
-    
   }
-  
-  settingstable <- convertToJson(modelDesignList,cohortDefinitions) # from runMultiplePlp.R
-  
-  if(nrow(settingstable) != length(modelDesignList)){
-    stop('Error in settingstable')
+
+  settingstable <- convertToJson(modelDesignList, cohortDefinitions) # from runMultiplePlp.R
+
+  if (nrow(settingstable) != length(modelDesignList)) {
+    stop("Error in settingstable")
   }
-  
+
   # save the settings: TODO fix
   utils::write.csv(
     x = settingstable %>% dplyr::select(
       "analysisId",
-      "targetId", 
+      "targetId",
       "targetName",
-      "outcomeId", 
+      "outcomeId",
       "outcomeName",
       "dataLocation"
-    ), 
-    file.path(saveDirectory,'settings.csv'), 
-    row.names = F
+    ),
+    file.path(saveDirectory, "settings.csv"),
+    row.names = FALSE
   )
 
   # group the outcomeIds per combination of data extraction settings
-  dataSettings <- settingstable %>% 
+  dataSettings <- settingstable %>%
     dplyr::group_by(
       .data$targetId,
       .data$covariateSettings,
       .data$restrictPlpDataSettings,
       .data$dataLocation
-    ) %>% 
+    ) %>%
     dplyr::summarise(
-      outcomeIds = paste(unique(.data$outcomeId), collapse = ',')
+      outcomeIds = paste(unique(.data$outcomeId), collapse = ",")
     )
-  
+
   # extract data
-  for(i in 1:nrow(as.data.frame(dataSettings))){
-    dataExists <- length(dir(file.path(saveDirectory, dataSettings$dataLocation[i])))>0
-    if(!dataExists){
-      ParallelLogger::logInfo(paste('Extracting data for cohort', dataSettings$targetId[i], 'to', file.path(saveDirectory, dataSettings$dataLocation[i])))
-      
+  for (i in 1:nrow(as.data.frame(dataSettings))) {
+    dataExists <- length(dir(file.path(saveDirectory, dataSettings$dataLocation[i]))) > 0
+    if (!dataExists) {
+      ParallelLogger::logInfo(paste("Extracting data for cohort", dataSettings$targetId[i], "to", file.path(saveDirectory, dataSettings$dataLocation[i])))
+
       databaseDetails$targetId <- dataSettings$targetId[i]
-      databaseDetails$outcomeIds <- strsplit(dataSettings$outcomeIds[i], ',')[[1]]
-      
+      databaseDetails$outcomeIds <- strsplit(dataSettings$outcomeIds[i], ",")[[1]]
+
       plpDataSettings <- list(
         databaseDetails = databaseDetails,
         covariateSettings = ParallelLogger::convertJsonToSettings(dataSettings$covariateSettings[i]),
         restrictPlpDataSettings = ParallelLogger::convertJsonToSettings(dataSettings$restrictPlpDataSettings[i])
       )
-      
+
       plpData <- tryCatch(
-        {do.call(getPlpData, plpDataSettings)},
-        error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+        {
+          do.call(getPlpData, plpDataSettings)
+        },
+        error = function(e) {
+          ParallelLogger::logInfo(e)
+          return(NULL)
+        }
       )
-      if(!is.null(plpData)){
+      if (!is.null(plpData)) {
         savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
       }
-    } else{
-      ParallelLogger::logInfo(paste('Data for cohort', dataSettings$targetId[i], 'exists at', file.path(saveDirectory, dataSettings$dataLocation[i])))
+    } else {
+      ParallelLogger::logInfo(paste("Data for cohort", dataSettings$targetId[i], "exists at", file.path(saveDirectory, dataSettings$dataLocation[i])))
     }
   }
-  
+
   # diagnosePlp
-  for(i in 1:nrow(as.data.frame(settingstable))){
+  for (i in 1:nrow(as.data.frame(settingstable))) {
     modelDesign <- modelDesignList[[i]]
-    settings <- settingstable[i,] # just the data locations?
-    
-    dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation)))>0
-    
-    if(dataExists){
+    settings <- settingstable[i, ] # just the data locations?
+
+    dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation))) > 0
+
+    if (dataExists) {
       plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
-      
-      diagnoseExists <- file.exists(file.path(saveDirectory, settings$analysisId, 'diagnosePlp.rds'))
-      if(!diagnoseExists){
-        
+
+      diagnoseExists <- file.exists(file.path(saveDirectory, settings$analysisId, "diagnosePlp.rds"))
+      if (!diagnoseExists) {
         diagnosePlpSettings <- list(
           plpData = plpData,
           outcomeId = modelDesign$outcomeId,
@@ -169,16 +169,20 @@ diagnoseMultiplePlp <- function(
           logSettings = logSettings,
           saveDirectory = saveDirectory
         )
-        
+
         result <- tryCatch(
-          {do.call(diagnosePlp, diagnosePlpSettings)},
-          error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+          {
+            do.call(diagnosePlp, diagnosePlpSettings)
+          },
+          error = function(e) {
+            ParallelLogger::logInfo(e)
+            return(NULL)
+          }
         )
-      } else{
-        ParallelLogger::logInfo(paste('Diagnosis ', settings$analysisId, 'exists at', file.path(saveDirectory, settings$analysisId)))
+      } else {
+        ParallelLogger::logInfo(paste("Diagnosis ", settings$analysisId, "exists at", file.path(saveDirectory, settings$analysisId)))
       }
     } # end run per setting
-    
   }
   return(invisible(settingstable))
 }
@@ -187,30 +191,30 @@ diagnoseMultiplePlp <- function(
 #' diagnostic - Investigates the prediction problem settings - use before training a model
 #'
 #' @description
-#' This function runs a set of prediction diagnoses to help pick a suitable T, O, TAR and determine 
+#' This function runs a set of prediction diagnoses to help pick a suitable T, O, TAR and determine
 #' whether the prediction problem is worth executing.
-#' 
+#'
 #' @details
 #' Users can define set of Ts, Os, databases and population settings.  A list of data.frames containing details such as
-#' follow-up time distribution, time-to-event information, characteriszation details, time from last prior event, 
-#' observation time distribution. 
+#' follow-up time distribution, time-to-event information, characteriszation details, time from last prior event,
+#' observation time distribution.
 #'
 #' @param plpData                    An object of type \code{plpData} - the patient level prediction
-#'                                   data extracted from the CDM.  Can also include an initial population as 
+#'                                   data extracted from the CDM.  Can also include an initial population as
 #'                                   plpData$popualtion.
-#' @param outcomeId                  (integer) The ID of the outcome.                                       
+#' @param outcomeId                  (integer) The ID of the outcome.
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
-#'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
+#'                                   specifies how the data class labels are defined and addition any exclusions to apply to the
 #'                                   plpData cohort
-#' @param splitSettings              An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.  
-#'                                   The default settings can be created using \code{createDefaultSplitSetting}.                               
+#' @param splitSettings              An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
+#'                                   The default settings can be created using \code{createDefaultSplitSetting}.
 #' @param sampleSettings             An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
 #'                                   The default is none.
-#' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)                                                        
-#' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
-#'                                   target population who must have a covariate for it to be included in the model training                            
-#'                                   and whether to normalise the covariates before training  
+#' @param featureEngineeringSettings An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)
+#' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
+#'                                   target population who must have a covariate for it to be included in the model training
+#'                                   and whether to normalise the covariates before training
 #' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
 #'                                         \itemize{
 #'                                         \item setLassoLogisticRegression() A lasso logistic regression model
@@ -219,12 +223,12 @@ diagnoseMultiplePlp <- function(
 #'                                         \item setRandomForest() A random forest model
 #'                                         \item setDecisionTree() A decision tree model
 #'                                         \item setKNN() A KNN model
-#'                                         
-#'                                         } 
-#' @param logSettings           An object of \code{logSettings} created using \code{createLogSettings} 
-#'                              specifying how the logging is done                                                                            
+#'
+#'                                         }
+#' @param logSettings           An object of \code{logSettings} created using \code{createLogSettings}
+#'                              specifying how the logging is done
 #' @param saveDirectory         The path to the directory where the results will be saved (if NULL uses working directory)
-#' 
+#'
 #' @return
 #' An object containing the model or location where the model is save, the data selection settings, the preprocessing
 #' and training settings as well as various performance measures obtained by the model.
@@ -237,62 +241,60 @@ diagnoseMultiplePlp <- function(
 #' @export
 #' @examples
 #' \dontrun{
-#' #******** EXAMPLE 1 ********* 
-#' } 
+#' #******** EXAMPLE 1 *********
+#' }
 diagnosePlp <- function(
-  plpData = NULL,
-  outcomeId,
-  analysisId,
-  populationSettings,
-  splitSettings = createDefaultSplitSetting(),
-  sampleSettings = createSampleSettings(), # default none
-  saveDirectory = NULL,
-  featureEngineeringSettings = createFeatureEngineeringSettings(), # default none
-  modelSettings = setLassoLogisticRegression(), # default to logistic regression
-  logSettings =  createLogSettings(
-    verbosity = 'DEBUG',
-    timeStamp = T,
-    logName = 'diagnosePlp Log'
-  ),
-  preprocessSettings = createPreprocessSettings()
-){
-  
-  # start log 
+    plpData = NULL,
+    outcomeId,
+    analysisId,
+    populationSettings,
+    splitSettings = createDefaultSplitSetting(),
+    sampleSettings = createSampleSettings(), # default none
+    saveDirectory = NULL,
+    featureEngineeringSettings = createFeatureEngineeringSettings(), # default none
+    modelSettings = setLassoLogisticRegression(), # default to logistic regression
+    logSettings = createLogSettings(
+      verbosity = "DEBUG",
+      timeStamp = TRUE,
+      logName = "diagnosePlp Log"
+    ),
+    preprocessSettings = createPreprocessSettings()) {
+  # start log
   analysisPath <- file.path(saveDirectory, analysisId)
   logSettings$saveDirectory <- analysisPath
-  logSettings$logFileName <- 'plpLog'
-  logger <- do.call(createLog,logSettings)
+  logSettings$logFileName <- "plpLog"
+  logger <- do.call(createLog, logSettings)
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
-  
+
   participantsDiag <- probastParticipants(
-    plpData, 
+    plpData,
     outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   predictorDiag <- probastPredictors(
-    plpData, 
+    plpData,
     outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   outcomeDiag <- probastOutcome(
-    plpData, 
+    plpData,
     outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   designDiag <- probastDesign(
-    plpData, 
+    plpData,
     outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
-  # Question: what about 
-  # splitSettings, sampleSettings, 
+
+  # Question: what about
+  # splitSettings, sampleSettings,
   # FeatureEngineeringSettings, modelSettings
-  
+
   result <- list(
     summary = rbind(
       participantsDiag$diagnosticParticipantsAggregate,
@@ -319,60 +321,58 @@ diagnosePlp <- function(
     databaseSchema = plpData$metaData$databaseDetails$cdmDatabaseSchema,
     databaseId = plpData$metaData$databaseDetails$cdmDatabaseId
   )
-  
-  class(result) <- 'diagnosePlp'
-  
-  if(!is.null(saveDirectory)){
-    if(!dir.exists(file.path(saveDirectory, analysisId))){
-      dir.create(file.path(saveDirectory, analysisId), recursive = T)
+
+  class(result) <- "diagnosePlp"
+
+  if (!is.null(saveDirectory)) {
+    if (!dir.exists(file.path(saveDirectory, analysisId))) {
+      dir.create(file.path(saveDirectory, analysisId), recursive = TRUE)
     }
-    saveLocation <- file.path(saveDirectory, analysisId, 'diagnosePlp.rds')
-    ParallelLogger::logInfo(paste0('Saving diagnosePlp to ', saveLocation))
+    saveLocation <- file.path(saveDirectory, analysisId, "diagnosePlp.rds")
+    ParallelLogger::logInfo(paste0("Saving diagnosePlp to ", saveLocation))
     saveRDS(result, saveLocation)
   }
-  
+
   return(result)
 }
 
 probastDesign <- function(
-  plpData, 
-  outcomeId,
-  populationSettings
-){
-  
+    plpData,
+    outcomeId,
+    populationSettings) {
   diagnosticAggregate <- c()
   diagnosticFull <- c()
-  
+
   population <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
-  probastId <- '4.1'
-  if(min(sum(population$outcomeCount > 0),nrow(population) - sum(population$outcomeCount > 0)) >= 1000){
+
+  probastId <- "4.1"
+  if (min(sum(population$outcomeCount > 0), nrow(population) - sum(population$outcomeCount > 0)) >= 1000) {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Pass')
+      c(probastId, "Pass")
     )
-  }else if((min(sum(population$outcomeCount > 0),nrow(population) - sum(population$outcomeCount > 0)) >= 100)){
+  } else if ((min(sum(population$outcomeCount > 0), nrow(population) - sum(population$outcomeCount > 0)) >= 100)) {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Unknown')
+      c(probastId, "Unknown")
     )
-  } else{
+  } else {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Fail')
+      c(probastId, "Fail")
     )
   }
-  
-  if(!is.null(dim(diagnosticAggregate))){
-    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
+
+  if (!is.null(dim(diagnosticAggregate))) {
+    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>%
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','resultValue')
+    colnames(diagnosticAggregate) <- c("probastId", "resultValue")
   }
-  
+
   return(
     list
     (
@@ -380,140 +380,132 @@ probastDesign <- function(
       diagnosticDesignAggregate = diagnosticAggregate
     )
   )
-  
-  
 }
 
 probastParticipants <- function(
-  plpData, 
-  outcomeId,
-  populationSettings
-){
-  
+    plpData,
+    outcomeId,
+    populationSettings) {
   diagnosticAggregate <- c()
   diagnosticFull <- c()
-  
+
   # true due to plp
-  probastId <- '1.1'
+  probastId <- "1.1"
   diagnosticAggregate <- rbind(
     diagnosticAggregate,
-    c(probastId, 'Pass')
+    c(probastId, "Pass")
   )
-  
+
   # appropriate inclusions
   ## 1.2.1 min prior observation
-  if(populationSettings$washoutPeriod != 0 ){
-    var <- 'washoutPeriod'
-    probastId <- '1.2.1'
-    
+  if (populationSettings$washoutPeriod != 0) {
+    var <- "washoutPeriod"
+    probastId <- "1.2.1"
+
     result <- getDiagnostic(
       probastId,
-      plpData, 
-      outcomeId, 
-      populationSettings, 
-      var, 
-      0  
+      plpData,
+      outcomeId,
+      populationSettings,
+      var,
+      0
     )
-    
+
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
       result$diagnosticAggregate
     )
-    
+
     diagnosticFull <- rbind(
       diagnosticFull,
       result$diagnosticFull
     )
-    
   }
-  
+
   ## 1.2.2 min time-at-risk
-  if(populationSettings$requireTimeAtRisk & populationSettings$minTimeAtRisk > 0){
-    probastId <- '1.2.2'
-    var <- 'minTimeAtRisk'
-    
+  if (populationSettings$requireTimeAtRisk && populationSettings$minTimeAtRisk > 0) {
+    probastId <- "1.2.2"
+    var <- "minTimeAtRisk"
+
     result <- getDiagnostic(
       probastId,
-      plpData, 
-      outcomeId, 
-      populationSettings, 
-      var, 
-      0  
+      plpData,
+      outcomeId,
+      populationSettings,
+      var,
+      0
     )
-    
+
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
       result$diagnosticAggregate
     )
-    
+
     diagnosticFull <- rbind(
       diagnosticFull,
       result$diagnosticFull
     )
-    
   }
-  
-  
+
+
   ## 1.2.3 first exposure only
-  if(populationSettings$firstExposureOnly){
-    probastId <- '1.2.3'
-    var <- 'firstExposureOnly'
-    default <- F
-    
+  if (populationSettings$firstExposureOnly) {
+    probastId <- "1.2.3"
+    var <- "firstExposureOnly"
+    default <- FALSE
+
     result <- getDiagnostic(
       probastId,
-      plpData, 
-      outcomeId, 
-      populationSettings, 
-      var, 
-      default  
+      plpData,
+      outcomeId,
+      populationSettings,
+      var,
+      default
     )
-    
+
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
       result$diagnosticAggregate
     )
-    
+
     diagnosticFull <- rbind(
       diagnosticFull,
       result$diagnosticFull
     )
-    
   }
-  
-  ## 1.2.4 prior observation 
-  if(populationSettings$removeSubjectsWithPriorOutcome & populationSettings$priorOutcomeLookback > 0){
-    probastId <- '1.2.4'
-    var <- 'priorOutcomeLookback'
+
+  ## 1.2.4 prior observation
+  if (populationSettings$removeSubjectsWithPriorOutcome && populationSettings$priorOutcomeLookback > 0) {
+    probastId <- "1.2.4"
+    var <- "priorOutcomeLookback"
     default <- 0
-    
+
     result <- getDiagnostic(
       probastId,
-      plpData, 
-      outcomeId, 
-      populationSettings, 
-      var, 
-      default  
+      plpData,
+      outcomeId,
+      populationSettings,
+      var,
+      default
     )
-    
+
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
       result$diagnosticAggregate
     )
-    
+
     diagnosticFull <- rbind(
       diagnosticFull,
       result$diagnosticFull
     )
-    
   }
-  
-  if(!is.null(dim(diagnosticAggregate))){
-    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
+
+  if (!is.null(dim(diagnosticAggregate))) {
+    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>%
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','resultValue')
+    colnames(diagnosticAggregate) <- c("probastId", "resultValue")
   }
-  
+
   return(
     list
     (
@@ -524,17 +516,18 @@ probastParticipants <- function(
 }
 
 
-getMaxEndDaysFromCovariates <- function(covariateSettings){
-  
-  if(inherits(covariateSettings, 'covariateSettings')){
+getMaxEndDaysFromCovariates <- function(covariateSettings) {
+  if (inherits(covariateSettings, "covariateSettings")) {
     covariateSettings <- list(covariateSettings)
   }
-  
-  vals <- unlist(lapply(covariateSettings, function(x){x$endDays}))
-  
-  if(length(vals) == 0){
+
+  vals <- unlist(lapply(covariateSettings, function(x) {
+    x$endDays
+  }))
+
+  if (length(vals) == 0) {
     return(0)
-  } else{
+  } else {
     return(max(vals))
   }
 }
@@ -542,136 +535,132 @@ getMaxEndDaysFromCovariates <- function(covariateSettings){
 
 
 probastPredictors <- function(
-  plpData, 
-  outcomeId,
-  populationSettings
-){
-  
+    plpData,
+    outcomeId,
+    populationSettings) {
   diagnosticAggregate <- c()
   diagnosticFull <- c()
-  
+
   # true due to plp
-  probastId <- '2.1'
+  probastId <- "2.1"
   diagnosticAggregate <- rbind(
     diagnosticAggregate,
-    c(probastId, 'Pass')
+    c(probastId, "Pass")
   )
-  
+
   # 2.2.1
   # cov end date < tar_start
   # covariate + outcome correlation; km of outcome (close to index or not)?
-  probastId <- '2.2'
-  if(populationSettings$startAnchor == 'cohort start'){
-    if(populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)){
+  probastId <- "2.2"
+  if (populationSettings$startAnchor == "cohort start") {
+    if (populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)) {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Pass')
+        c(probastId, "Pass")
       )
-    } else{
+    } else {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Fail')
+        c(probastId, "Fail")
       )
     }
-  } else{
+  } else {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Unknown')
+      c(probastId, "Unknown")
     )
   }
-  
+
   # KM of outcome
   populationSettingsFull <- populationSettings
-  populationSettingsFull$riskWindowEnd <- 10*365
-  
+  populationSettingsFull$riskWindowEnd <- 10 * 365
+
   population <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   populationFull <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = populationSettingsFull
   )
-  
-  #dayOfEvent, outcomeAtTime, observedAtStartOfDay
-  kmObservation <- population %>% 
-    dplyr::group_by(.data$daysToEvent) %>% 
+
+  # dayOfEvent, outcomeAtTime, observedAtStartOfDay
+  kmObservation <- population %>%
+    dplyr::group_by(.data$daysToEvent) %>%
     dplyr::summarise(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
-  
-  kmObservation$observedAtStartOfDay <-  unlist(
+
+  kmObservation$observedAtStartOfDay <- unlist(
     lapply(
       kmObservation$daysToEvent,
-      function(x){
-        population %>% 
+      function(x) {
+        population %>%
           dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>% 
+          dplyr::tally() %>%
           dplyr::select("n")
       }
     )
   )
-  
+
   kmObservation$probastId <- probastId
-  kmObservation$inputType <- 'populationSettings'
-  
-  kmObservationFull <- populationFull %>% 
-    dplyr::group_by(.data$daysToEvent) %>% 
+  kmObservation$inputType <- "populationSettings"
+
+  kmObservationFull <- populationFull %>%
+    dplyr::group_by(.data$daysToEvent) %>%
     dplyr::summarise(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
-  
-  kmObservationFull$observedAtStartOfDay <-  unlist(
+
+  kmObservationFull$observedAtStartOfDay <- unlist(
     lapply(
       kmObservationFull$daysToEvent,
-      function(x){
-        populationFull %>% 
+      function(x) {
+        populationFull %>%
           dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>% 
+          dplyr::tally() %>%
           dplyr::select("n")
       }
     )
   )
-  
+
   kmObservationFull$probastId <- probastId
-  kmObservationFull$inputType <- '10-year'
-  
+  kmObservationFull$inputType <- "10-year"
+
   diagnosticFull <- rbind(kmObservation, kmObservationFull)
-  
-  
+
+
   # 2.3.1
   # cov end_date <=0
-  probastId <- '2.3'
-  if(getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) <= 0){
-    
-    if(getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) < 0){
+  probastId <- "2.3"
+  if (getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) <= 0) {
+    if (getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) < 0) {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Pass')
+        c(probastId, "Pass")
       )
-    }
-    else{
+    } else {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Unknown')
+        c(probastId, "Unknown")
       )
     }
-  } else{
+  } else {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Fail')
+      c(probastId, "Fail")
     )
   }
-  
-  if(!is.null(dim(diagnosticAggregate))){
-    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
+
+  if (!is.null(dim(diagnosticAggregate))) {
+    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>%
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','resultValue')
+    colnames(diagnosticAggregate) <- c("probastId", "resultValue")
   }
-  
+
   return(
     list
     (
@@ -679,102 +668,99 @@ probastPredictors <- function(
       diagnosticPredictorsAggregate = diagnosticAggregate
     )
   )
-  
 }
 
 
 
 probastOutcome <- function(
-  plpData, 
-  outcomeId,
-  populationSettings
-){
-  
+    plpData,
+    outcomeId,
+    populationSettings) {
   diagnosticAggregate <- c()
   diagnosticFull <- c()
-  
+
   # true due to plp
-  probastId <- '3.4'
+  probastId <- "3.4"
   diagnosticAggregate <- rbind(
     diagnosticAggregate,
-    c(probastId, 'Pass')
+    c(probastId, "Pass")
   )
-  
+
   # 3.5 - check the outcome definition doesn't use things before index?
-  
+
   # 3.6 - check tar after covariate end_days
-  probastId <- '3.6'
-  if(populationSettings$startAnchor == 'cohort start'){
-    if(populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)){
+  probastId <- "3.6"
+  if (populationSettings$startAnchor == "cohort start") {
+    if (populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)) {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Pass')
+        c(probastId, "Pass")
       )
-    } else{
+    } else {
       diagnosticAggregate <- rbind(
         diagnosticAggregate,
-        c(probastId, 'Fail')
+        c(probastId, "Fail")
       )
     }
-  } else{
+  } else {
     diagnosticAggregate <- rbind(
       diagnosticAggregate,
-      c(probastId, 'Unknown')
+      c(probastId, "Unknown")
     )
   }
-  
+
   # 3.1.1 - check the outcome rate per gender/age/index year
-  probastId <- '3.1.1'
-  
+  probastId <- "3.1.1"
+
   # all cohort vs pop
   pop <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   popSum <- getOutcomeSummary(
-    type = 'population',
+    type = "population",
     population = pop
   )
-  
+
   cohort <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = PatientLevelPrediction::createStudyPopulationSettings(
-      includeAllOutcomes = F, 
-      firstExposureOnly = F, 
-      washoutPeriod = 0, 
-      removeSubjectsWithPriorOutcome = F, 
-      priorOutcomeLookback = 0, 
-      requireTimeAtRisk = F, 
-      minTimeAtRisk = 0, 
-      riskWindowStart = populationSettings$riskWindowStart, 
-      startAnchor = populationSettings$startAnchor, 
-      riskWindowEnd = populationSettings$riskWindowEnd, 
+      includeAllOutcomes = FALSE,
+      firstExposureOnly = FALSE,
+      washoutPeriod = 0,
+      removeSubjectsWithPriorOutcome = FALSE,
+      priorOutcomeLookback = 0,
+      requireTimeAtRisk = FALSE,
+      minTimeAtRisk = 0,
+      riskWindowStart = populationSettings$riskWindowStart,
+      startAnchor = populationSettings$startAnchor,
+      riskWindowEnd = populationSettings$riskWindowEnd,
       endAnchor = populationSettings$endAnchor
     )
   )
-  
+
   cohortSum <- getOutcomeSummary(
-    type = 'cohort',
+    type = "cohort",
     population = cohort
   )
-  
-  
-  
-  #dayOfEvent, outcomeAtTime, observedAtStartOfDay
+
+
+
+  # dayOfEvent, outcomeAtTime, observedAtStartOfDay
   diagnosticFull <- rbind(
     do.call(rbind, popSum),
     do.call(rbind, cohortSum)
   )
-  
-  if(!is.null(dim(diagnosticAggregate))){
-    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>% 
+
+  if (!is.null(dim(diagnosticAggregate))) {
+    diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>%
       dplyr::mutate_if(is.factor, as.character)
-    colnames(diagnosticAggregate) <- c('probastId','resultValue')
+    colnames(diagnosticAggregate) <- c("probastId", "resultValue")
   }
-  
+
   return(
     list
     (
@@ -782,152 +768,145 @@ probastOutcome <- function(
       diagnosticOutcomeAggregate = diagnosticAggregate
     )
   )
-  
 }
 
 getOutcomeSummary <- function(
-  type = 'population',
-  population
-){
-  
+    type = "population",
+    population) {
   res <- list()
   length(res) <- 4
-  probastId <- '3'
-  
-  res[[1]] <- population %>% 
+  probastId <- "3"
+
+  res[[1]] <- population %>%
     dplyr::group_by(.data$ageYear) %>%
-    dplyr::summarise(outcomePercent = sum(.data$outcomeCount>0)/length(.data$outcomeCount)) %>%
+    dplyr::summarise(outcomePercent = sum(.data$outcomeCount > 0) / length(.data$outcomeCount)) %>%
     dplyr::mutate(
       probastId = probastId,
-      aggregation = 'age',
+      aggregation = "age",
       inputType = type
-    ) %>% 
+    ) %>%
     dplyr::rename(xvalue = "ageYear")
-  
-  res[[2]] <-  population %>% 
+
+  res[[2]] <- population %>%
     dplyr::group_by(.data$gender) %>%
-    dplyr::summarise(outcomePercent = sum(.data$outcomeCount>0)/length(.data$outcomeCount)) %>%
+    dplyr::summarise(outcomePercent = sum(.data$outcomeCount > 0) / length(.data$outcomeCount)) %>%
     dplyr::mutate(
       probastId = probastId,
-      aggregation = 'gender',
+      aggregation = "gender",
       inputType = type
-    )%>% 
+    ) %>%
     dplyr::rename(xvalue = "gender")
-  
-  res[[3]] <- population %>% 
+
+  res[[3]] <- population %>%
     dplyr::mutate(
-      year = substring(.data$cohortStartDate,1,4)
+      year = substring(.data$cohortStartDate, 1, 4)
     ) %>%
     dplyr::group_by(.data$year) %>%
-    dplyr::summarise(outcomePercent = sum(.data$outcomeCount>0)/length(.data$outcomeCount)) %>%
+    dplyr::summarise(outcomePercent = sum(.data$outcomeCount > 0) / length(.data$outcomeCount)) %>%
     dplyr::mutate(
       probastId = probastId,
-      aggregation = 'year',
+      aggregation = "year",
       inputType = type
-    ) %>% 
+    ) %>%
     dplyr::rename(xvalue = "year")
-  
-  res[[4]] <- population %>% 
+
+  res[[4]] <- population %>%
     dplyr::mutate(
-      year = substring(.data$cohortStartDate,6,7)
+      year = substring(.data$cohortStartDate, 6, 7)
     ) %>%
     dplyr::group_by(.data$year) %>%
-    dplyr::summarise(outcomePercent = sum(.data$outcomeCount>0)/length(.data$outcomeCount)) %>%
+    dplyr::summarise(outcomePercent = sum(.data$outcomeCount > 0) / length(.data$outcomeCount)) %>%
     dplyr::mutate(
       probastId = probastId,
-      aggregation = 'month',
+      aggregation = "month",
       inputType = type
-    ) %>% 
+    ) %>%
     dplyr::rename(xvalue = "year")
-  
+
   return(res)
 }
 
-cos_sim <- function(a,b) 
-{
-  return( sum(a*b)/sqrt(sum(a^2)*sum(b^2)) )
-} 
+cos_sim <- function(a, b) {
+  return(sum(a * b) / sqrt(sum(a^2) * sum(b^2)))
+}
 
 getDiagnostic <- function(
-  probastId,
-  plpData, 
-  outcomeId,
-  populationSettings, 
-  var,
-  defaultValue = 0
-){
-  ParallelLogger::logInfo(paste0('Diagnosing impact of ',var,' in populationSettings'))
-  
+    probastId,
+    plpData,
+    outcomeId,
+    populationSettings,
+    var,
+    defaultValue = 0) {
+  ParallelLogger::logInfo(paste0("Diagnosing impact of ", var, " in populationSettings"))
+
   populationSettingsCheck <- populationSettings
   populationSettingsCheck[var] <- defaultValue
-  
+
   pop <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
+    plpData = plpData,
+    outcomeId = outcomeId,
     populationSettings = populationSettings
   )
-  
+
   popCheck <- PatientLevelPrediction::createStudyPopulation(
-    plpData = plpData, 
-    outcomeId = outcomeId, 
-    populationSettings = populationSettingsCheck 
+    plpData = plpData,
+    outcomeId = outcomeId,
+    populationSettings = populationSettingsCheck
   )
-  
-  #compare the populations:
+
+  # compare the populations:
   diag <- rbind(
     data.frame(
       probastId = probastId,
-      design = paste0(var,': ', defaultValue),
+      design = paste0(var, ": ", defaultValue),
       metric = c(
-        'N', 'outcomePercent', 'minAge',
-        'meanAge', 'medianAge', 'maxAge',
-        'malePercent'
+        "N", "outcomePercent", "minAge",
+        "meanAge", "medianAge", "maxAge",
+        "malePercent"
       ),
       value = c(
-        nrow(popCheck), sum(popCheck$outcomeCount>0)/nrow(popCheck)*100, min(popCheck$ageYear),
+        nrow(popCheck), sum(popCheck$outcomeCount > 0) / nrow(popCheck) * 100, min(popCheck$ageYear),
         mean(popCheck$ageYear), stats::median(popCheck$ageYear), max(popCheck$ageYear),
-        sum(popCheck$gender == 8507)/nrow(popCheck)*100
+        sum(popCheck$gender == 8507) / nrow(popCheck) * 100
       )
     ),
     data.frame(
       probastId = probastId,
-      design = paste0(var,': ',populationSettings[var]),
+      design = paste0(var, ": ", populationSettings[var]),
       metric = c(
-        'N', 'outcomePercent', 'minAge',
-        'meanAge', 'medianAge', 'maxAge',
-        'malePercent'
+        "N", "outcomePercent", "minAge",
+        "meanAge", "medianAge", "maxAge",
+        "malePercent"
       ),
       value = c(
-        nrow(pop), sum(pop$outcomeCount>0)/nrow(pop)*100, min(pop$ageYear),
+        nrow(pop), sum(pop$outcomeCount > 0) / nrow(pop) * 100, min(pop$ageYear),
         mean(pop$ageYear), stats::median(pop$ageYear), max(pop$ageYear),
-        sum(pop$gender == 8507)/nrow(pop)*100
+        sum(pop$gender == 8507) / nrow(pop) * 100
       )
     )
   )
-  
+
   diagSim <- cos_sim(
-    diag %>% 
+    diag %>%
       dplyr::filter(.data$design == unique(diag$design)[1]) %>%
-      dplyr::filter(.data$metric != 'N') %>%
+      dplyr::filter(.data$metric != "N") %>%
       dplyr::arrange(.data$metric) %>%
-      dplyr::select("value")
-    , 
-    diag %>% 
+      dplyr::select("value"),
+    diag %>%
       dplyr::filter(.data$design == unique(diag$design)[2]) %>%
-      dplyr::filter(.data$metric != 'N') %>%
+      dplyr::filter(.data$metric != "N") %>%
       dplyr::arrange(.data$metric) %>%
       dplyr::select("value")
   )
-  
-  
+
+
   return(
     list(
       diagnosticAggregate = c(
-        probastId, 
+        probastId,
         diagSim
       ),
       diagnosticFull = diag
     )
   )
 }
-  

@@ -57,17 +57,19 @@ getCalibrationSummary_binary <- function(
 
     predictionOfInterest <- merge(predictionOfInterest,
       data.frame(predictionThresholdId = 1:(length(q) + 1), predictionThreshold = c(0, q)),
-      by = "predictionThresholdId", all.x = T
+      by = "predictionThresholdId", all.x = TRUE
     )
 
     # count the number of persons with the age/gender strata
     PersonCountAtRisk <- stats::aggregate(rowId ~ predictionThreshold,
-      data = predictionOfInterest, length)
+      data = predictionOfInterest, length
+    )
     names(PersonCountAtRisk)[2] <- "PersonCountAtRisk"
 
     # count the number of persons with the age/gender strata in T also in O at time-at-risk
     PersonCountWithOutcome <- stats::aggregate(outcomeCount ~ predictionThreshold,
-      data = predictionOfInterest, sum)
+      data = predictionOfInterest, sum
+    )
     names(PersonCountWithOutcome)[2] <- "PersonCountWithOutcome"
 
     strataData <- merge(
@@ -111,8 +113,10 @@ getCalibrationSummary_binary <- function(
     strataData$evaluation <- evalType
 
     # what is this used for?
-    attr(strataData, "lims") <- stats::quantile(predictionOfInterest$value, 
-      c(truncateFraction, 1 - truncateFraction))
+    attr(strataData, "lims") <- stats::quantile(
+      predictionOfInterest$value,
+      c(truncateFraction, 1 - truncateFraction)
+    )
 
     result <- rbind(
       result,

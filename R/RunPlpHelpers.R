@@ -98,12 +98,12 @@ checkInputs <- function(inputs) {
 #'
 #' @export
 createExecuteSettings <- function(
-    runSplitData = F,
-    runSampleData = F,
-    runfeatureEngineering = F,
-    runPreprocessData = F,
-    runModelDevelopment = F,
-    runCovariateSummary = F) {
+    runSplitData = FALSE,
+    runSampleData = FALSE,
+    runfeatureEngineering = FALSE,
+    runPreprocessData = FALSE,
+    runModelDevelopment = FALSE,
+    runCovariateSummary = FALSE) {
   checkIsClass(runSplitData, "logical")
   checkIsClass(runSampleData, "logical")
   checkIsClass(runfeatureEngineering, "logical")
@@ -135,11 +135,11 @@ createExecuteSettings <- function(
 #' @export
 createDefaultExecuteSettings <- function() {
   createExecuteSettings(
-    runSplitData = T,
-    runSampleData = F,
-    runfeatureEngineering = F,
-    runPreprocessData = T,
-    runModelDevelopment = T,
-    runCovariateSummary = T
+    runSplitData = TRUE,
+    runSampleData = FALSE,
+    runfeatureEngineering = FALSE,
+    runPreprocessData = TRUE,
+    runModelDevelopment = TRUE,
+    runCovariateSummary = TRUE
   )
 }

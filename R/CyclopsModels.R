@@ -411,7 +411,7 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   return(outcomeModel)
 }
 
-modelTypeToCyclopsModelType <- function(modelType, stratified = F) {
+modelTypeToCyclopsModelType <- function(modelType, stratified = FALSE) {
   if (modelType == "logistic") {
     if (stratified) {
       return("clr")
@@ -464,8 +464,6 @@ getCV <- function(
     predCV <- cbind(labels[hold_out, ],
       value = predict[hold_out]
     )
-    # predCV$outcomeCount <- predCV$y
-
     return(list(
       out_sample_auc = auc,
       predCV = predCV,
@@ -490,12 +488,8 @@ getVariableImportance <- function(modelTrained, trainData) {
   } else {
     ParallelLogger::logInfo("Creating variable importance data frame")
 
-    # trainData$covariateData$varImp <- varImp
-    # on.exit(trainData$covariateData$varImp <- NULL, add = T)
-
     varImp <- trainData$covariateData$covariateRef %>%
       dplyr::collect() %>%
-      # dplyr::left_join(trainData$covariateData$varImp) %>%
       dplyr::left_join(varImp, by = "covariateId") %>%
       dplyr::mutate(covariateValue = ifelse(is.na(.data$value), 0, .data$value)) %>%
       dplyr::select(-"value") %>%
@@ -508,14 +502,14 @@ getVariableImportance <- function(modelTrained, trainData) {
 
 
 filterCovariateIds <- function(param, covariateData) {
-  if ((length(param$includeCovariateIds) != 0) & (length(param$excludeCovariateIds) != 0)) {
+  if ((length(param$includeCovariateIds) != 0) && (length(param$excludeCovariateIds) != 0)) {
     covariates <- covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% param$includeCovariateIds) %>%
       dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds) # does not work
-  } else if ((length(param$includeCovariateIds) == 0) & (length(param$excludeCovariateIds) != 0)) {
+  } else if ((length(param$includeCovariateIds) == 0) && (length(param$excludeCovariateIds) != 0)) {
     covariates <- covariateData$covariates %>%
       dplyr::filter(!.data$covariateId %in% param$excludeCovariateIds) # does not work
-  } else if ((length(param$includeCovariateIds) != 0) & (length(param$excludeCovariateIds) == 0)) {
+  } else if ((length(param$includeCovariateIds) != 0) && (length(param$excludeCovariateIds) == 0)) {
     includeCovariateIds <- as.double(param$includeCovariateIds) # fixes odd dplyr issue with param
     covariates <- covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% includeCovariateIds)

@@ -29,4 +29,3 @@ listCartesian <- function(allList) {
                     function(i) lapply(combinations, function(x) x[i][[1]]))
   return(results)
 }
- 

@@ -21,6 +21,8 @@ if (Sys.getenv("CI") == "true" &&
   Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
   cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
   ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
+  cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
+  ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
   connectionRedshift <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
     user = Sys.getenv("CDM5_POSTGRESQL_USER"),

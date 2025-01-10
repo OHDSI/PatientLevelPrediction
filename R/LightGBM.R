@@ -79,7 +79,7 @@ setLightGBM <- function(nthread = 20,
   if (sum(scalePosWeight < 0) > 0) {
     stop("scalePosWeight must be 0 or greater")
   }
-  if (isUnbalance == TRUE & sum(scalePosWeight != 1) > 0) {
+  if (isUnbalance == TRUE && sum(scalePosWeight != 1) > 0) {
     stop("isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them")
   }
 
@@ -124,7 +124,7 @@ setLightGBM <- function(nthread = 20,
 
 varImpLightGBM <- function(model,
                            covariateMap) {
-  varImp <- lightgbm::lgb.importance(model, percentage = T) %>% dplyr::select("Feature", "Gain")
+  varImp <- lightgbm::lgb.importance(model, percentage = TRUE) %>% dplyr::select("Feature", "Gain")
 
   varImp <- data.frame(
     covariateId = gsub(".*_", "", varImp$Feature),
@@ -185,11 +185,11 @@ fitLightGBM <- function(dataMatrix,
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
     train <- lightgbm::lgb.Dataset(
-      data = dataMatrix[trainInd, , drop = F],
+      data = dataMatrix[trainInd, , drop = FALSE],
       label = labels$outcomeCount[trainInd]
     )
     test <- lightgbm::lgb.Dataset(
-      data = dataMatrix[-trainInd, , drop = F],
+      data = dataMatrix[-trainInd, , drop = FALSE],
       label = labels$outcomeCount[-trainInd]
     )
     watchlist <- list(train = train, test = test)
@@ -202,9 +202,6 @@ fitLightGBM <- function(dataMatrix,
     watchlist <- list()
   }
 
-  outcomes <- sum(labels$outcomeCount > 0)
-  N <- nrow(labels)
-  outcomeProportion <- outcomes / N
   set.seed(settings$seed)
   model <- lightgbm::lgb.train(
     data = train,
@@ -229,7 +226,6 @@ fitLightGBM <- function(dataMatrix,
     verbose = 1,
     early_stopping_rounds = hyperParameters$earlyStopRound,
     valids = watchlist
-    # categorical_feature = 'auto' # future work
   )
 
   return(model)

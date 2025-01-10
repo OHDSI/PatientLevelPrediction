@@ -50,8 +50,8 @@ getDemographicSummary_binary <- function(prediction, evalColumn, ...) {
       dplyr::summarise(
         PersonCountAtRisk = length(.data$outcomeCount),
         PersonCountWithOutcome = sum(.data$outcomeCount),
-        averagePredictedProbability = mean(.data$value, na.rm = T),
-        StDevPredictedProbability = stats::sd(.data$value, na.rm = T),
+        averagePredictedProbability = mean(.data$value, na.rm = TRUE),
+        StDevPredictedProbability = stats::sd(.data$value, na.rm = TRUE),
         MinPredictedProbability = stats::quantile(.data$value, probs = 0),
         P25PredictedProbability = stats::quantile(.data$value, probs = 0.25),
         P50PredictedProbability = stats::quantile(.data$value, probs = 0.50),
