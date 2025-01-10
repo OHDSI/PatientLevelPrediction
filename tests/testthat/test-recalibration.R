@@ -23,8 +23,8 @@ prediction <- data.frame(
   rowId = 1:100,
   value = c(runif(20) / 30, runif(80) / 300),
   outcomeCount = c(runif(20) > 0.5, runif(80) > 0.9) * 1,
-  gender = sample(c(8507, 1111), 100, replace = T),
-  ageYear = sample(1:100, 100, replace = T),
+  gender = sample(c(8507, 1111), 100, replace = TRUE),
+  ageYear = sample(1:100, 100, replace = TRUE),
   survivalTime = rep(365, 100),
   evaluationType = rep("Test", 100)
 )
@@ -82,7 +82,7 @@ test_that("recalibratePlpRefit", {
     )
     testthat::expect_s3_class(testRecal, "data.frame")
   }
-  
+
   testRecalWithModel <- recalibratePlpRefit(
     plpModel = plpResult$model,
     newPopulation = newPop,
@@ -92,7 +92,7 @@ test_that("recalibratePlpRefit", {
   expect_type(testRecalWithModel, "list")
   expect_s3_class(testRecalWithModel$model, "plpModel")
   expect_s3_class(testRecalWithModel$prediction, "data.frame")
-  
+
   # add more test...
 })
 

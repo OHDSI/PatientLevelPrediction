@@ -115,7 +115,6 @@ reference:
       - setAdaBoost
       - setDecisionTree
       - setGradientBoostingMachine
-      - setKNN
       - setLassoLogisticRegression
       - setMLP
       - setNaiveBayes

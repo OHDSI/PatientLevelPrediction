@@ -17,184 +17,171 @@
 library("testthat")
 context("Sampling")
 
-testType <- sample(c('none', 'underSample', 'overSample'), 1)
+testType <- sample(c("none", "underSample", "overSample"), 1)
 testNumberOutcomestoNonOutcomes <- 2
-testSampleSeed <- sample(10000,1)
+testSampleSeed <- sample(10000, 1)
 
 sampleSettingFunc <- function(
-  type = testType,
-  numberOutcomestoNonOutcomes = testNumberOutcomestoNonOutcomes,
-  sampleSeed = testSampleSeed 
-){
-  
+    type = testType,
+    numberOutcomestoNonOutcomes = testNumberOutcomestoNonOutcomes,
+    sampleSeed = testSampleSeed) {
   result <- createSampleSettings(
-    type = type ,
+    type = type,
     numberOutcomestoNonOutcomes = numberOutcomestoNonOutcomes,
     sampleSeed = sampleSeed
   )
-  
+
   return(result)
-  
 }
 
 
-  
+
 test_that("createSampleSettings works", {
-  
   sampleSettings <- sampleSettingFunc()
   expect_is(sampleSettings, "sampleSettings")
-  
-  sampleFun <- 'sameData'
-  if(testType == 'underSample'){
-    sampleFun <- 'underSampleData'
+
+  sampleFun <- "sameData"
+  if (testType == "underSample") {
+    sampleFun <- "underSampleData"
   }
-  if(testType == 'overSample'){
-    sampleFun <- 'overSampleData'
+  if (testType == "overSample") {
+    sampleFun <- "overSampleData"
   }
-  
+
   expect_equal(
-    attr(sampleSettings, "fun") , 
+    attr(sampleSettings, "fun"),
     sampleFun
   )
-  
+
   expect_equal(
-    sampleSettings$numberOutcomestoNonOutcomes, 
+    sampleSettings$numberOutcomestoNonOutcomes,
     testNumberOutcomestoNonOutcomes
-    )
-  
-  # the seed is ignored if sameData 
-  if(testType == 'none'){
+  )
+
+  # the seed is ignored if sameData
+  if (testType == "none") {
     testSampleSeed <- 1
   }
   expect_equal(
-    sampleSettings$sampleSeed, 
-    testSampleSeed 
+    sampleSettings$sampleSeed,
+    testSampleSeed
   )
-  
 })
 
 
 test_that("createSampleSettings expected errors", {
-  
   expect_error(
-    sampleSettingFunc(numberOutcomestoNonOutcomes = 'fsfd')
+    sampleSettingFunc(numberOutcomestoNonOutcomes = "fsfd")
   )
   expect_error(
     sampleSettingFunc(numberOutcomestoNonOutcomes = -1)
   )
-  
+
   expect_error(
-    sampleSettingFunc(sampleSeed =  'fsfd')
+    sampleSettingFunc(sampleSeed = "fsfd")
   )
-  
+
   expect_error(
-    sampleSettingFunc(type =  'fsfd')
+    sampleSettingFunc(type = "fsfd")
   )
   expect_error(
-    sampleSettingFunc(type =  NULL)
+    sampleSettingFunc(type = NULL)
   )
- 
 })
 
 
 test_that("sampleData outputs are correct", {
-  
   newTrainData <- trainData
   attr(newTrainData, "metaData")$sampleSettings <- NULL # remove for test
-  
-  sampleSettings <- sampleSettingFunc(type = 'none') 
-  
+
+  sampleSettings <- sampleSettingFunc(type = "none")
+
   sampleData <- sampleData(newTrainData, sampleSettings)
-  
+
   # make sure metaData captures
   expect_equal(
     length(attr(sampleData, "metaData")),
-    length(attr(newTrainData, "metaData"))+1
+    length(attr(newTrainData, "metaData")) + 1
   )
-  
+
   expect_equal(
     attr(sampleData, "metaData")$sampleSettings[[1]],
     sampleSettings
   )
-  
+
   # check the data is the same:
   expect_equal(
-    nrow(sampleData$labels), 
+    nrow(sampleData$labels),
     nrow(newTrainData$labels)
   )
-  
+
   expect_equal(
-    nrow(sampleData$folds), 
+    nrow(sampleData$folds),
     nrow(newTrainData$folds)
   )
-  
+
   expect_equal(
-    sampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(), 
-    newTrainData$covariateData$covariates  %>% dplyr::tally() %>% dplyr::pull()
+    sampleData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(),
+    newTrainData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   )
-  
-  
 })
 
 # specific functions for sampling
 
- 
+
 test_that("underSampleData works", {
-  
   newTrainData <- trainData
-  
+
   sampleSettings <- list(
     sampleSeed = 1,
     numberOutcomestoNonOutcomes = 1
-    )
-  
+  )
+
   underSampleData <- underSampleData(trainData, sampleSettings)
-  
-  expect_true(inherits(underSampleData, 'plpData')) # add test based on github issue
-  
+
+  expect_true(inherits(underSampleData, "plpData")) # add test based on github issue
+
   # the sampled data should be smaller...
   expect_true(nrow(underSampleData$labels) <= nrow(newTrainData$labels))
-  
+
   expect_true(nrow(underSampleData$folds) <= nrow(newTrainData$folds))
-  
+
   expect_true(
-    underSampleData$covariateData$covariates %>% 
-      dplyr::tally() %>% 
-      dplyr::pull() <= newTrainData$covariateData$covariates  %>% 
-      dplyr::tally() %>% dplyr::pull()
+    underSampleData$covariateData$covariates %>%
+      dplyr::tally() %>%
+      dplyr::pull() <= newTrainData$covariateData$covariates %>%
+      dplyr::tally() %>%
+      dplyr::pull()
   )
-  
+
   # perhaps add manual data test
-  
-  
 })
 
 
 test_that("overSampleData works", {
-  
   newTrainData <- trainData
-  
+
   sampleSettings <- list(
     sampleSeed = 1,
     numberOutcomestoNonOutcomes = 0.5
   )
-  
+
   overSampleData <- overSampleData(newTrainData, sampleSettings)
-  
-  expect_true(inherits(overSampleData, 'plpData')) # add test based on github issue
-  
+
+  expect_true(inherits(overSampleData, "plpData")) # add test based on github issue
+
   # the sampled data should be smaller...
   expect_true(nrow(overSampleData$labels) >= nrow(newTrainData$labels))
-  
+
   expect_true(nrow(overSampleData$folds) >= nrow(newTrainData$folds))
-  
+
   expect_true(
-    overSampleData$covariateData$covariates %>% dplyr::tally() %>% 
-      dplyr::pull() >= newTrainData$covariateData$covariates  %>% 
-      dplyr::tally() %>% dplyr::pull()
+    overSampleData$covariateData$covariates %>%
+      dplyr::tally() %>%
+      dplyr::pull() >= newTrainData$covariateData$covariates %>%
+      dplyr::tally() %>%
+      dplyr::pull()
   )
-  
+
   # perhaps add manual data test
-  
-  
 })

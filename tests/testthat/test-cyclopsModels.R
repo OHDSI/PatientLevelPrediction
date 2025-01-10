@@ -37,8 +37,8 @@ test_that("set LR inputs", {
 
   expect_equal(attr(model_set$param, "settings")$modelType, "logistic")
   expect_equal(attr(model_set$param, "settings")$priorfunction, "Cyclops::createPrior")
-  expect_equal(attr(model_set$param, "settings")$addIntercept, T)
-  expect_equal(attr(model_set$param, "settings")$useControl, T)
+  expect_equal(attr(model_set$param, "settings")$addIntercept, TRUE)
+  expect_equal(attr(model_set$param, "settings")$useControl, TRUE)
   expect_equal(attr(model_set$param, "settings")$name, "Lasso Logistic Regression")
   expect_equal(attr(model_set$param, "settings")$cvRepetitions, 1)
 
@@ -61,8 +61,8 @@ test_that("set LR inputs", {
   model_set <- setLassoLogisticRegression(threads = threads)
   expect_equal(attr(model_set$param, "settings")$threads, threads)
 
-  model_set <- setLassoLogisticRegression(forceIntercept = T)
-  expect_equal(model_set$param$priorParams$forceIntercept, T)
+  model_set <- setLassoLogisticRegression(forceIntercept = TRUE)
+  expect_equal(model_set$param$priorParams$forceIntercept, TRUE)
 
   model_set <- setLassoLogisticRegression(upperLimit = 1)
   expect_equal(model_set$param$upperLimit, 1)

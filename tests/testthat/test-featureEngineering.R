@@ -29,7 +29,7 @@ test_that("createFeatureEngineeringSettings correct class", {
 
   expect_is(featureEngineeringSettings, "featureEngineeringSettings")
 
-  checkFun <- "sameData"  
+  checkFun <- "sameData"
   expect_equal(attr(featureEngineeringSettings, "fun"), checkFun)
 })
 
@@ -249,9 +249,9 @@ test_that("createStratifiedImputationSettings correct class", {
     covariateId = 12101,
     ageSplits = ageSplits
   )
-  
-  numSubjects <- nanoData$covariateData$covariates %>% 
-    dplyr::pull(.data$rowId) %>% 
+
+  numSubjects <- nanoData$covariateData$covariates %>%
+    dplyr::pull(.data$rowId) %>%
     dplyr::n_distinct()
   Andromeda::appendToTable(nanoData$covariateData$covariates, data.frame(
     rowId = sample(nanoData$cohorts$rowId, floor(numSubjects / 2)),
@@ -291,10 +291,10 @@ test_that("createStratifiedImputationSettings correct class", {
   )
 
   testthat::expect_equal(
-    imputedData$covariateData$covariates %>% 
-      dplyr::filter(.data$covariateId == 12101) %>% 
-      dplyr::pull(.data$rowId) %>% 
-      dplyr::n_distinct(), 
+    imputedData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 12101) %>%
+      dplyr::pull(.data$rowId) %>%
+      dplyr::n_distinct(),
     numSubjects
   )
 })

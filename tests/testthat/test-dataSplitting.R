@@ -439,7 +439,7 @@ test_that("Existing data splitter works", {
     population = population,
     splitSettings = splitSettings
   )
-  
+
   # test only old people in test
   expect_equal(
     length(ageSplit$Test$labels$rowId),
@@ -455,5 +455,4 @@ test_that("Existing data splitter works", {
     length(intersect(ageSplit$Test$labels$rowId, ageSplit$Train$labels$rowId)),
     0
   )
-
 })

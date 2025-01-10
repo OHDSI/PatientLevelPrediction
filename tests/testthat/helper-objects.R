@@ -111,7 +111,7 @@ diagnoseResult <- diagnosePlp(
   modelSettings = lrSet,
   logSettings = createLogSettings(
     verbosity = "DEBUG",
-    timeStamp = T,
+    timeStamp = TRUE,
     logName = "diagnosePlp Log"
   ),
   preprocessSettings = createPreprocessSettings(),
@@ -155,7 +155,7 @@ testData <- createTestData(plpData, population)
 # reduced trainData to only use n most important features (as decided by LR)
 reduceTrainData <- function(trainData, n = 20) {
   covariates <- plpResult$model$covariateImportance %>%
-    dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = F) %>%
+    dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = FALSE) %>%
     dplyr::pull(.data$covariateId)
 
   reducedTrainData <- list(
@@ -168,9 +168,9 @@ reduceTrainData <- function(trainData, n = 20) {
 
 
   reducedTrainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-    dplyr::filter(covariateId %in% covariates)
+    dplyr::filter(.data$covariateId %in% covariates)
   reducedTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
-    dplyr::filter(covariateId %in% covariates)
+    dplyr::filter(.data$covariateId %in% covariates)
 
   attributes(reducedTrainData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
   class(reducedTrainData$covariateData) <- class(trainData$covariateData)
@@ -189,12 +189,12 @@ tinyResults <- runPlp(
   outcomeId = outcomeId,
   analysisId = "tinyFit",
   executeSettings = createExecuteSettings(
-    runSplitData = T,
-    runSampleData = F,
-    runfeatureEngineering = F,
-    runPreprocessData = T,
-    runModelDevelopment = T,
-    runCovariateSummary = F
+    runSplitData = TRUE,
+    runSampleData = FALSE,
+    runfeatureEngineering = FALSE,
+    runPreprocessData = TRUE,
+    runModelDevelopment = TRUE,
+    runCovariateSummary = FALSE
   ),
   saveDirectory = file.path(saveLoc, "tinyResults")
 )

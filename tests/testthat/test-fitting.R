@@ -21,54 +21,49 @@ context("Fitting")
 modelSettings <- setLassoLogisticRegression()
 
 test_that("fitPlp", {
-  
-plpModel <- fitPlp(
-  trainData = trainData,   
-  modelSettings = modelSettings,
-  search = "grid", 
-  analysisId = 'fitting',
-  analysisPath = tempdir()
+  plpModel <- fitPlp(
+    trainData = trainData,
+    modelSettings = modelSettings,
+    search = "grid",
+    analysisId = "fitting",
+    analysisPath = tempdir()
   )
 
-expect_is(plpModel, 'plpModel')
-
+  expect_is(plpModel, "plpModel")
 })
 
 test_that("fitPlp input errors", {
-  
   expect_error(
     fitPlp(
-      trainData = trainData,   
+      trainData = trainData,
       modelSettings = modelSettings,
       analysisPath = tempDir()
     )
   )
-  
-  expect_error(
-    fitPlp(
-      trainData = list(covariateData = NULL),   
-      modelSettings = modelSettings,
-      analysisId = 'fitting',
-      analysisPath = tempDir()
-    )
-  )
-  
-  expect_error(
-    fitPlp(
-      trainData = trainData,   
-      modelSettings = NULL,
-      analysisId = 'fitting',
-      analysisPath = tempDir()
-    )
-  )
-  
-  expect_error(
-    fitPlp(
-      trainData = trainData,   
-      modelSettings = modelSettings,
-      analysisId = 'fitting'
-    )
-  )
-  
-})
 
+  expect_error(
+    fitPlp(
+      trainData = list(covariateData = NULL),
+      modelSettings = modelSettings,
+      analysisId = "fitting",
+      analysisPath = tempDir()
+    )
+  )
+
+  expect_error(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = NULL,
+      analysisId = "fitting",
+      analysisPath = tempDir()
+    )
+  )
+
+  expect_error(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = modelSettings,
+      analysisId = "fitting"
+    )
+  )
+})
