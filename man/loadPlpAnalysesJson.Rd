@@ -13,12 +13,12 @@ loadPlpAnalysesJson(jsonFileLocation)
 Load the multiple prediction json settings from a file
 }
 \details{
-This function interprets a json with the multiple prediction settings and creates a list 
+This function interprets a json with the multiple prediction settings and creates a list
 that can be combined with connection settings to run a multiple prediction study
 }
 \examples{
 \dontrun{
-modelDesignList <- loadPlpAnalysesJson('location of json settings')$analysis
+modelDesignList <- loadPlpAnalysesJson("location of json settings")$analysis
 }
 
 }

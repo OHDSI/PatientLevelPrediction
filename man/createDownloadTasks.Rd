@@ -2,7 +2,7 @@
 % Please edit documentation in R/ExternalValidatePlp.R
 \name{createDownloadTasks}
 \alias{createDownloadTasks}
-\title{createDownloadTasks 
+\title{createDownloadTasks
 create download tasks based on unique combinations of targetId and
 restrictPlpDataSettings. It adds all covariateSettings and outcomes that
 have that targetId and restrictPlpDataSettings. This is used to avoid
@@ -17,7 +17,7 @@ createDownloadTasks(validationDesignList)
 A dataframe where each row is a downloadTask
 }
 \description{
-createDownloadTasks 
+createDownloadTasks
 create download tasks based on unique combinations of targetId and
 restrictPlpDataSettings. It adds all covariateSettings and outcomes that
 have that targetId and restrictPlpDataSettings. This is used to avoid

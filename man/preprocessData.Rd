@@ -8,7 +8,7 @@ and remove rare or redundant features}
 preprocessData(covariateData, preprocessSettings)
 }
 \arguments{
-\item{covariateData}{The covariate part of the training data created by \code{splitData} after being sampled and having 
+\item{covariateData}{The covariate part of the training data created by \code{splitData} after being sampled and having
 any required feature engineering}
 
 \item{preprocessSettings}{The settings for the preprocessing created by \code{createPreprocessSettings}}

@@ -14,7 +14,7 @@ covariateSummary(
 )
 }
 \arguments{
-\item{covariateData}{The covariateData part of the plpData that is 
+\item{covariateData}{The covariateData part of the plpData that is
 extracted using \code{getPlpData}}
 
 \item{cohort}{The patient cohort to calculate the summary}
@@ -23,7 +23,7 @@ extracted using \code{getPlpData}}
 
 \item{strata}{A data.frame containing the columns rowId, strataName}
 
-\item{variableImportance}{A data.frame with the columns covariateId and 
+\item{variableImportance}{A data.frame with the columns covariateId and
 value (the variable importance value)}
 
 \item{featureEngineering}{(currently not used )

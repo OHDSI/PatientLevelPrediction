@@ -5,12 +5,12 @@
 \title{Creates list of settings specifying what parts of runPlp to execute}
 \usage{
 createExecuteSettings(
-  runSplitData = F,
-  runSampleData = F,
-  runfeatureEngineering = F,
-  runPreprocessData = F,
-  runModelDevelopment = F,
-  runCovariateSummary = F
+  runSplitData = FALSE,
+  runSampleData = FALSE,
+  runfeatureEngineering = FALSE,
+  runPreprocessData = FALSE,
+  runModelDevelopment = FALSE,
+  runCovariateSummary = FALSE
 )
 }
 \arguments{

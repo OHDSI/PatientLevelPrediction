@@ -14,7 +14,7 @@ setGradientBoostingMachine(
   scalePosWeight = 1,
   lambda = 1,
   alpha = 0,
-  seed = sample(10000000, 1)
+  seed = sample(1e+07, 1)
 )
 }
 \arguments{
@@ -42,7 +42,9 @@ setGradientBoostingMachine(
 Create setting for gradient boosting machine model using gbm_xgboost implementation
 }
 \examples{
-model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
-                           maxDepth=c(4,6), learnRate=c(0.1,0.3))
+model.gbm <- setGradientBoostingMachine(
+  ntrees = c(10, 100), nthread = 20,
+  maxDepth = c(4, 6), learnRate = c(0.1, 0.3)
+)
 
 }
