@@ -126,9 +126,8 @@ viewDatabaseResultPlp <- function(
 # one shiny app 
 
 viewPlps <- function(databaseSettings){
-  ensure_installed("ShinyAppBuilder") 
-  ensure_installed("ResultModelManager")
-  
+  rlang::check_installed("OhdsiShinyAppBuilder")
+  rlang::check_installed("ResultModelManager")
   connectionDetails <- do.call(
     DatabaseConnector::createConnectionDetails, 
     databaseSettings$connectionDetailSettings
@@ -136,7 +135,7 @@ viewPlps <- function(databaseSettings){
   connection <- ResultModelManager::ConnectionHandler$new(connectionDetails)
   databaseSettings$connectionDetailSettings <- NULL
   
-  shinyAppVersion <- strsplit(x = as.character(utils::packageVersion('ShinyAppBuilder')), split = '\\.')[[1]]
+  shinyAppVersion <- strsplit(x = as.character(utils::packageVersion('OhdsiShinyAppBuilder')), split = '\\.')[[1]]
   
   if((shinyAppVersion[1] <= 1 & shinyAppVersion[2] < 2)){
     # Old code to be backwards compatable
@@ -148,7 +147,7 @@ viewPlps <- function(databaseSettings){
     )
     # set database settings into system variables
   Sys.setenv("resultDatabaseDetails_prediction" = as.character(ParallelLogger::convertSettingsToJson(databaseSettings)))
-  ShinyAppBuilder::viewShiny(
+  OhdsiShinyAppBuilder::viewShiny(
     config = config, 
     connection = connection
     )
@@ -165,7 +164,7 @@ viewPlps <- function(databaseSettings){
       databaseSettings$cgTablePrefix = databaseSettings$tablePrefix
       databaseSettings$databaseTable = 'database_meta_data'
       databaseSettings$databaseTablePrefix = databaseSettings$tablePrefix
-    ShinyAppBuilder::viewShiny(
+    OhdsiShinyAppBuilder::viewShiny(
       config = config, 
       connection = connection, 
       resultDatabaseSettings = databaseSettings

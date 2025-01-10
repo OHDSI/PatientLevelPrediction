@@ -1,4 +1,6 @@
 test_that("setAdaBoost settings work checks", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   adset <- setAdaBoost(
     nEstimators = list(10, 50, 200),
     learningRate = list(1, 0.5, 0.1),
@@ -29,6 +31,8 @@ test_that("setAdaBoost settings work checks", {
 
 
 test_that("setAdaBoost errors as expected", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   expect_error(setAdaBoost(nEstimators = list(-1)))
   expect_error(setAdaBoost(learningRate = list(-1)))
   expect_error(setAdaBoost(algorithm = list(-1)))
@@ -37,6 +41,8 @@ test_that("setAdaBoost errors as expected", {
 
 
 test_that("setMLP settings work checks", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   mlpset <- setMLP(
     hiddenLayerSizes = list(c(100), c(20, 4)), # must be integers
     activation = list("relu"),
@@ -90,6 +96,8 @@ test_that("setMLP settings work checks", {
 
 
 test_that("setNaiveBayes settings work checks", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   nbset <- setNaiveBayes()
 
   expect_equal(nbset$fitFunction, "fitSklearn")
@@ -107,6 +115,8 @@ test_that("setNaiveBayes settings work checks", {
 
 
 test_that("setRandomForest settings work checks", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   rfset <- setRandomForest(
     ntrees = list(100, 500),
     criterion = list("gini"),
@@ -151,6 +161,8 @@ test_that("setRandomForest settings work checks", {
 
 
 test_that("setSVM  settings work checks", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   svmset <- setSVM(
     C = list(1, 0.9, 2, 0.1),
     kernel = list("rbf"),

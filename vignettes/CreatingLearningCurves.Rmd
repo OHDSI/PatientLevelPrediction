@@ -6,11 +6,11 @@ header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Generating Learning Curves}
-    - \fancyfoot[LE,RO]{\thepage}
+    - \fancyhead[C]{Generating Learning Curves}
+    - \fancyfoot[C]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
 output:   
   pdf_document:
     includes:
@@ -22,13 +22,11 @@ output:
     toc: yes
   html_notebook: 
     toc: yes
-  word_document:
-    toc: yes
 ---
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Creating Learning Curves}
 -->
 ```

@@ -23,7 +23,7 @@ insertCsvToDatabase <- function(
   csvTableAppend = ''
 ){
   
-  ensure_installed('readr')
+  rlang::check_installed("readr")
   
   ParallelLogger::logInfo('Starting input checks')
   

@@ -24,7 +24,7 @@ insertRunPlpToSqlite <- function(
   
   sqliteLocation <- tempdir()
   
-  ensure_installed('RSQLite')
+  rlang::check_installed("RSQLite")
   
   # create sqlite database
   connectionDetails <- DatabaseConnector::createConnectionDetails(
@@ -121,9 +121,7 @@ insertResultsToSqlite <- function(
   if(!dir.exists(sqliteLocation)){
     dir.create(sqliteLocation, recursive = T)
   }
-  
-  ensure_installed('RSQLite')
-  
+  rlang::check_installed("RSQLite")
   # create sqlite database
   connectionDetails <- DatabaseConnector::createConnectionDetails(
     dbms = 'sqlite',

@@ -56,7 +56,7 @@ migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = ""
 
 
 getDataMigrator <- function(connectionDetails, databaseSchema, tablePrefix = "") {
-  ensure_installed("ResultModelManager")
+  rlang::check_installed("ResultModelManager")
   
   ResultModelManager::DataMigrationManager$new(
     connectionDetails = connectionDetails,

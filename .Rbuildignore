@@ -2,6 +2,7 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^.vscode$
 standalone
 deploy.sh
 extras/*
@@ -11,5 +12,6 @@ compare_versions
 docs/*
 _pkgdown.yml
 ^vignettes/articles$
+^vignettes/Videos.Rmd
 ^doc$
 ^Meta$

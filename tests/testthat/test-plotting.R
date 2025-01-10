@@ -20,6 +20,8 @@ context("Plotting")
 # TODO: add input checks and test these...
 
 test_that("plots", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   # test all the outputs are ggplots
   test <- plotSparseRoc(plpResult, typeColumn = "evaluation")
   testthat::expect_s3_class(test, "arrangelist")
@@ -56,6 +58,8 @@ test_that("plots", {
 
 
 test_that("outcomeSurvivalPlot", {
+  skip_if_not_installed("survminer")
+  skip_on_cran()
   # test the plot works
   test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
   testthat::expect_s3_class(test, "ggsurvplot")
@@ -67,6 +71,8 @@ test_that("outcomeSurvivalPlot", {
 
 
 test_that("plotPlp", {
+  skip_if_not_installed(c("ggplot2", "gridExtra"))
+  skip_on_cran()
   # test the plot works
   test <- plotPlp(
     plpResult = plpResult,
@@ -81,6 +87,8 @@ test_that("plotPlp", {
 })
 
 test_that("plotSmoothCalibration", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   # test the plot works
   test <- plotSmoothCalibration(
     plpResult = plpResult,
@@ -109,8 +117,12 @@ test_that("plotSmoothCalibration", {
     saveLocation = NULL
   )
   testthat::expect_s3_class(test2$test$smoothPlot, c("gg", "ggplot"))
-  plpResult$prediction <- pred
+})
 
+test_that("Smooth calibration plot works with rcs", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("mgcv")
+  skip_on_cran()
   test3 <- plotSmoothCalibration(plpResult,
     smooth = "rcs",
     span = 1,
@@ -151,11 +163,15 @@ test_that("getNetBenefit handles invalid evalType gracefully", {
 })
 
 test_that("plotNetBenefit returns a grob object", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   plot <- plotNetBenefit(plpResult, evalType = "Test")
   expect_true(inherits(plot, "arrangelist"))
 })
 
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   tempDir <- tempfile()
   plotNetBenefit(plpResult, saveLocation = tempDir, fileName = "netBenefit.png", evalType = "Test")
   expect_true(file.exists(file.path(tempDir, "netBenefit.png")))
@@ -164,14 +180,18 @@ test_that("plotNetBenefit saves plot when saveLocation is specified", {
 })
 
 test_that("plotNetBenefit handles NULL evalType", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   expect_true(inherits(plot, "arrangelist"))
 })
 
 
 test_that("plotNetBenefit creates correct number of plots when evalType is NULL", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   # Since evalType is NULL, it should plot for all unique evaluation types
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)
-  expect_equal(length(plot[[1]]$grobs) - 1 , length(evalTypes)) # -1 for text grob
+  expect_equal(length(plot[[1]]$grobs) - 1, length(evalTypes)) # -1 for text grob
 })

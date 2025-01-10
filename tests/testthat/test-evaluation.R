@@ -15,21 +15,13 @@
 # limitations under the License.
 context("Evaluation")
 
-library("testthat")
-library("pROC")
-library("AUC")
-library("scoring")
-library("Metrics")
-library("PRROC")
-
-
 test_that("evaluatePlp", {
   eval <- evaluatePlp(
     prediction = plpResult$prediction,
-    typeColumn = 'evaluationType'
-    )
-  testthat::expect_equal(class(eval), 'plpEvaluation')
-  testthat::expect_equal(names(eval), c('evaluationStatistics', 'thresholdSummary', 'demographicSummary', 'calibrationSummary', 'predictionDistribution') )
+    typeColumn = "evaluationType"
+  )
+  testthat::expect_equal(class(eval), "plpEvaluation")
+  testthat::expect_equal(names(eval), c("evaluationStatistics", "thresholdSummary", "demographicSummary", "calibrationSummary", "predictionDistribution"))
 })
 
 test_that("modelBasedConcordance", {
@@ -38,125 +30,136 @@ test_that("modelBasedConcordance", {
 })
 
 test_that("evaluatePlp_survival", {
+  skip_if_not_installed("polspline")
+  skip_on_cran()
   N <- 100
   plpResultSurvivalPred <- data.frame(
-    rowId = 1:N, 
-    ageYear = sample(100, N, replace = T),
-    gender = sample(c('8507','8532'), N, replace = T),
-    outcomeCount = c(rep(1,N*0.1), rep(0,N*0.9)),
-    value = runif(N, max=0.1),
-    evaluationType = rep('Train', N),
-    survivalTime = sample(2000, N, replace = T)
+    rowId = 1:N,
+    ageYear = sample(100, N, replace = TRUE),
+    gender = sample(c("8507", "8532"), N, replace = TRUE),
+    outcomeCount = c(rep(1, N * 0.1), rep(0, N * 0.9)),
+    value = runif(N, max = 0.1),
+    evaluationType = rep("Train", N),
+    survivalTime = sample(2000, N, replace = TRUE)
   )
-  attr(plpResultSurvivalPred, "metaData")$modelType <- 'survival'
-  attr(plpResultSurvivalPred, 'metaData')$timepoint <- 365
-  
+  attr(plpResultSurvivalPred, "metaData")$modelType <- "survival"
+  attr(plpResultSurvivalPred, "metaData")$timepoint <- 365
+
   eval <- evaluatePlp(
     prediction = plpResultSurvivalPred,
-    typeColumn = 'evaluationType'
-    )
-  testthat::expect_equal(class(eval), 'plpEvaluation')
-  testthat::expect_true(5==sum(names(eval) %in% c('evaluationStatistics', 'demographicSummary', 'calibrationSummary', 'thresholdSummary', 'predictionDistribution') ))
+    typeColumn = "evaluationType"
+  )
+  testthat::expect_equal(class(eval), "plpEvaluation")
+  testthat::expect_true(5 == sum(names(eval) %in% c("evaluationStatistics", "demographicSummary", "calibrationSummary", "thresholdSummary", "predictionDistribution")))
 })
 
 test_that("AUROC", {
-  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
-  attr(Eprediction, "metaData") <- list(modelType = "binary")
-  proc.auc <- pROC::roc(Eprediction$outcomeCount, Eprediction$value, algorithm = 3,
-                        direction="<")
+  ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
+  attr(ePrediction, "metaData") <- list(modelType = "binary")
+  procAuc <- pROC::roc(ePrediction$outcomeCount, ePrediction$value,
+    algorithm = 3,
+    direction = "<"
+  )
   tolerance <- 0.001
 
-  plpAUC <- computeAuc(Eprediction, confidenceInterval = FALSE)
-  expect_equal(as.numeric(proc.auc$auc), plpAUC, tolerance = tolerance)
-  
-  
+  plpAUC <- computeAuc(ePrediction, confidenceInterval = FALSE)
+  expect_equal(as.numeric(procAuc$auc), plpAUC, tolerance = tolerance)
 })
 
 test_that("AUPRC", {
-  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
-  
-  positive <- Eprediction$value[Eprediction$outcomeCount == 1]
-  negative <- Eprediction$value[Eprediction$outcomeCount == 0]
+  ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
+
+  positive <- ePrediction$value[ePrediction$outcomeCount == 1]
+  negative <- ePrediction$value[ePrediction$outcomeCount == 0]
   pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
   auprc <- pr$auc.integral
-  
+
   # area under precision-recall curve must be between 0 and 1
   expect_gte(auprc, 0)
   expect_lte(auprc, 1)
 })
 
 test_that("Brierscore", {
-  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
+  skip_if_not_installed("scoring")
+  skip_on_cran()
+  ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
 
-  Eprediction$dummy <- 1
-  brier.scoring <- scoring::brierscore(outcomeCount ~ value, data=Eprediction, group='dummy')$brieravg
-  brier.plp <- brierScore(Eprediction)$brier
-  expect_that(as.double(brier.scoring), equals(brier.plp))
+  ePrediction$dummy <- 1
+  brierScoring <- scoring::brierscore(outcomeCount ~ value, data = ePrediction, group = "dummy")$brieravg
+  brierPlp <- brierScore(ePrediction)$brier
+  expect_that(as.double(brierScoring), equals(brierPlp))
 })
 
 test_that("Average precision", {
-  Eprediction <- data.frame(value= runif(100), outcomeCount = round(runif(100)))
-  
-  aveP.metrics <- Metrics::apk(nrow(Eprediction), 
-                               which(Eprediction$outcomeCount==1), (1:nrow(Eprediction))[order(-Eprediction$value)])
-  aveP.plp <- averagePrecision(Eprediction)
-  expect_that(as.double(aveP.metrics), equals(aveP.plp))
+  skip_if_not_installed("Metrics")
+  skip_on_cran()
+  ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
+
+  avepMetrics <- Metrics::apk(
+    nrow(ePrediction),
+    which(ePrediction$outcomeCount == 1), (1:nrow(ePrediction))[order(-ePrediction$value)]
+  )
+  avepPlp <- averagePrecision(ePrediction)
+  expect_that(as.double(avepMetrics), equals(avepPlp))
 })
 
-
-
-
-
-
 test_that("Calibration metrics", {
-  Eprediction <- data.frame(rowId=1:100,
-                           value= c(rep(0,50),rep(1,50)), 
-                           outcomeCount =c(rep(0,50),rep(1,50)))
-  # test the output 
-  calibrationTest1 <- calibrationLine(Eprediction,numberOfStrata=2)
-  expect_that(calibrationTest1$lm['Intercept'],  is_equivalent_to(0))
-  expect_that(calibrationTest1$lm['Gradient'],  is_equivalent_to(1))
-  expect_that(nrow(calibrationTest1$aggregateLmData)==2, equals(T))
-  
+  skip_if_not_installed("ResourceSelection")
+  skip_on_cran()
+  ePrediction <- data.frame(
+    rowId = 1:100,
+    value = c(rep(0, 50), rep(1, 50)),
+    outcomeCount = c(rep(0, 50), rep(1, 50))
+  )
+  # test the output
+  calibrationTest1 <- calibrationLine(ePrediction, numberOfStrata = 2)
+  expect_that(calibrationTest1$lm["Intercept"], is_equivalent_to(0))
+  expect_that(calibrationTest1$lm["Gradient"], is_equivalent_to(1))
+  expect_that(nrow(calibrationTest1$aggregateLmData) == 2, equals(TRUE))
+
   # should return - need to test all three
-  ##lm # has the 'Intercept' and 'Gradient'
-  ##aggregateLmData # obs vs pred for groups
-  ##hosmerlemeshow # hosmerlemeshow value
-  Eprediction2 <- data.frame(rowId=1:100,
-                           value= c(0.1+runif(50)*0.9,runif(50)*0.6), 
-                           outcomeCount =c(rep(1,50),rep(0,50)))
-  
-  hs.exist2 <- ResourceSelection::hoslem.test(Eprediction2$outcomeCount, 
-                                              Eprediction2$value, g=10)
-  calibrationTest2 <- calibrationLine(Eprediction2,numberOfStrata=10)
-  #  test plp values vs ResourceSelection::hoslem.test 
-  expect_that(calibrationTest2$hosmerlemeshow['Xsquared'],  
-              is_equivalent_to(hs.exist2$statistic))  
-  expect_that(calibrationTest2$hosmerlemeshow['df'],  
-              is_equivalent_to(hs.exist2$parameter))  
-  expect_that(calibrationTest2$hosmerlemeshow['pvalue'],  
-              is_equivalent_to(hs.exist2$p.value)) 
-  
-  })
+  ## lm # has the 'Intercept' and 'Gradient'
+  ## aggregateLmData # obs vs pred for groups
+  ## hosmerlemeshow # hosmerlemeshow value
+  ePrediction2 <- data.frame(
+    rowId = 1:100,
+    value = c(0.1 + runif(50) * 0.9, runif(50) * 0.6),
+    outcomeCount = c(rep(1, 50), rep(0, 50))
+  )
+
+  hsExist2 <- ResourceSelection::hoslem.test(ePrediction2$outcomeCount,
+    ePrediction2$value,
+    g = 10
+  )
+  calibrationTest2 <- calibrationLine(ePrediction2, numberOfStrata = 10)
+  #  test plp values vs ResourceSelection::hoslem.test
+  expect_that(
+    calibrationTest2$hosmerlemeshow["Xsquared"],
+    is_equivalent_to(hsExist2$statistic)
+  )
+  expect_that(
+    calibrationTest2$hosmerlemeshow["df"],
+    is_equivalent_to(hsExist2$parameter)
+  )
+  expect_that(
+    calibrationTest2$hosmerlemeshow["pvalue"],
+    is_equivalent_to(hsExist2$p.value)
+  )
+})
 
 test_that("E statistics binary", {
   prediction <- data.frame(
     value = c(seq(.1, .5, length.out = 5), NA, .2),
     outcomeCount = c(0, 0, 0, 1, 1, 0, NA)
   )
-  EStatsBinary <- PatientLevelPrediction:::calculateEStatisticsBinary(prediction)
+  eStatsBinary <- PatientLevelPrediction:::calculateEStatisticsBinary(prediction)
   expect_equal(
-    EStatsBinary,
+    eStatsBinary,
     c(Eavg = .34, E90 = .56, Emax = .6)
   )
 })
 
-  # TODO: test pref scores 
-  # test computePreferenceScore(prediction)
- 
-  #############################################################################
-  
-  
-  
+# TODO: test pref scores
+# test computePreferenceScore(prediction)
 
-
+#############################################################################

@@ -39,7 +39,7 @@ setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStop
                                   scalePosWeight=1, lambda=1, alpha=0,
                                   seed= sample(10000000,1)){
   
-  ensure_installed("xgboost")
+  rlang::check_installed("xgboost")
   
   checkIsClass(seed, c('numeric', 'integer'))
   
