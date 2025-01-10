@@ -7,6 +7,7 @@ removeInvalidString <- function(string) {
 }
 
 #' Check if the required packages for survival analysis are installed
+#' @keywords internal
 checkSurvivalPackages <- function() {
   rlang::check_installed(c("survival", "polspline"),
     reason = "Please install the required packages for survival analysis"
