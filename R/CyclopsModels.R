@@ -195,9 +195,9 @@ fitCyclopsModel <- function(
   result <- list(
     model = modelTrained,
     preprocessing = list(
-      featureEngineering = attr(trainData, "metaData")$featureEngineering, # learned mapping
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, # learned mapping
-      requireDenseMatrix = F
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
+      requireDenseMatrix = FALSE
     ),
     prediction = prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
