@@ -830,7 +830,7 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
   tryCatch({
     reticulate::import("sklearn")
   }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
+    stop("Cannot import scikit-learn in python. scikit-learn in a python environment reachable by reticulate is required to use the Python models. Please check your python setup with reticulate::py_config() followed by reticulate::import('sklearn')")
   })
   checkIsClass(seed, c("numeric", "integer"))
   checkIsClass(cacheSize, c("numeric", "integer"))
