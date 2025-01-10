@@ -191,9 +191,11 @@ file in a different format.</p>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># create learning curve object</span></span></span>
-<span class="r-in"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu"><a href="createLearningCurve.html">createLearningCurve</a></span><span class="op">(</span><span class="va">population</span>,</span></span>
-<span class="r-in"><span>                                     <span class="va">plpData</span>,</span></span>
-<span class="r-in"><span>                                     <span class="va">modelSettings</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu"><a href="createLearningCurve.html">createLearningCurve</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">population</span>,</span></span>
+<span class="r-in"><span>  <span class="va">plpData</span>,</span></span>
+<span class="r-in"><span>  <span class="va">modelSettings</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># plot the learning curve</span></span></span>
 <span class="r-in"><span><span class="fu">plotLearningCurve</span><span class="op">(</span><span class="va">learningCurve</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

@@ -183,7 +183,7 @@ data extracted from the CDM.</p></dd>
 <li><p><code><a href="setAdaBoost.html">setAdaBoost()</a></code> An ada boost model</p></li>
 <li><p><code><a href="setRandomForest.html">setRandomForest()</a></code> A random forest model</p></li>
 <li><p><code><a href="setDecisionTree.html">setDecisionTree()</a></code> A decision tree model</p></li>
-<li><p><code><a href="setKNN.html">setKNN()</a></code> A KNN model</p></li>
+<li><p><code>setKNN()</code> A KNN model</p></li>
 </ul></dd>
 
 
@@ -255,12 +255,14 @@ specifying how the logging is done</p></dd>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># define model</span></span></span>
-<span class="r-in"><span><span class="va">modelSettings</span> <span class="op">=</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">modelSettings</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># create learning curve</span></span></span>
-<span class="r-in"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">createLearningCurve</span><span class="op">(</span><span class="va">population</span>,</span></span>
-<span class="r-in"><span>                                                             <span class="va">plpData</span>,</span></span>
-<span class="r-in"><span>                                                             <span class="va">modelSettings</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">createLearningCurve</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">population</span>,</span></span>
+<span class="r-in"><span>  <span class="va">plpData</span>,</span></span>
+<span class="r-in"><span>  <span class="va">modelSettings</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># plot learning curve</span></span></span>
 <span class="r-in"><span><span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="plotLearningCurve.html">plotLearningCurve</a></span><span class="op">(</span><span class="va">learningCurve</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>

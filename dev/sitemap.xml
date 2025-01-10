@@ -29,6 +29,7 @@
 <url><loc>/reference/calibrationInLarge.html</loc></url>
 <url><loc>/reference/calibrationLine.html</loc></url>
 <url><loc>/reference/checkAllSameInModels.html</loc></url>
+<url><loc>/reference/checkSurvivalPackages.html</loc></url>
 <url><loc>/reference/checkValidateExternalInputs.html</loc></url>
 <url><loc>/reference/computeAuc.html</loc></url>
 <url><loc>/reference/computeGridPerformance.html</loc></url>
@@ -61,6 +62,7 @@
 <url><loc>/reference/createUnivariateFeatureSelection.html</loc></url>
 <url><loc>/reference/createValidationDesign.html</loc></url>
 <url><loc>/reference/createValidationSettings.html</loc></url>
+<url><loc>/reference/deDuplicateCovariateData.html</loc></url>
 <url><loc>/reference/diagnoseMultiplePlp.html</loc></url>
 <url><loc>/reference/diagnosePlp.html</loc></url>
 <url><loc>/reference/diagnosticOddsRatio.html</loc></url>
@@ -144,7 +146,6 @@
 <url><loc>/reference/setDecisionTree.html</loc></url>
 <url><loc>/reference/setGradientBoostingMachine.html</loc></url>
 <url><loc>/reference/setIterativeHardThresholding.html</loc></url>
-<url><loc>/reference/setKNN.html</loc></url>
 <url><loc>/reference/setLassoLogisticRegression.html</loc></url>
 <url><loc>/reference/setLightGBM.html</loc></url>
 <url><loc>/reference/setMLP.html</loc></url>

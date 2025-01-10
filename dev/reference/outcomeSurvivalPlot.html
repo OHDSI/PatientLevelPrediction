@@ -135,12 +135,12 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">outcomeSurvivalPlot</span><span class="op">(</span></span>
 <span>  <span class="va">plpData</span>,</span>
 <span>  <span class="va">outcomeId</span>,</span>
-<span>  populationSettings <span class="op">=</span> <span class="fu"><a href="createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>binary <span class="op">=</span> <span class="cn">T</span>, includeAllOutcomes <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>    firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>, washoutPeriod <span class="op">=</span> <span class="fl">0</span>, removeSubjectsWithPriorOutcome <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>, requireTimeAtRisk <span class="op">=</span> <span class="cn">F</span>, riskWindowStart <span class="op">=</span> <span class="fl">1</span>, startAnchor</span>
-<span>    <span class="op">=</span> <span class="st">"cohort start"</span>, riskWindowEnd <span class="op">=</span> <span class="fl">3650</span>, endAnchor <span class="op">=</span> <span class="st">"cohort start"</span><span class="op">)</span>,</span>
-<span>  riskTable <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  confInt <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  populationSettings <span class="op">=</span> <span class="fu"><a href="createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span>binary <span class="op">=</span> <span class="cn">TRUE</span>, includeAllOutcomes <span class="op">=</span></span>
+<span>    <span class="cn">TRUE</span>, firstExposureOnly <span class="op">=</span> <span class="cn">FALSE</span>, washoutPeriod <span class="op">=</span> <span class="fl">0</span>, removeSubjectsWithPriorOutcome <span class="op">=</span></span>
+<span>    <span class="cn">TRUE</span>, priorOutcomeLookback <span class="op">=</span> <span class="fl">99999</span>, requireTimeAtRisk <span class="op">=</span> <span class="cn">FALSE</span>, riskWindowStart <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    startAnchor <span class="op">=</span> <span class="st">"cohort start"</span>, riskWindowEnd <span class="op">=</span> <span class="fl">3650</span>, endAnchor <span class="op">=</span> <span class="st">"cohort start"</span><span class="op">)</span>,</span>
+<span>  riskTable <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  confInt <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  yLabel <span class="op">=</span> <span class="st">"Fraction of those who are outcome free in target population"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>

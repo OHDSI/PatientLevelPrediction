@@ -151,7 +151,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2024-12-17</h4>
+            <h4 data-toc-skip class="date">2025-01-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -161,7 +161,7 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
     
     
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Building patient-level predictive models}
 -->
 <div class="section level2">
@@ -434,20 +434,6 @@ maxDepth (max levels in tree), minRows (minimum data points in in
 node),balance (balance class labels), seed</td>
 </tr>
 <tr class="even">
-<td>K-nearest neighbors</td>
-<td>K-nearest neighbors (KNN) is an algorithm that uses some metric to
-find the K closest labelled data-points, given the specified metric, to
-a new unlabelled data-point. The prediction of the new data-points is
-then the most prevalent class of the K-nearest labelled data-points.
-There is a sharing limitation of KNN, as the model requires labelled
-data to perform the prediction on new data, and it is often not possible
-to share this data across data sites.We included the BigKnn classifier
-developed in OHDSI which is a large scale k-nearest neighbor classifier
-using the Lucene search engine: <a href="https://github.com/OHDSI/BigKnn" class="external-link uri">https://github.com/OHDSI/BigKnn</a>
-</td>
-<td>k (number of neighbours),weighted (weight by inverse frequency)</td>
-</tr>
-<tr class="odd">
 <td>Naive Bayes</td>
 <td>The Naive Bayes algorithm applies the Bayes theorem with the ‘naive’
 assumption of conditional independence between every pair of features
@@ -456,7 +442,7 @@ belongs to a class and the prior distribution of the class, a posterior
 distribution is obtained.</td>
 <td>none</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>AdaBoost</td>
 <td>AdaBoost is a boosting ensemble technique. Boosting works by
 iteratively adding classifiers but adds more weight to the data-points
@@ -468,7 +454,7 @@ terminated), learningRate (learning rate shrinks the contribution of
 each classifier by learning_rate. There is a trade-off between
 learningRate and nEstimators)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Decision Tree</td>
 <td>A decision tree is a classifier that partitions the variable space
 using individual tests selected using a greedy approach. It aims to find
@@ -484,7 +470,7 @@ stopping in tree growth. A node will split if its impurity is above the
 threshold, otherwise it is a leaf.), seed,classWeight (‘Balance’ or
 ‘None’)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Multilayer Perception</td>
 <td>Neural networks contain multiple layers that weight their inputs
 using a non-linear function. The first layer is the input layer, the
@@ -497,7 +483,7 @@ error.</td>
 <td>size (the number of hidden nodes), alpha (the l2 regularisation),
 seed</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Deep Learning (now in seperate DeepPatientLevelPrediction R
 package)</td>
 <td>Deep learning such as deep nets, convolutional neural networks or
