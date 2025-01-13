@@ -1,7 +1,7 @@
 test_that("createSimpleImputer works", {
   imputer <- createSimpleImputer()
 
-  expect_equal(imptuer$method, "mean")
+  expect_equal(imputer$method, "mean")
   expect_equal(imputer$missingThreshold, 0.3)
   expect_equal(attr(imputer, "fun"), "simpleImpute")
 
