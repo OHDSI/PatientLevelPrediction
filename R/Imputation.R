@@ -510,7 +510,7 @@ pmmFit <- function(data, k = 5) {
     )
   )
 
-  predsMiss <- predict(fit, xMiss, fit$lambda.min)
+  predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
 
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
