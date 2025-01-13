@@ -152,7 +152,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering[["minMaxNormalize"]] ->
+  attr(trainData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
     featureEngineering
   
   return(trainData)
@@ -239,7 +239,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering[["robustNormalize"]] <-
+  attr(trainData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
     featureEngineering
   return(trainData)
 }
@@ -306,7 +306,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare =
       findRare = findRare
     )
   )
-  attr(trainData, "metaData")$featureEngineering[["removeRare"]] <- 
+  attr(trainData$covariateData, "metaData")$featureEngineering[["removeRare"]] <- 
     featureEngineering
   return(trainData)
 }

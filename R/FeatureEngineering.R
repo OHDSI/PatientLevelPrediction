@@ -184,8 +184,8 @@ splineCovariates <- function(
   )
 
   # add the feature engineering in
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
   ParallelLogger::logInfo("Finished splineCovariates")
@@ -205,7 +205,7 @@ splineMap <- function(
     as.data.frame()
 
   designMatrix <- splines::bs(
-    x = measurements$covariateValue, # knots[1]:knots[length(knots)],
+    x = measurements$covariateValue,
     knots = knots[2:(length(knots) - 1)],
     Boundary.knots = knots[c(1, length(knots))]
   )
@@ -241,7 +241,8 @@ splineMap <- function(
   Andromeda::appendToTable(
     tbl = data$covariateData$covariateRef,
     data = data.frame(
-      covariateId = covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
+      covariateId =
+        covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
       covariateName = paste(
         paste0(covariateName, " spline component "),
         1:ncol(designMatrix)
@@ -442,8 +443,8 @@ univariateFeatureSelection <- function(
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
 
@@ -509,8 +510,8 @@ randomForestFeatureSelection <- function(
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngeering
   )
 
