@@ -40,7 +40,6 @@ Imports:
     tidyr,
     utils
 Suggests:
-    AUC,
     Eunomia (>= 2.0.0),
     ggplot2,
     gridExtra,
