@@ -14,14 +14,14 @@ diagnosePlp(
   saveDirectory = NULL,
   featureEngineeringSettings = createFeatureEngineeringSettings(),
   modelSettings = setLassoLogisticRegression(),
-  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "diagnosePlp Log"),
   preprocessSettings = createPreprocessSettings()
 )
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.  Can also include an initial population as 
+data extracted from the CDM.  Can also include an initial population as
 plpData$popualtion.}
 
 \item{outcomeId}{(integer) The ID of the outcome.}
@@ -29,7 +29,7 @@ plpData$popualtion.}
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
 \item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
-specifies how the data class labels are defined and addition any exclusions to apply to the 
+specifies how the data class labels are defined and addition any exclusions to apply to the
 plpData cohort}
 
 \item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
@@ -43,21 +43,21 @@ The default is none.}
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
-\itemize{
-\item setLassoLogisticRegression() A lasso logistic regression model
-\item setGradientBoostingMachine() A gradient boosting machine
-\item setAdaBoost() An ada boost model
-\item setRandomForest() A random forest model
-\item setDecisionTree() A decision tree model
-\item setKNN() A KNN model
+                                        \itemize{
+                                        \item setLassoLogisticRegression() A lasso logistic regression model
+                                        \item setGradientBoostingMachine() A gradient boosting machine
+                                        \item setAdaBoost() An ada boost model
+                                        \item setRandomForest() A random forest model
+                                        \item setDecisionTree() A decision tree model
+                                        \item setKNN() A KNN model
 
-}}
+                                        }}
 
-\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 
-\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
-target population who must have a covariate for it to be included in the model training                            
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
+target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
 }
 \value{
@@ -69,16 +69,16 @@ and training settings as well as various performance measures obtained by the mo
 \item{characterization}{list for each O of Characterization of T, TnO, Tn~O}
 }
 \description{
-This function runs a set of prediction diagnoses to help pick a suitable T, O, TAR and determine 
+This function runs a set of prediction diagnoses to help pick a suitable T, O, TAR and determine
 whether the prediction problem is worth executing.
 }
 \details{
 Users can define set of Ts, Os, databases and population settings.  A list of data.frames containing details such as
-follow-up time distribution, time-to-event information, characteriszation details, time from last prior event, 
+follow-up time distribution, time-to-event information, characteriszation details, time from last prior event,
 observation time distribution.
 }
 \examples{
 \dontrun{
-#******** EXAMPLE 1 ********* 
-} 
+#******** EXAMPLE 1 *********
+}
 }

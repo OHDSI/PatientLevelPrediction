@@ -57,8 +57,9 @@ createPreprocessSettings <- function(
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
-#' @return The data processed
+#' @return the processed data
 #' @keywords internal
+#' The data processed
 preprocessData <- function(covariateData,
                            preprocessSettings) {
   metaData <- attr(covariateData, "metaData")
@@ -169,7 +170,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
 #' @param trainData The training data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
 #' @param normalized Whether the data has already been normalized (bool)
-#' @return The normalized data'
+#' @return The normalized data
 #' @keywords internal
 robustNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
   if (!normalized) {

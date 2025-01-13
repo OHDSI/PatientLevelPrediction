@@ -36,11 +36,11 @@ function.}
 \item{plotSubtitle}{Subtitle of the learning curve plot.}
 
 \item{fileName}{Filename of plot to be saved, for example \code{'plot.png'}.
-See the function \code{ggsave} in the ggplot2 package for supported file 
+See the function \code{ggsave} in the ggplot2 package for supported file
 formats.}
 }
 \value{
-A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
+A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 file in a different format.
 }
 \description{
@@ -50,9 +50,11 @@ from \code{createLearningCurve}.
 \examples{
 \dontrun{
 # create learning curve object
-learningCurve <- createLearningCurve(population,
-                                     plpData,
-                                     modelSettings)
+learningCurve <- createLearningCurve(
+  population,
+  plpData,
+  modelSettings
+)
 # plot the learning curve
 plotLearningCurve(learningCurve)
 }

@@ -91,7 +91,7 @@ fitSklearn <- function(trainData,
   result <- list(
     model = file.path(outLoc),
     preprocessing = list(
-      featureEngineering = attr(trainData, "metaData")$featureEngineering,
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
       requireDenseMatrix = attr(param, "settings")$requiresDenseMatrix
     ),
@@ -343,7 +343,7 @@ gridCvPython <- function(matrixData,
 
   # saving model
   if (!dir.exists(file.path(modelLocation))) {
-    dir.create(file.path(modelLocation), recursive = T)
+    dir.create(file.path(modelLocation), recursive = TRUE)
   }
   if (saveToJson) {
     sklearnToJson(
@@ -351,7 +351,7 @@ gridCvPython <- function(matrixData,
       path = file.path(modelLocation, "model.json")
     )
   } else {
-    joblib$dump(model, file.path(modelLocation, "model.pkl"), compress = T)
+    joblib$dump(model, file.path(modelLocation, "model.pkl"), compress = TRUE)
   }
 
   # feature importance
@@ -466,13 +466,6 @@ computeGridPerformance <-
       }
     }
 
-    # hyperSummary <- c(performanceFunct, performance, performanceFold, unlist(paramString))
-    # names(hyperSummary) <- c(
-    #  'Metric',
-    #  'cvPerformance',
-    #  paste0('cvPerformanceFold',1:length(performanceFold)),
-    #  names(param)
-    # )
     paramValues <- unlist(paramString)
     names(paramValues) <- names(param)
 

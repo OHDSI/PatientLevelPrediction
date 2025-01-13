@@ -5,19 +5,19 @@
 \title{create the study population settings}
 \usage{
 createStudyPopulationSettings(
-  binary = T,
-  includeAllOutcomes = T,
+  binary = TRUE,
+  includeAllOutcomes = TRUE,
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
   removeSubjectsWithPriorOutcome = TRUE,
   priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T,
+  requireTimeAtRisk = TRUE,
   minTimeAtRisk = 364,
   riskWindowStart = 1,
   startAnchor = "cohort start",
   riskWindowEnd = 365,
   endAnchor = "cohort start",
-  restrictTarToCohortEnd = F
+  restrictTarToCohortEnd = FALSE
 )
 }
 \arguments{

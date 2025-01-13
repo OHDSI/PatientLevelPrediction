@@ -28,11 +28,11 @@ This function creates a json file with the modelDesignList saved
 \examples{
 \dontrun{
 savePlpAnalysesJson(
-modelDesignList = list(
-createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()), 
-createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
-),
-saveDirectory = 'C:/bestModels'
+  modelDesignList = list(
+    createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()),
+    createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+  ),
+  saveDirectory = "C:/bestModels"
 )
 }
 

@@ -20,38 +20,39 @@ context("RClassifier")
 
 
 test_that("GBM settings work", {
-  
-  seed <- sample(10000000,1)
-  #=====================================
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
+  seed <- sample(10000000, 1)
+  # =====================================
   # checking Gradient Boosting Machine
-  #=====================================
+  # =====================================
   gbmSet <- setGradientBoostingMachine(
-    ntrees = c(2, 10), 
-    nthread = 5, 
+    ntrees = c(2, 10),
+    nthread = 5,
     earlyStopRound = 25,
-    maxDepth = 4, 
-    minChildWeight = 1, 
+    maxDepth = 4,
+    minChildWeight = 1,
     learnRate = 0.1,
     alpha = 0,
-    lambda =1,
+    lambda = 1,
     seed = seed
-    )
-  
-  expect_is(gbmSet, 'modelSettings')
-  expect_equal(gbmSet$fitFunction, 'fitRclassifier')
-  expect_is(gbmSet$param, 'list')
-  
-  expect_equal(attr(gbmSet$param, 'settings')$modelType, 'Xgboost')
-  expect_equal(attr(gbmSet$param, 'settings')$seed, seed)
-  expect_equal(attr(gbmSet$param, 'settings')$modelName, "Gradient Boosting Machine")
-  
-  expect_equal(attr(gbmSet$param, 'settings')$threads, 5)
-  expect_equal(attr(gbmSet$param, 'settings')$varImpRFunction, 'varImpXgboost')
-  expect_equal(attr(gbmSet$param, 'settings')$trainRFunction, 'fitXgboost')
-  expect_equal(attr(gbmSet$param, 'settings')$predictRFunction, 'predictXgboost')
-  
-  expect_equal(length(gbmSet$param),2)
-  
+  )
+
+  expect_is(gbmSet, "modelSettings")
+  expect_equal(gbmSet$fitFunction, "fitRclassifier")
+  expect_is(gbmSet$param, "list")
+
+  expect_equal(attr(gbmSet$param, "settings")$modelType, "Xgboost")
+  expect_equal(attr(gbmSet$param, "settings")$seed, seed)
+  expect_equal(attr(gbmSet$param, "settings")$modelName, "Gradient Boosting Machine")
+
+  expect_equal(attr(gbmSet$param, "settings")$threads, 5)
+  expect_equal(attr(gbmSet$param, "settings")$varImpRFunction, "varImpXgboost")
+  expect_equal(attr(gbmSet$param, "settings")$trainRFunction, "fitXgboost")
+  expect_equal(attr(gbmSet$param, "settings")$predictRFunction, "predictXgboost")
+
+  expect_equal(length(gbmSet$param), 2)
+
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$ntrees)))), 2)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$earlyStopRound)))), 1)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$maxDepth)))), 1)
@@ -59,66 +60,65 @@ test_that("GBM settings work", {
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$learnRate)))), 1)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$lambda)))), 1)
   expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$alpha)))), 1)
-  
-  
-  
 })
 
 
 test_that("GBM settings expected errors", {
-#=====================================
-# checking Gradient Boosting Machine
-#=====================================
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
+  # =====================================
+  # checking Gradient Boosting Machine
+  # =====================================
 
-testthat::expect_error(setGradientBoostingMachine(ntrees = -1))
-testthat::expect_error(setGradientBoostingMachine(minChildWeight = -1))
-testthat::expect_error(setGradientBoostingMachine(maxDepth = 0))
-testthat::expect_error(setGradientBoostingMachine(learnRate = -2))
-testthat::expect_error(setGradientBoostingMachine(seed = 'F'))
-testthat::expect_error(setGradientBoostingMachine(lambda = -1))
-testthat::expect_error(setGradientBoostingMachine(alpha = -1))
-testthat::expect_error(setGradientBoostingMachine(scalePosWeight = -1))
-
-
-
+  testthat::expect_error(setGradientBoostingMachine(ntrees = -1))
+  testthat::expect_error(setGradientBoostingMachine(minChildWeight = -1))
+  testthat::expect_error(setGradientBoostingMachine(maxDepth = 0))
+  testthat::expect_error(setGradientBoostingMachine(learnRate = -2))
+  testthat::expect_error(setGradientBoostingMachine(seed = "F"))
+  testthat::expect_error(setGradientBoostingMachine(lambda = -1))
+  testthat::expect_error(setGradientBoostingMachine(alpha = -1))
+  testthat::expect_error(setGradientBoostingMachine(scalePosWeight = -1))
 })
 
 
 
 
 test_that("GBM working checks", {
-  
-  modelSettings <- setGradientBoostingMachine(ntrees = 10, maxDepth = 3, learnRate = 0.1)
-  
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
+  modelSettings <- setGradientBoostingMachine(ntrees = 10,
+    maxDepth = 3, learnRate = 0.1)
+
   fitModel <- fitPlp(
-    trainData = trainData,   
-    modelSettings = modelSettings, 
-    analysisId = 'gbmTest',
+    trainData = trainData,
+    modelSettings = modelSettings,
+    analysisId = "gbmTest",
     analysisPath = tempdir()
   )
-  
-  expect_equal(nrow(fitModel$prediction), nrow(trainData$labels)*2)
-  expect_equal(length(unique(fitModel$prediction$evaluationType)),2)
-  
+
+  expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+
   # check prediction between 0 and 1
   expect_gte(min(fitModel$prediction$value), 0)
   expect_lte(max(fitModel$prediction$value), 1)
-  
-  expect_equal(class(fitModel$model),"xgb.Booster")
-  
+
+  expect_equal(class(fitModel$model), "xgb.Booster")
+
   expect_lte(nrow(fitModel$covariateImportance), trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
-  
+
   expect_equal(fitModel$modelDesign$outcomeId, outcomeId)
   expect_equal(fitModel$modelDesign$targetId, 1)
   # TODO check other model design values?
-  
+
   # test that at least some features have importances that are not zero
-  expect_equal(sum(abs(fitModel$covariateImportance$covariateValue))>0, TRUE)
-  
+  expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
 })
 
 
 test_that("GBM without outcomes in early stopping set errors", {
+  skip_if_not_installed("xgboost")
+  skip_on_cran()
   hyperParameters <- list(
     ntrees = 10,
     earlyStopRound = 2,
@@ -131,22 +131,26 @@ test_that("GBM without outcomes in early stopping set errors", {
   )
   observations <- 100
   features <- 10
-  data <- createData(observations = observations, features = features, 
-                     totalFeatures = 10,
-                     numCovs = FALSE, outcomeRate = 0.05)
+  data <- createData(
+    observations = observations, features = features,
+    totalFeatures = 10,
+    numCovs = FALSE, outcomeRate = 0.05
+  )
   dataMatrix <- Matrix::sparseMatrix(
     i = data$covariates %>% dplyr::pull("rowId"),
     j = data$covariates %>% dplyr::pull("columnId"),
     x = data$covariates %>% dplyr::pull("covariateValue"),
-    dims = c(observations,features)
+    dims = c(observations, features)
   )
   labels <- data.frame(outcomeCount = data$labels)
   settings <- list(seed = 42, threads = 2)
-  expect_error(fitXgboost(dataMatrix = dataMatrix, 
-             labels = labels,
-             hyperParameters = hyperParameters,
-             settings = settings),
-             regexp = "* or turn off early stopping")
-
+  expect_error(
+    fitXgboost(
+      dataMatrix = dataMatrix,
+      labels = labels,
+      hyperParameters = hyperParameters,
+      settings = settings
+    ),
+    regexp = "* or turn off early stopping"
+  )
 })
-

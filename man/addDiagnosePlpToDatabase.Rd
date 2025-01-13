@@ -10,7 +10,7 @@ addDiagnosePlpToDatabase(
   databaseSchemaSettings,
   cohortDefinitions,
   databaseList = NULL,
-  overWriteIfExists = T
+  overWriteIfExists = TRUE
 )
 }
 \arguments{

@@ -49,8 +49,8 @@ Create setting for gradient boosting machine model using lightGBM (https://githu
 }
 \examples{
 model.lightgbm <- setLightGBM(
-    numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
-    minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
+  numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
+  minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
 )
 
 }

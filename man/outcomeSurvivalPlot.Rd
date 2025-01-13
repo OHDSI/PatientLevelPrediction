@@ -7,12 +7,12 @@
 outcomeSurvivalPlot(
   plpData,
   outcomeId,
-  populationSettings = createStudyPopulationSettings(binary = T, includeAllOutcomes = T,
-    firstExposureOnly = FALSE, washoutPeriod = 0, removeSubjectsWithPriorOutcome = TRUE,
-    priorOutcomeLookback = 99999, requireTimeAtRisk = F, riskWindowStart = 1, startAnchor
-    = "cohort start", riskWindowEnd = 3650, endAnchor = "cohort start"),
-  riskTable = T,
-  confInt = T,
+  populationSettings = createStudyPopulationSettings(binary = TRUE, includeAllOutcomes =
+    TRUE, firstExposureOnly = FALSE, washoutPeriod = 0, removeSubjectsWithPriorOutcome =
+    TRUE, priorOutcomeLookback = 99999, requireTimeAtRisk = FALSE, riskWindowStart = 1,
+    startAnchor = "cohort start", riskWindowEnd = 3650, endAnchor = "cohort start"),
+  riskTable = TRUE,
+  confInt = TRUE,
   yLabel = "Fraction of those who are outcome free in target population"
 )
 }

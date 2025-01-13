@@ -78,6 +78,15 @@ createUnivariateFeatureSelection <- function(k = 100) {
   if (inherits(k, "numeric")) {
     k <- as.integer(k)
   }
+  rlang::check_installed(
+    "reticulate",
+    reason = "This function requires the reticulate package to be installed"
+  )
+  tryCatch({
+    reticulate::import("sklearn")
+  }, error = function(e) {
+    stop("This function requires the scikit-learn package to be installed")
+  })
 
   checkIsClass(k, "integer")
   checkHigherEqual(k, 0)
@@ -102,6 +111,15 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' An object of class \code{featureEngineeringSettings}
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
+  rlang::check_installed(
+    "reticulate",
+    reason = "This function requires the reticulate package to be installed"
+  )
+  tryCatch({
+    reticulate::import("sklearn")
+  }, error = function(e) {
+    stop("This function requires the scikit-learn package to be installed")
+  })
   checkIsClass(ntrees, c("numeric", "integer"))
   checkIsClass(maxDepth, c("numeric", "integer"))
   checkHigher(ntrees, 0)
@@ -205,7 +223,7 @@ splineMap <- function(
     as.data.frame()
 
   designMatrix <- splines::bs(
-    x = measurements$covariateValue,
+    x = measurements$covariateValue, 
     knots = knots[2:(length(knots) - 1)],
     Boundary.knots = knots[c(1, length(knots))]
   )
@@ -408,11 +426,6 @@ univariateFeatureSelection <- function(
     y <- reticulate::r_to_py(labels[, "outcomeCount"])
 
     np <- reticulate::import("numpy")
-    os <- reticulate::import("os")
-    sys <- reticulate::import("sys")
-    math <- reticulate::import("math")
-    scipy <- reticulate::import("scipy")
-
     sklearn <- reticulate::import("sklearn")
 
     SelectKBest <- sklearn$feature_selection$SelectKBest
@@ -467,12 +480,6 @@ randomForestFeatureSelection <- function(
     X <- reticulate::r_to_py(matrixData)
     y <- reticulate::r_to_py(matrix(labels$outcomeCount, ncol = 1))
 
-    np <- reticulate::import("numpy")
-    os <- reticulate::import("os")
-    sys <- reticulate::import("sys")
-    math <- reticulate::import("math")
-    scipy <- reticulate::import("scipy")
-
     sklearn <- reticulate::import("sklearn")
 
     ntrees <- featureEngineeringSettings$ntrees # 2000
@@ -485,7 +492,7 @@ randomForestFeatureSelection <- function(
       min_samples_split = as.integer(2),
       random_state = as.integer(10), # make this an imput for consistency
       n_jobs = as.integer(-1),
-      bootstrap = F
+      bootstrap = FALSE
     )
 
     rf <- rf$fit(X, y$ravel())

@@ -14,9 +14,9 @@ runPlp(
     trainFraction = 0.75, splitSeed = 123, nfold = 3),
   sampleSettings = createSampleSettings(type = "none"),
   featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
-  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
   modelSettings = setLassoLogisticRegression(),
-  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
   executeSettings = createDefaultExecuteSettings(),
   saveDirectory = getwd()

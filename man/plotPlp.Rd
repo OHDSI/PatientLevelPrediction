@@ -11,7 +11,7 @@ plotPlp(plpResult, saveLocation = NULL, typeColumn = "evaluation")
 
 \item{saveLocation}{Name of the directory where the plots should be saved (NULL means no saving)}
 
-\item{typeColumn}{The name of the column specifying the evaluation type 
+\item{typeColumn}{The name of the column specifying the evaluation type
 (to stratify the plots)}
 }
 \value{

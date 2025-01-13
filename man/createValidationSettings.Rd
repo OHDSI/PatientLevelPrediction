@@ -4,7 +4,7 @@
 \alias{createValidationSettings}
 \title{createValidationSettings define optional settings for performing external validation}
 \usage{
-createValidationSettings(recalibrate = NULL, runCovariateSummary = T)
+createValidationSettings(recalibrate = NULL, runCovariateSummary = TRUE)
 }
 \arguments{
 \item{recalibrate}{A vector of characters specifying the recalibration method to apply}

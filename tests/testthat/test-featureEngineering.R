@@ -24,26 +24,23 @@ testFEFun <- function(type = "none") {
   return(result)
 }
 
-
 test_that("createFeatureEngineeringSettings correct class", {
   featureEngineeringSettings <- testFEFun()
 
   expect_is(featureEngineeringSettings, "featureEngineeringSettings")
 
-  checkFun <- "sameData" # this is the only option at the moment, edit this when more are added
+  checkFun <- "sameData"
   expect_equal(attr(featureEngineeringSettings, "fun"), checkFun)
 })
 
-
 testUniFun <- function(k = 100) {
   result <- createUnivariateFeatureSelection(k = k)
-
   return(result)
 }
 
-
-
 test_that("createUnivariateFeatureSelection correct class", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   k <- sample(1000, 1)
   featureEngineeringSettings <- testUniFun(k = k)
 
@@ -58,6 +55,8 @@ test_that("createUnivariateFeatureSelection correct class", {
 
 
 test_that("univariateFeatureSelection", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   k <- 20 + sample(10, 1)
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -83,6 +82,8 @@ test_that("univariateFeatureSelection", {
 
 
 test_that("createRandomForestFeatureSelection correct class", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -127,6 +128,8 @@ test_that("createRandomForestFeatureSelection correct class", {
 
 
 test_that("randomForestFeatureSelection", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -152,6 +155,8 @@ test_that("randomForestFeatureSelection", {
 })
 
 test_that("featureSelection is applied on test_data", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
   k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -200,14 +205,14 @@ test_that("createSplineSettings correct class", {
     continousCovariateId = 12101,
     knots = knots
   )
-
+  data(plpDataSimulationProfile)
   trainData <- simulatePlpData(plpDataSimulationProfile, n = 200)
 
   N <- 50
   trainData$covariateData$covariates <- data.frame(
     rowId = sample(trainData$cohorts$rowId, N),
     covariateId = rep(12101, N),
-    covariateValue = sample(10, N, replace = T)
+    covariateValue = sample(10, N, replace = TRUE)
   )
 
   trainData$covariateData$analysisRef <- data.frame(
@@ -244,9 +249,9 @@ test_that("createStratifiedImputationSettings correct class", {
     covariateId = 12101,
     ageSplits = ageSplits
   )
-  
-  numSubjects <- nanoData$covariateData$covariates %>% 
-    dplyr::pull(.data$rowId) %>% 
+
+  numSubjects <- nanoData$covariateData$covariates %>%
+    dplyr::pull(.data$rowId) %>%
     dplyr::n_distinct()
   Andromeda::appendToTable(nanoData$covariateData$covariates, data.frame(
     rowId = sample(nanoData$cohorts$rowId, floor(numSubjects / 2)),
@@ -286,11 +291,10 @@ test_that("createStratifiedImputationSettings correct class", {
   )
 
   testthat::expect_equal(
-    imputedData$covariateData$covariates %>% 
-      dplyr::filter(.data$covariateId == 12101) %>% 
-      dplyr::pull(.data$rowId) %>% 
-      dplyr::n_distinct(), 
+    imputedData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 12101) %>%
+      dplyr::pull(.data$rowId) %>%
+      dplyr::n_distinct(),
     numSubjects
   )
 })
-

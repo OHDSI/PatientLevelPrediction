@@ -15,13 +15,6 @@
 # limitations under the License.
 context("Evaluation")
 
-library("testthat")
-library("pROC")
-library("AUC")
-library("scoring")
-library("Metrics")
-library("PRROC")
-
 
 test_that("evaluatePlp", {
   eval <- evaluatePlp(

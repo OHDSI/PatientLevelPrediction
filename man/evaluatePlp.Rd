@@ -9,7 +9,7 @@ evaluatePlp(prediction, typeColumn = "evaluationType")
 \arguments{
 \item{prediction}{The patient level prediction model's prediction}
 
-\item{typeColumn}{The column name in the prediction object that is used to 
+\item{typeColumn}{The column name in the prediction object that is used to
 stratify the evaluation}
 }
 \value{

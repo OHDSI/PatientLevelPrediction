@@ -27,10 +27,10 @@ createTinyPlpData <- function(plpData, plpResult, n = 20) {
   tinyPlpData$covariateData$covariateRef <- plpData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariates)
 
-  rowIds <- tinyPlpData$covariateData$covariates %>% 
+  rowIds <- tinyPlpData$covariateData$covariates %>%
     dplyr::pull(.data$rowId) %>%
     unique()
-  tinyPlpData$cohorts <- plpData$cohorts %>% 
+  tinyPlpData$cohorts <- plpData$cohorts %>%
     dplyr::filter(.data$rowId %in% rowIds)
 
   attributes(tinyPlpData$covariateData)$metaData <-

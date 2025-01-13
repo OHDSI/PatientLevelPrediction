@@ -6,9 +6,9 @@ header-includes:
     - \usepackage{fancyhdr}
     - \pagestyle{fancy}
     - \fancyhead{}
-    - \fancyhead[CO,CE]{Automatically Build Multiple Patient-Level Predictive Models}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
+    - \fancyhead[C]{Automatically Build Multiple Patient-Level Predictive Models}
+    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
+    - \fancyfoot[C]{\thepage}
     - \renewcommand{\headrulewidth}{0.4pt}
     - \renewcommand{\footrulewidth}{0.4pt}
 output:
@@ -17,8 +17,6 @@ output:
       in_header: preamble.tex
     number_sections: yes
     toc: yes
-  word_document:
-    toc: yes
   html_document:
     number_sections: yes
     toc: yes
@@ -26,7 +24,7 @@ output:
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Building multiple patient-level predictive models}
 -->
 ```

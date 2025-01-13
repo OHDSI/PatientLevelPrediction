@@ -34,7 +34,7 @@
 recalibratePlpRefit <- function(
     plpModel,
     newPopulation,
-    newData, 
+    newData,
     returnModel = FALSE) {
   checkNotNull(plpModel)
   checkNotNull(newPopulation)
@@ -129,7 +129,7 @@ recalibratePlpRefit <- function(
   newIntercept <- newModel$model$coefficients[names(newModel$model$coefficients) == "(Intercept)"]
 
   attr(prediction, "metaData")$recalibratePlpRefit <- list(adjust = adjust, newIntercept = newIntercept)
-  
+
   if (returnModel) {
     return(list(prediction = prediction, model = newModel))
   } else {
@@ -141,10 +141,10 @@ recalibratePlpRefit <- function(
 #' recalibratePlp
 #'
 #' @description
-#' Recalibrating a model using the recalibrationInTheLarge or weakRecalibration methods 
-#' 
+#' Recalibrating a model using the recalibrationInTheLarge or weakRecalibration methods
+#'
 #' @details
-#' 'recalibrationInTheLarge' calculates a single correction factor for the 
+#' 'recalibrationInTheLarge' calculates a single correction factor for the
 #' average predicted risks to match the average observed risks.
 #' 'weakRecalibration' fits a glm model to the logit of the predicted risks,
 #' also known as Platt scaling/logistic recalibration.
@@ -180,7 +180,7 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' @description
 #' Recalibrate a model using the recalibrationInTheLarge method which calculates a single correction factor
 #' for the average predicted risks to match the average observed risks
-#' 
+#'
 #' @param prediction                      A prediction dataframe
 #' @param columnType                      The column name where the strata types are specified
 #' @return
@@ -210,14 +210,14 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 }
 
 #' weakRecalibration
-#' 
-#' @description 
+#'
+#' @description
 #' Recalibrate a model using the weakRecalibration method which fits a glm model
 #' to the logit of the predicted risks.
 #' Alsi known as Platt scaling/logistic recalibration
 #' @param prediction                    A prediction dataframe
 #' @param columnType                    The column name where the strata types are specified
-#' @return 
+#' @return
 #' An prediction dataframe with the recalibrated predictions added
 #' @keywords internal
 weakRecalibration <- function(prediction, columnType = "evaluationType") {
@@ -247,6 +247,9 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
 
   # add if survival
   if (attr(prediction, "metaData")$modelType == "survival") {
+    rlang::check_installed("survival",
+      reason = "weakRecalibration for survival models requires the survival package to be installed"
+    )
     recalibrated <- prediction
 
     # this will make the recalibration work if the baselineSurvival is missing
