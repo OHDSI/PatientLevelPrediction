@@ -76,19 +76,23 @@ createSimpleImputer <- function(method = "mean",
 #' @keywords internal
 simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   if (!done) {
-    missingInfo <- extractMissingInfo(trainData)
-    trainData$covariateData$missingInfo <- missingInfo$missingInfo
+    outputData <- list(
+      labels = trainData$labels,
+      folds = trainData$foldsa,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData))
+    missingInfo <- extractMissingInfo(outputData)
+    outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
-    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
     
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
       dplyr::filter(is.na(.data$missing) ||
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
 
     # separate the continuous and binary features
-    featureData <- separateFeatures(trainData, continuousFeatures)
+    featureData <- separateFeatures(outputData, continuousFeatures)
     numericData <- featureData[[1]]
     on.exit(numericData <- NULL, add = TRUE)
   
@@ -116,46 +120,59 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
           dplyr::summarise(imputedValues = median(.data$covariateValue, na.rm = TRUE))
     }
       
-      
-      numericData$imputedCovariates <- numericData$covariates %>%
-        dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
-          .data$imputedValues,
-          .data$covariateValue
-        )) %>% 
-        dplyr::select(-c("imputedValues"))
+    allRowIds <- outputData$labels$rowId
+    allColumnIds <- numericData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique() %>%
+      sort()
+    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
+    numericData$covariates <- merge(completeIds, numericData$covariates,
+      all.x = TRUE
+    )
+    
+    numericData$imputedCovariates <- numericData$covariates %>%
+      dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
+        .data$imputedValues,
+        .data$covariateValue
+      )) %>% 
+      dplyr::select(-c("imputedValues"))
     Andromeda::appendToTable(
-      trainData$covariateData$covariates,
+      outputData$covariateData$covariates,
       numericData$imputedCovariates %>%
         dplyr::filter(is.na(.data$covariateValue)) %>%
         dplyr::mutate(covariateValue = .data$imputedValue) %>%
         dplyr::select(-c("imputedValue"))
     )
     attr(featureEngineeringSettings, "missingInfo") <-
-      trainData$covariateData$missingInfo %>%
+      outputData$covariateData$missingInfo %>%
       dplyr::collect()
     attr(featureEngineeringSettings, "imputer") <- 
       numericData$imputedValues %>% dplyr::collect()
     done <- TRUE
   } else {
-    trainData$covariateData$missingInfo <- attr(
+    outputData <- list(
+      labels = trainData$labels,
+      folds = trainData$foldsa,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData))
+    outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
     )
-    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
       dplyr::filter(is.na(.data$missing) ||
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
 
-    continuousFeatures <- trainData$covariateData$analysisRef %>%
+    continuousFeatures <- outputData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
       dplyr::select("analysisId") %>%
-      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::inner_join(outputData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
-    featureData <- separateFeatures(trainData, continuousFeatures)
+    featureData <- separateFeatures(outputData, continuousFeatures)
     numericData <- featureData[[1]]
     on.exit(numericData <- NULL, add = TRUE)
     # impute missing values
@@ -181,7 +198,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
         )) %>% 
         dplyr::select(-c("imputedValues"))
     Andromeda::appendToTable(
-      trainData$covariateData$covariates,
+      outputData$covariateData$covariates,
       numericData$imputedCovariates %>%
         dplyr::filter(is.na(.data$covariateValue)) %>%
         dplyr::mutate(covariateValue = .data$imputedValue) %>%
@@ -196,9 +213,9 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       done = done
     )
   )
-  attr(trainData, "metaData")$featureEngineering[["simpleImputer"]] <-
+  attr(outputData$covariateData, "metaData")$featureEngineering[["simpleImputer"]] <-
     featureEngineering
-  return(trainData)
+  return(outputData)
 }
 
 
@@ -211,36 +228,41 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 #' @keywords internal
 iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   if (!done) {
-    missingInfo <- extractMissingInfo(trainData)
-    trainData$covariateData$missingInfo <- missingInfo$missingInfo
+    outputData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData))
+    missingInfo <- extractMissingInfo(outputData)
+    outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
-    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
 
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
       dplyr::filter(is.na(.data$missing) ||
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
 
     # separate the continuous and binary features
-    featureData <- separateFeatures(trainData, continuousFeatures)
+    featureData <- separateFeatures(outputData, continuousFeatures)
     numericData <- featureData[[1]]
     binary <- featureData[[2]]
     on.exit(numericData <- NULL, add = TRUE)
     on.exit(binary <- NULL, add = TRUE)
   
-    numericData <- initializeImputation(numericData, "mean")
+    numericData <- initializeImputation(numericData, "mean",
+                                        labels = outputData$labels)
     # add imputed values in data
     iterativeImputeResults <- iterativeChainedImpute(numericData,
       binary,
-      trainData,
+      outputData,
       featureEngineeringSettings,
       direction = "ascending",
       iterations = 5
     )
 
     Andromeda::appendToTable(
-      trainData$covariateData$covariates,
+      outputData$covariateData$covariates,
       iterativeImputeResults$numericData$imputedCovariates %>%
         dplyr::filter(is.na(.data$covariateValue)) %>%
         dplyr::mutate(covariateValue = .data$imputedValue) %>%
@@ -249,44 +271,48 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 
 
     attr(featureEngineeringSettings, "missingInfo") <-
-      trainData$covariateData$missingInfo %>%
+      outputData$covariateData$missingInfo %>%
       dplyr::collect()
     attr(featureEngineeringSettings, "imputer") <- iterativeImputeResults$modelInfo
     attr(featureEngineeringSettings, "kdeEstimates") <- iterativeImputeResults$kdeEstimates
     done <- TRUE
   } else {
+    outputData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData))
     # remove data with more than missingThreshold
-    trainData$covariateData$missingInfo <- attr(
+    outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
     )
-    on.exit(trainData$covariateData$missingInfo <- NULL, add = TRUE)
-    trainData$covariateData$covariateIsBinary <- trainData$covariateData$covariateRef %>%
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    outputData$covariateData$covariateIsBinary <- outputData$covariateData$covariateRef %>%
       dplyr::select("covariateId", "analysisId") %>%
       dplyr::inner_join(
-        trainData$covariateData$analysisRef %>%
+        outputData$covariateData$analysisRef %>%
           dplyr::select("analysisId", "isBinary"),
         by = "analysisId"
       ) %>%
       dplyr::mutate(isBinary = .data$isBinary == "Y") %>%
       dplyr::select(.data$covariateId, .data$isBinary) %>%
       dplyr::compute()
-    on.exit(trainData$covariateData$covariateIsBinary <- NULL, add = TRUE)
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::left_join(trainData$covariateData$covariateIsBinary, by = "covariateId") %>%
+    on.exit(outputData$covariateData$covariateIsBinary <- NULL, add = TRUE)
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
+      dplyr::left_join(outputData$covariateData$covariateIsBinary, by = "covariateId") %>%
       dplyr::filter(
         (!is.na(.data$missing) && .data$missing <= featureEngineeringSettings$missingThreshold) ||
           (is.na(.data$missing) && .data$isBinary)
       ) %>%
       dplyr::select(-"missing", -"isBinary")
 
-    continuousFeatures <- trainData$covariateData$analysisRef %>%
+    continuousFeatures <- outputData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
       dplyr::select("analysisId") %>%
-      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::inner_join(outputData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
-    featureData <- separateFeatures(trainData, continuousFeatures)
+    featureData <- separateFeatures(outputData, continuousFeatures)
     numericData <- featureData[[1]]
     binary <- featureData[[2]]
     on.exit(numericData <- NULL, add = TRUE)
@@ -322,7 +348,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::pull(.data$covariateId) %>%
       unique()
     for (varId in varsToImpute) {
-      varName <- trainData$covariateData$covariateRef %>%
+      varName <- outputData$covariateData$covariateRef %>%
         dplyr::filter(.data$covariateId == varId) %>%
         dplyr::pull(.data$covariateName)
       ParallelLogger::logInfo("Imputing variable: ", varName)
@@ -363,7 +389,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     }
     # add imputed values in data
     Andromeda::appendToTable(
-      trainData$covariateData$covariates,
+      outputData$covariateData$covariates,
       numericData$imputedCovariates %>%
         dplyr::filter(is.na(.data$covariateValue)) %>%
         dplyr::mutate(covariateValue = .data$imputedValue) %>%
@@ -377,9 +403,9 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       done = done
     )
   )
-  attr(trainData, "metaData")$featureEngineering[["iterativeImputer"]] <-
+  attr(outputData, "metaData")$featureEngineering[["iterativeImputer"]] <-
     featureEngineering
-  return(trainData)
+  return(outputData)
 }
 
 #' @title Predictive mean matching using lasso
@@ -604,11 +630,8 @@ separateFeatures <- function(trainData, continuousFeatures) {
     return(list(numericData, binaryData))
 }
 
-initializeImputation <- function(numericData, method = "mean") {
-    allRowIds <- numericData$covariates %>%
-      dplyr::pull(.data$rowId) %>%
-      unique() %>%
-      sort()
+initializeImputation <- function(numericData, method = "mean", labels) {
+    allRowIds <- labels$rowId
     allColumnIds <- numericData$covariates %>%
       dplyr::pull(.data$covariateId) %>%
       unique() %>%
