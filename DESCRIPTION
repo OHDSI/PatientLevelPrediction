@@ -40,22 +40,9 @@ Imports:
     tidyr,
     utils
 Suggests:
-<<<<<<< HEAD
-    AUC,
-    BigKnn (>= 1.0.0),
-    devtools,
-    Eunomia,
-    glmnet,
-||||||| fbea7558
-    AUC,
-    BigKnn (>= 1.0.0),
-    devtools,
-    Eunomia,
-=======
     Eunomia (>= 2.0.0),
     ggplot2,
     gridExtra,
->>>>>>> develop
     IterativeHardThresholding,
     knitr,
     Metrics,
