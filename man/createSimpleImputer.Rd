@@ -8,6 +8,8 @@ createSimpleImputer(method = "mean", missingThreshold = 0.3)
 }
 \arguments{
 \item{method}{The method to use for imputation, either "mean" or "median"}
+
+\item{missingThreshold}{The threshold for missing values to be imputed vs removed}
 }
 \value{
 The settings for the single imputer of class `featureEngineeringSettings`

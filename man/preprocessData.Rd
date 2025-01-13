@@ -23,3 +23,4 @@ and remove rare or redundant features
 \details{
 Returns an object of class \code{covariateData} that has been processed
 }
+\keyword{internal}

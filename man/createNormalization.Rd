@@ -6,8 +6,13 @@
 \usage{
 createNormalization(type = "minmax")
 }
+\arguments{
+\item{type}{The type of normalization to use, either "minmax" or "robust"}
+}
 \value{
 An object of class \code{featureEngineeringSettings}
+
+An object of class \code{featureEngineeringSettings}'
 }
 \description{
 Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"

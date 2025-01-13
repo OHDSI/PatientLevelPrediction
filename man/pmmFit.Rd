@@ -7,12 +7,12 @@
 pmmFit(data, k = 5)
 }
 \arguments{
-\item{k}{The number of donors to use for matching (default 5)}
-
-\item{numericData}{An andromeda object with the following fields:
+\item{data}{An andromeda object with the following fields:
 xObs: covariates table for observed data
 xMiss: covariates table for missing data
 yObs: outcome variable that we want to impute}
+
+\item{k}{The number of donors to use for matching (default 5)}
 }
 \description{
 Predictive mean matching using lasso

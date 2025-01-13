@@ -8,13 +8,13 @@ setSVM(
   C = list(1, 0.9, 2, 0.1),
   kernel = list("rbf"),
   degree = list(1, 3, 5),
-  gamma = list("scale", 0.0001, 0.00003, 0.001, 0.01, 0.25),
+  gamma = list("scale", 1e-04, 3e-05, 0.001, 0.01, 0.25),
   coef0 = list(0),
   shrinking = list(TRUE),
   tol = list(0.001),
   classWeight = list(NULL),
   cacheSize = 500,
-  seed = sample(100000, 1)
+  seed = sample(1e+05, 1)
 )
 }
 \arguments{

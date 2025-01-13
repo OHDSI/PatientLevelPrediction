@@ -22,3 +22,4 @@ A function that normalizes continous features to have values between 0 and 1
 \details{
 uses value - min / (max - min) to normalize the data
 }
+\keyword{internal}

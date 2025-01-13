@@ -14,6 +14,9 @@ robustNormalize(trainData, featureEngineeringSettings, normalized = FALSE)
 
 \item{normalized}{Whether the data has already been normalized (bool)}
 }
+\value{
+The normalized data'
+}
 \description{
 A function that normalizes continous by the interquartile range and forces
 the resulting values to be between -3 and 3 with f(x) = x / sqrt(1 + (x/3)^2)
@@ -25,3 +28,4 @@ This forces the values to be between -3 and 3 while preserving the relative
 ordering of the values.'
 based on https://arxiv.org/abs/2407.04491 for more details
 }
+\keyword{internal}

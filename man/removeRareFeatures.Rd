@@ -13,9 +13,13 @@ removeRareFeatures(trainData, featureEngineeringSettings, findRare = FALSE)
 
 \item{findRare}{Whether to find and remove rare features or remove them only (bool)}
 }
+\value{
+The data with rare features removed
+}
 \description{
 A function that removes rare features from the data
 }
 \details{
 removes features that are present in less than a certain fraction of the population
 }
+\keyword{internal}

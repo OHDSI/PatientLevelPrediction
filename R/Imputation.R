@@ -43,6 +43,7 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' @description This function creates the settings for a simple imputer
 #' which imputes missing values with the mean or median
 #' @param method The method to use for imputation, either "mean" or "median"
+#' @param missingThreshold The threshold for missing values to be imputed vs removed
 #' @return The settings for the single imputer of class `featureEngineeringSettings`
 #' @export
 createSimpleImputer <- function(method = "mean",
@@ -65,6 +66,7 @@ createSimpleImputer <- function(method = "mean",
 #' @param featureEngineeringSettings The settings for the imputation
 #' @param done Whether the imputation has already been done (bool)
 #' @return The imputed data
+#' @keywords internal
 simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   if (!done) {
     missingInfo <- extractMissingInfo(trainData)
@@ -199,6 +201,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 #' @param featureEngineeringSettings The settings for the imputation
 #' @param done Whether the imputation has already been done (bool)
 #' @return The imputed data
+#' @keywords internal
 iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   if (!done) {
     missingInfo <- extractMissingInfo(trainData)
@@ -373,7 +376,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 }
 
 #' @title Predictive mean matching using lasso
-#' @param numericData An andromeda object with the following fields:
+#' @param data An andromeda object with the following fields:
 #'      xObs: covariates table for observed data
 #'      xMiss: covariates table for missing data
 #'      yObs: outcome variable that we want to impute
@@ -713,7 +716,7 @@ iterativeChainedImpute <- function(numericData,
       for (varId in varsToImpute) {
         currentImputation <- currentImputations[[as.character(varId)]]
         meanVector[idx] <- mean(currentImputation)
-        varVector[idx] <- var(currentImputation)
+        varVector[idx] <- stats::var(currentImputation)
         idx <- idx + 1
       }
       convergenceInfo <- list(
@@ -760,8 +763,8 @@ iterativeChainedImpute <- function(numericData,
         ) %>%
         dplyr::pull(.data$covariateValue)
       kdeEstimates[[as.character(varId)]] <- list(
-        imputed = density(imputedValues),
-        observed = density(observedValues)
+        imputed = stats::density(imputedValues),
+        observed = stats::density(observedValues)
       )
     }
   results <- list(

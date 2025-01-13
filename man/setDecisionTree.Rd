@@ -15,7 +15,7 @@ setDecisionTree(
   maxLeafNodes = list(NULL),
   minImpurityDecrease = list(10^-7),
   classWeight = list(NULL),
-  seed = sample(1000000, 1)
+  seed = sample(1e+06, 1)
 )
 }
 \arguments{

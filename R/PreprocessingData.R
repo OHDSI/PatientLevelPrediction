@@ -57,8 +57,8 @@ createPreprocessSettings <- function(
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
-#' @return
-#' The data processed
+#' @return The data processed
+#' @keywords internal
 preprocessData <- function(covariateData,
                            preprocessSettings) {
   metaData <- attr(covariateData, "metaData")
@@ -95,6 +95,7 @@ preprocessData <- function(covariateData,
 #' @param featureEngineeringSettings The settings for the normalization
 #' @param normalized Whether the data has already been normalized (bool)
 #' @return The normalized data
+#' @keywords internal
 minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
   if (!normalized) {
     # fit the normalization
@@ -168,6 +169,8 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
 #' @param trainData The training data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
 #' @param normalized Whether the data has already been normalized (bool)
+#' @return The normalized data'
+#' @keywords internal
 robustNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
   if (!normalized) {
     # find continuous features from trainData$covariateData$analysisRef
@@ -246,6 +249,8 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
 
 #' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
 #' @return An object of class \code{featureEngineeringSettings}
+#' @param type The type of normalization to use, either "minmax" or "robust"
+#' @return An object of class \code{featureEngineeringSettings}'
 #' @export
 createNormalization <- function(type = "minmax") {
   featureEngineeringSettings <- list(
@@ -266,6 +271,8 @@ createNormalization <- function(type = "minmax") {
 #' @param trainData The data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
 #' @param findRare Whether to find and remove rare features or remove them only (bool)
+#' @return The data with rare features removed
+#' @keywords internal
 removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare = FALSE) {
   if (!findRare) {
     rareFeatures <- trainData$covariateData$covariates %>%

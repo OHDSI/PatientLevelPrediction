@@ -9,7 +9,7 @@ test/validation/train sets using default splitting functions
 createDefaultSplitSetting(
   testFraction = 0.25,
   trainFraction = 0.75,
-  splitSeed = sample(100000, 1),
+  splitSeed = sample(1e+05, 1),
   nfold = 3,
   type = "stratified"
 )
