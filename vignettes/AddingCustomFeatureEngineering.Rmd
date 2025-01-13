@@ -144,8 +144,8 @@ implementAgeSplines <- function(trainData, featureEngineeringSettings, model = N
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
 
