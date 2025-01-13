@@ -137,7 +137,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createLearningCurve</span><span class="op">(</span></span>
 <span>  <span class="va">plpData</span>,</span>
 <span>  <span class="va">outcomeId</span>,</span>
-<span>  parallel <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cores <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  <span class="va">modelSettings</span>,</span>
 <span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -148,11 +148,11 @@
 <span>  trainEvents <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sampleSettings <span class="op">=</span> <span class="fu"><a href="createSampleSettings.html">createSampleSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  featureEngineeringSettings <span class="op">=</span> <span class="fu"><a href="createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  preprocessSettings <span class="op">=</span> <span class="fu"><a href="createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span>minFraction <span class="op">=</span> <span class="fl">0.001</span>, normalize <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>,</span>
+<span>  preprocessSettings <span class="op">=</span> <span class="fu"><a href="createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span>minFraction <span class="op">=</span> <span class="fl">0.001</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  executeSettings <span class="op">=</span> <span class="fu"><a href="createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span>runSplitData <span class="op">=</span> <span class="cn">T</span>, runSampleData <span class="op">=</span> <span class="cn">F</span>,</span>
-<span>    runfeatureEngineering <span class="op">=</span> <span class="cn">F</span>, runPreprocessData <span class="op">=</span> <span class="cn">T</span>, runModelDevelopment <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>    runCovariateSummary <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
+<span>  executeSettings <span class="op">=</span> <span class="fu"><a href="createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span>runSplitData <span class="op">=</span> <span class="cn">TRUE</span>, runSampleData <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    runfeatureEngineering <span class="op">=</span> <span class="cn">FALSE</span>, runPreprocessData <span class="op">=</span> <span class="cn">TRUE</span>, runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    runCovariateSummary <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
