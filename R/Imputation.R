@@ -117,7 +117,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       numericData$imputedValues <- numericData$covariates %>%
           dplyr::group_by(.data$covariateId) %>%
           dplyr::collect() %>% # median not possible in sql
-          dplyr::summarise(imputedValues = median(.data$covariateValue, na.rm = TRUE))
+          dplyr::summarise(imputedValues = stats::median(.data$covariateValue, na.rm = TRUE))
     }
       
     allRowIds <- outputData$labels$rowId
@@ -460,7 +460,7 @@ pmmFit <- function(data, k = 5) {
     dplyr::pull(.data$y), alpha = 1, nfolds = 3)
 
   # predict on both XObs and XMiss
-  predsObs <- predict(fit, xObs, fit$lambda.min)
+  predsObs <- stats::predict(fit, xObs, fit$lambda.min)
   data$xMiss <- data$xMiss %>%
     dplyr::left_join(
       data$xMiss %>%

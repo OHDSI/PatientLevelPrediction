@@ -192,7 +192,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
       dplyr::summarise(
         q25 = dplyr::sql("lower_quartile(covariateValue)"),
         q75 = dplyr::sql("upper_quartile(covariateValue)"),
-        median = median(.data$covariateValue, na.rm = TRUE)
+        median = stats::median(.data$covariateValue, na.rm = TRUE)
       ) %>%
       dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
       dplyr::select(-c("q75", "q25")) %>%

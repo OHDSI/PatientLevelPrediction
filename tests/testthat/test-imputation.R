@@ -15,7 +15,8 @@ createMissingData <- function(trainData, missingness) {
                                      covariateValue = covariateValue))
   Andromeda::appendToTable((missingData$covariateData$covariateRef),
                           data.frame(covariateId = 666,
-                                     covariateName = "fakeMissingVariable" = 666,
+                                     covariateName = "fakeMissingVariable",
+                                     analysisId = 666,
                                      conceptId = 666))
   Andromeda::appendToTable(missingData$covariateData$analysisRef,
                          data.frame(analysisId = 666,
