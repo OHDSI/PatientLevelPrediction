@@ -25,6 +25,10 @@
 #' @export
 createIterativeImputer <- function(missingThreshold = 0.3,
                                    method = "pmm") {
+  checkIsClass(missingThreshold, "numeric")
+  checkInStringVector(method, c("pmm"))
+  checkHigher(missingThreshold, 0)
+  checkLower(missingThreshold, 1)
   featureEngineeringSettings <- list(
     missingThreshold = missingThreshold,
     method = method
@@ -50,6 +54,9 @@ createSimpleImputer <- function(method = "mean",
                                 missingThreshold = 0.3) {
   checkIsClass(method, "character")
   checkInStringVector(method, c("mean", "median"))
+  checkIsClass(missingThreshold, "numeric")
+  checkHigher(missingThreshold, 0)
+  checkLower(missingThreshold, 1)
   featureEngineeringSettings <- list(
     method = method,
     missingThreshold = missingThreshold
