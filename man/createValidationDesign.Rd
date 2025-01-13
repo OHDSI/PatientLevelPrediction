@@ -19,7 +19,7 @@ createValidationDesign(
 
 \item{outcomeId}{The outcomeId of the outcome cohort to validate on}
 
-\item{populationSettings}{A list of population restriction settings created 
+\item{populationSettings}{A list of population restriction settings created
 by \code{createPopulationSettings}. Default is NULL and then this is taken
 from the model}
 

@@ -17,19 +17,18 @@
 context("Validation")
 
 # Test unit for the creation of the study externalValidatePlp
-modelVal <- loadPlpModel(file.path(saveLoc, 'Test', 'plpResult', 'model'))
-validationDatabaseDetailsVal <- databaseDetails  # from run multiple tests
+modelVal <- loadPlpModel(file.path(saveLoc, "Test", "plpResult", "model"))
+validationDatabaseDetailsVal <- databaseDetails # from run multiple tests
 validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
-recalSet <- createValidationSettings(recalibrate = 'weakRecalibration')
-saveLocation <- file.path(saveLoc, 'extern')
+recalSet <- createValidationSettings(recalibrate = "weakRecalibration")
+saveLocation <- file.path(saveLoc, "extern")
 
 setEV <- function(
-  model = modelVal,
-  validationDatabaseDetails = validationDatabaseDetailsVal,
-  validationRestrictPlpDataSettings = validationRestrictPlpDataSettingsVal,
-  settings = recalSet,
-  outputFolder = saveLocation
-){
+    model = modelVal,
+    validationDatabaseDetails = validationDatabaseDetailsVal,
+    validationRestrictPlpDataSettings = validationRestrictPlpDataSettingsVal,
+    settings = recalSet,
+    outputFolder = saveLocation) {
   result <- externalValidateDbPlp(
     plpModel = model,
     validationDatabaseDetails = validationDatabaseDetails,
@@ -37,100 +36,109 @@ setEV <- function(
     settings = settings,
     outputFolder = outputFolder
   )
-  
+
   return(result)
 }
 
 
 test_that("incorrect input externalValidateDbPlp checks work", {
-  
   # fails when plpResult is NULL
-  expect_error(externalValidateDbPlp(setEV(model=NULL)))
+  expect_error(externalValidateDbPlp(setEV(model = NULL)))
   # fails when plpResult is not class 'plpResult'
-  expect_error(externalValidateDbPlp(setEV(model=list())))
-  
-  
+  expect_error(externalValidateDbPlp(setEV(model = list())))
+
+
   expect_error(externalValidateDbPlp(
     setEV(validationDatabaseDetails = NULL)
   ))
-    
+
   expect_error(externalValidateDbPlp(
     setEV(validationRestrictPlpDataSettings = NULL)
   ))
-  
+
   expect_error(externalValidateDbPlp(
     setEV(outputFolder = NULL)
   ))
-
-  
 })
 
 
 
 test_that("external validate", {
-  
   exVal <- setEV()
-  testthat::expect_equal(class(exVal[[1]]), 'externalValidatePlp')
-  
+  testthat::expect_equal(class(exVal[[1]]), "externalValidatePlp")
 })
 
 test_that("fromDesignOrModel helper works", {
-    
-   settingName <- "restrictPlpDataSettings"
-   validationDesign <- list(targetId = 1,
-                            outcomeId = 2,
-                            restrictPlpDataSettings = list(a = 1, b = 2)
-   )
-   modelDesigns <- list(
-     list(targetId = 1,
-          outcomeId = 2,
-          restrictPlpDataSettings = list(a = 3, b = 4)
-     ),
-     list(targetId = 1,
-          outcomeId = 2,
-          restrictPlpDataSettings = list(a = 3, b = 4)
-     )
-   )
-   output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
-   
-   expect_equal(output[[settingName]], list(a = 1, b = 2))
-   validationDesign[[settingName]] <- NULL
-   output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
-   expect_equal(output[[settingName]], list(a = 3, b = 4))
+  settingName <- "restrictPlpDataSettings"
+  validationDesign <- list(
+    targetId = 1,
+    outcomeId = 2,
+    restrictPlpDataSettings = list(a = 1, b = 2)
+  )
+  modelDesigns <- list(
+    list(
+      targetId = 1,
+      outcomeId = 2,
+      restrictPlpDataSettings = list(a = 3, b = 4)
+    ),
+    list(
+      targetId = 1,
+      outcomeId = 2,
+      restrictPlpDataSettings = list(a = 3, b = 4)
+    )
+  )
+  output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
 
+  expect_equal(output[[settingName]], list(a = 1, b = 2))
+  validationDesign[[settingName]] <- NULL
+  output <- fromDesignOrModel(validationDesign, modelDesigns, settingName)
+  expect_equal(output[[settingName]], list(a = 3, b = 4))
 })
 
 test_that("createValidationDesign errors", {
-  
-  expect_error(createValidationDesign(targetId = NULL, outcomeId = 2,
-                                      plpModelList = list()))
-  expect_error(createValidationDesign(targetId = 1, outcomeId = NULL,
-                                      plpModelList = list()))
-  expect_error(createValidationDesign(targetId = "a", outcomeId = 2,
-                                      plpModelList = list()))
-  expect_error(createValidationDesign(targetId = 1, outcomeId = "a",
-                                      plpModelList = list()))
-  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
-                                      plpModelList = list(),
-                                      populationSettings = list()))
-  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
-                                      plpModelList = list(),
-                                      recalibrate = 1))
-  expect_error(createValidationDesign(targetId = 1, outcomeId = 2,
-                                      plpModelList = list(),
-                                      runCovariateSummary = 1))
+  expect_error(createValidationDesign(
+    targetId = NULL, outcomeId = 2,
+    plpModelList = list()
+  ))
+  expect_error(createValidationDesign(
+    targetId = 1, outcomeId = NULL,
+    plpModelList = list()
+  ))
+  expect_error(createValidationDesign(
+    targetId = "a", outcomeId = 2,
+    plpModelList = list()
+  ))
+  expect_error(createValidationDesign(
+    targetId = 1, outcomeId = "a",
+    plpModelList = list()
+  ))
+  expect_error(createValidationDesign(
+    targetId = 1, outcomeId = 2,
+    plpModelList = list(),
+    populationSettings = list()
+  ))
+  expect_error(createValidationDesign(
+    targetId = 1, outcomeId = 2,
+    plpModelList = list(),
+    recalibrate = 1
+  ))
+  expect_error(createValidationDesign(
+    targetId = 1, outcomeId = 2,
+    plpModelList = list(),
+    runCovariateSummary = 1
+  ))
 })
 
 test_that("createValidationDesign works with minimal required arguments", {
   targetId <- 1
   outcomeId <- 2
   plpModelList <- list()
-  
+
   design <- createValidationDesign(
-    targetId = targetId, 
-    outcomeId = outcomeId, 
+    targetId = targetId,
+    outcomeId = outcomeId,
     plpModelList = plpModelList
-    )
+  )
   expect_s3_class(design, "validationDesign")
   expect_equal(design$targetId, targetId)
   expect_equal(design$outcomeId, outcomeId)
@@ -141,20 +149,20 @@ test_that("single createValidationDesign works with all arguments", {
   targetId <- 1
   outcomeId <- 2
   plpModelList <- list("model1", "model2")
-  populationSettings <- createStudyPopulationSettings()  
-  restrictPlpDataSettings <- createRestrictPlpDataSettings()  # Replace with actual restrictPlpDataSettings object
-  recalibrate <- c("recalibrationInTheLarge") 
+  populationSettings <- createStudyPopulationSettings()
+  restrictPlpDataSettings <- createRestrictPlpDataSettings() # Replace with actual restrictPlpDataSettings object
+  recalibrate <- c("recalibrationInTheLarge")
   runCovariateSummary <- FALSE
-  
+
   design <- createValidationDesign(
-    targetId = targetId, 
-    outcomeId = outcomeId, 
-    plpModelList = plpModelList, 
-    populationSettings = populationSettings, 
-    restrictPlpDataSettings = restrictPlpDataSettings, 
-    recalibrate = recalibrate, 
+    targetId = targetId,
+    outcomeId = outcomeId,
+    plpModelList = plpModelList,
+    populationSettings = populationSettings,
+    restrictPlpDataSettings = restrictPlpDataSettings,
+    recalibrate = recalibrate,
     runCovariateSummary = runCovariateSummary
-    )
+  )
   expect_s3_class(design, "validationDesign")
   expect_equal(design$targetId, targetId)
   expect_equal(design$outcomeId, outcomeId)
@@ -170,13 +178,13 @@ test_that("createValidationDesigns correctly handles multiple restrictSettings",
   outcomeId <- 2
   plpModelList <- list()
   restrictPlpDataSettings <- list(createRestrictPlpDataSettings(), createRestrictPlpDataSettings())
-  
+
   design <- createValidationDesign(
-    targetId = targetId, 
-    outcomeId = outcomeId, 
-    plpModelList = plpModelList, 
+    targetId = targetId,
+    outcomeId = outcomeId,
+    plpModelList = plpModelList,
     restrictPlpDataSettings = restrictPlpDataSettings
-    )
+  )
   expect_s3_class(design[[1]], "validationDesign")
   expect_equal(design[[1]]$targetId, targetId)
   expect_equal(design[[1]]$outcomeId, outcomeId)
@@ -198,12 +206,15 @@ test_that("createValidationSettings errors with <10 outcomes", {
     restrictPlpDataSettings = tinyRestrictPlpDataSettings
   )
 
-  expect_output(validateExternal(validationDesignList = validationDesign, 
-                   databaseDetails = databaseDetails,
-                   logSettings = createLogSettings(),
-                    outputFolder = saveLocation),
-                "skipping validation for design and database")
-
+  expect_output(
+    validateExternal(
+      validationDesignList = validationDesign,
+      databaseDetails = databaseDetails,
+      logSettings = createLogSettings(),
+      outputFolder = saveLocation
+    ),
+    "skipping validation for design and database"
+  )
 })
 
 test_that("createDownloadTasks handles single design correctly", {
@@ -248,7 +259,7 @@ test_that("createDownloadTasks handles duplicated designs correctly", {
   result <- createDownloadTasks(list(design, design))
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 1)
-  
+
   design2 <- createValidationDesign(
     targetId = 3,
     outcomeId = 4,
@@ -257,7 +268,7 @@ test_that("createDownloadTasks handles duplicated designs correctly", {
   )
 
   results <- createDownloadTasks(list(design, design2, design))
-  expect_s3_class(results, "data.frame") 
+  expect_s3_class(results, "data.frame")
   expect_equal(nrow(results), 2)
 })
 
@@ -334,7 +345,6 @@ test_that("createDownloadTasks with multiple covSettings", {
   result <- createDownloadTasks(list(design1, design2))
   expect_equal(nrow(result), 1)
   expect_equal(length(result[1, ]$covariateSettings[[1]]), 2)
-
 })
 
 test_that("createDownloadTasks when restrictSettings come from models", {
@@ -345,5 +355,4 @@ test_that("createDownloadTasks when restrictSettings come from models", {
   )
   result <- createDownloadTasks(list(design1))
   expect_s3_class(result[1, ]$restrictPlpDataSettings[[1]], "restrictPlpDataSettings")
-
 })

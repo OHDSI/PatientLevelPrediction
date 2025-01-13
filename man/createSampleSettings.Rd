@@ -2,7 +2,7 @@
 % Please edit documentation in R/Sampling.R
 \name{createSampleSettings}
 \alias{createSampleSettings}
-\title{Create the settings for defining how the trainData from \code{splitData} are sampled using 
+\title{Create the settings for defining how the trainData from \code{splitData} are sampled using
 default sample functions.}
 \usage{
 createSampleSettings(
@@ -26,7 +26,7 @@ createSampleSettings(
 An object of class \code{sampleSettings}
 }
 \description{
-Create the settings for defining how the trainData from \code{splitData} are sampled using 
+Create the settings for defining how the trainData from \code{splitData} are sampled using
 default sample functions.
 }
 \details{

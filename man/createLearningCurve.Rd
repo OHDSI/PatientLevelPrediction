@@ -7,7 +7,7 @@
 createLearningCurve(
   plpData,
   outcomeId,
-  parallel = T,
+  parallel = TRUE,
   cores = 4,
   modelSettings,
   saveDirectory = getwd(),
@@ -18,11 +18,11 @@ createLearningCurve(
   trainEvents = NULL,
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
-  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
   logSettings = createLogSettings(),
-  executeSettings = createExecuteSettings(runSplitData = T, runSampleData = F,
-    runfeatureEngineering = F, runPreprocessData = T, runModelDevelopment = T,
-    runCovariateSummary = F)
+  executeSettings = createExecuteSettings(runSplitData = TRUE, runSampleData = FALSE,
+    runfeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
+    runCovariateSummary = FALSE)
 )
 }
 \arguments{

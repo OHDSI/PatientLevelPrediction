@@ -12,9 +12,9 @@ createCohortCovariateSettings(
   cohortId,
   startDay = -30,
   endDay = 0,
-  count = F,
-  ageInteraction = F,
-  lnAgeInteraction = F,
+  count = FALSE,
+  ageInteraction = FALSE,
+  lnAgeInteraction = FALSE,
   analysisId = 456
 )
 }
@@ -23,10 +23,10 @@ createCohortCovariateSettings(
 
 \item{settingId}{A unique id for the covariate time and}
 
-\item{cohortDatabaseSchema}{The schema of the database with the cohort. If 
+\item{cohortDatabaseSchema}{The schema of the database with the cohort. If
 nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.}
 
-\item{cohortTable}{the table name that contains the covariate cohort. If 
+\item{cohortTable}{the table name that contains the covariate cohort. If
 nothing is specified then the cohortTable from databaseDetails at runtime is used.}
 
 \item{cohortId}{cohort id for the covariate cohort}

@@ -27,7 +27,7 @@ A prediction dataframe with the recalibrated predictions added
 Recalibrating a model using the recalibrationInTheLarge or weakRecalibration methods
 }
 \details{
-'recalibrationInTheLarge' calculates a single correction factor for the 
+'recalibrationInTheLarge' calculates a single correction factor for the
 average predicted risks to match the average observed risks.
 'weakRecalibration' fits a glm model to the logit of the predicted risks,
 also known as Platt scaling/logistic recalibration.

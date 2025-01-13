@@ -188,37 +188,37 @@
 runPlp <- function(
   plpData,
   outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = '-'),
-  analysisName = 'Study details',
+  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(
-    type = 'stratified', 
-    testFraction=0.25, 
+    type = "stratified", 
+    testFraction = 0.25, 
     trainFraction = 0.75, 
-    splitSeed=123, 
-    nfold=3
+    splitSeed = 123, 
+    nfold = 3
     ),
-  sampleSettings = createSampleSettings(type = 'none'),
-  featureEngineeringSettings = createFeatureEngineeringSettings(type = 'none'),
+  sampleSettings = createSampleSettings(type = "none"),
+  featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
   preprocessSettings = createPreprocessSettings(
     minFraction = 0.001,
-    normalize = T
+    normalize = TRUE
     ),
   modelSettings = setLassoLogisticRegression(),
   logSettings = createLogSettings(
-    verbosity = 'DEBUG',
-    timeStamp = T,
-    logName = 'runPlp Log'
+    verbosity = "DEBUG",
+    timeStamp = TRUE,
+    logName = "runPlp Log"
     ),
   executeSettings = createDefaultExecuteSettings(),
   saveDirectory = getwd()
-){
+) {
   
   # start log 
   analysisPath <- file.path(saveDirectory, analysisId)
   logSettings$saveDirectory <- analysisPath
-  logSettings$logFileName <- 'plpLog'
-  logger <- do.call(createLog,logSettings)
+  logSettings$logFileName <- "plpLog"
+  logger <- do.call(createLog, logSettings)
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
@@ -239,11 +239,13 @@ runPlp <- function(
         )
       )
     },
-    error = function(e){ParallelLogger::logError(e); return(NULL)}
-    )
+    error = function(e) {
+      ParallelLogger::logError(e)
+      return(NULL)
+    })
   
-  if(is.null(settingsValid)){
-    stop('Settings are invalid - check log for error message')
+  if (is.null(settingsValid)) {
+    stop("Settings are invalid - check log for error message")
   }
   
   # log the start time:
@@ -262,11 +264,11 @@ runPlp <- function(
   })
   
   # create the population
-  if(!is.null(plpData$population)) {
-    ParallelLogger::logInfo('Using existing population')
+  if (!is.null(plpData$population)) {
+    ParallelLogger::logInfo("Using existing population")
     population <- plpData$population
   } else {
-    ParallelLogger::logInfo('Creating population')
+    ParallelLogger::logInfo("Creating population")
     population <- tryCatch({
       do.call(createStudyPopulation,
               list(plpData = plpData,
@@ -275,15 +277,18 @@ runPlp <- function(
                    population = plpData$population
                    )
       )},
-    error = function(e){ParallelLogger::logError(e); return(NULL)}
+    error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
   }
     
-  if(is.null(population)){
-    stop('population NULL')
+  if (is.null(population)) {
+    stop("population NULL")
   }
   
-  if(executeSettings$runSplitData){
+  if (executeSettings$runSplitData) {
     # split the data (test/train/cv) + summarise at the end
     data <- tryCatch(
       {
@@ -293,16 +298,19 @@ runPlp <- function(
           splitSettings = splitSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data)){
-      stop('data NULL after splitting')
+    if (is.null(data)) {
+      stop("data NULL after splitting")
     }
     
     dataSummary(data)
   } 
   
-  if(executeSettings$runSampleData){
+  if (executeSettings$runSampleData) {
     # sampling
     data$Train <- tryCatch(
       {
@@ -311,15 +319,18 @@ runPlp <- function(
           sampleSettings = sampleSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train)){
-      stop('train data NULL after sample')
+    if (is.null(data$Train)) {
+      stop("train data NULL after sample")
     }
     dataSummary(data)
   }
   
-  if(executeSettings$runfeatureEngineering){
+  if (executeSettings$runfeatureEngineering) {
     
     data$Train <- tryCatch(
       {
@@ -328,15 +339,18 @@ runPlp <- function(
           featureEngineeringSettings = featureEngineeringSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train)){
-      stop('train data NULL after feature engineering')
+    if (is.null(data$Train)) {
+      stop("train data NULL after feature engineering")
     }
     dataSummary(data)
   }
   
-  if(executeSettings$runPreprocessData){
+  if (executeSettings$runPreprocessData) {
     
     data$Train$covariateData <- tryCatch(
       {
@@ -345,10 +359,13 @@ runPlp <- function(
           preprocessSettings = preprocessSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train$covariateData)){
-      stop('train data NULL after preprocessing')
+    if (is.null(data$Train$covariateData)) {
+      stop("train data NULL after preprocessing")
     }
     dataSummary(data)
   }
@@ -357,7 +374,7 @@ runPlp <- function(
   model <- NULL
   prediction <- NULL
   performance <- NULL
-  if(executeSettings$runModelDevelopment){
+  if (executeSettings$runModelDevelopment) {
     # fit model
     settings <- list(
       trainData = data$Train, 
@@ -366,21 +383,26 @@ runPlp <- function(
       analysisPath = analysisPath
     )
     
-    ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
+    ParallelLogger::logInfo(sprintf("Training %s model",
+      settings$modelSettings$name))  
+
     model <- tryCatch(
       {
         do.call(fitPlp, settings)
       },
-      error = function(e) { ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
     
-    if(!is.null(model)){
+    if (!is.null(model)) {
       prediction <- model$prediction
       # remove prediction from model
       model$prediction <- NULL
       
       #apply to test data if exists:
-      if('Test' %in% names(data)){
+      if ("Test" %in% names(data)) {
         predictionTest <- tryCatch(
           {
             predictPlp(
@@ -389,13 +411,16 @@ runPlp <- function(
               population = data$Test$labels
             )
           },
-          error = function(e) { ParallelLogger::logError(e); return(NULL)}
+          error = function(e) {
+            ParallelLogger::logError(e)
+            return(NULL)
+          }
         )
         
-        predictionTest$evaluationType <- 'Test'
+        predictionTest$evaluationType <- "Test"
         
-        if(!is.null(predictionTest)){
-          prediction <- rbind(predictionTest, prediction[, colnames(prediction)!='index'])
+        if (!is.null(predictionTest)) {
+          prediction <- rbind(predictionTest, prediction[, colnames(prediction) != "index"])
         } 
         
         
@@ -404,9 +429,12 @@ runPlp <- function(
       # evaluate model
       performance <- tryCatch(
         {
-          evaluatePlp(prediction, typeColumn = 'evaluationType')
+          evaluatePlp(prediction, typeColumn = "evaluationType")
         },
-        error = function(e) { ParallelLogger::logError(e); return(NULL)}
+        error = function(e) {
+          ParallelLogger::logError(e)
+          return(NULL)
+        }
       )
     }
     
@@ -415,23 +443,23 @@ runPlp <- function(
   
   # covariateSummary
   covariateSummaryResult <- NULL
-  if(executeSettings$runCovariateSummary){
+  if (executeSettings$runCovariateSummary) {
     
-    if(!is.null(data$Test)){
+    if (!is.null(data$Test)) {
       strata <- data.frame(
         rowId = c(
           data$Train$labels$rowId, 
           data$Test$labels$rowId 
         ),
         strataName = c(
-          rep('Train', nrow(data$Train$labels)), 
-          rep('Test', nrow(data$Test$labels))
+          rep("Train", nrow(data$Train$labels)), 
+          rep("Test", nrow(data$Test$labels))
         )
       )
-    } else{
+    } else {
       strata <- data.frame(
-        rowId = c( data$Train$labels$rowId ),
-        strataName = c( rep('Train', nrow(data$Train$labels)) )
+        rowId = c(data$Train$labels$rowId),
+        strataName = c(rep("Train", nrow(data$Train$labels)))
       )
     }
     
@@ -439,8 +467,8 @@ runPlp <- function(
       dplyr::mutate(covariateValue = 0) %>% 
       dplyr::select("covariateId", "covariateValue") %>% 
       dplyr::collect()
-    if(!is.null(model)){
-      if(!is.null(model$covariateImportance)){
+    if (!is.null(model)) {
+      if (!is.null(model$covariateImportance)) {
         variableImportance <- model$covariateImportance %>% 
           dplyr::select("covariateId", "covariateValue")
       }
@@ -448,7 +476,7 @@ runPlp <- function(
     
     # apply FE if it is used
     featureEngineering <- NULL
-    if(!is.null(model)){
+    if (!is.null(model)) {
       featureEngineering <- model$preprocessing$featureEngineering
     }
     
@@ -468,16 +496,16 @@ runPlp <- function(
   #  ExecutionSummary details:
   # log the end time:
   endTime <- Sys.time()
-  TotalExecutionElapsedTime <- difftime(endTime, executionDateTime, units='mins')
+  TotalExecutionElapsedTime <- difftime(endTime, executionDateTime, units = "mins")
   
   executionSummary <- list(
     PackageVersion = list(
-      rVersion= R.Version()$version.string,
+      rVersion = R.Version()$version.string,
       packageVersion = utils::packageVersion("PatientLevelPrediction")
     ),
-    PlatformDetails= list(
+    PlatformDetails = list(
       platform = R.Version()$platform,
-      cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
+      cores = Sys.getenv("NUMBER_OF_PROCESSORS"),
       RAM = memuse::Sys.meminfo()[1]
       ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
@@ -487,15 +515,14 @@ runPlp <- function(
   )
   
   # if model is NULL convert it to list for saving 
-  if(is.null(model)){
-    model <- list(noModel = T)
-    attr(model, "predictionFunction") <- 'noModel'
-    attr(model, "saveType") <- 'RtoJson'
-    class(model) <- 'plpModel'
+  if (is.null(model)) {
+    model <- list(noModel = TRUE)
+    attr(model, "predictionFunction") <- "noModel"
+    attr(model, "saveType") <- "RtoJson"
+    class(model) <- "plpModel"
   }
   
   results <- list(
-    #inputSetting = inputSetting, 
     executionSummary = executionSummary, 
     model = model,
     prediction = prediction,
@@ -506,18 +533,16 @@ runPlp <- function(
       analysisName = analysisName
       )
     )
-  class(results) <- c('runPlp')
+  class(results) <- c("runPlp")
   
   ParallelLogger::logInfo("Run finished successfully.")
   
   # save the results
-  ParallelLogger::logInfo(paste0('Saving PlpResult'))
-  tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
-    finally= ParallelLogger::logTrace('Done.'))
-  ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
+  ParallelLogger::logInfo(paste0("Saving PlpResult"))
+  tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
+    finally = ParallelLogger::logTrace("Done."))
+  ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
   
   return(results)
   
 }
-
-

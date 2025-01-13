@@ -8,8 +8,8 @@ createPlpResultTables(
   connectionDetails,
   targetDialect = "postgresql",
   resultSchema,
-  deleteTables = T,
-  createTables = T,
+  deleteTables = TRUE,
+  createTables = TRUE,
   tablePrefix = "",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   testFile = NULL

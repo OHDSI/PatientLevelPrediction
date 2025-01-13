@@ -223,7 +223,7 @@ splineMap <- function(
     as.data.frame()
 
   designMatrix <- splines::bs(
-    x = measurements$covariateValue, # knots[1]:knots[length(knots)],
+    x = measurements$covariateValue, 
     knots = knots[2:(length(knots) - 1)],
     Boundary.knots = knots[c(1, length(knots))]
   )

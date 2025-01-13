@@ -24,7 +24,7 @@
 #' @details
 #' The user can define the machine learning model to train (regularised logistic regression, random forest,
 #' gradient boosting machine, neural network and )
-#' 
+#'
 #' @param trainData                        An object of type \code{TrainData} created using \code{splitData}
 #'                                         data extracted from the CDM.
 #' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
@@ -34,12 +34,12 @@
 #'                                         \item setRandomForest() A random forest model
 #'                                         \item setKNN() A KNN model
 #'                                         }
-#' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
+#' @param search                           The search strategy for the hyper-parameter selection (currently not used)
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
 #' @return
 #' An object of class \code{plpModel} containing:
-#' 
+#'
 #' \item{model}{The trained prediction model}
 #' \item{preprocessing}{The preprocessing required when applying the model}
 #' \item{prediction}{The cohort data.frame with the predicted risk column added}
@@ -50,26 +50,26 @@
 #'
 #' @export
 fitPlp <- function(
-  trainData,   
-  modelSettings,
-  search = "grid",
-  analysisId,
-  analysisPath
-  )
-  {
-  
-  if(is.null(trainData))
-    stop('trainData is NULL')
-  if(is.null(trainData$covariateData))
-    stop('covariateData is NULL')
-  checkIsClass(trainData$covariateData, 'CovariateData')
-  if(is.null(modelSettings$fitFunction))
-    stop('No model specified')
-  checkIsClass(modelSettings, 'modelSettings')
-  
-  #=========================================================
+    trainData,
+    modelSettings,
+    search = "grid",
+    analysisId,
+    analysisPath) {
+  if (is.null(trainData)) {
+    stop("trainData is NULL")
+  }
+  if (is.null(trainData$covariateData)) {
+    stop("covariateData is NULL")
+  }
+  checkIsClass(trainData$covariateData, "CovariateData")
+  if (is.null(modelSettings$fitFunction)) {
+    stop("No model specified")
+  }
+  checkIsClass(modelSettings, "modelSettings")
+
+  # =========================================================
   # run through pipeline list and apply:
-  #=========================================================
+  # =========================================================
 
   # Now apply the classifier:
   fun <- eval(parse(text = modelSettings$fitFunction))
@@ -79,16 +79,15 @@ fitPlp <- function(
     search = search,
     analysisId = analysisId,
     analysisPath = analysisPath
-    )
+  )
   plpModel <- do.call(fun, args)
-  ParallelLogger::logTrace('Returned from classifier function')
-  
+  ParallelLogger::logTrace("Returned from classifier function")
+
   # adding trainDetails databaseId to all classifiers
   # TODO - move other details into fit
-  plpModel$trainDetails$developmentDatabaseId = attr(trainData, "metaData")$cdmDatabaseId
-  
-  class(plpModel) <- 'plpModel'
-  
+  plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
+
+  class(plpModel) <- "plpModel"
+
   return(plpModel)
-  
 }

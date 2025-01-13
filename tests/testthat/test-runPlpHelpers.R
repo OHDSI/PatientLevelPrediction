@@ -18,78 +18,75 @@ library("testthat")
 context("runPlpHelpers")
 
 test_that("check printHeader runs", {
-  
   header <- printHeader(
-    plpData = plpData, 
-    targetId = 1, 
-    outcomeId = outcomeId, 
-    analysisId = 123, 
-    analysisName = 'test', 
+    plpData = plpData,
+    targetId = 1,
+    outcomeId = outcomeId,
+    analysisId = 123,
+    analysisName = "test",
     executionDateTime = Sys.time()
-    )
+  )
   expect_is(header, "logical")
-  
 })
 
 test_that("checkInputs", {
-
   check <- checkInputs(
     list(
-      plpData = plpData, 
-      outcomeId = outcomeId, 
+      plpData = plpData,
+      outcomeId = outcomeId,
       populationSettings = populationSettings
     )
   )
-  
+
   expect_is(check, "logical")
   expect_equal(check, TRUE)
-  
+
   # error as NULL plpData
   expect_error(
     checkInputs(
       list(
-        plpData = NULL, 
-        outcomeId = outcomeId, 
+        plpData = NULL,
+        outcomeId = outcomeId,
         populationSettings = populationSettings
       )
     )
   )
-  
+
   # error as incorrect outcomeId
   expect_error(
     checkInputs(
       list(
-        plpData = plpData, 
-        outcomeId = 'test', 
+        plpData = plpData,
+        outcomeId = "test",
         populationSettings = populationSettings
       )
     )
   )
-  
+
   # error as incorrect populationSettings
   expect_error(
     checkInputs(
       list(
-        plpData = plpData, 
-        outcomeId = outcomeId, 
-        populationSettings = 'populationSettings'
+        plpData = plpData,
+        outcomeId = outcomeId,
+        populationSettings = "populationSettings"
       )
     )
   )
-  
 })
 
 
 test_that("createExecuteSettings", {
-  
-  getTF <- function(){return(sample(c(T,F), 1))}
+  getTF <- function() {
+    return(sample(c(TRUE, FALSE), 1))
+  }
   runSplitData <- getTF()
   runSampleData <- getTF()
   runfeatureEngineering <- getTF()
   runPreprocessData <- getTF()
   runModelDevelopment <- getTF()
   runCovariateSummary <- getTF()
-  
+
   executeSettings <- createExecuteSettings(
     runSplitData = runSplitData,
     runSampleData = runSampleData,
@@ -98,15 +95,15 @@ test_that("createExecuteSettings", {
     runModelDevelopment = runModelDevelopment,
     runCovariateSummary = runCovariateSummary
   )
-    
+
   expect_is(executeSettings, "executeSettings")
   expect_equal(executeSettings$runSplitData, runSplitData)
-  expect_equal(executeSettings$runSampleData , runSampleData)
+  expect_equal(executeSettings$runSampleData, runSampleData)
   expect_equal(executeSettings$runfeatureEngineering, runfeatureEngineering)
   expect_equal(executeSettings$runPreprocessData, runPreprocessData)
   expect_equal(executeSettings$runModelDevelopment, runModelDevelopment)
   expect_equal(executeSettings$runCovariateSummary, runCovariateSummary)
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = 12,
@@ -117,7 +114,7 @@ test_that("createExecuteSettings", {
       runCovariateSummary = runCovariateSummary
     )
   )
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
@@ -128,7 +125,7 @@ test_that("createExecuteSettings", {
       runCovariateSummary = runCovariateSummary
     )
   )
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
@@ -139,7 +136,7 @@ test_that("createExecuteSettings", {
       runCovariateSummary = runCovariateSummary
     )
   )
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
@@ -150,7 +147,7 @@ test_that("createExecuteSettings", {
       runCovariateSummary = runCovariateSummary
     )
   )
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
@@ -161,7 +158,7 @@ test_that("createExecuteSettings", {
       runCovariateSummary = runCovariateSummary
     )
   )
-  
+
   expect_error(
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
@@ -172,21 +169,17 @@ test_that("createExecuteSettings", {
       runCovariateSummary = 12
     )
   )
-  
 })
 
 
 
 test_that("createDefaultExecuteSettings", {
-  
   executeSettings <- createDefaultExecuteSettings()
   expect_is(executeSettings, "executeSettings")
-  expect_equal(executeSettings$runSplitData, T)
-  expect_equal(executeSettings$runSampleData , F)
-  expect_equal(executeSettings$runfeatureEngineering, F)
-  expect_equal(executeSettings$runPreprocessData, T)
-  expect_equal(executeSettings$runModelDevelopment, T)
-  expect_equal(executeSettings$runCovariateSummary, T)
-  
-  
+  expect_equal(executeSettings$runSplitData, TRUE)
+  expect_equal(executeSettings$runSampleData, FALSE)
+  expect_equal(executeSettings$runfeatureEngineering, FALSE)
+  expect_equal(executeSettings$runPreprocessData, TRUE)
+  expect_equal(executeSettings$runModelDevelopment, TRUE)
+  expect_equal(executeSettings$runCovariateSummary, TRUE)
 })

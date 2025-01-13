@@ -17,18 +17,16 @@
 library("testthat")
 context("AndromedaHelperFunctions")
 
-# add limitCovariatesToPopulation(covariateData, rowIds) test 
+# add limitCovariatesToPopulation(covariateData, rowIds) test
 
 
-# batcheRestrict test 
+# batcheRestrict test
 test_that("batchRestrict", {
-  
-  metaData <- attr(plpData$covariateData, 'metaData')
+  metaData <- attr(plpData$covariateData, "metaData")
   covariateData <- PatientLevelPrediction:::batchRestrict(plpData$covariateData, population, sizeN = 1000000)
-  testthat::expect_is(covariateData, 'CovariateData')
-  
-  expect_equal(names(metaData), names(attr(covariateData, 'metaData')))
-  
+  testthat::expect_is(covariateData, "CovariateData")
+
+  expect_equal(names(metaData), names(attr(covariateData, "metaData")))
 })
 
 

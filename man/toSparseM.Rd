@@ -31,6 +31,6 @@ This function converts the covariate file from ffdf in COO format into a sparse 
 the package Matrix
 }
 \examples{
-#TODO
+# TODO
 
 }

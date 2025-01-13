@@ -21,84 +21,66 @@ context("ParamChecks")
 
 
 test_that("checkBoolean", {
-  
   testthat::expect_error(checkBoolean(1))
-  testthat::expect_error(checkBoolean('tertet'))
-  
-  testthat::expect_equal(checkBoolean(T), T)
-  testthat::expect_equal(checkBoolean(F), T)
-  
-  
+  testthat::expect_error(checkBoolean("tertet"))
+
+  testthat::expect_equal(checkBoolean(TRUE), TRUE)
+  testthat::expect_equal(checkBoolean(FALSE), TRUE)
 })
 
 test_that("checkHigherEqual", {
-  
-  testthat::expect_error(checkHigherEqual(1,2))
-  testthat::expect_error(checkHigherEqual('tertet',1))
-  
-  testthat::expect_equal(checkHigherEqual(1,0), T)
-  testthat::expect_equal(checkHigherEqual(0,0), T)
-  
-  
+  testthat::expect_error(checkHigherEqual(1, 2))
+  testthat::expect_error(checkHigherEqual("tertet", 1))
+
+  testthat::expect_equal(checkHigherEqual(1, 0), TRUE)
+  testthat::expect_equal(checkHigherEqual(0, 0), TRUE)
 })
 
 
 
 test_that("checkLowerEqual", {
-  
-  testthat::expect_error(checkLowerEqual(2,1))
-  testthat::expect_error(checkLowerEqual('tertet',1))
-  
-  testthat::expect_equal(checkLowerEqual(0,1), T)
-  testthat::expect_equal(checkLowerEqual(0,0), T)
+  testthat::expect_error(checkLowerEqual(2, 1))
+  testthat::expect_error(checkLowerEqual("tertet", 1))
 
+  testthat::expect_equal(checkLowerEqual(0, 1), TRUE)
+  testthat::expect_equal(checkLowerEqual(0, 0), TRUE)
 })
 
 
 test_that("checkHigher", {
-  
-  testthat::expect_error(checkHigher(1,2))
-  testthat::expect_error(checkHigher(0,0))
-  testthat::expect_error(checkHigher('tertet',1))
-  
-  testthat::expect_equal(checkHigher(1,0), T)
-  
+  testthat::expect_error(checkHigher(1, 2))
+  testthat::expect_error(checkHigher(0, 0))
+  testthat::expect_error(checkHigher("tertet", 1))
+
+  testthat::expect_equal(checkHigher(1, 0), TRUE)
 })
 
 
 test_that("checkLower", {
-  
-  testthat::expect_error(checkLower(2,1))
-  testthat::expect_error(checkLower(0,0))
-  testthat::expect_error(checkLower('tertet',1))
-  
-  testthat::expect_equal(checkLower(0,1), T)
-  
+  testthat::expect_error(checkLower(2, 1))
+  testthat::expect_error(checkLower(0, 0))
+  testthat::expect_error(checkLower("tertet", 1))
+
+  testthat::expect_equal(checkLower(0, 1), TRUE)
 })
 
 test_that("checkNotNull", {
-  
   testthat::expect_error(checkNotNull(NULL))
-  
-  testthat::expect_equal(checkNotNull(0), T)
-  testthat::expect_equal(checkNotNull(T), T)
-  testthat::expect_equal(checkNotNull('yeryey'), T)
-  
+
+  testthat::expect_equal(checkNotNull(0), TRUE)
+  testthat::expect_equal(checkNotNull(TRUE), TRUE)
+  testthat::expect_equal(checkNotNull("yeryey"), TRUE)
 })
 
 
 test_that("checkIsClass", {
-  
-  testthat::expect_error(checkIsClass('dsdsds', 'double'))
-  
-  testthat::expect_equal(checkIsClass('dsdsds', "character"), T)
+  testthat::expect_error(checkIsClass("dsdsds", "double"))
 
+  testthat::expect_equal(checkIsClass("dsdsds", "character"), TRUE)
 })
 
 test_that("checkInStringVector", {
-  
-  testthat::expect_error(checkInStringVector('dsdsds', c('dsds','double')))
-  
-  testthat::expect_equal(checkInStringVector('dsdsds', c('dsdsds','double')), T)
-  
+  testthat::expect_error(checkInStringVector("dsdsds", c("dsds", "double")))
+
+  testthat::expect_equal(checkInStringVector("dsdsds", c("dsdsds", "double")), TRUE)
 })

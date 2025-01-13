@@ -4,7 +4,7 @@
 \alias{savePlpData}
 \title{Save the cohort data to folder}
 \usage{
-savePlpData(plpData, file, envir = NULL, overwrite = F)
+savePlpData(plpData, file, envir = NULL, overwrite = FALSE)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using

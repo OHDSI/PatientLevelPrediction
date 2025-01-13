@@ -87,7 +87,7 @@
 createLearningCurve <- function(
     plpData,
     outcomeId,
-    parallel = T,
+    parallel = TRUE,
     cores = 4,
     modelSettings,
     saveDirectory = getwd(),
@@ -100,16 +100,16 @@ createLearningCurve <- function(
     featureEngineeringSettings = createFeatureEngineeringSettings(),
     preprocessSettings = createPreprocessSettings(
       minFraction = 0.001,
-      normalize = T
+      normalize = TRUE
     ),
     logSettings = createLogSettings(),
     executeSettings = createExecuteSettings(
-      runSplitData = T,
-      runSampleData = F,
-      runfeatureEngineering = F,
-      runPreprocessData = T,
-      runModelDevelopment = T,
-      runCovariateSummary = F
+      runSplitData = TRUE,
+      runSampleData = FALSE,
+      runfeatureEngineering = FALSE,
+      runPreprocessData = TRUE,
+      runModelDevelopment = TRUE,
+      runCovariateSummary = FALSE
     )) {
   if (is.null(analysisId)) {
     analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", Sys.time())))
@@ -215,8 +215,6 @@ createLearningCurve <- function(
     names_from = "name",
     values_from = "value"
   )
-  # learningCurve <- reshape2::dcast(data = learningCurve,  trainFraction ~ name)
-
   endTime <- Sys.time()
   TotalExecutionElapsedTime <-
     as.numeric(difftime(endTime, ExecutionDateTime,
@@ -440,8 +438,6 @@ plotLearningCurve <- function(
       values_to = "value",
       names_to = "variable"
     )
-    # tidyLearningCurve <- reshape2::melt(as.data.frame(tidyLearningCurve), id.vars = c('trainFraction', 'Occurrences', 'Observations'))
-
     tidyLearningCurve$Dataset <- sapply(tidyLearningCurve$variable, function(x) strsplit(as.character(x), "_")[[1]][1])
 
 
@@ -476,7 +472,7 @@ plotLearningCurve <- function(
     ggplot2::theme_light()
 
   # save plot, if fucntion call provides a file name
-  if ((!is.null(fileName)) & (is.character(fileName))) {
+  if ((!is.null(fileName)) && (is.character(fileName))) {
     ggplot2::ggsave(fileName, plot, width = 5, height = 4.5, dpi = 400)
   }
 

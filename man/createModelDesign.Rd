@@ -16,7 +16,7 @@ createModelDesign(
   modelSettings = NULL,
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
     trainFraction = 0.75, splitSeed = 123, nfold = 3),
-  runCovariateSummary = T
+  runCovariateSummary = TRUE
 )
 }
 \arguments{
