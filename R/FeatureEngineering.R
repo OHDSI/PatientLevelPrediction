@@ -82,11 +82,14 @@ createUnivariateFeatureSelection <- function(k = 100) {
     "reticulate",
     reason = "This function requires the reticulate package to be installed"
   )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("This function requires the scikit-learn package to be installed")
-  })
+  tryCatch(
+    {
+      reticulate::import("sklearn")
+    },
+    error = function(e) {
+      stop("This function requires the scikit-learn package to be installed")
+    }
+  )
 
   checkIsClass(k, "integer")
   checkHigherEqual(k, 0)
@@ -115,11 +118,14 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
     "reticulate",
     reason = "This function requires the reticulate package to be installed"
   )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("This function requires the scikit-learn package to be installed")
-  })
+  tryCatch(
+    {
+      reticulate::import("sklearn")
+    },
+    error = function(e) {
+      stop("This function requires the scikit-learn package to be installed")
+    }
+  )
   checkIsClass(ntrees, c("numeric", "integer"))
   checkIsClass(maxDepth, c("numeric", "integer"))
   checkHigher(ntrees, 0)
@@ -223,7 +229,7 @@ splineMap <- function(
     as.data.frame()
 
   designMatrix <- splines::bs(
-    x = measurements$covariateValue, 
+    x = measurements$covariateValue,
     knots = knots[2:(length(knots) - 1)],
     Boundary.knots = knots[c(1, length(knots))]
   )
@@ -522,5 +528,283 @@ randomForestFeatureSelection <- function(
     featureEngeering
   )
 
+  return(trainData)
+}
+
+#' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
+#' @return An object of class \code{featureEngineeringSettings}
+#' @param type The type of normalization to use, either "minmax" or "robust"
+#' @return An object of class \code{featureEngineeringSettings}'
+#' @export
+createNormalizer <- function(type = "minmax") {
+  featureEngineeringSettings <- list(
+    type = type
+  )
+  checkIsClass(type, "character")
+  checkInStringVector(type, c("minmax", "robust"))
+  if (type == "minmax") {
+    attr(featureEngineeringSettings, "fun") <- "minMaxNormalize"
+  } else if (type == "robust") {
+    attr(featureEngineeringSettings, "fun") <- "robustNormalize"
+  }
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' A function that normalizes continous features to have values between 0 and 1
+#' @details uses value - min / (max - min) to normalize the data
+#' @param trainData The training data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param normalized Whether the data has already been normalized (bool)
+#' @return The normalized data
+#' @keywords internal
+minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
+  start <- Sys.time()
+  if (!normalized) {
+    ParallelLogger::logInfo("Starting min-max normalization of continuous features")
+    # fit the normalization
+    # find continuous features from trainData$covariateData$analysisRef
+    continousFeatures <- trainData$covariateData$analysisRef %>%
+      dplyr::filter(.data$isBinary == "N") %>%
+      dplyr::select("analysisId") %>%
+      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::pull(.data$covariateId)
+
+    # get max of each feature
+    trainData$covariateData$minMaxs <- trainData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(
+        max = max(.data$covariateValue, na.rm = TRUE),
+        min = min(.data$covariateValue, na.rm = TRUE)
+      ) %>%
+      dplyr::collect()
+    on.exit(trainData$covariateData$minMaxs <- NULL, add = TRUE)
+
+    # save the normalization
+    attr(featureEngineeringSettings, "minMaxs") <-
+      trainData$covariateData$minMaxs %>% dplyr::collect()
+
+    # apply the normalization to trainData
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(trainData$covariateData$minMaxs, by = "covariateId") %>%
+      # use ifelse to only normalize if min and max are not NA as is the case
+      # for continous features, else return original value
+      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
+        (.data$covariateValue - min) / (max - min),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("max", "min"))
+    trainData$covariateData$minMaxs <- NULL
+    normalized <- TRUE
+  } else {
+    ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
+    # apply the normalization to test data by using saved normalization values
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
+        by = "covariateId", copy = TRUE
+      ) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
+        (.data$covariateValue - min) / (max - min),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("max", "min"))
+  }
+  featureEngineering <- list(
+    funct = "minMaxNormalize",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      normalized = normalized
+    )
+  )
+
+  attr(trainData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished min-max normalization of continuous features in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
+  return(trainData)
+}
+
+#' A function that normalizes continous by the interquartile range and forces
+#' the resulting values to be between -3 and 3 with f(x) = x / sqrt(1 + (x/3)^2)
+#' @details uses (value - median) / iqr to normalize the data and then
+#' applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values.
+#' This forces the values to be between -3 and 3 while preserving the relative
+#' ordering of the values.
+#' based on https://arxiv.org/abs/2407.04491 for more details
+#' @param trainData The training data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param normalized Whether the data has already been normalized (bool)
+#' @return The normalized data
+#' @keywords internal
+robustNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
+  start <- Sys.time()
+  if (!normalized) {
+    ParallelLogger::logInfo("Starting robust normalization of continuous features")
+    # find continuous features from trainData$covariateData$analysisRef
+    continousFeatures <- trainData$covariateData$analysisRef %>%
+      dplyr::filter(.data$isBinary == "N") %>%
+      dplyr::select("analysisId") %>%
+      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::pull(.data$covariateId)
+
+    # get (25, 75)% quantiles of each feature
+    # sqlite (used by Andromeda) doesn't have quantile function, so we need to load the extension
+    # to get upper_quartile and lower_quartile_functions
+    RSQLite::initExtension(trainData$covariateData, "math")
+
+    trainData$covariateData$quantiles <- trainData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(
+        q25 = dplyr::sql("lower_quartile(covariateValue)"),
+        q75 = dplyr::sql("upper_quartile(covariateValue)"),
+        median = stats::median(.data$covariateValue, na.rm = TRUE)
+      ) %>%
+      dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+      dplyr::select(-c("q75", "q25")) %>%
+      dplyr::collect()
+    on.exit(trainData$covariateData$quantiles <- NULL, add = TRUE)
+
+    # save the normalization
+    attr(featureEngineeringSettings, "quantiles") <-
+      trainData$covariateData$quantiles %>% dplyr::collect()
+
+    # apply the normalization to trainData
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(trainData$covariateData$quantiles, by = "covariateId") %>%
+      # use ifelse to only normalize continous features
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+        (.data$covariateValue - .data$median) / .data$iqr,
+        .data$covariateValue
+      )) %>%
+      # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
+      # ref: https://arxiv.org/abs/2407.04491
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("median", "iqr"))
+    normalized <- TRUE
+  } else {
+    ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
+    # apply the normalization to test data by using saved normalization values
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
+        by = "covariateId", copy = TRUE
+      ) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+        (.data$covariateValue - .data$median) / .data$iqr,
+        .data$covariateValue
+      )) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("median", "iqr"))
+  }
+  featureEngineering <- list(
+    funct = "robustNormalize",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      normalized = normalized
+    )
+  )
+
+  attr(trainData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished robust normalization in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
+  return(trainData)
+}
+
+#' Create the settings for removing rare features
+#' @param ratio The minimum fraction of the training data that must have a
+#' feature for it to be included
+#' @return An object of class \code{featureEngineeringSettings}
+#' @export
+createRareFeatureRemover <- function(ratio = 0.001) {
+  checkIsClass(ratio, c("numeric"))
+  checkHigherEqual(ratio, 0)
+  checkLower(ratio, 1)
+  featureEngineeringSettings <- list(
+    ratio = ratio
+  )
+  attr(featureEngineeringSettings, "fun") <- "removeRareFeatures"
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' A function that removes rare features from the data
+#' @details removes features that are present in less than a certain fraction of the population
+#' @param trainData The data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param findRare Whether to find and remove rare features or remove them only (bool)
+#' @return The data with rare features removed
+#' @keywords internal
+removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare = FALSE) {
+  start <- Sys.time()
+  if (!findRare) {
+    ParallelLogger::logInfo(
+      "Removing features rarer than rate: ", featureEngineeringSettings$ratio,
+      " from the data"
+    )
+    rareFeatures <- trainData$covariateData$covariates %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(count = dplyr::n()) %>%
+      dplyr::collect()
+    rareFeatures <- rareFeatures %>%
+      dplyr::mutate(ratio = .data$count / (
+        trainData$covariateData$covariates %>%
+          dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
+          dplyr::pull()
+      )) %>%
+      dplyr::filter(.data$ratio <= featureEngineeringSettings$ratio) %>%
+      dplyr::pull(c("covariateId"))
+
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(!.data$covariateId %in% rareFeatures)
+    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+      dplyr::filter(!.data$covariateId %in% rareFeatures)
+
+    attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
+
+    findRare <- TRUE
+  } else {
+    ParallelLogger::logInfo(
+      "Applying rare feature removal with rate below: ",
+      featureEngineeringSettings$ratio, " to test data"
+    )
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(
+        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
+      )
+    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+      dplyr::filter(
+        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
+      )
+  }
+  featureEngineering <- list(
+    funct = "removeRareFeatures",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      findRare = findRare
+    )
+  )
+  attr(trainData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished rare feature removal in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
   return(trainData)
 }

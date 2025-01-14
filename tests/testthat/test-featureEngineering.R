@@ -20,7 +20,6 @@ context("FeatureEngineering")
 
 testFEFun <- function(type = "none") {
   result <- createFeatureEngineeringSettings(type = type)
-
   return(result)
 }
 
@@ -297,4 +296,75 @@ test_that("createStratifiedImputationSettings correct class", {
       dplyr::n_distinct(),
     numSubjects
   )
+})
+
+test_that("createNormalizer works", {
+  normalizer <- createNormalizer(type = "minmax")
+  expect_equal(normalizer$type, "minmax")
+  expect_equal(attr(normalizer, "fun"), "minMaxNormalize")
+  expect_s3_class(normalizer, "featureEngineeringSettings")
+
+  normalizer <- createNormalizer(type = "robust")
+  expect_equal(normalizer$type, "robust")
+
+  expect_error(createNormalizer(type = "mean"))
+  expect_error(createNormalizer(type = "median"))
+  expect_error(createNormalizer(type = "zscore"))
+  expect_error(createNormalizer(type = "none"))
+})
+
+test_that("normalization works", {
+  normalizer <- createNormalizer(type = "minmax")
+  addFeature <- function(data, covariateId, minValue, maxValue) {
+    data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
+    nSubjects <- nrow(data$labels)
+    Andromeda::appendToTable(
+      data$covariateData$covariates,
+      data.frame(
+        rowId = data$labels$rowId,
+        covariateId = rep(covariateId, nSubjects),
+        covariateValue = runif(nSubjects, minValue, maxValue)
+      )
+    )
+    Andromeda::appendToTable(
+      data$covariateData$covariateRef,
+      data.frame(
+        covariateId = covariateId,
+        covariateName = "testCovariate",
+        analysisId = 101,
+        conceptId = 1
+      )
+    )
+    Andromeda::appendToTable(
+      data$covariateData$analysisRef,
+      data.frame(
+        analysisId = 101,
+        analysisName = "testAnalysis",
+        domainId = "testDomain",
+        startDay = 0,
+        endDay = 0,
+        isBinary = "N",
+        missingMeansZero = "N"
+      )
+    )
+    return(data)
+  }
+  data <- addFeature(tinyTrainData, 12101, -10, 10)
+  normalizedData <- minMaxNormalize(data, normalizer)
+
+  expect_equal(
+    normalizedData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 12101) %>%
+      dplyr::pull(.data$covariateValue) %>%
+      range(),
+    c(0, 1)
+  )
+
+  normalizer <- createNormalizer(type = "robust")
+  data <- addFeature(tinyTrainData, 12101, -10, 10)
+  newTrainData <- robustNormalize(data, normalizer)
+  feature <- newTrainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(feature >= -3) && all(feature <= 3))
 })
