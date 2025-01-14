@@ -15,7 +15,7 @@ robustNormalize(trainData, featureEngineeringSettings, normalized = FALSE)
 \item{normalized}{Whether the data has already been normalized (bool)}
 }
 \value{
-The normalized data'
+The normalized data
 }
 \description{
 A function that normalizes continous by the interquartile range and forces

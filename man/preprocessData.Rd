@@ -14,7 +14,7 @@ any required feature engineering}
 \item{preprocessSettings}{The settings for the preprocessing created by \code{createPreprocessSettings}}
 }
 \value{
-The data processed
+the processed data
 }
 \description{
 A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data
@@ -23,4 +23,7 @@ and remove rare or redundant features
 \details{
 Returns an object of class \code{covariateData} that has been processed
 }
+\keyword{The}
+\keyword{data}
 \keyword{internal}
+\keyword{processed}
