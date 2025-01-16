@@ -147,6 +147,7 @@ MapIds <- function(
       covariateId = covariateData$covariates %>%
         dplyr::inner_join(covariateData$rowMap, by = "rowId") %>% # first restrict the covariates to the rowMap$rowId
         dplyr::distinct(.data$covariateId) %>%
+        dplyr::arrange(.data$covariateId) %>%
         dplyr::pull()
     )
     mapping$columnId <- 1:nrow(mapping)

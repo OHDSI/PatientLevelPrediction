@@ -142,7 +142,7 @@ test_that("toSparseM", {
   sparseMat.test <- toSparseM(FplpData, Fpopulation, map = NULL)
   matrix.real <- matrix(rep(0, 5 * 7), ncol = 7)
   x <- c(1, 1, 1, 3, 3, 3, 5, 5)
-  y <- c(1, 2, 3, 2, 4, 5, 6, 7)
+  y <- c(5, 6, 7, 1, 2, 7, 3, 4)
   for (a in 1:8) matrix.real[x[a], y[a]] <- 1
   expect_that(as.matrix(sparseMat.test$dataMatrix), is_equivalent_to(matrix.real))
 

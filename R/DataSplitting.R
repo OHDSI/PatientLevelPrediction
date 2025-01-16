@@ -281,11 +281,11 @@ dataSummary <- function(data) {
 
 
   result <- data$Train$covariateData$covariates %>%
-    dplyr::group_by(.data$covariateId) %>%
-    dplyr::summarise(N = length(.data$covariateValue)) %>%
-    dplyr::collect()
+    dplyr::distinct(.data$covariateId) %>%
+    dplyr::count() %>%
+    dplyr::pull()
 
-  ParallelLogger::logInfo(paste0(nrow(result), " covariates in train data"))
+  ParallelLogger::logInfo(paste0(result, " covariates in train data"))
 
   if ("Test" %in% names(data)) {
     ParallelLogger::logInfo("Test Set:")
