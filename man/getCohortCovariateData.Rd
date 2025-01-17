@@ -6,6 +6,7 @@
 \usage{
 getCohortCovariateData(
   connection,
+  tempEmulationSchema = NULL,
   oracleTempSchema = NULL,
   cdmDatabaseSchema,
   cdmVersion = "5",
@@ -20,7 +21,9 @@ getCohortCovariateData(
 \arguments{
 \item{connection}{The database connection}
 
-\item{oracleTempSchema}{The temp schema if using oracle}
+\item{tempEmulationSchema}{The schema to use for temp tables}
+
+\item{oracleTempSchema}{DEPRECATED The temp schema if using oracle}
 
 \item{cdmDatabaseSchema}{The schema of the OMOP CDM data}
 
