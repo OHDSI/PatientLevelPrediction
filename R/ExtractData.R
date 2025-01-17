@@ -316,7 +316,7 @@ getPlpData <- function(
 
   covariateData <- FeatureExtraction::getDbCovariateData(
     connection = connection,
-    oracleTempSchema = databaseDetails$tempEmulationSchema,
+    tempEmulationSchema = databaseDetails$tempEmulationSchema,
     cdmDatabaseSchema = databaseDetails$cdmDatabaseSchema,
     cdmVersion = databaseDetails$cdmVersion,
     cohortTable = "#cohort_person",
