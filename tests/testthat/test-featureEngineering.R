@@ -364,7 +364,10 @@ test_that("normalization works", {
   testFeature <- testNormalizedData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
-  expect_true(all(testFeature >= 0) && all(testFeature <= 1))
+  trainMin <- min(normalizedData$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
+  trainMax <- max(normalizedData$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
+  testNormFeature <- (testFeature - trainMin) / (trainMax - trainMin)
+  expect_equal(testFeature, testNormFeature)
 
   normalizer <- createNormalizer(type = "robust")
   data <- addFeature(tinyTrainData, 12101, -10, 10)
@@ -377,8 +380,13 @@ test_that("normalization works", {
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
   expect_true(all(feature >= -3) && all(feature <= 3))
+  trainFeature <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
   testFeature <- newTestData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
+  testNormFeature <- (testFeature - median(trainFeature)) / IQR(trainFeature)
+  testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 2)^2)
   expect_true(all(testFeature >= -3) && all(testFeature <= 3))
 })

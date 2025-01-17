@@ -562,17 +562,22 @@ createNormalizer <- function(type = "minmax") {
 minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
   start <- Sys.time()
   if (!normalized) {
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     # fit the normalization
     # find continuous features from trainData$covariateData$analysisRef
-    continousFeatures <- trainData$covariateData$analysisRef %>%
+    continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
       dplyr::select("analysisId") %>%
-      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
     # get max of each feature
-    trainData$covariateData$minMaxs <- trainData$covariateData$covariates %>%
+    outData$covariateData$minMaxs <- outData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% continousFeatures) %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(
@@ -580,15 +585,15 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
         min = min(.data$covariateValue, na.rm = TRUE)
       ) %>%
       dplyr::collect()
-    on.exit(trainData$covariateData$minMaxs <- NULL, add = TRUE)
+    on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
 
     # save the normalization
     attr(featureEngineeringSettings, "minMaxs") <-
-      trainData$covariateData$minMaxs %>% dplyr::collect()
+      outData$covariateData$minMaxs %>% dplyr::collect()
 
     # apply the normalization to trainData
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$minMaxs, by = "covariateId") %>%
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(outData$covariateData$minMaxs, by = "covariateId") %>%
       # use ifelse to only normalize if min and max are not NA as is the case
       # for continous features, else return original value
       dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
@@ -596,12 +601,17 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
         .data$covariateValue
       )) %>%
       dplyr::select(-c("max", "min"))
-    trainData$covariateData$minMaxs <- NULL
+    outData$covariateData$minMaxs <- NULL
     normalized <- TRUE
   } else {
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
     # apply the normalization to test data by using saved normalization values
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
         by = "covariateId", copy = TRUE
       ) %>%
@@ -619,14 +629,14 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     )
   )
 
-  attr(trainData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
+  attr(outData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
     featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished min-max normalization of continuous features in ",
     signif(delta, 3), " ", attr(delta, "units")
   ))
-  return(trainData)
+  return(outData)
 }
 
 #' A function that normalizes continous by the interquartile range and forces
@@ -645,19 +655,24 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
   start <- Sys.time()
   if (!normalized) {
     ParallelLogger::logInfo("Starting robust normalization of continuous features")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
     # find continuous features from trainData$covariateData$analysisRef
-    continousFeatures <- trainData$covariateData$analysisRef %>%
+    continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
       dplyr::select("analysisId") %>%
-      dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
     # get (25, 75)% quantiles of each feature
     # sqlite (used by Andromeda) doesn't have quantile function, so we need to load the extension
     # to get upper_quartile and lower_quartile_functions
-    RSQLite::initExtension(trainData$covariateData, "math")
+    RSQLite::initExtension(outData$covariateData, "math")
 
-    trainData$covariateData$quantiles <- trainData$covariateData$covariates %>%
+    outData$covariateData$quantiles <- outData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% continousFeatures) %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(
@@ -668,15 +683,15 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
       dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
       dplyr::select(-c("q75", "q25")) %>%
       dplyr::collect()
-    on.exit(trainData$covariateData$quantiles <- NULL, add = TRUE)
+    on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
 
     # save the normalization
     attr(featureEngineeringSettings, "quantiles") <-
-      trainData$covariateData$quantiles %>% dplyr::collect()
+      outData$covariateData$quantiles %>% dplyr::collect()
 
     # apply the normalization to trainData
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-      dplyr::left_join(trainData$covariateData$quantiles, by = "covariateId") %>%
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
       # use ifelse to only normalize continous features
       dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
         (.data$covariateValue - .data$median) / .data$iqr,
@@ -692,8 +707,13 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     normalized <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
     # apply the normalization to test data by using saved normalization values
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
         by = "covariateId", copy = TRUE
       ) %>%
@@ -715,14 +735,14 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     )
   )
 
-  attr(trainData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
+  attr(outData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
     featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished robust normalization in ",
     signif(delta, 3), " ", attr(delta, "units")
   ))
-  return(trainData)
+  return(outData)
 }
 
 #' Create the settings for removing rare features
