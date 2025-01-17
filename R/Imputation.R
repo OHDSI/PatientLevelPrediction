@@ -100,7 +100,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
   if (!done) {
     ParallelLogger::logInfo("Imputing missing values with simpleImputer using: ",
-      featureEngineeringSettings$method, "and missing threshold: ",
+      featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
@@ -177,7 +177,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying imputation to test data with simpleImputer
-      using method: ", featureEngineeringSettings$method, "and missing threshold: ",
+      using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
@@ -315,7 +315,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying imputation to test data with iterativeImputer
-      using method: ", featureEngineeringSettings$method, "and missing threshold: ",
+      using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
@@ -336,7 +336,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
         by = "analysisId"
       ) %>%
       dplyr::mutate(isBinary = .data$isBinary == "Y") %>%
-      dplyr::select(.data$covariateId, .data$isBinary) %>%
+      dplyr::select("covariateId", "isBinary") %>%
       dplyr::compute()
     on.exit(outputData$covariateData$covariateIsBinary <- NULL, add = TRUE)
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%

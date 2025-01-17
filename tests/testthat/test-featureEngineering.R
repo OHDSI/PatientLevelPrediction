@@ -355,7 +355,7 @@ test_that("normalization works", {
   testNormData <- addFeature(testData, 12101, -10, 10)
   metaData <- attr(normalizedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings
-  testNormalizedData <- minMaxNormalize(testNormData, testSettings, normalized = TRUE)
+  testNormalizedData <- minMaxNormalize(testNormData, testSettings, done = TRUE)
 
   feature <- normalizedData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
@@ -375,7 +375,7 @@ test_that("normalization works", {
   newTrainData <- robustNormalize(data, normalizer)
   metaData <- attr(newTrainData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$robustNormalize$settings$featureEngineeringSettings
-  newTestData <- robustNormalize(testNormData, testSettings, normalized = TRUE)
+  newTestData <- robustNormalize(testNormData, testSettings, done = TRUE)
   feature <- newTrainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
