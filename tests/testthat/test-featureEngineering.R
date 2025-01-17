@@ -352,19 +352,33 @@ test_that("normalization works", {
   data <- addFeature(tinyTrainData, 12101, -10, 10)
   normalizedData <- minMaxNormalize(data, normalizer)
 
-  expect_equal(
-    normalizedData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId == 12101) %>%
-      dplyr::pull(.data$covariateValue) %>%
-      range(),
-    c(0, 1)
-  )
+  testNormData <- addFeature(testData, 12101, -10, 10)
+  metaData <- attr(normalizedData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings
+  testNormalizedData <- minMaxNormalize(testNormData, testSettings, normalized = TRUE)
+
+  feature <- normalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(feature >= 0) && all(feature <= 1))
+  testFeature <- testNormalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(testFeature >= 0) && all(testFeature <= 1))
 
   normalizer <- createNormalizer(type = "robust")
   data <- addFeature(tinyTrainData, 12101, -10, 10)
+  testNormData <- addFeature(testData, 12101, -10, 10)
   newTrainData <- robustNormalize(data, normalizer)
+  metaData <- attr(newTrainData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$robustNormalize$settings$featureEngineeringSettings
+  newTestData <- robustNormalize(testNormData, testSettings, normalized = TRUE)
   feature <- newTrainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
   expect_true(all(feature >= -3) && all(feature <= 3))
+  testFeature <- newTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(testFeature >= -3) && all(testFeature <= 3))
 })
