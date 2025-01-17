@@ -4,14 +4,14 @@
 \alias{minMaxNormalize}
 \title{A function that normalizes continous features to have values between 0 and 1}
 \usage{
-minMaxNormalize(trainData, featureEngineeringSettings, normalized = FALSE)
+minMaxNormalize(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
 \item{trainData}{The training data to be normalized}
 
 \item{featureEngineeringSettings}{The settings for the normalization}
 
-\item{normalized}{Whether the data has already been normalized (bool)}
+\item{done}{Whether the data has already been normalized (bool)}
 }
 \value{
 The normalized data

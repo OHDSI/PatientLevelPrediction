@@ -4,14 +4,14 @@
 \alias{removeRareFeatures}
 \title{A function that removes rare features from the data}
 \usage{
-removeRareFeatures(trainData, featureEngineeringSettings, findRare = FALSE)
+removeRareFeatures(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
 \item{trainData}{The data to be normalized}
 
 \item{featureEngineeringSettings}{The settings for the normalization}
 
-\item{findRare}{Whether to find and remove rare features or remove them only (bool)}
+\item{done}{Whether to find and remove rare features or remove them only (bool)}
 }
 \value{
 The data with rare features removed

@@ -556,12 +556,12 @@ createNormalizer <- function(type = "minmax") {
 #' @details uses value - min / (max - min) to normalize the data
 #' @param trainData The training data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param normalized Whether the data has already been normalized (bool)
+#' @param done Whether the data has already been normalized (bool)
 #' @return The normalized data
 #' @keywords internal
-minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
+minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
-  if (!normalized) {
+  if (!done) {
     outData <- list(
       labels = trainData$labels,
       folds = trainData$folds,
@@ -602,7 +602,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
       )) %>%
       dplyr::select(-c("max", "min"))
     outData$covariateData$minMaxs <- NULL
-    normalized <- TRUE
+    done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
     outData <- list(
@@ -625,7 +625,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     funct = "minMaxNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      normalized = normalized
+      done = done
     )
   )
 
@@ -648,12 +648,12 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, normalized = 
 #' based on https://arxiv.org/abs/2407.04491 for more details
 #' @param trainData The training data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param normalized Whether the data has already been normalized (bool)
+#' @param done Whether the data has already been normalized (bool)
 #' @return The normalized data
 #' @keywords internal
-robustNormalize <- function(trainData, featureEngineeringSettings, normalized = FALSE) {
+robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
-  if (!normalized) {
+  if (!done) {
     ParallelLogger::logInfo("Starting robust normalization of continuous features")
     outData <- list(
       labels = trainData$labels,
@@ -704,7 +704,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
         .data$covariateValue
       )) %>%
       dplyr::select(-c("median", "iqr"))
-    normalized <- TRUE
+    done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
     outData <- list(
@@ -731,7 +731,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
     funct = "robustNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      normalized = normalized
+      done = done
     )
   )
 
@@ -746,16 +746,16 @@ robustNormalize <- function(trainData, featureEngineeringSettings, normalized = 
 }
 
 #' Create the settings for removing rare features
-#' @param ratio The minimum fraction of the training data that must have a
+#' @param threshold The minimum fraction of the training data that must have a
 #' feature for it to be included
 #' @return An object of class \code{featureEngineeringSettings}
 #' @export
-createRareFeatureRemover <- function(ratio = 0.001) {
-  checkIsClass(ratio, c("numeric"))
-  checkHigherEqual(ratio, 0)
-  checkLower(ratio, 1)
+createRareFeatureRemover <- function(threshold = 0.001) {
+  checkIsClass(threshold, c("numeric"))
+  checkHigherEqual(threshold, 0)
+  checkLower(threshold, 1)
   featureEngineeringSettings <- list(
-    ratio = ratio
+    threshold = threshold
   )
   attr(featureEngineeringSettings, "fun") <- "removeRareFeatures"
 
@@ -767,47 +767,57 @@ createRareFeatureRemover <- function(ratio = 0.001) {
 #' @details removes features that are present in less than a certain fraction of the population
 #' @param trainData The data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param findRare Whether to find and remove rare features or remove them only (bool)
+#' @param done Whether to find and remove rare features or remove them only (bool)
 #' @return The data with rare features removed
 #' @keywords internal
-removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare = FALSE) {
+removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
-  if (!findRare) {
+  if (!done) {
     ParallelLogger::logInfo(
-      "Removing features rarer than rate: ", featureEngineeringSettings$ratio,
+      "Removing features rarer than threshold: ", featureEngineeringSettings$threshold,
       " from the data"
     )
-    rareFeatures <- trainData$covariateData$covariates %>%
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(count = dplyr::n()) %>%
       dplyr::collect()
     rareFeatures <- rareFeatures %>%
       dplyr::mutate(ratio = .data$count / (
-        trainData$covariateData$covariates %>%
+        outData$covariateData$covariates %>%
           dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
           dplyr::pull()
       )) %>%
-      dplyr::filter(.data$ratio <= featureEngineeringSettings$ratio) %>%
+      dplyr::filter(.data$ratio <= featureEngineeringSettings$threshold) %>%
       dplyr::pull(c("covariateId"))
 
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(!.data$covariateId %in% rareFeatures)
-    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
       dplyr::filter(!.data$covariateId %in% rareFeatures)
 
     attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
 
-    findRare <- TRUE
+    done <- TRUE
   } else {
     ParallelLogger::logInfo(
       "Applying rare feature removal with rate below: ",
-      featureEngineeringSettings$ratio, " to test data"
+      featureEngineeringSettings$threshold, " to test data"
     )
-    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
       )
-    trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
       )
@@ -816,15 +826,15 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, findRare =
     funct = "removeRareFeatures",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      findRare = findRare
+      done = done
     )
   )
-  attr(trainData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
+  attr(outData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
     featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished rare feature removal in ",
     signif(delta, 3), " ", attr(delta, "units")
   ))
-  return(trainData)
+  return(outData)
 }

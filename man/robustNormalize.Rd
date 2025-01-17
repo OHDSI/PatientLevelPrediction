@@ -5,14 +5,14 @@
 \title{A function that normalizes continous by the interquartile range and forces
 the resulting values to be between -3 and 3 with f(x) = x / sqrt(1 + (x/3)^2)}
 \usage{
-robustNormalize(trainData, featureEngineeringSettings, normalized = FALSE)
+robustNormalize(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
 \item{trainData}{The training data to be normalized}
 
 \item{featureEngineeringSettings}{The settings for the normalization}
 
-\item{normalized}{Whether the data has already been normalized (bool)}
+\item{done}{Whether the data has already been normalized (bool)}
 }
 \value{
 The normalized data

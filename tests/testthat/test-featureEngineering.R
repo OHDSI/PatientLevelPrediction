@@ -390,3 +390,31 @@ test_that("normalization works", {
   testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 2)^2)
   expect_true(all(testFeature >= -3) && all(testFeature <= 3))
 })
+
+test_that("createRareFeatureRemover works", {
+  remover <- createRareFeatureRemover(threshold = 0.1)
+  expect_equal(remover$threshold, 0.1)
+  expect_equal(attr(remover, "fun"), "removeRareFeatures")
+
+  expect_error(createRareFeatureRemover(threshold = -1))
+  expect_error(createRareFeatureRemover(threshold = "0.5"))
+  expect_error(createRareFeatureRemover(threshold = 1))
+})
+
+test_that("Removing rare features works", {
+  remover <- createRareFeatureRemover(threshold = 0.1)
+
+  removedData <- removeRareFeatures(tinyTrainData, remover)
+  expect_true(
+    removedData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      dplyr::n_distinct() <= 
+      tinyTrainData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      dplyr::n_distinct()
+  )
+  metaData <- attr(removedData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$removeRare$settings$featureEngineeringSettings
+
+  removedTestData <- removeRareFeatures(testData, remover, done = TRUE)
+})

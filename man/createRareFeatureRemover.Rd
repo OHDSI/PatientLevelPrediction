@@ -4,10 +4,10 @@
 \alias{createRareFeatureRemover}
 \title{Create the settings for removing rare features}
 \usage{
-createRareFeatureRemover(ratio = 0.001)
+createRareFeatureRemover(threshold = 0.001)
 }
 \arguments{
-\item{ratio}{The minimum fraction of the training data that must have a
+\item{threshold}{The minimum fraction of the training data that must have a
 feature for it to be included}
 }
 \value{
