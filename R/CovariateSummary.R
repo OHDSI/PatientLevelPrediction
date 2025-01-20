@@ -48,7 +48,7 @@ covariateSummary <- function(
     variableImportance = NULL,
     featureEngineering = NULL) {
   start <- Sys.time()
-  ParallelLogger::logInfo(paste0("Calculating covariate summary @ ", start)
+  ParallelLogger::logInfo(paste0("Calculating covariate summary @ ", start))
   ParallelLogger::logInfo("This can take a while...")
 
   if (missing(covariateData)) {
