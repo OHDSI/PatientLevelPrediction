@@ -441,7 +441,7 @@ test_that("Existing data splitter works", {
   )
 
   # test only old people in test
-  expect_equal(
+  expect_equal( 
     length(ageSplit$Test$labels$rowId),
     sum(age > 43)
   )
@@ -455,4 +455,15 @@ test_that("Existing data splitter works", {
     length(intersect(ageSplit$Test$labels$rowId, ageSplit$Train$labels$rowId)),
     0
   )
+})
+
+test_that("Outcome options works", {
+  testPop <- data.frame(outcomeCount = sample(c(0, 1), 9, replace = TRUE))
+  # regular plp outcome check
+  expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3))
+
+  withr::with_options(list("plp.outcomes" = 100), {
+    testPop <- data.frame(outcomeCount = sample(c(0, 1), 90, replace = TRUE))
+    expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3))
+  })
 })

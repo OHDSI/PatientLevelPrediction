@@ -315,18 +315,7 @@ randomSplitter <- function(population, splitSettings) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
-
-  if (length(table(population$outcomeCount)) <= 1 ||
-    sum(population$outcomeCount > 0) < 10) {
-    stop("Outcome only occurs in fewer than 10 people or only one class")
-  }
-
-  if (floor(sum(population$outcomeCount > 0) * train / nfold) < 5) {
-    stop(paste0("Insufficient (", sum(population$outcomeCount > 0), ")
-      outcomes for choosen nfold value, please reduce"))
-  }
-
-
+  checkOutcomes(population, train, nfold)
   ParallelLogger::logInfo(paste0(
     "Creating a ",
     test * 100,
@@ -596,4 +585,26 @@ existingSplitter <- function(population, splitSettings) {
     stop("Not all rowIds in splitIds are in the population")
   }
   return(splitIds)
+}
+
+checkOutcomes <- function(population, train, nfold) {
+  if (!is.null(options("plp.outcomes")[[1]])) {
+    if (sum(population$outcomeCount > 0) < options("plp.outcomes")[[1]]) {
+      stop("Outcome count is less than specified option plp.outcomes: ", 
+        options("plp.outcomes")[[1]])
+    }
+
+  } else {
+    # plp default minimum outcomes, less < 10 in total or less than 5 in train folds
+    if (length(table(population$outcomeCount)) <= 1 ||
+      sum(population$outcomeCount > 0) < 10) {
+      stop("Outcome only occurs in fewer than 10 people or only one class")
+    }
+
+    if (floor(sum(population$outcomeCount > 0) * train / nfold) < 5) {
+      stop(paste0("Insufficient (", sum(population$outcomeCount > 0), ")
+        outcomes for choosen nfold value, please reduce"))
+    } 
+  }
+  return(invisible(TRUE))
 }
