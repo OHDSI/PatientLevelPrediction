@@ -149,6 +149,7 @@ createExistingSplitSettings <- function(splitIds) {
 splitData <- function(plpData = plpData,
                       population = population,
                       splitSettings = splitSettings) {
+  start <- Sys.time()
   fun <- attr(splitSettings, "fun")
   args <- list(
     population = population,
@@ -260,6 +261,8 @@ splitData <- function(plpData = plpData,
   }
 
   class(result) <- "splitData"
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Data split in ", delta, " ", attr(delta, "units"))
   return(result)
 }
 

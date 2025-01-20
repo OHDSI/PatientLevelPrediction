@@ -31,6 +31,7 @@
 
 #' @export
 evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
+  start <- Sys.time()
   # checking inputs
   # ========================================
   modelType <- attr(prediction, "metaData")$modelType
@@ -138,7 +139,8 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   )
 
   class(result) <- "plpEvaluation"
-
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Time to calculate evaluation metrics: ", delta, " ", attr(delta, "units"))
   return(result)
 }
 

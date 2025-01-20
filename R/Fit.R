@@ -55,6 +55,7 @@ fitPlp <- function(
     search = "grid",
     analysisId,
     analysisPath) {
+  start <- Sys.time()
   if (is.null(trainData)) {
     stop("trainData is NULL")
   }
@@ -86,8 +87,9 @@ fitPlp <- function(
   # adding trainDetails databaseId to all classifiers
   # TODO - move other details into fit
   plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
-
   class(plpModel) <- "plpModel"
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Time to fit model: ", delta, " ", attr(delta, "units"))
 
   return(plpModel)
 }
