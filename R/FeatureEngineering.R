@@ -17,6 +17,7 @@
 
 
 featureEngineer <- function(data, featureEngineeringSettings) {
+  start <- Sys.time()
   ParallelLogger::logInfo("Starting Feature Engineering")
 
   # if a single setting, make it a list
@@ -35,9 +36,8 @@ featureEngineer <- function(data, featureEngineeringSettings) {
   }
 
   attr(data, "metaData")$featureEngineeringSettings <- featureEngineeringSettings
-
-  ParallelLogger::logInfo("Done Feature Engineering")
-
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Feature Engineering completed in ", delta, " ", attr(delta, "units"))
   return(data)
 }
 

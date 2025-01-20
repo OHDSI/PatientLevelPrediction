@@ -169,6 +169,7 @@ createStudyPopulation <- function(
     outcomeId,
     populationSettings,
     population = NULL) {
+  start <- Sys.time()
   checkIsClass(populationSettings, "populationSettings")
 
   binary <- populationSettings$binary
@@ -466,6 +467,8 @@ createStudyPopulation <- function(
   population <- as.data.frame(population)
 
   attr(population, "metaData") <- metaData
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Population created in ", delta, " ", attr(delta, "units"))
   return(population)
 }
 
