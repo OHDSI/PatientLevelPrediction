@@ -71,7 +71,7 @@
       <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
     </li>
     <li>
-      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting</a>
     </li>
     <li>
       <a href="../articles/BenchmarkTasks.html">Benchmark Tasks</a>
@@ -89,13 +89,13 @@
       <a href="../articles/ClinicalModels.html">Clinical Models</a>
     </li>
     <li>
-      <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
+      <a href="../articles/ConstrainedPredictors.html">Constrained Predictors</a>
     </li>
     <li>
       <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
     </li>
     <li>
-      <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
+      <a href="../articles/CreatingNetworkStudies.html">Making patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -153,17 +153,13 @@ Jenna M. Reps, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2025-01-20</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/CreatingLearningCurves.Rmd" class="external-link"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/448-docs/vignettes/CreatingLearningCurves.Rmd" class="external-link"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
       <div class="hidden name"><code>CreatingLearningCurves.Rmd</code></div>
 
     </div>
 
     
     
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Creating Learning Curves}
--->
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -183,7 +179,7 @@ performance by training a sequence of prediction models on successively
 larger subsets of the training set. A learning curve plot can also help
 in diagnosing a bias or variance problem as explained below.</p>
 <div class="float">
-<img src="learningCurve.png" alt="Learning curve example."><div class="figcaption">Learning curve example.</div>
+<img src="images/learningCurve.avif" alt="Learning curve example."><div class="figcaption">Learning curve example.</div>
 </div>
 <p>Figure 1, shows an example of learning curve plot in which the
 vertical axis represents the model performance and the horizontal axis
@@ -210,7 +206,7 @@ plateaued and, thus, the model is not saturated yet. Therefore, adding
 more data will decrease the gap between training set and testing set,
 which is the main indicator for a high variance problem.</p>
 <div class="float">
-<img src="learningCurveVariance.png" alt="Prediction model suffering from high variance."><div class="figcaption">Prediction model suffering from high
+<img src="images/learningCurveVariance.avif" alt="Prediction model suffering from high variance."><div class="figcaption">Prediction model suffering from high
 variance.</div>
 </div>
 <p>Furthermore, we can observe high bias (underfitting) if a prediction
@@ -222,7 +218,7 @@ model performance. Choosing another prediction algorithm that can find
 more complex (for example non-linear) relationships in the data may be
 an alternative approach to consider in this high bias situation.</p>
 <div class="float">
-<img src="learningCurveBias.png" alt="Prediction model suffering from high bias."><div class="figcaption">Prediction model suffering from high bias.</div>
+<img src="images/learningCurveBias.avif" alt="Prediction model suffering from high bias."><div class="figcaption">Prediction model suffering from high bias.</div>
 </div>
 </div>
 <div class="section level2">
@@ -274,10 +270,7 @@ your training set contains the number of events specified.</p>
 <span>  splitSeed <span class="op">=</span> <span class="fl">1000</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">trainFractions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.8</span>, <span class="fl">0.1</span><span class="op">)</span> <span class="co"># Create eight training set fractions</span></span>
-<span></span>
-<span><span class="co"># alternatively use a sequence of training events by uncommenting the line below.</span></span>
-<span><span class="co"># trainEvents &lt;- seq(100, 5000, 100)</span></span></code></pre></div>
+<span><span class="va">trainFractions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.8</span>, <span class="fl">0.1</span><span class="op">)</span> <span class="co"># Create eight training set fractions</span></span></code></pre></div>
 <p>Create the learning curve object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createLearningCurve.html">createLearningCurve</a></span><span class="op">(</span></span>
@@ -322,7 +315,7 @@ and databases.</p>
 <span>  plotSubtitle <span class="op">=</span> <span class="st">"AUROC performance"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="learningCurvePlot.png" alt="Learning curve plot."><div class="figcaption">Learning curve plot.</div>
+<img src="images/learningCurvePlot.avif" alt="Learning curve plot."><div class="figcaption">Learning curve plot.</div>
 </div>
 </div>
 <div class="section level2">

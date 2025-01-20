@@ -71,7 +71,7 @@
       <a href="../articles/AddingCustomSamples.html">Adding Custom Sampling Functions</a>
     </li>
     <li>
-      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting Functions</a>
+      <a href="../articles/AddingCustomSplitting.html">Adding Custom Data Splitting</a>
     </li>
     <li>
       <a href="../articles/BenchmarkTasks.html">Benchmark Tasks</a>
@@ -89,13 +89,13 @@
       <a href="../articles/ClinicalModels.html">Clinical Models</a>
     </li>
     <li>
-      <a href="../articles/ConstrainedPredictors.html">Constrained predictors</a>
+      <a href="../articles/ConstrainedPredictors.html">Constrained Predictors</a>
     </li>
     <li>
       <a href="../articles/CreatingLearningCurves.html">Creating Learning Curves</a>
     </li>
     <li>
-      <a href="../articles/CreatingNetworkStudies.html">Making  patient-level predictive network study packages</a>
+      <a href="../articles/CreatingNetworkStudies.html">Making patient-level predictive network study packages</a>
     </li>
     <li>
       <a href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a>
@@ -153,17 +153,18 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2025-01-20</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/448-docs/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="hidden name"><code>BuildingPredictiveModels.Rmd</code></div>
 
     </div>
 
     
     
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Building patient-level predictive models}
--->
+<style type="text/css">
+img {
+  max-width: 100%;
+}
+</style>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -207,7 +208,7 @@ in time (t = 0) will experience some outcome during a time-at-risk.
 Prediction is done using only information about the patients in an
 observation window prior to that moment in time.</p>
 <div class="float">
-<img src="Figure1.webp" alt="The prediction problem"><div class="figcaption">The prediction problem</div>
+<img src="./images/Figure1.avif" alt="The prediction problem"><div class="figcaption">The prediction problem</div>
 </div>
 <p>As shown in Figure 2, to define a prediction problem we have to
 define t=0 by a Target Cohort (T), the outcome we like to predict by an
@@ -217,10 +218,10 @@ observational datasets to perform internal and external validation. This
 conceptual framework works for all type of prediction problems, for
 example those presented in Figure 3.</p>
 <div class="float">
-<img src="studydesign.webp" alt="Design choices"><div class="figcaption">Design choices</div>
+<img src="./images/studydesign.avif" alt="Design choices"><div class="figcaption">Design choices</div>
 </div>
 <div class="float">
-<img src="problems.webp" alt="Examples of prediction problems"><div class="figcaption">Examples of prediction problems</div>
+<img src="./images/problems.avif" alt="Examples of prediction problems"><div class="figcaption">Examples of prediction problems</div>
 </div>
 <p>This vignette describes how you can use the
 <code>PatientLevelPrediction</code> package to build patient-level
@@ -681,7 +682,7 @@ problem.</p>
 <h4 id="atlas-cohort-builder">ATLAS cohort builder<a class="anchor" aria-label="anchor" href="#atlas-cohort-builder"></a>
 </h4>
 <div class="float">
-<img src="example1%2FATLAS_T.webp" alt="Figure 4: Target Cohort Atrial Fibrillation"><div class="figcaption">Figure 4: Target Cohort Atrial
+<img src="example1/ATLAS_T.avif" alt="Figure 4: Target Cohort Atrial Fibrillation"><div class="figcaption">Figure 4: Target Cohort Atrial
 Fibrillation</div>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort
@@ -695,7 +696,7 @@ end date is less relevant. As an example, Figure 4 shows how we created
 the Atrial Fibrillation cohort and Figure 5 shows how we created the
 stroke cohort in ATLAS.</p>
 <div class="float">
-<img src="example1%2FATLAS_O.webp" alt="Figure 5: Outcome Cohort Stroke"><div class="figcaption">Figure 5: Outcome Cohort Stroke</div>
+<img src="example1/ATLAS_O.avif" alt="Figure 5: Outcome Cohort Stroke"><div class="figcaption">Figure 5: Outcome Cohort Stroke</div>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <ul>
@@ -1304,7 +1305,7 @@ problem.</p>
 <h4 id="atlas-cohort-builder-1">ATLAS cohort builder<a class="anchor" aria-label="anchor" href="#atlas-cohort-builder-1"></a>
 </h4>
 <div class="float">
-<img src="example2%2Faceinhibitors.webp" alt="Target Cohort ACE inhibitors"><div class="figcaption">Target Cohort ACE inhibitors</div>
+<img src="example2/aceinhibitors.avif" alt="Target Cohort ACE inhibitors"><div class="figcaption">Target Cohort ACE inhibitors</div>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort
 entry and cohort exit criteria. Cohort entry criteria involve selecting
@@ -1317,7 +1318,7 @@ end date is less relevant. As an example, Figure 6 shows how we created
 the ACE inhibitors cohort and Figure 7 shows how we created the
 angioedema cohort in ATLAS.</p>
 <div class="float">
-<img src="example2%2Fangioedema.webp" alt="Outcome Cohort Angioedema"><div class="figcaption">Outcome Cohort Angioedema</div>
+<img src="example2/angioedema.avif" alt="Outcome Cohort Angioedema"><div class="figcaption">Outcome Cohort Angioedema</div>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <ul>
@@ -1606,10 +1607,11 @@ validation data set is not required). Cross validation can also be used
 to estimate internal validation (so a testing data set is not
 required).</p>
 <p>In small data the best approach for internal validation has been
-shown to be boostrapping. However, in big data (many patients and many
+shown to be bootstrapping. However, in big data (many patients and many
 features) bootstrapping is generally not feasible. In big data our
 research has shown that it is just important to have some form of fair
-evaluation (use a test set or cross validation). For full details see <a href="add%20link">our BMJ open paper</a>.</p>
+evaluation (use a test set or cross validation). For full details see <a href="https://bmjopen.bmj.com/content/11/12/e050146.long" class="external-link">our BMJ open
+paper</a>.</p>
 <p>In the PatientLevelPrediction package, the splitSettings define how
 the plpData are partitioned into training/validation/testing data. Cross
 validation is always done, but using a test set is optional (when the
@@ -1765,7 +1767,7 @@ Create a new prediction study and select your target and outcome
 cohorts.
 </dt>
 <dd>
-<img src="atlasplp1.webp">
+<img src="images/atlasplp1.avif">
 </dd>
 </dl></li>
 <li>
@@ -1774,7 +1776,7 @@ cohorts.
 Specify one or more analysis settings.
 </dt>
 <dd>
-<img src="atlasplp2.web">
+<img src="images/atlasplp2.avif">
 </dd>
 </dl>
 <div style="page-break-after: always;"></div>
@@ -1784,7 +1786,7 @@ Specify one or more analysis settings.
 Specify the trainings settigns
 </dt>
 <dd>
-<img src="atlasplp3.webp">
+<img src="images/atlasplp3.avif">
 </dd>
 </dl></li>
 <li>
@@ -1793,7 +1795,7 @@ Specify the trainings settigns
 Specify the execution settings
 </dt>
 <dd>
-<img src="atlasplp4.web">
+<img src="images/atlasplp4.avif">
 </dd>
 </dl>
 ] </li>
@@ -1809,7 +1811,7 @@ the full study specification</p>
 </dt>
 <dd>
 <div class="float">
-<img src="atlasdownload1.webp" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
+<img src="images/atlasdownload1.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
 </div>
 </dd>
 </dl></li>
@@ -1820,7 +1822,7 @@ the full study specification</p>
 </dt>
 <dd>
 <div class="float">
-<img src="atlasdownload2.webp" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
+<img src="images/atlasdownload2.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
 </div>
 </dd>
 </dl></li>
@@ -1843,7 +1845,7 @@ in your browser in which you can view all performance measures created
 by the framework as shown in the figure below.</p>
 <dd>
 <div class="float">
-<img src="shinysummary.webp" alt="Summary of all the performance measures of the analyses"><div class="figcaption">Summary of all the performance measures of the
+<img src="images/shinysummary.avif" alt="Summary of all the performance measures of the analyses"><div class="figcaption">Summary of all the performance measures of the
 analyses</div>
 </div>
 </dd>
@@ -1852,7 +1854,7 @@ for example the ROC curve in which you can move over the plot to see the
 threshold and the corresponding sensitivity and specificity values.</p>
 <dd>
 <div class="float">
-<img src="shinyroc.webp" alt="Example of the interactive ROC curve"><div class="figcaption">Example of the interactive ROC curve</div>
+<img src="images/shinyroc.avif" alt="Example of the interactive ROC curve"><div class="figcaption">Example of the interactive ROC curve</div>
 </div>
 </dd>
 <p>To generate and save all the evaluation plots to a folder run the
@@ -1874,7 +1876,7 @@ created by changing the probability threshold to assign the positive
 class.</p>
 <dd>
 <div class="float">
-<img src="sparseRoc.webp" alt="Receiver Operating Characteristic Plot"><div class="figcaption">Receiver Operating Characteristic Plot</div>
+<img src="images/sparseRoc.avif" alt="Receiver Operating Characteristic Plot"><div class="figcaption">Receiver Operating Characteristic Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1890,7 +1892,7 @@ represented the 95% lower and upper confidence intervals of the slope of
 the fitted line.</p>
 <dd>
 <div class="float">
-<img src="sparseCalibration.webp" alt="Calibration Plot"><div class="figcaption">Calibration Plot</div>
+<img src="images/sparseCalibration.avif" alt="Calibration Plot"><div class="figcaption">Calibration Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1921,7 +1923,7 @@ not highlight the miss-calibration at the lower predicted probability
 levels that well.</p>
 <dd>
 <div class="float">
-<img src="smoothCalibration.jpeg" alt="Smooth Calibration plot"><div class="figcaption">Smooth Calibration plot</div>
+<img src="images/smoothCalibration.avif" alt="Smooth Calibration plot"><div class="figcaption">Smooth Calibration plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1932,7 +1934,7 @@ outcome (red) and ii) people in the test set without the outcome
 (blue).</p>
 <dd>
 <div class="float">
-<img src="preferencePDF.webp" alt="Preference Plot"><div class="figcaption">Preference Plot</div>
+<img src="images/preferencePDF.avif" alt="Preference Plot"><div class="figcaption">Preference Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1946,7 +1948,7 @@ also overlap between the two distribution which lead to an imperfect
 discrimination.</p>
 <dd>
 <div class="float">
-<img src="predictionDistribution.wwebp" alt="Prediction Distribution Box Plot"><div class="figcaption">Prediction Distribution Box Plot</div>
+<img src="images/predictionDistribution.avif" alt="Prediction Distribution Box Plot"><div class="figcaption">Prediction Distribution Box Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1958,7 +1960,7 @@ and without the outcome.</p>
 values of the covariates are on the diagonal.</p>
 <dd>
 <div class="float">
-<img src="generalizability.webp" alt="Similarity plots of train and test set"><div class="figcaption">Similarity plots of train and test set</div>
+<img src="images/generalizability.avif" alt="Similarity plots of train and test set"><div class="figcaption">Similarity plots of train and test set</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1973,7 +1975,7 @@ covariate to show more details (name, value etc).</p>
 subjects with the outcome compared to those without.</p>
 <dd>
 <div class="float">
-<img src="variableScatterplot.webp" alt="Variabel scatter Plot"><div class="figcaption">Variabel scatter Plot</div>
+<img src="images/variableScatterplot.avif" alt="Variabel scatter Plot"><div class="figcaption">Variabel scatter Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -2004,7 +2006,7 @@ results. It is also possible that lowering the threshold may leave
 recall unchanged, while the precision fluctuates.</p>
 <dd>
 <div class="float">
-<img src="precisionRecall.webp" alt="Precision Recall Plot"><div class="figcaption">Precision Recall Plot</div>
+<img src="images/precisionRecall.avif" alt="Precision Recall Plot"><div class="figcaption">Precision Recall Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -2015,7 +2017,7 @@ in different age groups together with a confidence area.</p>
 age groups.</p>
 <dd>
 <div class="float">
-<img src="demographicSummary.webp" alt="Demographic Summary Plot"><div class="figcaption">Demographic Summary Plot</div>
+<img src="images/demographicSummary.avif" alt="Demographic Summary Plot"><div class="figcaption">Demographic Summary Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -2201,7 +2203,7 @@ final study population in the Venn diagrams below are colored green.</p>
 Require minimum time-at-risk for all person in the target cohort
 </dt>
 <dd>
-<img src="popdef1.webp">
+<img src="images/popdef1.avif">
 </dd>
 </dl></li>
 <li><dl>
@@ -2210,7 +2212,7 @@ Require minumum time-at-risk for target cohort, except for persons with
 outcomes during time-at-risk.
 </dt>
 <dd>
-<img src="popdef2.webp">
+<img src="images/popdef2.avif">
 </dd>
 </dl></li>
 </ol>
@@ -2221,7 +2223,7 @@ Include all persons in the target cohort exclude persons with prior
 outcomes
 </dt>
 <dd>
-<img src="popdef3.webp">
+<img src="images/popdef3.avif">
 </dd>
 </dl>
 <ol start="4" style="list-style-type: decimal">
@@ -2231,7 +2233,7 @@ Require minimum time-at-risk for target cohort, except for persons with
 outcomes during time-at-risk, exclude persons with prior outcomes
 </dt>
 <dd>
-<img src="popdef4.webp">
+<img src="images/popdef4.avif">
 </dd>
 </dl></li>
 </ol>
@@ -2241,7 +2243,7 @@ outcomes during time-at-risk, exclude persons with prior outcomes
 Include all persons in target cohort exclude persons with prior outcomes
 </dt>
 <dd>
-<img src="popdef5.webp">
+<img src="images/popdef5.avif">
 </dd>
 </dl>
 <ol start="6" style="list-style-type: decimal">
@@ -2250,7 +2252,7 @@ Include all persons in target cohort exclude persons with prior outcomes
 Include all persons in target cohort
 </dt>
 <dd>
-<img src="popdef6.webp">
+<img src="images/popdef6.avif">
 </dd>
 </dl></li>
 </ol>
