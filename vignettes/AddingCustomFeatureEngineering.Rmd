@@ -2,28 +2,14 @@
 title: "Adding Custom Feature Engineering Functions"
 author: "Jenna Reps, Egill Fridgeirsson"
 date: "`r Sys.Date()`"
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Custom FeatureEngineering}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
 ---
 
 ```{=html}
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Adding Custom Feature Engineering}
+%\VignetteIndexEntry{Adding Custom Feature Engineering Functions}
+%\VignetteEncoding{UTF-8}
 -->
 ```
 
