@@ -544,7 +544,7 @@ runPlp <- function(
     finally = ParallelLogger::logTrace("Done."))
   ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
   delta <- Sys.time() - start
-  ParallelLogger::logInfo(paste0("Total time taken: ", delta, " ", attr(delta, "units")))
+  ParallelLogger::logInfo(paste0("Total time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)
   
 }

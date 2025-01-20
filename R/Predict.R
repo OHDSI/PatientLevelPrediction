@@ -113,7 +113,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
   attr(prediction, "metaData") <- metaData
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Prediction done in: ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Prediction done in: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
 }
 

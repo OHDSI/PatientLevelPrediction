@@ -93,7 +93,8 @@ sampleData <- function(trainData, sampleSettings) {
 
   attr(trainData, "metaData") <- metaData
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Sampling took ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Sampling took ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(trainData)
 }
 

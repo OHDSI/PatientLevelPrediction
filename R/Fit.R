@@ -89,7 +89,8 @@ fitPlp <- function(
   plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
   class(plpModel) <- "plpModel"
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to fit model: ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Time to fit model: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
 
   return(plpModel)
 }

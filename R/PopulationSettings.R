@@ -468,7 +468,7 @@ createStudyPopulation <- function(
 
   attr(population, "metaData") <- metaData
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Population created in ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Population created in ", signif(delta, 3), " ", attr(delta, "units"))
   return(population)
 }
 

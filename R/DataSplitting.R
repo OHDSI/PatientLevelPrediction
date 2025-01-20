@@ -262,7 +262,7 @@ splitData <- function(plpData = plpData,
 
   class(result) <- "splitData"
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Data split in ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Data split in ", signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 

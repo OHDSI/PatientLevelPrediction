@@ -121,7 +121,8 @@ covariateSummary <- function(
 
   ParallelLogger::logInfo(paste0("Finished covariate summary @ ", Sys.time()))
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to calculate covariate summary: ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Time to calculate covariate summary: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(covariateSummary)
 }
 

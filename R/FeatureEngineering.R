@@ -37,7 +37,8 @@ featureEngineer <- function(data, featureEngineeringSettings) {
 
   attr(data, "metaData")$featureEngineeringSettings <- featureEngineeringSettings
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Feature Engineering completed in ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Feature Engineering completed in ",
+    signif(delta, 3), " ", attr(delta, "units"))
   return(data)
 }
 

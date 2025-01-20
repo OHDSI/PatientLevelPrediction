@@ -140,7 +140,8 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
 
   class(result) <- "plpEvaluation"
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to calculate evaluation metrics: ", delta, " ", attr(delta, "units"))
+  ParallelLogger::logInfo("Time to calculate evaluation metrics: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 
