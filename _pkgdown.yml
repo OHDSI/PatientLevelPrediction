@@ -18,10 +18,8 @@ navbar:
     left:
     - home
     - intro
-    - videos
     - reference
     - articles
-    - tutorial
     - benchmarks
     - predictors
     - bestpractice

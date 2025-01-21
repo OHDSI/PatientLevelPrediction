@@ -51,11 +51,11 @@ Screenshots
 <tr valign="bottom">
 <td width = 50%>
 
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseCalibration.webp" alt="Calibration plot" title="Calibration plot" />
+<img src="vignettes/images/sparseCalibration.avif" alt="Calibration plot" title="Calibration plot" />
 
 </td>
 <td width = 50%>
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseROC.webp" alt="ROC plot" title="ROC plot" />
+<img src="vignettes/images/sparseROC.avif" alt="ROC plot" title="ROC plot" />
 
 </td>
 </tr><tr>
