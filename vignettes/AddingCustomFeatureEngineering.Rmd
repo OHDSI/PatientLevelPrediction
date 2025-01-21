@@ -3,15 +3,11 @@ title: "Adding Custom Feature Engineering Functions"
 author: "Jenna Reps, Egill Fridgeirsson"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adding Custom Feature Engineering Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-```{=html}
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Adding Custom Feature Engineering Functions}
-%\VignetteEncoding{UTF-8}
--->
-```
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
