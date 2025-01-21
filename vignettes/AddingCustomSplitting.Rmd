@@ -1,29 +1,15 @@
 ---
-title: "Adding Custom Data Splitting Functions"
+title: "Adding Custom Data Splitting"
 author: "Jenna Reps"
 date: "`r Sys.Date()`"
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Custom Splitting}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
 ---
 
 ```{=html}
 <!--
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Adding Custom Data Splitting}
+%\VignetteEncoding{UTF-8}
 -->
 ```
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}

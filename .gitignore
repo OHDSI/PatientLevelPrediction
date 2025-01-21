@@ -25,5 +25,8 @@ standalone/build/*
 /inst/shiny/DiagnosticsExplorer/rsconnect/*
 /doc/
 /Meta/
+/extras/
+/results/
+/.vscode/
 .project
 .cproject

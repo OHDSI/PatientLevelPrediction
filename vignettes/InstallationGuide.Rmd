@@ -2,32 +2,13 @@
 title: "Patient-Level Prediction Installation Guide"
 author: "Jenna Reps, Peter R. Rijnbeek, Egill Fridgeirsson"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Installation Guide}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Patient-Level Prediction Installation Guide}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{=html}
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Installation guide}
--->
-```
 # Introduction
 
 This vignette describes how you need to install the Observational Health Data Science and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package under Windows, Mac, and Linux.

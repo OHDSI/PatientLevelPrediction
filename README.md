@@ -18,11 +18,11 @@ Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. [Design and implementati
 
 The figure below illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
-![](vignettes/Figure1.webp)
+![](vignettes/images/Figure1.avif)
 
 To define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we  have to make design choices for the model we like to develop, and determine the observational datasets to perform internal and external validation. This conceptual framework works for all type of prediction problems, for example those presented below (T=green, O=red).
 
-![](vignettes/problems.webp)
+![](vignettes/images/problems.avif)
 
 Features
 ========
@@ -51,11 +51,11 @@ Screenshots
 <tr valign="bottom">
 <td width = 50%>
 
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseCalibration.webp" alt="Calibration plot" title="Calibration plot" />
+<img src="vignettes/images/sparseCalibration.avif" alt="Calibration plot" title="Calibration plot" />
 
 </td>
 <td width = 50%>
-<img src="https://github.com/OHDSI/PatientLevelPrediction/raw/main/vignettes/sparseROC.webp" alt="ROC plot" title="ROC plot" />
+<img src="vignettes/images/sparseROC.avif" alt="ROC plot" title="ROC plot" />
 
 </td>
 </tr><tr>
