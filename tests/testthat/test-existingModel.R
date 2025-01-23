@@ -97,8 +97,10 @@ test_that("existing sklearn model works", {
     covariateSettings = plpModel$modelDesign$covariateSettings,
     populationSettings = plpModel$modelDesign$populationSettings
   )
-
-  prediction <- predictPlp(existingModel, testData, testData$labels)
+  
+  prediction <- predictPlp(plpModel, testData, testData$labels)
+  predictionNew <- predictPlp(existingModel, testData, testData$labels)
 
   expect_correct_predictions(prediction, testData)
+  expect_equal(prediction$value, predictionNew$value)
 })
