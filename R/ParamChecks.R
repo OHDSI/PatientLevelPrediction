@@ -108,3 +108,13 @@ checkIsEqual <- function(parameter, value) {
   }
   return(TRUE)
 }
+
+checkFileType <- function(parameter, fileType) {
+  name <- deparse(substitute(parameter))
+  if (!grepl(fileType, parameter)) {
+    ParallelLogger::logError(paste0(name, " should be a ", fileType, " file"))
+    stop(paste0(name, " is not a ", fileType, " file"))
+  }
+  return(TRUE)
+}
+

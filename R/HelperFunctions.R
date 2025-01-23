@@ -14,6 +14,18 @@ checkSurvivalPackages <- function() {
   )
 }
 
+checkSklearn <- function() {
+  rlang::check_installed(
+    "reticulate",
+    reason = "Reticulate is required to use the Python models"
+  )
+  tryCatch({
+    reticulate::import("sklearn")
+  }, error = function(e) {
+    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
+  })
+}
+
 #' Create a temporary model location
 #'
 #' @export
