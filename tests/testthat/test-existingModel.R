@@ -1,47 +1,46 @@
 test_that("Create existing sklearn works", {
-  expect_error(createSciKitLearnModel("existing"))
+  expect_error(createSklearnModel("existing"))
   # create a file model.pkl for testing
   file.create("model.pkl")
   covariateSettings <-
     FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE)
   populationSettings <- createStudyPopulationSettings()
   # dataframe wrong type
-  expect_error(createSciKitLearnModel(
+  expect_error(createSklearnModel(
     modelLocation = "model.pkl",
     covariateMap = list(
       columnId = "columnId",
-      modelCovariateIdName = "modelCovariateIdName"
+      covariateId = c(1)
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
   ))
   # dataframe wrong column names
-  expect_error(createSciKitLearnModel(
+  expect_error(createSklearnModel(
     modelLocation = "model.pkl",
     covariateMap = data.frame(
-      columnId = "columnId",
-      modelCovariateIdName = "modelCovariateIdName"
+      columnId = c(1),
+      notCovariateId = c(1002),
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
   ))
   # dataframe wrong column types
-  expect_error(createSciKitLearnModel(
+  expect_error(createSklearnModel(
     modelLocation = "model.pkl",
     covariateMap = data.frame(
       columnId = 1,
-      modelCovariateIdName = 2
+      covariateId = "2"
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
   ))
 
-  model <- createSciKitLearnModel(
+  model <- createSklearnModel(
     modelLocation = "model.pkl",
     covariateMap = data.frame(
       columnId = c(1, 2),
-      covariateId = c(1002, 1003),
-      modelCovariateIdName = c("feature1", "feature2")
+      covariateId = c(1002, 1003)
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
@@ -51,9 +50,6 @@ test_that("Create existing sklearn works", {
   expect_equal(attr(model, "predictionFunction"), "predictPythonSklearn")
   expect_equal(attr(model, "saveToJson"), FALSE)
   expect_equal(class(model), "plpModel")
-  expect_equal(model$preprocessing$featureEngineering$funct, "mapColumns")
-  expect_equal(model$preprocessing$featureEngineering$settings$featureEngineeringSettings$columnMap$columnId, c(1, 2))
-  expect_equal(model$preprocessing$featureEngineering$settings$featureEngineeringSettings$columnMap$modelCovariateIdName, c("feature1", "feature2"))
   unlink("model.pkl")
 })
 
@@ -87,11 +83,10 @@ test_that("existing sklearn model works", {
   joblib <- reticulate::import("joblib")
   joblib$dump(model, file.path(plpModel$model, "model.pkl"))
 
-  # extract covariatMap from plpModel
+  # extract covariateMap from plpModel
   covariateMap <- plpModel$covariateImportance %>% dplyr::select(columnId, covariateId)
-  covariateMap$modelCovariateIdName <- as.character(covariateMap$covariateId)
   
-  existingModel <- createSciKitLearnModel(
+  existingModel <- createSklearnModel(
     modelLocation = file.path(plpModel$model),
     covariateMap = covariateMap,
     covariateSettings = plpModel$modelDesign$covariateSettings,
