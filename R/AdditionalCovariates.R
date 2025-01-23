@@ -24,7 +24,9 @@
 #' cohort during the time periods relative to target population cohort index
 #'
 #' @param connection  The database connection
-#' @param oracleTempSchema  The temp schema if using oracle
+
+#' @param tempEmulationSchema The schema to use for temp tables
+#' @param oracleTempSchema  DEPRECATED The temp schema if using oracle
 #' @param cdmDatabaseSchema  The schema of the OMOP CDM data
 #' @param cdmVersion  version of the OMOP CDM data
 #' @param cohortTable  the table name that contains the target population cohort
@@ -40,6 +42,7 @@
 #' @export
 getCohortCovariateData <- function(
     connection,
+    tempEmulationSchema = NULL,
     oracleTempSchema = NULL,
     cdmDatabaseSchema,
     cdmVersion = "5",
@@ -49,6 +52,14 @@ getCohortCovariateData <- function(
     cohortIds,
     covariateSettings,
     ...) {
+  if (!is.null(oracleTempSchema) && oracleTempSchema != "") {
+    rlang::warn("The 'oracleTempSchema' argument is deprecated. Use 'tempEmulationSchema' instead.",
+      .frequency = "regularly",
+      .frequency_id = "oracleTempSchema"
+    )
+    tempEmulationSchema <- oracleTempSchema
+  }
+
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
@@ -104,7 +115,7 @@ getCohortCovariateData <- function(
   sql <- SqlRender::translate(
     sql = sql,
     targetDialect = attr(connection, "dbms"),
-    tempEmulationSchema = oracleTempSchema
+    tempEmulationSchema = tempEmulationSchema
   )
 
   # Retrieve the covariate:
@@ -135,7 +146,7 @@ getCohortCovariateData <- function(
   sql <- SqlRender::translate(
     sql = sql,
     targetDialect = attr(connection, "dbms"),
-    tempEmulationSchema = oracleTempSchema
+    tempEmulationSchema = tempEmulationSchema
   )
 
   # Retrieve the covariateRef:

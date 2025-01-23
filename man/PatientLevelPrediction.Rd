@@ -29,5 +29,10 @@ Authors:
   \item Peter Rijnbeek
 }
 
+Other contributors:
+\itemize{
+  \item Observational Health Data Science and Informatics [copyright holder]
+}
+
 }
 \keyword{internal}

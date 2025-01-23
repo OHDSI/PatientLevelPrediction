@@ -2,30 +2,14 @@
 title: "Automatically Build Multiple Patient-Level Predictive Models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Automatically Build Multiple Patient-Level Predictive Models}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
 ---
 
 ```{=html}
 <!--
 %\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Building multiple patient-level predictive models}
+%\VignetteIndexEntry{Automatically Build Multiple Patient-Level Predictive Models}
+%\VignetteEncoding{UTF-8}
 -->
 ```
 # Introduction

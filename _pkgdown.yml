@@ -1,6 +1,8 @@
 template:
+  bootstrap: 5
   params:
     bootswatch: cosmo
+  light-switch: true
 
 development:
   mode: auto
@@ -16,10 +18,8 @@ navbar:
     left:
     - home
     - intro
-    - videos
     - reference
     - articles
-    - tutorial
     - benchmarks
     - predictors
     - bestpractice
