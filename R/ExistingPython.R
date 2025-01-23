@@ -27,7 +27,7 @@
 #' as `model.pkl`.  The user also needs to specify the covariate settings and population settings as these
 #' are used to determine the standard PLP model design.
 #'
-#' @param pythonModelLocation  The location of the folder that contains the model as model.pkl
+#' @param modelLocation  The location of the folder that contains the model as model.pkl
 #' @param covariateMap  A data.frame with the columns: columnId specifying the column order for the
 #' covariate, covariateId the covariate ID from FeatureExtraction and modelCovariateIdName which is the
 #' column name used when fitting the model.  For example, if you had a column called 'age' in your model and this was the 3rd
@@ -46,7 +46,7 @@
 #'
 #' @export
 createSciKitLearnModel <- function(
-    pythonModelLocation = "/model", # model needs to be saved here as "model.pkl"
+    modelLocation = "/model", # model needs to be saved here as "model.pkl"
     covariateMap = data.frame(
       columnId = 1:2,
       covariateId = c(1, 2),
@@ -55,12 +55,15 @@ createSciKitLearnModel <- function(
     covariateSettings, # specify the covariates
     populationSettings, # specify time at risk used to develop model
     isPickle = TRUE) {
-  checkSklearn() 
-  checkFileExists(pythonModelLocation)
+  checkSklearn()
+  checkFileExists(modelLocation)
   checkIsClass(covariateMap, "data.frame")
   checkIsClass(covariateSettings, "covariateSettings")
   checkIsClass(populationSettings, "populationSettings")
   checkBoolean(isPickle)
+  checkDataframe(covariateMap, c("columnId", "covariateId", "modelCovariateIdName"),
+    columnTypes = list(c("numeric", "integer"), "numeric", "character")
+  )
   existingModel <- list(model = "existingPython")
   class(existingModel) <- "modelSettings"
 
@@ -102,7 +105,7 @@ createSciKitLearnModel <- function(
       modelSettings = existingModel,
       splitSettings = PatientLevelPrediction::createDefaultSplitSetting()
     ),
-    model = pythonModelLocation,
+    model = modelLocation,
     trainDetails = list(
       analysisId = "exisitingPython",
       developmentDatabase = "nonOMOP",
