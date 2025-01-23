@@ -159,7 +159,7 @@ mapColumns <- function(
     dplyr::select("covariateId", "modelCovariateIdName")
   trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
     dplyr::rename(newId = "rowId") %>% # duckdb issue with implicit rowid
-    dplyr::compute() %>% 
+    dplyr::collapse() %>% 
     dplyr::inner_join(
       trainData$covariateData$columnMap,
       by = "covariateId"
