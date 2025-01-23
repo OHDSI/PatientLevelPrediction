@@ -118,3 +118,22 @@ checkFileType <- function(parameter, fileType) {
   return(TRUE)
 }
 
+checkDirExists <- function(
+    saveDirectory,
+    createIfNot = TRUE) {
+  dirExists <- dir.exists(saveDirectory)
+  if (!dirExists && createIfNot) {
+    ParallelLogger::logInfo(paste0("Creating save directory at: ", saveDirectory))
+    dir.create(saveDirectory, recursive = TRUE)
+  }
+  return(invisible(dirExists))
+}
+
+checkFileExists <- function(parameter) {
+  name <- deparse(substitute(parameter))
+  if (!file.exists(parameter)) {
+    ParallelLogger::logError(paste0(name, " does not exist"))
+    stop(paste0(name, " does not exist"))
+  }
+  return(TRUE)
+}

@@ -24,7 +24,7 @@
 #' This function lets users add an existing scikit learn that is saved as model.pkl
 #' into PLP format.  covariateMap is a mapping between standard covariateIds and the model column names
 #' and order are required in addition to pythonModelLocation, the location of the model that must be saved
-#' as model.pkl .  The user also needs to specify the covariate settings and population settings as these
+#' as `model.pkl`.  The user also needs to specify the covariate settings and population settings as these
 #' are used to determine the standard PLP model design.
 #'
 #' @param pythonModelLocation  The location of the folder that contains the model as model.pkl
@@ -56,6 +56,11 @@ createSciKitLearnModel <- function(
     populationSettings, # specify time at risk used to develop model
     isPickle = TRUE) {
   checkSklearn() 
+  checkFileExists(pythonModelLocation)
+  checkIsClass(covariateMap, "data.frame")
+  checkIsClass(covariateSettings, "covariateSettings")
+  checkIsClass(populationSettings, "populationSettings")
+  checkBoolean(isPickle)
   existingModel <- list(model = "existingPython")
   class(existingModel) <- "modelSettings"
 

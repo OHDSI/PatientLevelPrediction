@@ -62,7 +62,7 @@ createLog <- function(
     logName = "PLP Log",
     saveDirectory = getwd(),
     logFileName = paste0("plpLog", as.Date(Sys.Date(), "%Y%m%d"), ".txt")) {
-  checkFileExists(saveDirectory, createIfNot = TRUE)
+  checkDirExists(saveDirectory, createIfNot = TRUE)
 
   logFileName <- gsub("[[:punct:]]", "", logFileName)
 
@@ -81,17 +81,6 @@ createLog <- function(
   }
 
   return(logger)
-}
-
-checkFileExists <- function(
-    saveDirectory,
-    createIfNot = TRUE) {
-  dirExists <- dir.exists(saveDirectory)
-  if (!dirExists && createIfNot) {
-    ParallelLogger::logInfo(paste0("Creating save directory at: ", saveDirectory))
-    dir.create(saveDirectory, recursive = TRUE)
-  }
-  return(invisible(dirExists))
 }
 
 closeLog <- function(logger) {
