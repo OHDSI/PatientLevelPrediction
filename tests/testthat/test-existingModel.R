@@ -142,6 +142,7 @@ test_that("Externally trained sklearn model works", {
     populationSettings = populationSettings
   )
   prediction <- predictPlp(plpModel, testData, testData$labels)
-
+  
+  expect_equal(mean(prediction$value), mean(externalPredictions))
   expect_correct_predictions(prediction, testData)
 })
