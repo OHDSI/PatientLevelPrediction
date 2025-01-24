@@ -128,52 +128,57 @@ population <- createStudyPopulation(
   populationSettings = populationSettings
 )
 
-createSplitData <- function(plpData, population, split = "train") {
+createTrainData <- function(plpData, population) {
   data <- PatientLevelPrediction::splitData(
     plpData = plpData,
     population = population,
     splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12)
   )
-  if (split == "train") {
-    return(data$Train)
-  } else {
-    return(data$Test)
-  }
+  trainData <- data$Train
+  return(trainData)
 }
 
-trainData <- createSplitData(plpData, population)
-testData <-  createSplitData(plpData, population, split = "test")
+trainData <- createTrainData(plpData, population)
 
+createTestData <- function(plpData, population) {
+  data <- PatientLevelPrediction::splitData(
+    plpData = plpData,
+    population = population,
+    splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12)
+  )
+  testData <- data$Test
+  return(testData)
+}
 
-# reduced Data to only use n most important features (as decided by LR)
-reduceData <- function(data, n = 20) {
+testData <- createTestData(plpData, population)
+
+# reduced trainData to only use n most important features (as decided by LR)
+reduceTrainData <- function(trainData, n = 20) {
   covariates <- plpResult$model$covariateImportance %>%
     dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = FALSE) %>%
     dplyr::pull(.data$covariateId)
 
-  reducedData <- list(
-    labels = data$labels,
-    folds = data$folds,
+  reducedTrainData <- list(
+    labels = trainData$labels,
+    folds = trainData$folds,
     covariateData = Andromeda::andromeda(
-      analysisRef = data$covariateData$analysisRef
+      analysisRef = trainData$covariateData$analysisRef
     )
   )
 
 
-  reducedData$covariateData$covariates <- trainData$covariateData$covariates %>%
+  reducedTrainData$covariateData$covariates <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId %in% covariates)
-  reducedData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+  reducedTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariates)
 
-  attributes(reducedData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
-  class(reducedData$covariateData) <- class(trainData$covariateData)
-  attributes(reducedData)$metaData <- attributes(trainData)$metaData
-  class(reducedData) <- class(data)
-  return(reducedData)
+  attributes(reducedTrainData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
+  class(reducedTrainData$covariateData) <- class(trainData$covariateData)
+  attributes(reducedTrainData)$metaData <- attributes(trainData)$metaData
+  return(reducedTrainData)
 }
 
-tinyTrainData <- reduceData(trainData)
-tinyTestData <- reduceData(testData)
+tinyTrainData <- reduceTrainData(trainData)
 
 tinyPlpData <- createTinyPlpData(plpData, plpResult)
 
