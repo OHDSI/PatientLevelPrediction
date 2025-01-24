@@ -65,6 +65,11 @@ test_that("check fit of DecisionTree", {
     analysisPath = tempdir()
   )
 
+  predictions <- predictPlp(plpModel, tinyTrainData, tinyTrainData$labels)
+  trainPredictions <- plpModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(predictions$value), mean(trainPredictions))
   expect_correct_fitPlp(plpModel, trainData)
   # add check for other model design settings
 })
