@@ -85,17 +85,63 @@ test_that("existing sklearn model works", {
 
   # extract covariateMap from plpModel
   covariateMap <- plpModel$covariateImportance %>% dplyr::select(columnId, covariateId)
-  
+
   existingModel <- createSklearnModel(
     modelLocation = file.path(plpModel$model),
     covariateMap = covariateMap,
     covariateSettings = plpModel$modelDesign$covariateSettings,
     populationSettings = plpModel$modelDesign$populationSettings
   )
-  
+
   prediction <- predictPlp(plpModel, testData, testData$labels)
   predictionNew <- predictPlp(existingModel, testData, testData$labels)
 
   expect_correct_predictions(prediction, testData)
   expect_equal(prediction$value, predictionNew$value)
+})
+
+test_that("Externally trained sklearn model works", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  # change map to be some random order
+  covariateIds <- tinyTrainData$covariateData$covariates %>% 
+  dplyr::pull(.data$covariateId) %>%
+  unique()
+  map <- data.frame(
+    columnId = sample(1:20, length(covariateIds)),
+    covariateId = sample(covariateIds, length(covariateIds))
+ )
+  matrixData <- toSparseM(tinyTrainData, map = map)
+  matrix <- matrixData$dataMatrix %>%
+    Matrix::as.matrix()
+  
+  # fit with sklearn
+  xMatrix <- reticulate::r_to_py(matrix)
+  y <- reticulate::r_to_py(tinyTrainData$labels$outcomeCount)
+
+  sklearn <- reticulate::import("sklearn")
+  classifier <- sklearn$tree$DecisionTreeClassifier()
+  classifier <- classifier$fit(xMatrix, y)
+
+  testMatrix <- toSparseM(testData, map = matrixData$covariateMap)
+  xTest <- reticulate::r_to_py(testMatrix$dataMatrix %>% Matrix::as.matrix())
+  yTest <- reticulate::r_to_py(testData$labels$outcomeCount)
+  externalPredictions <- classifier$predict_proba(xTest)[, 2]
+  auc <- sklearn$metrics$roc_auc_score(yTest, externalPredictions)
+
+  joblib <- reticulate::import("joblib")
+  path <- tempfile()
+  createDir(path)
+  joblib$dump(classifier, file.path(path, "model.pkl"))
+  plpModel <- createSklearnModel(
+    model = path,
+    covariateMap = matrixData$covariateMap,
+    covariateSettings = FeatureExtraction::createCovariateSettings(
+      useDemographicsAge = TRUE
+    ),
+    populationSettings = populationSettings
+  )
+  prediction <- predictPlp(plpModel, testData, testData$labels)
+
+  expect_correct_predictions(prediction, testData)
 })

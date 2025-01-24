@@ -70,7 +70,7 @@ createSklearnModel <- function(
   checkIsClass(populationSettings, "populationSettings")
   checkBoolean(isPickle)
   checkDataframe(covariateMap, c("columnId", "covariateId"),
-    columnTypes = list(c("numeric", "integer"), "numeric")
+    columnTypes = list(c("numeric", "integer"), c("numeric", "integer"))
   )
   existingModel <- list(model = "existingSklearn")
   class(existingModel) <- "modelSettings"
