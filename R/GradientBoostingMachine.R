@@ -170,8 +170,6 @@ predictXgboost <- function(
         dplyr::select("columnId", "covariateId")
     )
 
-    # use the include??
-
     newData <- matrixObjects$dataMatrix
     cohort <- matrixObjects$labels
   } else {
