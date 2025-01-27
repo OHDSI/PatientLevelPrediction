@@ -1,6 +1,6 @@
-# @file StudyPopulation.R
+# @file PopulationSettings.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -19,8 +19,6 @@
 
 #' create the study population settings
 #'
-#' @details
-#' Takes as input the inputs to create study population
 #' @param binary                Forces the outcomeCount to be 0 or 1 (use for binary prediction problems)
 #' @param includeAllOutcomes    (binary) indicating whether to include people with outcomes who are not observed for the whole at risk period
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
@@ -41,7 +39,8 @@
 #' @param endAnchor              The anchor point for the end of the risk window. Can be "cohort start" or "cohort end".
 #' @param restrictTarToCohortEnd If using a survival model and you want the time-at-risk to end at the cohort end date set this to T
 #' @return
-#' A list containing all the settings required for creating the study population
+#' An object of type populationSettings containing all the settings required 
+#' for creating the study population
 #' @export
 createStudyPopulationSettings <- function(
     binary = TRUE,

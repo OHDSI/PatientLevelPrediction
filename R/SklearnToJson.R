@@ -19,6 +19,7 @@
 #' Saves sklearn python model object to json in path
 #' @param     model a fitted sklearn python model object
 #' @param     path  path to the saved model file
+#' @return    nothing, saves the model to the path as json
 #' @export
 sklearnToJson <- function(model, path) {
   py <- reticulate::import_builtins(convert = FALSE)
@@ -47,6 +48,7 @@ sklearnToJson <- function(model, path) {
 
 #' Loads sklearn python model from json
 #' @param     path  path to the model json file
+#' @return    a sklearn python model object
 #' @export
 sklearnFromJson <- function(path) {
   py <- reticulate::import_builtins(convert = FALSE)

@@ -1,6 +1,6 @@
 # @file RunPlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -63,7 +63,7 @@
 #'                                                                                 
 #' @param saveDirectory         The path to the directory where the results will be saved (if NULL uses working directory)
 #' @return
-#' An object containing the following:
+#' An plpResults object containing the following:
 #'
 #'  \itemize{
 #'           \item model The developed model of class \code{plpModel}

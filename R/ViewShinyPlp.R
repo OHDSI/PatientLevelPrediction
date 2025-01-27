@@ -1,9 +1,28 @@
+# @file ViewShinyPlp.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' open a local shiny app for viewing the result of a multiple PLP analyses
 #'
 #' @details
 #' Opens a shiny app for viewing the results of the models from various T,O, Tar and settings
 #' settings.
 #' @param analysesLocation  The directory containing the results (with the analysis_x folders)
+#' @return Opens a shiny app for interactively viewing the results
 #'
 #' @export
 viewMultiplePlp <- function(analysesLocation) {
@@ -82,6 +101,7 @@ viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
 #' @param myDbms database management system for the result database
 #' @param myPort Port for the connection to the result database
 #' @param myTableAppend A string appended to the results tables (optional)
+#' @return Opens a shiny app for interactively viewing the results
 #'
 #' @export
 viewDatabaseResultPlp <- function(

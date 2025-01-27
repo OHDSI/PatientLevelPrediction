@@ -1,6 +1,6 @@
 # @file ExtractData.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -15,7 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 
 
 #' createRestrictPlpDataSettings define extra restriction settings when calling getPlpData
@@ -41,7 +40,8 @@
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #'
 #' @return
-#' A setting object of class \code{restrictPlpDataSettings} containing a list getPlpData extra settings
+#' A setting object of class \code{restrictPlpDataSettings} containing a list of 
+#' getPlpData extra settings
 #'
 #' @export
 createRestrictPlpDataSettings <- function(
@@ -108,7 +108,7 @@ createRestrictPlpDataSettings <- function(
 #' @param cohortId                       (depreciated: use targetId) old input for the target cohort id
 #'
 #' @return
-#' A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
+#' A list with the the database specific settings 
 #'
 #' @export
 createDatabaseDetails <- function(
@@ -435,7 +435,8 @@ getPlpData <- function(
   return(result)
 }
 
-
+#' @method print plpData
+#' @return A message describing the object
 #' @export
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
@@ -445,6 +446,7 @@ print.plpData <- function(x, ...) {
 }
 
 #' @method summary plpData
+#' @return A summary of the object containing the number of people, outcomes and covariates
 #' @export
 summary.plpData <- function(object, ...) {
   people <- length(unique(object$cohorts$subjectId))
@@ -471,6 +473,8 @@ summary.plpData <- function(object, ...) {
 }
 
 #' @export
+#' @method print summary.plpData
+#' @return A message describing the object
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
   writeLines("")

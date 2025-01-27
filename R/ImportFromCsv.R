@@ -1,9 +1,29 @@
+# @file ImportFromCsv.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' Function to insert results into a database from csvs
 #' @description
-#' This function converts a folder with csv results into plp objects and loads them into a plp result database
+#' This function converts a folder with csv results into plp objects and loads 
+#' them into a plp result database
 #'
 #' @details
-#' The user needs to have plp csv results in a single folder and an existing plp result database
+#' The user needs to have plp csv results in a single folder and an existing plp 
+#' result database
 #'
 #' @param csvFolder        The location to the csv folder with the plp results
 #' @param connectionDetails             A connection details for the plp results database that the csv results will be inserted into
@@ -154,10 +174,6 @@ insertCsvToDatabase <- function(
 
   return(TRUE)
 }
-
-
-
-
 
 extractCohortDefinitionsCSV <- function(
     csvFolder) {

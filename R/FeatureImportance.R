@@ -1,20 +1,27 @@
-# permutation feature importance - use parrallel computing...
+# @file FeatureEngineering.R
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-## Input: Trained model f, feature matrix X, target vector y, error measure L(y,f).
-
-## Estimate the original model error eorig = L(y, f(X)) (e.g. mean squared error)
-## For each feature j = 1,...,p do:
-##  Generate feature matrix Xperm by permuting feature j in the data X. This breaks the association between feature j and true outcome y.
-## Estimate error eperm = L(Y,f(Xperm)) based on the predictions of the permuted data.
-## Calculate permutation feature importance FIj= eperm/eorig. Alternatively, the difference can be used: FIj = eperm - eorig
-## Sort features by descending FI.
-
-#' pfi
+#' Permutation Feature Importance
 #'
 #' @description
-#' Calculate the permutation feature importance for a PLP model.
+#' Calculate the permutation feature importance (pfi) for a PLP model.
 #' @details
-#' The function permutes the each covariate/features <repeats> times and calculates the mean AUC change caused by the permutation.
+#' The function permutes the each covariate/features <repeats> times and
+#' calculates the mean AUC change caused by the permutation.
 #' @param plpResult                         An object of type \code{runPlp}
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction
@@ -27,8 +34,6 @@
 #'
 #' @return
 #' A dataframe with the covariateIds and the pfi (change in AUC caused by permuting the covariate) value
-#'
-# permutation feature importance
 #' @export
 pfi <- function(plpResult, population, plpData, repeats = 1,
                 covariates = NULL, cores = NULL, log = NULL,

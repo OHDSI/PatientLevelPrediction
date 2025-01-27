@@ -1,3 +1,20 @@
+# @file ThresholdSummary.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitatons under the License.
 #' Calculate all measures for sparse ROC
 #'
 #' @details
@@ -9,7 +26,8 @@
 #' @param typeColumn            A column that is used to stratify the results
 #'
 #' @return
-#' A data.frame with all the measures
+#' A data.frame with TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
+
 #' @export
 getThresholdSummary <- function(
     prediction,
@@ -41,7 +59,8 @@ getThresholdSummary <- function(
 #'
 #' @return
 #' A data.frame with all the measures
-#'
+#' @keywords internal
+#' @noRd
 getThresholdSummary_binary <- function(prediction, evalColumn, ...) {
   result <- c()
   evalTypes <- unique(as.data.frame(prediction)[, evalColumn])
@@ -535,6 +554,8 @@ checkToByTwoTableInputs <- function(TP, FP, FN, TN) {
 #' @return
 #' f1Score value
 #'
+#' @keywords internal
+#' @noRd
 f1Score <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -558,6 +579,8 @@ f1Score <- function(TP, TN, FN, FP) {
 #' @return
 #' accuracy value
 #'
+#' @keywords internal
+#' @noRd
 accuracy <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -582,6 +605,8 @@ accuracy <- function(TP, TN, FN, FP) {
 #' @return
 #' sensitivity value
 #'
+#' @keywords internal
+#' @noRd
 sensitivity <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -605,7 +630,8 @@ sensitivity <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' falseNegativeRate  value
-#'
+#' @keywords internal
+#' @noRd
 falseNegativeRate <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -629,7 +655,8 @@ falseNegativeRate <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' falsePositiveRate  value
-#'
+#' @keywords internal
+#' @noRd
 falsePositiveRate <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -653,7 +680,8 @@ falsePositiveRate <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' specificity value
-#'
+#' @keywords internal
+#' @noRd
 specificity <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -677,7 +705,8 @@ specificity <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' positivePredictiveValue value
-#'
+#' @keywords internal
+#' @noRd
 positivePredictiveValue <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -701,7 +730,8 @@ positivePredictiveValue <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' falseDiscoveryRate value
-#'
+#' @keywords internal
+#' @noRd
 falseDiscoveryRate <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -725,7 +755,8 @@ falseDiscoveryRate <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' negativePredictiveValue value
-#'
+#' @keywords internal
+#' @noRd
 negativePredictiveValue <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -749,7 +780,8 @@ negativePredictiveValue <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' falseOmissionRate value
-#'
+#' @keywords internal
+#' @noRd
 falseOmissionRate <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -773,7 +805,8 @@ falseOmissionRate <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' positiveLikelihoodRatio value
-#'
+#' @keywords internal
+#' @noRd
 positiveLikelihoodRatio <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -797,7 +830,8 @@ positiveLikelihoodRatio <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' negativeLikelihoodRatio value
-#'
+#' @keywords internal
+#' @noRd
 negativeLikelihoodRatio <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,
@@ -822,7 +856,8 @@ negativeLikelihoodRatio <- function(TP, TN, FN, FP) {
 #'
 #' @return
 #' diagnosticOddsRatio value
-#'
+#' @keywords internal
+#' @noRd
 diagnosticOddsRatio <- function(TP, TN, FN, FP) {
   checkToByTwoTableInputs(
     TP = TP,

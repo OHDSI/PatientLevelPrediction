@@ -1,5 +1,5 @@
 # @file PreprocessingData.R
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -18,11 +18,14 @@
 #' Create the settings for preprocessing the trainData.
 #'
 #' @details
-#' Returns an object of class \code{preprocessingSettings} that specifies how to preprocess the training data
+#' Returns an object of class \code{preprocessingSettings} that specifies how to
+#' preprocess the training data
 #'
-#' @param minFraction             The minimum fraction of target population who must have a covariate for it to be included in the model training
-#' @param normalize                    Whether to normalise the covariates before training (Default: TRUE)
-#' @param removeRedundancy                 Whether to remove redundant features (Default: TRUE)
+#' @param minFraction The minimum fraction of target population who must have a 
+#' covariate for it to be included in the model training
+#' @param normalize Whether to normalise the covariates before training 
+#' (Default: TRUE)
+#' @param removeRedundancy Whether to remove redundant features (Default: TRUE)
 #' @return
 #' An object of class \code{preprocessingSettings}
 #' @export
@@ -48,17 +51,19 @@ createPreprocessSettings <- function(
 }
 
 
-#' A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data
-#' and remove rare or redundant features
+#' A function that wraps around FeatureExtraction::tidyCovariateData to normalise 
+#' the data and remove rare or redundant features
 #'
 #' @details
-#' Returns an object of class \code{covariateData} that has been processed
+#' Returns an object of class \code{covariateData} that has been processed. 
+#' This includes normalising the data and removing rare or redundant features.
+#' Redundant features are features that within an analysisId together cover
+#' all obervations.
 #'
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
-#' @return
-#' The data processed
+#' @return The covariateData object with the processed covariates
 preprocessData <- function(covariateData,
                            preprocessSettings) {
   metaData <- attr(covariateData, "metaData")
