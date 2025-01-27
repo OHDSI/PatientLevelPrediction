@@ -6,6 +6,9 @@
 \usage{
 \method{summary}{plpData}(object, ...)
 }
+\arguments{
+\item{object}{The plpData object to summarize'}
+}
 \value{
 A summary of the object containing the number of people, outcomes and covariates
 }

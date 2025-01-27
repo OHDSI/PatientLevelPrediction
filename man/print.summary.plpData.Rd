@@ -6,6 +6,9 @@
 \usage{
 \method{print}{summary.plpData}(x, ...)
 }
+\arguments{
+\item{x}{The summary.plpData object to print}
+}
 \value{
 A message describing the object
 }

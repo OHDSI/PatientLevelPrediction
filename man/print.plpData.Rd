@@ -6,6 +6,9 @@
 \usage{
 \method{print}{plpData}(x, ...)
 }
+\arguments{
+\item{x}{The plpData object to print}
+}
 \value{
 A message describing the object
 }
