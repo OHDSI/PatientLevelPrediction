@@ -11,6 +11,9 @@ sklearnToJson(model, path)
 
 \item{path}{path to the saved model file}
 }
+\value{
+nothing, saves the model to the path as json
+}
 \description{
 Saves sklearn python model object to json in path
 }

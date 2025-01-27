@@ -2,7 +2,7 @@
 % Please edit documentation in R/CyclopsSettings.R
 \name{setIterativeHardThresholding}
 \alias{setIterativeHardThresholding}
-\title{Create setting for lasso logistic regression}
+\title{Create setting for Iterative Hard Thresholding model}
 \usage{
 setIterativeHardThresholding(
   K = 10,
@@ -41,9 +41,12 @@ setIterativeHardThresholding(
 
 \item{delta}{numeric}
 }
+\value{
+`modelSettings` object
+}
 \description{
-Create setting for lasso logistic regression
+Create setting for Iterative Hard Thresholding model
 }
 \examples{
-model.lr <- setLassoLogisticRegression()
+modelIht <- setIterativeHardThresholding()
 }

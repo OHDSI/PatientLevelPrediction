@@ -9,6 +9,9 @@ loadPlpResult(dirPath)
 \arguments{
 \item{dirPath}{The directory where the evaluation was saved}
 }
+\value{
+The runPlp object
+}
 \description{
 Loads the evalaution dataframe
 }

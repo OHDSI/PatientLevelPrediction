@@ -13,6 +13,9 @@ savePrediction(prediction, dirPath, fileName = "prediction.rds")
 
 \item{fileName}{The name of the RDS file that will be saved in dirPath}
 }
+\value{
+The file location where the prediction was saved
+}
 \description{
 Saves the prediction dataframe to RDS
 }

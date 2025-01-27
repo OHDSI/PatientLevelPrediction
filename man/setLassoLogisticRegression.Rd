@@ -2,7 +2,7 @@
 % Please edit documentation in R/CyclopsSettings.R
 \name{setLassoLogisticRegression}
 \alias{setLassoLogisticRegression}
-\title{Create setting for lasso logistic regression}
+\title{Create modelSettings for lasso logistic regression}
 \usage{
 setLassoLogisticRegression(
   variance = 0.01,
@@ -25,7 +25,8 @@ setLassoLogisticRegression(
 
 \item{includeCovariateIds}{a set of covariate IDS to limit the analysis to}
 
-\item{noShrinkage}{a set of covariates whcih are to be forced to be included in the final model. default is the intercept}
+\item{noShrinkage}{a set of covariates whcih are to be forced to be includedin
+in the final model. default is the intercept}
 
 \item{threads}{An option to set number of threads when training model}
 
@@ -35,15 +36,21 @@ setLassoLogisticRegression(
 
 \item{lowerLimit}{Numeric: Lower prior variance limit for grid-search}
 
-\item{tolerance}{Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence}
+\item{tolerance}{Numeric: maximum relative change in convergence criterionfrom
+from successive iterations to achieve convergence}
 
-\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error}
+\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt 
+before returning a failed-to-converge error}
 
-\item{priorCoefs}{Use coefficients from a previous model as starting points for model fit (transfer learning)}
+\item{priorCoefs}{Use coefficients from a previous model as starting 
+points for model fit (transfer learning}
+}
+\value{
+`modelSettings` object
 }
 \description{
-Create setting for lasso logistic regression
+Create modelSettings for lasso logistic regression
 }
 \examples{
-model.lr <- setLassoLogisticRegression()
+modelLasso <- setLassoLogisticRegression()
 }

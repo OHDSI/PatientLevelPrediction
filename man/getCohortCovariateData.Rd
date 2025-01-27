@@ -42,7 +42,7 @@ getCohortCovariateData(
 \item{...}{additional arguments from FeatureExtraction}
 }
 \value{
-The models will now be in the package
+CovariateData object with covariates, covariateRef, and analysisRef tables
 }
 \description{
 Extracts covariates based on cohorts

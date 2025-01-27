@@ -38,6 +38,9 @@ setGradientBoostingMachine(
 
 \item{seed}{An option to add a seed when training the final model}
 }
+\value{
+A modelSettings object that can be used to fit the model
+}
 \description{
 Create setting for gradient boosting machine model using gbm_xgboost implementation
 }

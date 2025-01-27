@@ -9,6 +9,9 @@ loadPrediction(fileLocation)
 \arguments{
 \item{fileLocation}{The location with the saved prediction}
 }
+\value{
+The prediction data.frame
+}
 \description{
 Loads the prediciton dataframe to csv
 }

@@ -9,6 +9,9 @@ loadPlpShareable(loadDirectory)
 \arguments{
 \item{loadDirectory}{The directory with the results as json/csv files}
 }
+\value{
+The runPlp object
+}
 \description{
 Loads the plp result saved as json/csv files for transparent sharing
 }

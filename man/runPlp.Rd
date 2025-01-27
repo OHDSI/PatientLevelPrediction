@@ -67,7 +67,7 @@ specifying how the logging is done}
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}
 }
 \value{
-An object containing the following:
+An plpResults object containing the following:
 
  \itemize{
           \item model The developed model of class \code{plpModel}

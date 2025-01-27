@@ -2,7 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{setPythonEnvironment}
 \alias{setPythonEnvironment}
-\title{Use the virtual environment created using configurePython()}
+\title{Use the python environment created using configurePython()}
 \usage{
 setPythonEnvironment(envname = "PLP", envtype = NULL)
 }
@@ -11,9 +11,12 @@ setPythonEnvironment(envname = "PLP", envtype = NULL)
 
 \item{envtype}{An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users}
 }
+\value{
+A string indicating the which python environment will be used
+}
 \description{
-Use the virtual environment created using configurePython()
+Use the python environment created using configurePython()
 }
 \details{
-This function sets PatientLevelPrediction to use a virtual environment
+This function sets PatientLevelPrediction to use a python environment
 }

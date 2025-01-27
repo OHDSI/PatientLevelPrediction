@@ -30,7 +30,7 @@ outcomeSurvivalPlot(
 \item{yLabel}{(string) The label for the y-axis}
 }
 \value{
-TRUE if it ran
+TRUE if it ran, produces a plot
 }
 \description{
 Plot the outcome incidence over time

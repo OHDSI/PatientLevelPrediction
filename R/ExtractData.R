@@ -435,6 +435,7 @@ getPlpData <- function(
   return(result)
 }
 
+#' Print a plpData object
 #' @method print plpData
 #' @return A message describing the object
 #' @export
@@ -445,6 +446,7 @@ print.plpData <- function(x, ...) {
   writeLines(paste("Outcome concept ID(s):", paste(attr(x$outcomes, "metaData")$outcomeIds, collapse = ",")))
 }
 
+#' Summarize a plpData object
 #' @method summary plpData
 #' @return A summary of the object containing the number of people, outcomes and covariates
 #' @export
@@ -472,6 +474,7 @@ summary.plpData <- function(object, ...) {
   return(result)
 }
 
+#' Print a summary.plpData object
 #' @export
 #' @method print summary.plpData
 #' @return A message describing the object

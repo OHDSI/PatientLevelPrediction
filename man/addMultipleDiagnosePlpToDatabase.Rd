@@ -2,7 +2,7 @@
 % Please edit documentation in R/uploadToDatabaseDiagnostics.R
 \name{addMultipleDiagnosePlpToDatabase}
 \alias{addMultipleDiagnosePlpToDatabase}
-\title{Insert mutliple diagnosePlp results saved to a directory into a PLP result schema database}
+\title{Insert multiple diagnosePlp results saved to a directory into a PLP result schema database}
 \usage{
 addMultipleDiagnosePlpToDatabase(
   connectionDetails,

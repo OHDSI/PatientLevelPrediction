@@ -11,6 +11,9 @@ savePlpResult(result, dirPath)
 
 \item{dirPath}{The directory to save the csv}
 }
+\value{
+The directory path where the results were saved
+}
 \description{
 Saves the result from runPlp into the location directory
 }

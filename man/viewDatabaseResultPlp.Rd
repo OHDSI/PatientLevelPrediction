@@ -29,6 +29,9 @@ viewDatabaseResultPlp(
 
 \item{myTableAppend}{A string appended to the results tables (optional)}
 }
+\value{
+Opens a shiny app for interactively viewing the results
+}
 \description{
 open a local shiny app for viewing the result of a PLP analyses from a database
 }

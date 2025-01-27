@@ -38,11 +38,9 @@ setSVM(
 
 \item{seed}{A seed for the model}
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for the python sklearn SVM (SVC function)
-}
-\examples{
-\dontrun{
-model.svm <- setSVM(kernel = "rbf", seed = NULL)
-}
 }

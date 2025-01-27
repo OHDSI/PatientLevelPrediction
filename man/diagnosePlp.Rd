@@ -61,7 +61,7 @@ target population who must have a covariate for it to be included in the model t
 and whether to normalise the covariates before training}
 }
 \value{
-An object containing the model or location where the model is save, the data selection settings, the preprocessing
+An object containing the model or location where the model is saved, the data selection settings, the preprocessing
 and training settings as well as various performance measures obtained by the model.
 
 \item{distribution}{list for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index) }
@@ -76,9 +76,4 @@ whether the prediction problem is worth executing.
 Users can define set of Ts, Os, databases and population settings.  A list of data.frames containing details such as
 follow-up time distribution, time-to-event information, characteriszation details, time from last prior event,
 observation time distribution.
-}
-\examples{
-\dontrun{
-#******** EXAMPLE 1 *********
-}
 }

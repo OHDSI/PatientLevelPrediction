@@ -6,6 +6,9 @@
 \usage{
 createTempModelLoc()
 }
+\value{
+A string for the location of the temporary model location
+}
 \description{
 Create a temporary model location
 }

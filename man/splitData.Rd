@@ -22,13 +22,6 @@ that define who will be used to develop the model}
 split - the default can be created using \code{createDefaultSplitSetting}}
 }
 \value{
-An object of class \code{splitSettings}
-}
-\description{
-Split the plpData into test/train sets using a splitting settings of class 
-\code{splitSettings}
-}
-\details{
 Returns a list containing the training data (Train) and optionally the test
 data (Test). Train is an Andromeda object containing
 \itemize{\item covariates: a table (rowId, covariateId, covariateValue)
@@ -46,4 +39,8 @@ containing the covariates for each data point in the test data
          \item labels: a table (rowId, outcomeCount, ...) for each data
 point in the test data (outcomeCount is the class label)
          }
+}
+\description{
+Split the plpData into test/train sets using a splitting settings of class 
+\code{splitSettings}
 }

@@ -30,7 +30,3 @@ Converts the standard plpData to a sparse matrix
 This function converts the covariate file from ffdf in COO format into a sparse matrix from
 the package Matrix
 }
-\examples{
-# TODO
-
-}

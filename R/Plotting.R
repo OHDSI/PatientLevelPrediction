@@ -1018,7 +1018,7 @@ plotSparseCalibration2 <- function(
 #' was defined: from utopia to empirical data" (2016)
 #'
 #' @details
-#' Create a plot showing the smoothed calibration #'
+#' Create a plot showing the smoothed calibration
 #' @param plpResult       The result of running \code{\link{runPlp}} function. An object containing the
 #'                        model or location where the model is save, the data selection settings, the
 #'                        preprocessing and training settings as well as various performance measures

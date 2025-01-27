@@ -30,7 +30,7 @@ plotNetBenefit(
 \item{xlim}{The x limits for the plot, if NULL the limits are calculated from the data}
 }
 \value{
-A list of ggplot objects
+A list of ggplot objects or a single ggplot object if only one evaluation type is plotted
 }
 \description{
 Plot the net benefit

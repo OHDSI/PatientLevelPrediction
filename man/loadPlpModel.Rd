@@ -9,6 +9,9 @@ loadPlpModel(dirPath)
 \arguments{
 \item{dirPath}{The location of the model}
 }
+\value{
+The plpModel object
+}
 \description{
 loads the plp model
 }
