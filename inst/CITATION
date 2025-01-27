@@ -1,11 +1,11 @@
 citHeader("To cite PatientLevelPrediction in publications use:")
 
 bibentry(bibtype = "Article",
-        author = personList(as.person("J. M. Reps"),
-                            as.person("M. J. Schuemie"),
-                            as.person("M. A. Suchard"),
-                            as.person("P. B. Ryan"),
-                            as.person("P. Rijnbeek")),
+        author = c(as.person("J. M. Reps"),
+                   as.person("M. J. Schuemie"),
+                   as.person("M. A. Suchard"),
+                   as.person("P. B. Ryan"),
+                   as.person("P. Rijnbeek")),
         title = "Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data",
         journal = "Journal of the American Medical Informatics Association",
         volume = "25",

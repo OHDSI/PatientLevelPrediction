@@ -8,6 +8,8 @@
 }
 \arguments{
 \item{x}{The plpData object to print}
+
+\item{...}{Additional arguments}
 }
 \value{
 A message describing the object

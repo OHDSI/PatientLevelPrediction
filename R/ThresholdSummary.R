@@ -27,7 +27,6 @@
 #'
 #' @return
 #' A data.frame with TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
-
 #' @export
 getThresholdSummary <- function(
     prediction,

@@ -18,8 +18,8 @@ library(PatientLevelPrediction)
 
 # Introduction
 
-This vignette describes how you can add your own custom function for splitting the labelled data into training data and validation data in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels)`. 
-**We invite you to share your new data splitting functions with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
+This vignette describes how you can add your own custom function for splitting the labelled data into training data and validation data in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels)`. 
+**We invite you to share your new data splitting functions with the OHDSI community through our [GitHub repository](https://github.com/OHDSI/PatientLevelPrediction).**
 
 # Data Splitting Function Code Structure
 
@@ -90,6 +90,6 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

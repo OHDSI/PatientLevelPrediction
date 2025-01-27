@@ -17,7 +17,7 @@ Description: A user friendly way to create patient level prediction models using
     be used to fit a predictive model with a number of machine learning algorithms.
     Several performance measures are implemented for model evaluation.
 License: Apache License 2.0
-URL: https://ohdsi.github.io/PatientLevelPrediction, https://github.com/OHDSI/PatientLevelPrediction
+URL: https://ohdsi.github.io/PatientLevelPrediction/, https://github.com/OHDSI/PatientLevelPrediction
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
 VignetteBuilder: knitr
 Depends:

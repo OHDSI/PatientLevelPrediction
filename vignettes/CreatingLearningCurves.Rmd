@@ -26,7 +26,7 @@ if (file.exists(vignetteDataFolder)) {
 
 # Introduction
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
 Prediction models will show overly-optimistic performance when predicting on the same data as used for training. Therefore, best-practice is to partition our data into a training set and testing set. We then train our prediction model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set.
 
@@ -46,7 +46,7 @@ Furthermore, we can observe high bias (underfitting) if a prediction model perfo
 
 # Creating the learning curve
 
-Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create a `plpData` object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.
+Use the [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package to create a `plpData` object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.
 
 ```{r eval=FALSE}
 set.seed(1234)
@@ -172,4 +172,4 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)

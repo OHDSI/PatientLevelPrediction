@@ -438,6 +438,7 @@ getPlpData <- function(
 #' Print a plpData object
 #' @method print plpData
 #' @param x The plpData object to print
+#' @param ... Additional arguments
 #' @return A message describing the object
 #' @export
 print.plpData <- function(x, ...) {
@@ -449,7 +450,8 @@ print.plpData <- function(x, ...) {
 
 #' Summarize a plpData object
 #' @method summary plpData
-#' @param object The plpData object to summarize'
+#' @param object The plpData object to summarize
+#' @param ... Additional arguments
 #' @return A summary of the object containing the number of people, outcomes and covariates
 #' @export
 summary.plpData <- function(object, ...) {
@@ -480,6 +482,7 @@ summary.plpData <- function(object, ...) {
 #' @export
 #' @method print summary.plpData
 #' @param x The summary.plpData object to print
+#' @param ... Additional arguments
 #' @return A message describing the object
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
