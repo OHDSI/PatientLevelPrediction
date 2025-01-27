@@ -1226,7 +1226,7 @@ plotSmoothCalibration <- function(plpResult,
       )]
       popData2$Label <- "No Outcome"
       popData2$PersonCountAtRisk <- -1 * (popData2$PersonCountAtRisk - popData1$PersonCount)
-      colnames(popData1) <- c(
+      colnames(popData2) <- c(
         "averagePredictedProbability", "PersonCount",
         "Label"
       )
