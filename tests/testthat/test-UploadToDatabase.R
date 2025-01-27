@@ -183,6 +183,18 @@ test_that("database deletion", {
     databaseSchema = ohdsiDatabaseSchema,
     tableName = paste0(appendRandom("test"), "_PERFORMANCES")
   ))
+  
+  expect_false(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom("test"), "_migration")
+  ))
+  
+  expect_false(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom("test"), "_package_version")
+  ))
 })
 
 # disconnect

@@ -173,7 +173,7 @@ insertResultsToSqlite <- function(
 #' @param testFile                     (used for testing) The location of an sql file with the table creation code
 #'
 #' @return
-#' Returns NULL but creates the required tables into the specified database schema(s).
+#' Returns NULL but creates or deletes the required tables in the specified database schema(s).
 #'
 #' @export
 createPlpResultTables <- function(
@@ -252,14 +252,27 @@ createPlpResultTables <- function(
   } else {
     ParallelLogger::logInfo("PLP result tables already exist")
   }
-
-  # then migrate
-  ParallelLogger::logInfo("PLP result migrration being applied")
-  migrateDataModel(
-    connectionDetails = connectionDetails, # input is connection
-    databaseSchema = resultSchema,
-    tablePrefix = tablePrefix
-  )
+  
+  if (!(createTables == FALSE && deleteTables == TRUE)) {
+    # then migrate, unless only deleting
+    ParallelLogger::logInfo("PLP result migration being applied")
+    migrateDataModel(
+      connectionDetails = connectionDetails, # input is connection
+      databaseSchema = resultSchema,
+      tablePrefix = tablePrefix
+    )
+  } else {
+    ParallelLogger::logInfo("Deleting PLP migration tables") 
+    migrationTableNames <- c("MIGRATION", "PACKAGE_VERSION") 
+    deleteTables(
+        conn = conn,
+        databaseSchema = resultSchema,
+        targetDialect = targetDialect,
+        tempEmulationSchema = tempEmulationSchema,
+        tableNames = migrationTableNames,
+        tablePrefix = tablePrefix
+      )
+  }
 }
 
 #' Populate the PatientLevelPrediction results tables
