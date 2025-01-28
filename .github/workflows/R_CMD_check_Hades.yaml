@@ -20,9 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, r: 'release'}  # Does not appear to have Java 32-bit, hence the --no-multiarch
+          - {os: windows-latest, r: 'release'}  
           - {os: macOS-latest, r: 'release'}
-          - {os: ubuntu-22.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/jammy/latest"}
+          - {os: ubuntu-24.04, r: 'release', rspm: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"}
 
     env:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
@@ -53,7 +53,17 @@ jobs:
 
       - uses: r-lib/actions/setup-tinytex@v2
 
-      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-pandoc@v2 
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+          python-version: "3.11"
 
       - name: Install system requirements
         if: runner.os == 'Linux'
@@ -63,15 +73,17 @@ jobs:
           while read -r cmd
           do
             eval sudo $cmd
-          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "22.04"))')
+          done < <(Rscript -e 'writeLines(remotes::system_requirements("ubuntu", "24.04"))')
           
-      - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v3
-        
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          cache: always
           extra-packages: any::rcmdcheck
           needs: check
+      
+      - name: setup r-reticulate venv
+        run: | 
+          uv pip install numpy scikit-learn scipy
 
       - uses: r-lib/actions/check-r-package@v2
         with:

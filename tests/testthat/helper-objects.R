@@ -188,3 +188,4 @@ if (internet && rlang::is_installed("Eunomia")) {
   )
 }
 
+expect_true(!is.null(plpResult$performanceEvaluation))
