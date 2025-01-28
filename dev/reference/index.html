@@ -88,19 +88,37 @@
           <code><a href="savePlpData.html">savePlpData()</a></code>
 
         </dt>
-        <dd>Save the cohort data to folder</dd>
+        <dd>Save the plpData to folder</dd>
       </dl><dl><dt>
 
           <code><a href="loadPlpData.html">loadPlpData()</a></code>
 
         </dt>
-        <dd>Load the cohort data from a folder</dd>
+        <dd>Load the plpData from a folder</dd>
       </dl><dl><dt>
 
           <code><a href="getCohortCovariateData.html">getCohortCovariateData()</a></code>
 
         </dt>
         <dd>Extracts covariates based on cohorts</dd>
+      </dl><dl><dt>
+
+          <code><a href="print.plpData.html">print(<i>&lt;plpData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print a plpData object</dd>
+      </dl><dl><dt>
+
+          <code><a href="print.summary.plpData.html">print(<i>&lt;summary.plpData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print a summary.plpData object</dd>
+      </dl><dl><dt>
+
+          <code><a href="summary.plpData.html">summary(<i>&lt;plpData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summarize a plpData object</dd>
       </dl></div><div class="section level2">
       <h2 id="settings-for-designing-a-prediction-models">Settings for designing a prediction models<a class="anchor" aria-label="anchor" href="#settings-for-designing-a-prediction-models"></a></h2>
 
@@ -293,7 +311,7 @@
           <code><a href="setLassoLogisticRegression.html">setLassoLogisticRegression()</a></code>
 
         </dt>
-        <dd>Create setting for lasso logistic regression</dd>
+        <dd>Create modelSettings for lasso logistic regression</dd>
       </dl><dl><dt>
 
           <code><a href="setMLP.html">setMLP()</a></code>
@@ -311,7 +329,7 @@
           <code><a href="setRandomForest.html">setRandomForest()</a></code>
 
         </dt>
-        <dd>Create setting for random forest model with python (very fast)</dd>
+        <dd>Create setting for random forest model using sklearn</dd>
       </dl><dl><dt>
 
           <code><a href="setSVM.html">setSVM()</a></code>
@@ -323,7 +341,7 @@
           <code><a href="setIterativeHardThresholding.html">setIterativeHardThresholding()</a></code>
 
         </dt>
-        <dd>Create setting for lasso logistic regression</dd>
+        <dd>Create setting for Iterative Hard Thresholding model</dd>
       </dl><dl><dt>
 
           <code><a href="setLightGBM.html">setLightGBM()</a></code>
@@ -416,7 +434,7 @@
           <code><a href="createModelDesign.html">createModelDesign()</a></code>
 
         </dt>
-        <dd>Specify settings for deceloping a single model</dd>
+        <dd>Specify settings for developing a single model</dd>
       </dl><dl><dt>
 
           <code><a href="runMultiplePlp.html">runMultiplePlp()</a></code>
@@ -558,7 +576,7 @@
           <code><a href="addMultipleDiagnosePlpToDatabase.html">addMultipleDiagnosePlpToDatabase()</a></code>
 
         </dt>
-        <dd>Insert mutliple diagnosePlp results saved to a directory into a PLP result schema database</dd>
+        <dd>Insert multiple diagnosePlp results saved to a directory into a PLP result schema database</dd>
       </dl><dl><dt>
 
           <code><a href="extractDatabaseToCsv.html">extractDatabaseToCsv()</a></code>
@@ -739,7 +757,7 @@
       </dl></div><div class="section level2">
       <h2 id="simulation">Simulation<a class="anchor" aria-label="anchor" href="#simulation"></a></h2>
 
-      <div class="section-desc"><p>Functions for simulating cohort method data objects.</p></div>
+      <div class="section-desc"><p>Functions for simulating PLP data objects.</p></div>
 
 
     </div><div class="section level2">
@@ -816,13 +834,13 @@
           <code><a href="configurePython.html">configurePython()</a></code>
 
         </dt>
-        <dd>Sets up a virtual environment to use for PLP (can be conda or python)</dd>
+        <dd>Sets up a python environment to use for PLP (can be conda or venv)</dd>
       </dl><dl><dt>
 
           <code><a href="setPythonEnvironment.html">setPythonEnvironment()</a></code>
 
         </dt>
-        <dd>Use the virtual environment created using configurePython()</dd>
+        <dd>Use the python environment created using configurePython()</dd>
       </dl></div><div class="section level2">
       <h2 id="evaluation-measures">Evaluation measures<a class="anchor" aria-label="anchor" href="#evaluation-measures"></a></h2>
 
@@ -835,12 +853,6 @@
 
 
       <dl><dt>
-
-          <code><a href="accuracy.html">accuracy()</a></code>
-
-        </dt>
-        <dd>Calculate the accuracy</dd>
-      </dl><dl><dt>
 
           <code><a href="averagePrecision.html">averagePrecision()</a></code>
 
@@ -866,40 +878,10 @@
         <dd>Compute the area under the ROC curve</dd>
       </dl><dl><dt>
 
-          <code><a href="f1Score.html">f1Score()</a></code>
-
-        </dt>
-        <dd>Calculate the f1Score</dd>
-      </dl><dl><dt>
-
-          <code><a href="falseDiscoveryRate.html">falseDiscoveryRate()</a></code>
-
-        </dt>
-        <dd>Calculate the falseDiscoveryRate</dd>
-      </dl><dl><dt>
-
-          <code><a href="falseNegativeRate.html">falseNegativeRate()</a></code>
-
-        </dt>
-        <dd>Calculate the falseNegativeRate</dd>
-      </dl><dl><dt>
-
-          <code><a href="falseOmissionRate.html">falseOmissionRate()</a></code>
-
-        </dt>
-        <dd>Calculate the falseOmissionRate</dd>
-      </dl><dl><dt>
-
-          <code><a href="falsePositiveRate.html">falsePositiveRate()</a></code>
-
-        </dt>
-        <dd>Calculate the falsePositiveRate</dd>
-      </dl><dl><dt>
-
           <code><a href="ici.html">ici()</a></code>
 
         </dt>
-        <dd>Calculate the Integrated Calibration Information from Austin and Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281</dd>
+        <dd>Calculate the Integrated Calibration Index from Austin and Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281</dd>
       </dl><dl><dt>
 
           <code><a href="modelBasedConcordance.html">modelBasedConcordance()</a></code>
@@ -908,52 +890,10 @@
         <dd>Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/</dd>
       </dl><dl><dt>
 
-          <code><a href="negativeLikelihoodRatio.html">negativeLikelihoodRatio()</a></code>
-
-        </dt>
-        <dd>Calculate the negativeLikelihoodRatio</dd>
-      </dl><dl><dt>
-
-          <code><a href="negativePredictiveValue.html">negativePredictiveValue()</a></code>
-
-        </dt>
-        <dd>Calculate the negativePredictiveValue</dd>
-      </dl><dl><dt>
-
-          <code><a href="positiveLikelihoodRatio.html">positiveLikelihoodRatio()</a></code>
-
-        </dt>
-        <dd>Calculate the positiveLikelihoodRatio</dd>
-      </dl><dl><dt>
-
-          <code><a href="positivePredictiveValue.html">positivePredictiveValue()</a></code>
-
-        </dt>
-        <dd>Calculate the positivePredictiveValue</dd>
-      </dl><dl><dt>
-
-          <code><a href="sensitivity.html">sensitivity()</a></code>
-
-        </dt>
-        <dd>Calculate the sensitivity</dd>
-      </dl><dl><dt>
-
-          <code><a href="specificity.html">specificity()</a></code>
-
-        </dt>
-        <dd>Calculate the specificity</dd>
-      </dl><dl><dt>
-
           <code><a href="computeGridPerformance.html">computeGridPerformance()</a></code>
 
         </dt>
         <dd>Computes grid performance with a specified performance function</dd>
-      </dl><dl><dt>
-
-          <code><a href="diagnosticOddsRatio.html">diagnosticOddsRatio()</a></code>
-
-        </dt>
-        <dd>Calculate the diagnostic odds ratio</dd>
       </dl><dl><dt>
 
           <code><a href="getCalibrationSummary.html">getCalibrationSummary()</a></code>
@@ -965,7 +905,7 @@
           <code><a href="getDemographicSummary.html">getDemographicSummary()</a></code>
 
         </dt>
-        <dd>Get a calibration per age/gender groups</dd>
+        <dd>Get a demographic summary</dd>
       </dl><dl><dt>
 
           <code><a href="getThresholdSummary.html">getThresholdSummary()</a></code>
@@ -974,19 +914,7 @@
         <dd>Calculate all measures for sparse ROC</dd>
       </dl><dl><dt>
 
-          <code><a href="getThresholdSummary_binary.html">getThresholdSummary_binary()</a></code>
-
-        </dt>
-        <dd>Calculate all measures for sparse ROC when prediction is bianry classification</dd>
-      </dl><dl><dt>
-
           <code><a href="getPredictionDistribution.html">getPredictionDistribution()</a></code>
-
-        </dt>
-        <dd>Calculates the prediction distribution</dd>
-      </dl><dl><dt>
-
-          <code><a href="getPredictionDistribution_binary.html">getPredictionDistribution_binary()</a></code>
 
         </dt>
         <dd>Calculates the prediction distribution</dd>
@@ -1064,7 +992,7 @@
           <code><a href="pfi.html">pfi()</a></code>
 
         </dt>
-        <dd>pfi</dd>
+        <dd>Permutation Feature Importance</dd>
       </dl></div><div class="section level2">
       <h2 id="other-functions">Other functions<a class="anchor" aria-label="anchor" href="#other-functions"></a></h2>
 
@@ -1081,7 +1009,7 @@
           <code><a href="predictCyclops.html">predictCyclops()</a></code>
 
         </dt>
-        <dd>Create predictive probabilities</dd>
+        <dd>Predict risk for a population using a Cyclops model</dd>
       </dl><dl><dt>
 
           <code><a href="predictGlm.html">predictGlm()</a></code>
@@ -1094,6 +1022,12 @@
 
         </dt>
         <dd>createGlmModel</dd>
+      </dl><dl><dt>
+
+          <code><a href="createSklearnModel.html">createSklearnModel()</a></code>
+
+        </dt>
+        <dd>Plug an existing scikit learn python model into the PLP framework</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -182,24 +182,6 @@ specifying how the logging is done</p></dd>
  using <code>plotLearningCurve</code>.</p>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="co"># define model</span></span></span>
-<span class="r-in"><span><span class="va">modelSettings</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># create learning curve</span></span></span>
-<span class="r-in"><span><span class="va">learningCurve</span> <span class="op">&lt;-</span> <span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu">createLearningCurve</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">population</span>,</span></span>
-<span class="r-in"><span>  <span class="va">plpData</span>,</span></span>
-<span class="r-in"><span>  <span class="va">modelSettings</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># plot learning curve</span></span></span>
-<span class="r-in"><span><span class="fu">PatientLevelPrediction</span><span class="fu">::</span><span class="fu"><a href="plotLearningCurve.html">plotLearningCurve</a></span><span class="op">(</span><span class="va">learningCurve</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

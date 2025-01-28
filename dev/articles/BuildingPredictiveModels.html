@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2025-01-27</h4>
+            <h4 data-toc-skip class="date">2025-01-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="d-none name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -633,7 +633,7 @@ stroke cohort in ATLAS.</p>
 </li>
 </ul>
 <p>In depth explanation of cohort creation in ATLAS is out of scope of
-this vignette but can be found on the OHDSI wiki pages <a href="http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas" class="external-link">(link)</a>.</p>
+this vignette but can be found on the OHDSI wiki pages <a href="https://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas" class="external-link">(link)</a>.</p>
 <p>Note that when a cohort is created in ATLAS the <code>cohortId</code>
 is needed to extract the data in R. The <code>cohortId</code> can be
 found at the top of the ATLAS screen, e.g. 1769447 in Figure 4.</p>
@@ -746,7 +746,7 @@ contents:</p>
 <span id="cb1-95"><a href="#cb1-95" tabindex="-1"></a>  visit_occurrence.visit_end_date</span>
 <span id="cb1-96"><a href="#cb1-96" tabindex="-1"></a>  ;</span>
 <span id="cb1-97"><a href="#cb1-97" tabindex="-1"></a>  </span></code></pre></div>
-<p>This is parameterized SQL which can be used by the <a href="http://github.com/OHDSI/SqlRender" class="external-link"><code>SqlRender</code></a>
+<p>This is parameterized SQL which can be used by the <a href="https://github.com/OHDSI/SqlRender" class="external-link"><code>SqlRender</code></a>
 package. We use parameterized SQL so we do not have to pre-specify the
 names of the CDM and result schemas. That way, if we want to run the SQL
 on a different schema, we only need to change the parameter values; we
@@ -755,7 +755,7 @@ functionality in <code>SqlRender</code>, we can make sure the SQL code
 can be run in many different environments.</p>
 <p>To execute this <code>sql</code> against our CDM we first need to
 tell R how to connect to the server. <code>PatientLevelPrediction</code>
-uses the <a href="http://github.com/ohdsi/DatabaseConnector" class="external-link"><code>DatabaseConnector</code></a>
+uses the <a href="https://github.com/ohdsi/DatabaseConnector" class="external-link"><code>DatabaseConnector</code></a>
 package, which provides a function called
 <code><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">createConnectionDetails()</a></code>. Type
 <code><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">?createConnectionDetails</a></code> for the specific settings required
@@ -852,7 +852,7 @@ the minimum number of days prior to cohort index date that the person
 must have been observed to be included into the data, and finally input
 the previously constructed <code>covariateSettings</code>.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction" class="external-link">PatientLevelPrediction</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction/" class="external-link">PatientLevelPrediction</a></span><span class="op">)</span></span>
 <span><span class="va">databaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span></span>
 <span>  connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,</span>
 <span>  cdmDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
@@ -1255,7 +1255,7 @@ angioedema cohort in ATLAS.</p>
 </li>
 </ul>
 <p>In depth explanation of cohort creation in ATLAS is out of scope of
-this vignette but can be found on the OHDSI wiki pages <a href="http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas" class="external-link">(link)</a>.</p>
+this vignette but can be found on the OHDSI wiki pages <a href="https://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas" class="external-link">(link)</a>.</p>
 <p>Note that when a cohort is created in ATLAS the cohortid is needed to
 extract the data in R. The cohortid can be found at the top of the ATLAS
 screen, e.g. 1770617 in Figure 6.</p>
@@ -1343,7 +1343,7 @@ the AF and Stroke cohorts. Therefore, we create a file called
 <span id="cb20-71"><a href="#cb20-71" tabindex="-1"></a>    </span>
 <span id="cb20-72"><a href="#cb20-72" tabindex="-1"></a>    ;</span>
 <span id="cb20-73"><a href="#cb20-73" tabindex="-1"></a>    </span></code></pre></div>
-<p>This is parameterized SQL which can be used by the <a href="http://github.com/OHDSI/SqlRender" class="external-link"><code>SqlRender</code></a>
+<p>This is parameterized SQL which can be used by the <a href="https://github.com/OHDSI/SqlRender" class="external-link"><code>SqlRender</code></a>
 package. We use parameterized SQL so we do not have to pre-specify the
 names of the CDM and result schemas. That way, if we want to run the SQL
 on a different schema, we only need to change the parameter values; we
@@ -1351,7 +1351,7 @@ do not have to change the SQL code. By also making use of translation
 functionality in <code>SqlRender</code>, we can make sure the SQL code
 can be run in many different environments.</p>
 <p>To execute this sql against our CDM we first need to tell R how to
-connect to the server. <code>PatientLevelPrediction</code> uses the <a href="http://github.com/ohdsi/DatabaseConnector" class="external-link"><code>DatabaseConnector</code></a>
+connect to the server. <code>PatientLevelPrediction</code> uses the <a href="https://github.com/ohdsi/DatabaseConnector" class="external-link"><code>DatabaseConnector</code></a>
 package, which provides a function called
 <code>createConnectionDetails</code>. Type
 <code><a href="https://ohdsi.github.io/DatabaseConnector/reference/createConnectionDetails.html" class="external-link">?createConnectionDetails</a></code> for the specific settings required
@@ -2105,7 +2105,7 @@ the <code>Cyclops</code> package.</p>
 <span><span class="co">##   }</span></span></code></pre>
 <p><strong>Please reference this paper if you use the PLP Package in
 your work:</strong></p>
-<p><a href="http://dx.doi.org/10.1093/jamia/ocy032" class="external-link">Reps JM, Schuemie
+<p><a href="https://dx.doi.org/10.1093/jamia/ocy032" class="external-link">Reps JM, Schuemie
 MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a
 standardized framework to generate and evaluate patient-level prediction
 models using observational healthcare data. J Am Med Inform Assoc.
