@@ -33,7 +33,7 @@ createPlpResultTables(
 \item{testFile}{(used for testing) The location of an sql file with the table creation code}
 }
 \value{
-Returns NULL but creates the required tables into the specified database schema(s).
+Returns NULL but creates or deletes the required tables in the specified database schema(s).
 }
 \description{
 This function executes a large set of SQL statements to create tables that can store models and results
