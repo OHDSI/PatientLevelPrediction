@@ -209,7 +209,7 @@ reference:
       - plotLearningCurve
   - title: "Simulation"
     desc: >
-      Functions for simulating cohort method data objects.
+      Functions for simulating PLP data objects.
     contents:
       - simulatePlpData
       - plpDataSimulationProfile
@@ -276,5 +276,6 @@ reference:
       - predictCyclops
       - predictGlm
       - createGlmModel
+      - createSklearnModel
     
 
