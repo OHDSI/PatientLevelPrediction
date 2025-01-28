@@ -228,32 +228,17 @@ reference:
       - setPythonEnvironment
   - title: "Evaluation measures"
     contents:
-      - accuracy
       - averagePrecision
       - brierScore
       - calibrationLine
       - computeAuc
-      - f1Score
-      - falseDiscoveryRate
-      - falseNegativeRate
-      - falseOmissionRate
-      - falsePositiveRate
       - ici
       - modelBasedConcordance
-      - negativeLikelihoodRatio
-      - negativePredictiveValue
-      - positiveLikelihoodRatio
-      - positivePredictiveValue
-      - sensitivity
-      - specificity
       - computeGridPerformance
-      - diagnosticOddsRatio
       - getCalibrationSummary
       - getDemographicSummary
       - getThresholdSummary
-      - getThresholdSummary_binary
       - getPredictionDistribution
-      - getPredictionDistribution_binary
   - title: "Saving/loading models as json"
     desc: >
       Functions for saving or loading models as json
