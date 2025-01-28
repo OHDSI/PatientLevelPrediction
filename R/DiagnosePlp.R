@@ -1,6 +1,6 @@
 # @file Diagnostics.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -19,7 +19,7 @@
 #' Run a list of predictions diagnoses
 #'
 #' @details
-#' This function will run all specified prediction design diagnoses as defined using .
+#' This function will run all specified prediction design diagnoses.
 #'
 #' @param databaseDetails               The database settings created using \code{createDatabaseDetails()}
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
@@ -230,19 +230,14 @@ diagnoseMultiplePlp <- function(
 #' @param saveDirectory         The path to the directory where the results will be saved (if NULL uses working directory)
 #'
 #' @return
-#' An object containing the model or location where the model is save, the data selection settings, the preprocessing
+#' An object containing the model or location where the model is saved, the data selection settings, the preprocessing
 #' and training settings as well as various performance measures obtained by the model.
 #'
 #' \item{distribution}{list for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index) }
 #' \item{incident}{list for each O of incidence of O in T during TAR}
 #' \item{characterization}{list for each O of Characterization of T, TnO, Tn~O}
 #'
-#'
 #' @export
-#' @examples
-#' \dontrun{
-#' #******** EXAMPLE 1 *********
-#' }
 diagnosePlp <- function(
     plpData = NULL,
     outcomeId,

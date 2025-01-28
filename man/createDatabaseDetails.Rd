@@ -63,7 +63,7 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 \item{cohortId}{(depreciated: use targetId) old input for the target cohort id}
 }
 \value{
-A list with the the database specific settings (this is used by the runMultiplePlp function and the skeleton packages)
+A list with the the database specific settings
 }
 \description{
 Create a setting that holds the details about the cdmDatabase connection for data extraction

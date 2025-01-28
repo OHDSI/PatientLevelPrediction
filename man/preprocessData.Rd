@@ -2,8 +2,8 @@
 % Please edit documentation in R/PreprocessingData.R
 \name{preprocessData}
 \alias{preprocessData}
-\title{A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data
-and remove rare or redundant features}
+\title{A function that wraps around FeatureExtraction::tidyCovariateData to normalise 
+the data and remove rare or redundant features}
 \usage{
 preprocessData(covariateData, preprocessSettings)
 }
@@ -14,12 +14,15 @@ any required feature engineering}
 \item{preprocessSettings}{The settings for the preprocessing created by \code{createPreprocessSettings}}
 }
 \value{
-The data processed
+The covariateData object with the processed covariates
 }
 \description{
-A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data
-and remove rare or redundant features
+A function that wraps around FeatureExtraction::tidyCovariateData to normalise 
+the data and remove rare or redundant features
 }
 \details{
-Returns an object of class \code{covariateData} that has been processed
+Returns an object of class \code{covariateData} that has been processed. 
+This includes normalising the data and removing rare or redundant features.
+Redundant features are features that within an analysisId together cover
+all obervations.
 }

@@ -15,3 +15,6 @@ A list with all possible combinations from the input list of lists
 \description{
 Computes the Cartesian product of all the combinations of elements in a list
 }
+\examples{
+listCartesian(list(list(1, 2), list(3, 4)))
+}

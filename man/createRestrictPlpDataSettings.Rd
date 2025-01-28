@@ -33,7 +33,8 @@ but can already be done here for efficiency reasons.}
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }
 \value{
-A setting object of class \code{restrictPlpDataSettings} containing a list getPlpData extra settings
+A setting object of class \code{restrictPlpDataSettings} containing a list of 
+getPlpData extra settings
 }
 \description{
 This function creates the settings used to restrict the target cohort when calling getPlpData

@@ -3,10 +3,10 @@ PatientLevelPrediction
 
 [![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check)
 
-[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=main)](https://codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
+[![codecov.io](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
 
 
-PatientLevelPrediction is part of [HADES](https://ohdsi.github.io/Hades).
+PatientLevelPrediction is part of [HADES](https://ohdsi.github.io/Hades/).
 
 
 Introduction
@@ -66,7 +66,7 @@ Screenshots
 
 Demo of the Shiny Apps can be found here:
 
-- [Multiple Prediction Viewer Shiny App](http://data.ohdsi.org/smokingPhenotypeExplorer/)
+- [Multiple Prediction Viewer Shiny App](https://data.ohdsi.org/smokingPhenotypeExplorer/)
 
 
 Technology
@@ -75,7 +75,7 @@ PatientLevelPrediction is an R package, with some functions using python through
 
 System Requirements
 ===================
-Requires R (version 4.0 or higher). Installation on Windows requires [RTools](http://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
+Requires R (version 4.0 or higher). Installation on Windows requires [RTools](https://cran.r-project.org/bin/windows/Rtools/). Libraries used in PatientLevelPrediction require Java and Python.
 
 The python installation is required for some of the machine learning algorithms. We advise to
 install Python 3.9 or higher using Anaconda (https://www.continuum.io/downloads). 
@@ -87,8 +87,8 @@ Getting Started
 
 - Have a look at the video below for an extensive demo of the package.
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
-" target="_blank"><img src="http://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
+<a href="https://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA
+" target="_blank"><img src="https://img.youtube.com/vi/BEukCbT8UoA/0.jpg" 
 alt="Video Vignette PLP Package" width="240" height="180" border="10" /></a>
 
 Please read the main vignette for the package:
@@ -107,11 +107,11 @@ Package function reference: [Reference](https://ohdsi.github.io/PatientLevelPred
 
 User Documentation
 ==================
-Documentation can be found on the [package website](https://ohdsi.github.io/PatientLevelPrediction).
+Documentation can be found on the [package website](https://ohdsi.github.io/PatientLevelPrediction/).
 
 Support
 =======
-* Developer questions/comments/feedback: <a href="http://forums.ohdsi.org/c/developers">OHDSI Forum</a>
+* Developer questions/comments/feedback: <a href="https://forums.ohdsi.org/c/developers">OHDSI Forum</a>
 * We use the <a href="https://github.com/OHDSI/PatientLevelPrediction/issues">GitHub issue tracker</a> for all bugs/issues/enhancements
 
 Contributing

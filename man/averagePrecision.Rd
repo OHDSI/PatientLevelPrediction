@@ -10,7 +10,7 @@ averagePrecision(prediction)
 \item{prediction}{A prediction object}
 }
 \value{
-The average precision
+The average precision value
 }
 \description{
 Calculate the average precision

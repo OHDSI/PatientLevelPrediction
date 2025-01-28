@@ -28,7 +28,12 @@ specifying how the logging is done}
 \item{outputFolder}{The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)}
 }
 \value{
-A list containing the performance for each validation_schema
+An externalValidatePlp object containing the following components
+- model: The model object
+- executionSummary: A list of execution details
+- prediction: A dataframe containing the predictions
+- performanceEvaluation: A dataframe containing the performance metrics
+- covariateSummary: A dataframe containing the covariate summary
 }
 \description{
 This function extracts data using a user specified connection and cdm_schema, applied the model and then calcualtes the performance

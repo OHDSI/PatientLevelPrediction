@@ -1,6 +1,6 @@
 # @file ExternalValidatePlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -164,8 +164,12 @@ externalValidatePlp <- function(plpModel,
 #' @param outputFolder                The directory to save the validation results to (subfolders are created per database in validationDatabaseDetails)
 #'
 #' @return
-#' A list containing the performance for each validation_schema
-#'
+#' An externalValidatePlp object containing the following components
+#' - model: The model object
+#' - executionSummary: A list of execution details
+#' - prediction: A dataframe containing the predictions
+#' - performanceEvaluation: A dataframe containing the performance metrics
+#' - covariateSummary: A dataframe containing the covariate summary
 #'
 #' @export
 externalValidateDbPlp <- function(plpModel,
@@ -469,6 +473,7 @@ createValidationDesign <-
 #' using \code{createLogSettings}
 #' @param outputFolder        The directory to save the validation results to
 #' (subfolders are created per database in validationDatabaseDetails)
+#' @return A list of results
 #' @export
 validateExternal <- function(validationDesignList,
                              databaseDetails,
@@ -637,6 +642,7 @@ validateModel <-
 #' checkAllSameInModels - Check if all settings are the same across models
 #' @param settingsList A list of settings to check
 #' @param settingName The name of the setting to check
+#' @noRd
 #' @keywords internal
 checkAllSameInModels <- function(settingsList, settingName) {
   if (!Reduce(
@@ -654,6 +660,7 @@ checkAllSameInModels <- function(settingsList, settingName) {
 #' extractModelDesigns - Extract all modelDesigns from a list of plpModels
 #' @param plpModelList A list of plpModels
 #' @return A list of modelDesigns
+#' @noRd
 #' @keywords internal
 extractModelDesigns <- function(plpModelList) {
   lapply(plpModelList, function(plpModel) {
@@ -674,6 +681,7 @@ extractModelDesigns <- function(plpModelList) {
 #' @param logSettings An object of logSettings
 #' @param outputFolder The directory to save the validation results to
 #' @return A list of inputs that were modified
+#' @noRd
 #' @keywords internal
 checkValidateExternalInputs <- function(validationDesignList,
                                         databaseDetails,
@@ -709,6 +717,7 @@ checkValidateExternalInputs <- function(validationDesignList,
 #' @param modelDesigns A list of modelDesign objects
 #' @param settingName The name of the setting to check
 #' @return The updated design
+#' @noRd
 #' @keywords internal
 fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
   settingsFromModel <- lapply(modelDesigns, function(x) x[[settingName]])
@@ -735,6 +744,7 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 #' combinations of targetId and restrictPlpDataSettings
 #' @return The plpData object
 #' @keywords internal
+#' @noRd
 getData <- function(design, database, outputFolder, downloadTasks) {
   # find task associated with design and the index of the task in downloadTasks
   task <- downloadTasks %>%
@@ -803,6 +813,7 @@ getData <- function(design, database, outputFolder, downloadTasks) {
 #' @param plpData The plpData object
 #' @return The population dataframe
 #' @keywords internal
+#' @noRd
 getPopulation <- function(validationDesign, modelDesigns, plpData) {
   design <- fromDesignOrModel(validationDesign, modelDesigns, "populationSettings")
   population <- tryCatch(
@@ -832,6 +843,7 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
 #' @param validationDesignList A list of validationDesign objects
 #' @return A dataframe where each row is a downloadTask
 #' @keywords internal
+#' @noRd
 createDownloadTasks <- function(validationDesignList) {
   ParallelLogger::logInfo("Extracting unique combinations of targetId, \
   restrictPlpDataSettings and covariateSettings for extracting data")
@@ -918,6 +930,7 @@ createDownloadTasks <- function(validationDesignList) {
 #' @param covariateData The covariate data Andromeda object
 #' @return The deduplicated covariate data
 #' @keywords internal
+#' @noRd
 deDuplicateCovariateData <- function(covariateData) {
   covariateData$covariateRef <- covariateData$covariateRef %>%
     dplyr::distinct()

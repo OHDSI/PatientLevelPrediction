@@ -47,16 +47,3 @@ file in a different format.
 Create a plot of the learning curve using the object returned
 from \code{createLearningCurve}.
 }
-\examples{
-\dontrun{
-# create learning curve object
-learningCurve <- createLearningCurve(
-  population,
-  plpData,
-  modelSettings
-)
-# plot the learning curve
-plotLearningCurve(learningCurve)
-}
-
-}

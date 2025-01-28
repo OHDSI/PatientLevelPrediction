@@ -9,6 +9,9 @@ viewMultiplePlp(analysesLocation)
 \arguments{
 \item{analysesLocation}{The directory containing the results (with the analysis_x folders)}
 }
+\value{
+Opens a shiny app for interactively viewing the results
+}
 \description{
 open a local shiny app for viewing the result of a multiple PLP analyses
 }

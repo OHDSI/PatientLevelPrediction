@@ -2,7 +2,7 @@
 % Please edit documentation in R/DemographicSummary.R
 \name{getDemographicSummary}
 \alias{getDemographicSummary}
-\title{Get a calibration per age/gender groups}
+\title{Get a demographic summary}
 \usage{
 getDemographicSummary(prediction, predictionType, typeColumn = "evaluation")
 }
@@ -14,11 +14,12 @@ getDemographicSummary(prediction, predictionType, typeColumn = "evaluation")
 \item{typeColumn}{A column that is used to stratify the results}
 }
 \value{
-A dataframe with the calibration summary
+A dataframe with the demographic summary
 }
 \description{
-Get a calibration per age/gender groups
+Get a demographic summary
 }
 \details{
-Generates a data.frame with the calibration per each 5 year age group and gender group
+Generates a data.frame with a prediction summary per each 5 year age group 
+and gender group
 }

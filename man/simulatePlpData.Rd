@@ -20,6 +20,5 @@ An object of type \code{plpData}.
 }
 \details{
 This function generates simulated data that is in many ways similar to the original data on which
-the simulation profile is based. The contains same outcome, comparator, and outcome concept IDs,
-and the covariates and their 1st order statistics should be comparable.
+the simulation profile is based.
 }

@@ -1,6 +1,6 @@
-# @file gradientBoostingMachine.R
+# @file GradientBoostingMachine.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -28,6 +28,7 @@
 #' @param lambda    L2 regularization on weights - larger is more conservative
 #' @param alpha     L1 regularization on weights - larger is more conservative
 #' @param seed       An option to add a seed when training the final model
+#' @return A modelSettings object that can be used to fit the model
 #'
 #' @examples
 #' model.gbm <- setGradientBoostingMachine(

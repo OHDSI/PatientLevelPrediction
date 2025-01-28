@@ -1,6 +1,6 @@
 # @file predict.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -29,9 +29,6 @@
 #' @param timepoint                        The timepoint to predict risk (survival models only)
 #' @return
 #' A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
-#'
-
-# parent predict that calls the others
 #' @export
 predictPlp <- function(plpModel, plpData, population, timepoint) {
   start <- Sys.time()

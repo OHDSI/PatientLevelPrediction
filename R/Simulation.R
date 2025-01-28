@@ -1,6 +1,6 @@
 # @file simulation.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -28,8 +28,7 @@
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
-#' the simulation profile is based. The contains same outcome, comparator, and outcome concept IDs,
-#' and the covariates and their 1st order statistics should be comparable.
+#' the simulation profile is based. 
 #'
 #' @return
 #' An object of type \code{plpData}.

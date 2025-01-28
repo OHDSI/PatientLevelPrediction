@@ -11,9 +11,10 @@ calibrationLine(prediction, numberOfStrata = 10)
 
 \item{numberOfStrata}{The number of groups to split the prediction into}
 }
+\value{
+A list containing the calibrationLine coefficients, the aggregate data used 
+to fit the line and the Hosmer-Lemeshow goodness of fit test
+}
 \description{
 calibrationLine
-}
-\details{
-Calculates the calibration from prediction object
 }

@@ -31,7 +31,7 @@ A function or list of functions specifying any feature engineering
 to create covariates before summarising}
 }
 \value{
-A data.frame containing: CovariateCount	CovariateMean and CovariateStDev plus these values
+A data.frame containing: CovariateCount, CovariateMean and CovariateStDev 
 for any specified stratification
 }
 \description{

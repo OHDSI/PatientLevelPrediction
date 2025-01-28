@@ -20,7 +20,8 @@ this is the inverse of the link function. Supported values is only
 "logistic" for logistic regression model at the moment.}
 }
 \value{
-A model object containing the model and the prediction function.
+A model object containing the model (Coefficients and intercept)
+and the prediction function.
 }
 \description{
 Create a generalized linear model that can be used in the 

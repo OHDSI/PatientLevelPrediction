@@ -1,6 +1,6 @@
 # @file RunMultiplePlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -232,7 +232,7 @@ runMultiplePlp <- function(
 }
 
 
-#' Specify settings for deceloping a single model
+#' Specify settings for developing a single model
 #'
 #' @details
 #' This specifies a single analysis for developing as single model
@@ -350,16 +350,7 @@ createModelDesign <- function(
 #' @param cohortDefinitions        A list of the cohortDefinitions (generally extracted from ATLAS)
 #' @param saveDirectory            The directory to save the modelDesignList settings
 #'
-#' @examples
-#' \dontrun{
-#' savePlpAnalysesJson(
-#'   modelDesignList = list(
-#'     createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()),
-#'     createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
-#'   ),
-#'   saveDirectory = "C:/bestModels"
-#' )
-#' }
+#' @return The json string of the ModelDesignList
 #'
 #' @export
 savePlpAnalysesJson <- function(
@@ -416,12 +407,7 @@ savePlpAnalysesJson <- function(
 #' that can be combined with connection settings to run a multiple prediction study
 #'
 #' @param jsonFileLocation    The location of the file 'predictionAnalysisList.json' with the modelDesignList
-#'
-#' @examples
-#' \dontrun{
-#' modelDesignList <- loadPlpAnalysesJson("location of json settings")$analysis
-#' }
-#'
+#' @return A list with the modelDesignList and cohortDefinitions
 #' @export
 loadPlpAnalysesJson <- function(
     jsonFileLocation) {
@@ -453,6 +439,7 @@ loadPlpAnalysesJson <- function(
 #' @param recalibrate                      A vector of recalibration methods (currently supports 'RecalibrationintheLarge' and/or 'weakRecalibration')
 #' @param cohortDefinitions           A list of cohortDefinitions
 #' @param saveDirectory               The location to save to validation results
+#' @return Nothing. The results are saved to the saveDirectory
 #'
 #' @export
 validateMultiplePlp <- function(

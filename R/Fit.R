@@ -1,8 +1,8 @@
 # @file Fit.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
-# This file is part of CohortMethod
+# This file is part of PatientLevelPrediction
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,22 +19,17 @@
 #' fitPlp
 #'
 #' @description
-#' Train various models using a default parameter gird search or user specified parameters
+#' Train various models using a default parameter grid search or user specified 
+#' parameters
 #'
 #' @details
-#' The user can define the machine learning model to train (regularised logistic regression, random forest,
-#' gradient boosting machine, neural network and )
-#'
-#' @param trainData                        An object of type \code{TrainData} created using \code{splitData}
-#'                                         data extracted from the CDM.
-#' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
-#'                                         \itemize{
-#'                                         \item setLassoLogisticRegression() A lasso logistic regression model
-#'                                         \item setGradientBoostingMachine() A gradient boosting machine
-#'                                         \item setRandomForest() A random forest model
-#'                                         \item setKNN() A KNN model
-#'                                         }
-#' @param search                           The search strategy for the hyper-parameter selection (currently not used)
+#' The user can define the machine learning model to train 
+
+#' @param trainData An object of type \code{trainData} created using \code{splitData}
+#' data extracted from the CDM.
+#' @param modelSettings An object of class \code{modelSettings} created using 
+#' one of the \code{createModelSettings} functions
+#' @param search The search strategy for the hyper-parameter selection (currently not used)
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
 #' @return
@@ -46,7 +41,6 @@
 #' \item{modelDesign}{A list specifiying the modelDesign settings used to fit the model}
 #' \item{trainDetails}{The model meta data}
 #' \item{covariateImportance}{The covariate importance for the model}
-#'
 #'
 #' @export
 fitPlp <- function(

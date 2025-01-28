@@ -1,6 +1,6 @@
 # @file AdditionalCovariates.R
 #
-# Copyright 2022 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -37,7 +37,7 @@
 #' @param ...  additional arguments from FeatureExtraction
 #'
 #' @return
-#' The models will now be in the package
+#' CovariateData object with covariates, covariateRef, and analysisRef tables
 #'
 #' @export
 getCohortCovariateData <- function(

@@ -1,5 +1,5 @@
 # @file Logging.R
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -33,6 +33,8 @@
 #' @param logName                          A string reference for the logger
 #' @return
 #' An object of class \code{logSettings}
+#' @examples
+#' createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
 #' @export
 createLogSettings <- function(
     verbosity = "DEBUG",

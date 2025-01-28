@@ -1,6 +1,6 @@
 # @file SklearnClassifierSettings.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -22,14 +22,8 @@
 #'                       There is a trade-off between learningRate and nEstimators.
 #' @param algorithm      Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.
 #' @param seed           A seed for the model
+#' @return a modelSettings object
 #'
-#' @examples
-#' \dontrun{
-#' model.adaBoost <- setAdaBoost(
-#'   nEstimators = list(10, 50, 200), learningRate = list(1, 0.5, 0.1),
-#'   algorithm = list("SAMME.R"), seed = sample(1000000, 1)
-#' )
-#' }
 #' @export
 setAdaBoost <- function(nEstimators = list(10, 50, 200),
                         learningRate = list(1, 0.5, 0.1),
@@ -122,11 +116,7 @@ AdaBoostClassifierInputs <- function(classifier, param) {
 #' @param minImpurityDecrease  Threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.
 #' @param classWeight         (list) Weights associated with classes 'balance' or NULL
 #' @param seed                The random state seed
-#'
-#' @examples
-#' \dontrun{
-#' model.decisionTree <- setDecisionTree(maxDepth = 10, minSamplesLeaf = 10, seed = NULL)
-#' }
+#' @return a modelSettings object
 #' @export
 setDecisionTree <- function(criterion = list("gini"),
                             splitter = list("best"),
@@ -376,11 +366,8 @@ DecisionTreeClassifierInputs <- function(classifier, param) {
 #' @param epsilon  (list) Value for numerical stability in adam.
 #' @param nIterNoChange     (list) Maximum number of epochs to not meet tol improvement. Only effective when solver=’sgd’ or ‘adam’.
 #' @param seed       A seed for the model
+#' @return a modelSettings object
 #'
-#' @examples
-#' \dontrun{
-#' model.mlp <- setMLP()
-#' }
 #' @export
 setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
                    # must be integers
@@ -535,10 +522,7 @@ MLPClassifierInputs <- function(classifier, param) {
 
 #' Create setting for naive bayes model with python
 #'
-#' @examples
-#' \dontrun{
-#' model.nb <- setNaiveBayes()
-#' }
+#' @return a modelSettings object
 #' @export
 setNaiveBayes <- function() {
   param <- list(none = "true")
@@ -572,7 +556,7 @@ GaussianNBInputs <- function(classifier, param) {
 }
 
 
-#' Create setting for random forest model with python (very fast)
+#' Create setting for random forest model using sklearn
 #'
 #' @param ntrees    (list) The number of trees to build
 #' @param criterion (list) The function to measure the quality of a split. Supported criteria are “gini” for the Gini impurity and “entropy” for the information gain. Note: this parameter is tree-specific.
@@ -596,14 +580,8 @@ GaussianNBInputs <- function(classifier, param) {
 #' @param classWeight (list) Weights associated with classes. If not given, all classes are supposed to have weight one. NULL, “balanced”, “balanced_subsample”
 #' @param nJobs The number of jobs to run in parallel.
 #' @param seed  A seed when training the final model
+#' @return a modelSettings object
 #'
-#' @examples
-#' \dontrun{
-#' model.rf <- setRandomForest(
-#'   mtries = list("auto", 5, 20), ntrees = c(10, 100),
-#'   maxDepth = c(5, 20)
-#' )
-#' }
 #' @export
 setRandomForest <- function(ntrees = list(100, 500),
                             criterion = list("gini"),
@@ -762,11 +740,7 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #' @param classWeight   (list) Class weight based on imbalance either 'balanced' or NULL
 #' @param cacheSize     Specify the size of the kernel cache (in MB).
 #' @param seed           A seed for the model
-#'
-#' @examples
-#' \dontrun{
-#' model.svm <- setSVM(kernel = "rbf", seed = NULL)
-#' }
+#' @return a modelSettings object
 #' @export
 setSVM <- function(C = list(1, 0.9, 2, 0.1),
                    kernel = list("rbf"),

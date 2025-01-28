@@ -87,7 +87,7 @@ test_that("plotPlp", {
 })
 
 test_that("plotSmoothCalibration", {
-  skip_if_not_installed("ggplot2")
+  skip_if_not_installed(c("ggplot2", "mgcv"))
   skip_on_cran()
   # test the plot works
   test <- plotSmoothCalibration(

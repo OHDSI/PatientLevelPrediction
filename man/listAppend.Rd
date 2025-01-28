@@ -11,9 +11,18 @@ listAppend(a, b)
 
 \item{b}{Another list}
 }
+\value{
+the joined list
+}
 \description{
 join two lists
 }
 \details{
 This function joins two lists
+}
+\examples{
+a <- list(a = 1, b = 2)
+b <- list(c = 3, d = 4)
+listAppend(a, b)
+
 }

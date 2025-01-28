@@ -2,7 +2,7 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{loadPlpData}
 \alias{loadPlpData}
-\title{Load the cohort data from a folder}
+\title{Load the plpData from a folder}
 \usage{
 loadPlpData(file, readOnly = TRUE)
 }
@@ -20,8 +20,4 @@ system.
 }
 \details{
 The data will be written to a set of files in the folder specified by the user.
-}
-\examples{
-# todo
-
 }

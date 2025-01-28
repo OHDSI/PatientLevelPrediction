@@ -1,6 +1,6 @@
 # @file CovariateSummary.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -37,7 +37,7 @@
 #'                                           to create covariates before summarising
 #'
 #' @return
-#' A data.frame containing: CovariateCount	CovariateMean and CovariateStDev plus these values
+#' A data.frame containing: CovariateCount, CovariateMean and CovariateStDev 
 #' for any specified stratification
 #' @export
 covariateSummary <- function(

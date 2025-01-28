@@ -2,7 +2,7 @@
 % Please edit documentation in R/FeatureImportance.R
 \name{pfi}
 \alias{pfi}
-\title{pfi}
+\title{Permutation Feature Importance}
 \usage{
 pfi(
   plpResult,
@@ -37,8 +37,9 @@ data extracted from the CDM.}
 A dataframe with the covariateIds and the pfi (change in AUC caused by permuting the covariate) value
 }
 \description{
-Calculate the permutation feature importance for a PLP model.
+Calculate the permutation feature importance (pfi) for a PLP model.
 }
 \details{
-The function permutes the each covariate/features <repeats> times and calculates the mean AUC change caused by the permutation.
+The function permutes the each covariate/features <repeats> times and
+calculates the mean AUC change caused by the permutation.
 }

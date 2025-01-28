@@ -1,6 +1,6 @@
 # @file Plotting.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -30,7 +30,7 @@
 #' @param yLabel              (string) The label for the y-axis
 #'
 #' @return
-#' TRUE if it ran
+#' TRUE if it ran, produces a plot
 #'
 #' @export
 outcomeSurvivalPlot <- function(
@@ -121,7 +121,7 @@ outcomeSurvivalPlot <- function(
 #'                                (to stratify the plots)
 #'
 #' @return
-#' TRUE if it ran
+#' TRUE if it ran, plots are saved in the specified directory
 #'
 #' @export
 plotPlp <- function(
@@ -313,12 +313,6 @@ plotPlp <- function(
 
   return(invisible(TRUE))
 }
-
-
-
-# =============
-# THERSHOLDSUMMARY PLOTS
-# =============
 
 
 #' Plot the ROC curve using the sparse thresholdSummary data frame
@@ -727,10 +721,6 @@ plotF1Measure <- function(
 }
 
 
-
-# =============
-# DEMOGRAPHICSUMMARY PLOTS
-# =============
 #' Plot the Observed vs. expected incidence, by age and gender
 #'
 #' @details
@@ -868,9 +858,6 @@ plotDemographicSummary <- function(
 }
 
 
-# =============
-# CALIBRATIONSUMMARY PLOTS
-# =============
 #' Plot the calibration
 #'
 #' @details
@@ -958,9 +945,6 @@ plotSparseCalibration <- function(
   return(plot)
 }
 
-# =============
-# CALIBRATIONSUMMARY PLOTS 2
-# =============
 #' Plot the conventional calibration
 #'
 #' @details
@@ -1030,14 +1014,11 @@ plotSparseCalibration2 <- function(
   return(plot)
 }
 
-# =============
-# SMOOTHCALIBRATION plot
-# =============
 #' Plot the smooth calibration as detailed in Calster et al. "A calibration heirarchy for risk models
 #' was defined: from utopia to empirical data" (2016)
 #'
 #' @details
-#' Create a plot showing the smoothed calibration #'
+#' Create a plot showing the smoothed calibration
 #' @param plpResult       The result of running \code{\link{runPlp}} function. An object containing the
 #'                        model or location where the model is save, the data selection settings, the
 #'                        preprocessing and training settings as well as various performance measures
@@ -1336,7 +1317,7 @@ plotSmoothCalibration <- function(plpResult,
 #' @param evalType Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted
 #' @param ylim The y limits for the plot, if NULL the limits are calculated from the data
 #' @param xlim The x limits for the plot, if NULL the limits are calculated from the data
-#' @return A list of ggplot objects
+#' @return A list of ggplot objects or a single ggplot object if only one evaluation type is plotted
 #' @export
 plotNetBenefit <- function(plpResult,
                            typeColumn = "evaluation",
@@ -1417,6 +1398,7 @@ plotNetBenefit <- function(plpResult,
 #' @param plpResult A plp result object as generated using the \code{\link{runPlp}} function.
 #' @param evalType The evaluation type column
 #' @return A data frame with the net benefit, treat all and treat none values
+#' @noRd
 #' @keywords internal
 getNetBenefit <- function(plpResult, evalType) {
   prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
@@ -1645,10 +1627,6 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
   return(plot)
 }
 
-# =============
-# PREDICTIONSUMMARY PLOTS
-# =============
-
 #' Plot the side-by-side boxplots of prediction distribution, by class#'
 #' @details
 #' Create a plot showing the side-by-side boxplots of prediction distribution, by class
@@ -1731,12 +1709,6 @@ plotPredictionDistribution <- function(
   }
   return(plot)
 }
-
-
-
-# =============
-# COVARIATESUMMARY PLOTS
-# =============
 
 #' Plot the variable importance scatterplot
 #'

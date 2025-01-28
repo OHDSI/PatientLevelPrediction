@@ -6,11 +6,9 @@
 \usage{
 setNaiveBayes()
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for naive bayes model with python
-}
-\examples{
-\dontrun{
-model.nb <- setNaiveBayes()
-}
 }

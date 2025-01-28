@@ -22,6 +22,8 @@
 #' 
 #' @param allList a list of lists
 #' @return A list with all possible combinations from the input list of lists
+#' @examples
+#' listCartesian(list(list(1, 2), list(3, 4)))
 #' @export
 listCartesian <- function(allList) {
   combinations <- expand.grid(allList)

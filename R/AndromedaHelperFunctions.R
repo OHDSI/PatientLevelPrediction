@@ -1,4 +1,8 @@
-# @file ffHelperFunctions.R Copyright 2021 Observational Health Data Sciences and Informatics This file is part of PatientLevelPrediction
+# @file AndromedaHelperFunctions.R 
+# 
+# Copyright 2025 Observational Health Data Sciences and Informatics 
+# 
+# This file is part of PatientLevelPrediction
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -94,33 +98,4 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000) {
   ParallelLogger::logInfo(paste0("Limiting covariate data took: ", timeTaken, " mins"))
 
   return(newCovariateData)
-}
-
-
-# is this used?
-# return prev of ffdf
-calculatePrevs <- function(plpData, population) {
-  # ===========================
-  # outcome prevs
-  # ===========================
-
-  # add population to sqllite
-  population <- dplyr::as_tibble(population)
-  plpData$covariateData$population <- population %>%
-    dplyr::select("rowId", "outcomeCount")
-
-  outCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 1))
-  nonOutCount <- nrow(plpData$covariateData$population %>% dplyr::filter(.data$outcomeCount == 0))
-
-  # join covariate with label
-  prevs <- plpData$covariateData$covariates %>%
-    dplyr::inner_join(plpData$covariateData$population) %>%
-    dplyr::group_by(.data$covariateId) %>%
-    dplyr::summarise(
-      prev.out = 1.0 * sum(.data$outcomeCount == 1, na.rm = TRUE) / outCount,
-      prev.noout = 1.0 * sum(.data$outcomeCount == 0, na.rm = TRUE) / nonOutCount
-    ) %>%
-    dplyr::select("covariateId", "prev.out", "prev.noout")
-
-  return(as.data.frame(prevs))
 }
