@@ -32,7 +32,7 @@ test_that("setPythonEnvironment", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
   expect_error(setPythonEnvironment(envname = "madeup34343"))
-  expect_equal(class(setPythonEnvironment(envname = "madeup34343", envtype = "conda")), "character")
+  expect_equal(class(setPythonEnvironment(envname = "madeup34343")), "character")
 })
 
 test_that("Borrowed cut2", {
