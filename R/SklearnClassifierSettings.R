@@ -35,16 +35,7 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
                         learningRate = list(1, 0.5, 0.1),
                         algorithm = list("SAMME"),
                         seed = sample(1000000, 1)) {
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
-  })
-
+  checkSklearn()
   checkIsClass(seed[[1]], c("numeric", "integer"))
   checkIsClass(nEstimators, "list")
   checkIsClass(learningRate, "list")
@@ -148,19 +139,7 @@ setDecisionTree <- function(criterion = list("gini"),
                             minImpurityDecrease = list(10^-7),
                             classWeight = list(NULL),
                             seed = sample(1000000, 1)) {
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
-  })
-  if (!inherits(x = seed[[1]], what = c("numeric", "integer"))) {
-    stop("Invalid seed")
-  }
-
+  checkSklearn()
   checkIsClass(criterion, "list")
   checkIsClass(splitter, "list")
   checkIsClass(maxDepth, "list")
@@ -425,15 +404,7 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
                    epsilon = list(0.00000001),
                    nIterNoChange = list(10),
                    seed = sample(100000, 1)) {
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
-  })
+  checkSklearn()
   checkIsClass(seed, c("numeric", "integer"))
   checkIsClass(hiddenLayerSizes, c("list"))
   checkIsClass(activation, c("list"))
@@ -582,15 +553,7 @@ setNaiveBayes <- function() {
     pythonModule = "sklearn.naive_bayes",
     pythonClass = "GaussianNB"
   )
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
-  })
+  checkSklearn()
   attr(param, "saveToJson") <- TRUE
   attr(param, "saveType") <- "file"
 
@@ -657,15 +620,7 @@ setRandomForest <- function(ntrees = list(100, 500),
                             nJobs = list(NULL),
                             classWeight = list(NULL),
                             seed = sample(100000, 1)) {
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
-  })
+  checkSklearn()
   checkIsClass(seed, c("numeric", "integer"))
   checkIsClass(ntrees, c("list"))
   checkIsClass(criterion, c("list"))
@@ -823,15 +778,7 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
                    classWeight = list(NULL),
                    cacheSize = 500,
                    seed = sample(100000, 1)) {
-  rlang::check_installed(
-    "reticulate",
-    reason = "Reticulate is required to use the Python models"
-  )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("Cannot import scikit-learn in python. scikit-learn in a python environment reachable by reticulate is required to use the Python models. Please check your python setup with reticulate::py_config() followed by reticulate::import('sklearn')")
-  })
+  checkSklearn()
   checkIsClass(seed, c("numeric", "integer"))
   checkIsClass(cacheSize, c("numeric", "integer"))
   checkIsClass(C, c("list"))

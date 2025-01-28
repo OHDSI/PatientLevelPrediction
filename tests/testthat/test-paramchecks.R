@@ -17,9 +17,6 @@
 library("testthat")
 context("ParamChecks")
 
-# Test unit for the creation of the study externalValidatePlp
-
-
 test_that("checkBoolean", {
   testthat::expect_error(checkBoolean(1))
   testthat::expect_error(checkBoolean("tertet"))
@@ -83,4 +80,47 @@ test_that("checkInStringVector", {
   testthat::expect_error(checkInStringVector("dsdsds", c("dsds", "double")))
 
   testthat::expect_equal(checkInStringVector("dsdsds", c("dsdsds", "double")), TRUE)
+})
+
+test_that("createDir", {
+  dir <- tempfile()
+  createDir(dir)
+  testthat::expect_equal(file.exists(dir), TRUE)
+  unlink(dir)
+})
+
+test_that("checkFileExists", {
+  file <- tempfile()
+  testthat::expect_error(checkFileExists(file))
+  file.create(file)
+  testthat::expect_equal(checkFileExists(file), TRUE)
+  unlink(file)
+})
+
+test_that("checkDataframe", {
+  expect_error(checkDataframe(
+    data.frame(a = 1:2, b = 1:2), c("a", "c"),
+    c("numeric", "numeric")
+  ))
+  expect_error(checkDataframe(
+    data.frame(a = 1:2, b = 1:2),
+    c("a", "b"), c("numeric", "character")
+  ))
+  expect_error(checkDataframe(
+    data.frame(a = 1:2, b = 1:2),
+    c("a", "b"), c("numeric", "numeric", "numeric")
+  ))
+  expect_true(checkDataframe(
+    data.frame(a = 1:2, b = 1:2),
+    c("a", "b"), c("integer", "integer")
+  ))
+  # allow both numeric and integer in a
+  expect_true(checkDataframe(
+    data.frame(a = as.numeric(1:2), b = 1:2),
+    c("a", "b"), list(c("numeric", "integer"), "integer")
+  ))
+  expect_true(checkDataframe(
+    data.frame(a = 1:2, b = 1:2),
+    c("a", "b"), list(c("numeric", "integer"), "integer")
+  ))
 })
