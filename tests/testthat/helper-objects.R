@@ -14,182 +14,178 @@ if (Sys.getenv("GITHUB_ACTIONS") == "true") {
         unlink(tempJarFolder, recursive = TRUE, force = TRUE)
         Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
       },
-      testthat::teardown_env()
-    )
-  }
-
-  # configure and activate python
-  rlang::check_installed("reticulate")
-  PatientLevelPrediction::configurePython(envname = "r-reticulate", envtype = "conda")
-  PatientLevelPrediction::setPythonEnvironment(envname = "r-reticulate", envtype = "conda")
-
-  # if mac install nomkl -- trying to fix github actions
-  if (ifelse(is.null(Sys.info()), FALSE, Sys.info()["sysname"] == "Darwin")) {
-    reticulate::conda_install(
-      envname = "r-reticulate", packages = c("nomkl"),
-      forge = TRUE, pip = FALSE, pip_ignore_installed = TRUE,
-      conda = "auto"
+      teardown_env()
     )
   }
 }
-
 
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
-# PLPDATA
-connectionDetails <- Eunomia::getEunomiaConnectionDetails()
-Eunomia::createCohorts(connectionDetails)
-outcomeId <- 3 # GIbleed
-
-databaseDetails <- createDatabaseDetails(
-  connectionDetails = connectionDetails,
-  cdmDatabaseSchema = "main",
-  cdmDatabaseName = "main",
-  cohortDatabaseSchema = "main",
-  cohortTable = "cohort",
-  outcomeDatabaseSchema = "main",
-  outcomeTable = "cohort",
-  targetId = 1,
-  outcomeIds = outcomeId,
-  cdmVersion = 5
-)
-
-covariateSettings <- FeatureExtraction::createCovariateSettings(
-  useDemographicsAge = TRUE,
-  useDemographicsGender = TRUE,
-  useConditionOccurrenceAnyTimePrior = TRUE
-)
-
-plpData <- getPlpData(
-  databaseDetails = databaseDetails,
-  covariateSettings = covariateSettings,
-  restrictPlpDataSettings = createRestrictPlpDataSettings()
-)
-
-# POPULATION
-populationSettings <- createStudyPopulationSettings(
-  firstExposureOnly = FALSE,
-  washoutPeriod = 0,
-  removeSubjectsWithPriorOutcome = FALSE,
-  priorOutcomeLookback = 99999,
-  requireTimeAtRisk = TRUE,
-  minTimeAtRisk = 10,
-  riskWindowStart = 0,
-  startAnchor = "cohort start",
-  riskWindowEnd = 365,
-  endAnchor = "cohort start"
-)
-
-# MODEL SETTINGS
-lrSet <- setLassoLogisticRegression(seed = 42)
-
-# RUNPLP - LASSO LR
-plpResult <- runPlp(
-  plpData = plpData,
-  outcomeId = outcomeId,
-  analysisId = "Test",
-  analysisName = "Testing analysis",
-  populationSettings = populationSettings,
-  splitSettings = createDefaultSplitSetting(splitSeed = 12),
-  preprocessSettings = createPreprocessSettings(),
-  modelSettings = lrSet,
-  logSettings = createLogSettings(verbosity = "ERROR"),
-  executeSettings = createDefaultExecuteSettings(),
-  saveDirectory = saveLoc
-)
+if (rlang::is_installed("curl")) {
+  internet <- curl::has_internet()
+} else {
+  internet <- FALSE
+}
 
 
-# now diagnose
-diagnoseResult <- diagnosePlp(
-  plpData = plpData,
-  outcomeId = outcomeId,
-  analysisId = "Test",
-  populationSettings = populationSettings,
-  splitSettings = createDefaultSplitSetting(splitSeed = 12),
-  saveDirectory = saveLoc,
-  modelSettings = lrSet,
-  logSettings = createLogSettings(
-    verbosity = "DEBUG",
-    timeStamp = TRUE,
-    logName = "diagnosePlp Log"
-  ),
-  preprocessSettings = createPreprocessSettings(),
-  sampleSettings = NULL,
-  featureEngineeringSettings = NULL
-)
+if (internet && rlang::is_installed("Eunomia")) {
+  # PLPDATA
+  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+  Eunomia::createCohorts(connectionDetails)
+  outcomeId <- 3 # GIbleed
 
-#
+  databaseDetails <- createDatabaseDetails(
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = "main",
+    cdmDatabaseName = "main",
+    cohortDatabaseSchema = "main",
+    cohortTable = "cohort",
+    outcomeDatabaseSchema = "main",
+    outcomeTable = "cohort",
+    targetId = 1,
+    outcomeIds = outcomeId,
+    cdmVersion = 5
+  )
 
+  covariateSettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE,
+    useDemographicsGender = TRUE,
+    useConditionOccurrenceAnyTimePrior = TRUE
+  )
 
-population <- createStudyPopulation(
-  plpData = plpData,
-  outcomeId = outcomeId,
-  populationSettings = populationSettings
-)
+  plpData <- getPlpData(
+    databaseDetails = databaseDetails,
+    covariateSettings = covariateSettings,
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
 
-createSplitData <- function(plpData, population, split = "train") {
-  data <- PatientLevelPrediction::splitData(
+  # POPULATION
+  populationSettings <- createStudyPopulationSettings(
+    firstExposureOnly = FALSE,
+    washoutPeriod = 0,
+    removeSubjectsWithPriorOutcome = FALSE,
+    priorOutcomeLookback = 99999,
+    requireTimeAtRisk = TRUE,
+    minTimeAtRisk = 10,
+    riskWindowStart = 0,
+    startAnchor = "cohort start",
+    riskWindowEnd = 365,
+    endAnchor = "cohort start"
+  )
+
+  # MODEL SETTINGS
+  lrSet <- setLassoLogisticRegression(seed = 42)
+
+  # RUNPLP - LASSO LR
+  plpResult <- runPlp(
     plpData = plpData,
-    population = population,
-    splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12)
+    outcomeId = outcomeId,
+    analysisId = "Test",
+    analysisName = "Testing analysis",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12),
+    preprocessSettings = createPreprocessSettings(),
+    modelSettings = lrSet,
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createDefaultExecuteSettings(),
+    saveDirectory = saveLoc
   )
-  if (split == "train") {
-    return(data$Train)
-  } else {
-    return(data$Test)
-  }
-}
-
-trainData <- createSplitData(plpData, population)
-testData <-  createSplitData(plpData, population, split = "test")
 
 
-# reduced Data to only use n most important features (as decided by LR)
-reduceData <- function(data, n = 20) {
-  covariates <- plpResult$model$covariateImportance %>%
-    dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = FALSE) %>%
-    dplyr::pull(.data$covariateId)
+  # now diagnose
+  diagnoseResult <- diagnosePlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    analysisId = "Test",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12),
+    saveDirectory = saveLoc,
+    modelSettings = lrSet,
+    logSettings = createLogSettings(
+      verbosity = "DEBUG",
+      timeStamp = TRUE,
+      logName = "diagnosePlp Log"
+    ),
+    preprocessSettings = createPreprocessSettings(),
+    sampleSettings = NULL,
+    featureEngineeringSettings = NULL
+  )
 
-  reducedData <- list(
-    labels = data$labels,
-    folds = data$folds,
-    covariateData = Andromeda::andromeda(
-      analysisRef = data$covariateData$analysisRef
+  #
+
+
+  population <- createStudyPopulation(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    populationSettings = populationSettings
+  )
+
+  createSplitData <- function(plpData, population, split = "train") {
+    data <- PatientLevelPrediction::splitData(
+      plpData = plpData,
+      population = population,
+      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12)
     )
+    if (split == "train") {
+      return(data$Train)
+    } else {
+      return(data$Test)
+    }
+  }
+
+  trainData <- createSplitData(plpData, population)
+  testData <- createSplitData(plpData, population, split = "test")
+
+
+  # reduced Data to only use n most important features (as decided by LR)
+  reduceData <- function(data, n = 20) {
+    covariates <- plpResult$model$covariateImportance %>%
+      dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = FALSE) %>%
+      dplyr::pull(.data$covariateId)
+
+    reducedData <- list(
+      labels = data$labels,
+      folds = data$folds,
+      covariateData = Andromeda::andromeda(
+        analysisRef = data$covariateData$analysisRef
+      )
+    )
+
+
+    reducedData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% covariates)
+    reducedData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+      dplyr::filter(.data$covariateId %in% covariates)
+
+    attributes(reducedData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
+    class(reducedData$covariateData) <- class(trainData$covariateData)
+    attributes(reducedData)$metaData <- attributes(trainData)$metaData
+    class(reducedData) <- class(data)
+    return(reducedData)
+  }
+
+  tinyTrainData <- reduceData(trainData)
+  tinyTestData <- reduceData(testData)
+
+  tinyPlpData <- createTinyPlpData(plpData, plpResult)
+
+  nanoData <- createTinyPlpData(plpData, plpResult, n = 2)
+  tinyResults <- runPlp(
+    plpData = nanoData,
+    populationSettings = populationSettings,
+    outcomeId = outcomeId,
+    analysisId = "tinyFit",
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE,
+      runSampleData = FALSE,
+      runfeatureEngineering = FALSE,
+      runPreprocessData = TRUE,
+      runModelDevelopment = TRUE,
+      runCovariateSummary = FALSE
+    ),
+    saveDirectory = file.path(saveLoc, "tinyResults")
   )
-
-
-  reducedData$covariateData$covariates <- trainData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId %in% covariates)
-  reducedData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
-    dplyr::filter(.data$covariateId %in% covariates)
-
-  attributes(reducedData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
-  class(reducedData$covariateData) <- class(trainData$covariateData)
-  attributes(reducedData)$metaData <- attributes(trainData)$metaData
-  class(reducedData) <- class(data)
-  return(reducedData)
 }
 
-tinyTrainData <- reduceData(trainData)
-tinyTestData <- reduceData(testData)
-
-tinyPlpData <- createTinyPlpData(plpData, plpResult)
-
-nanoData <- createTinyPlpData(plpData, plpResult, n = 2)
-tinyResults <- runPlp(
-  plpData = nanoData,
-  populationSettings = populationSettings,
-  outcomeId = outcomeId,
-  analysisId = "tinyFit",
-  executeSettings = createExecuteSettings(
-    runSplitData = TRUE,
-    runSampleData = FALSE,
-    runfeatureEngineering = FALSE,
-    runPreprocessData = TRUE,
-    runModelDevelopment = TRUE,
-    runCovariateSummary = FALSE
-  ),
-  saveDirectory = file.path(saveLoc, "tinyResults")
-)
+expect_true(!is.null(plpResult$performanceEvaluation))

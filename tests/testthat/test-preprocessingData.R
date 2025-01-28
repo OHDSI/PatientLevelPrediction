@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,11 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("preprocessingData")
-
-
 createDefaultSettings <- function(
     minCovariateFraction = 0.001,
     normalizeData = TRUE,
@@ -41,7 +36,7 @@ test_that("createPreprocessSettings", {
     removeRedundancy = removeRedundancyTest
   )
 
-  expect_is(settings, "preprocessSettings")
+  expect_s3_class(settings, "preprocessSettings")
   expect_equal(settings$minFraction, minCovariateFractionTest)
   expect_equal(settings$normalize, normalizeDataTest)
   expect_equal(settings$removeRedundancy, removeRedundancyTest)
@@ -57,6 +52,8 @@ test_that("createPreprocessSettings", {
 })
 
 test_that("createPreprocessSettings", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   attr(trainData$covariateData, "metaData")$preprocessSettings <- NULL # removing for test
   metaData <- attr(trainData$covariateData, "metaData")
   metaLength <- length(metaData)
@@ -74,7 +71,7 @@ test_that("createPreprocessSettings", {
   )
   newData <- preprocessData(trainData$covariateData, preprocessSettings)
 
-  expect_is(newData, "CovariateData")
+  expect_s4_class(newData, "CovariateData")
   expect_true(newData$covariates %>% dplyr::tally() %>% dplyr::pull() < covSize)
 
   # metaData should have tidyCovariateDataSettings + preprocessSettings (so 2 bigger)
@@ -117,5 +114,7 @@ test_that("createPreprocessSettings", {
 })
 
 test_that("Did tidy on test", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   expect_true(attr(plpResult$prediction, "metaData")$tidyCovariates)
 })

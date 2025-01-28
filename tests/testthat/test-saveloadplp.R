@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,22 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-context("SaveLoadPlp")
-
-saveLoc <- tempdir()
-
 test_that("savePlpDataError", {
   expect_error(savePlpData())
   expect_error(savePlpData(plpData = 1))
   expect_error(savePlpData(plpData = 1, file = "testing"))
 })
 
-
-oldCohorts <- plpData$cohorts
-oldOutcomes <- plpData$outcomes
-oldCovariates <- as.data.frame(plpData$covariateData$covariates)
-oldCovariateRef <- as.data.frame(plpData$covariateData$covariateRef)
+if (internet && rlang::is_installed("Eunomia")) {
+  oldCohorts <- plpData$cohorts
+  oldOutcomes <- plpData$outcomes
+  oldCovariates <- as.data.frame(plpData$covariateData$covariates)
+  oldCovariateRef <- as.data.frame(plpData$covariateData$covariateRef)
+}
 test_that("savePlpData", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   savePlpData(
     plpData = plpData,
     file = file.path(saveLoc, "saveDataTest"), overwrite = TRUE
@@ -43,6 +42,8 @@ test_that("loadPlpDataError", {
 })
 
 test_that("loadPlpData", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   loadedData <- loadPlpData(file = file.path(saveLoc, "saveDataTest"))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
@@ -81,14 +82,16 @@ test_that("loadPlpModelError", {
   expect_error(loadPlpModel(dirPath = "madeup.txt"))
 })
 
-# make an sklearn model to test file transport
-dir.create(file.path(saveLoc, "testMoveStart"))
-write.csv(data.frame(a = 1, b = 2), file = file.path(saveLoc, "testMoveStart", "file.csv"), row.names = FALSE)
-plpModelTemp <- plpResult$model
-plpModelTemp$model <- file.path(saveLoc, "testMoveStart")
-attr(plpModelTemp, "saveType") <- "file"
-
 test_that("move model files when saveType is file", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
+# make an sklearn model to test file transport
+  dir.create(file.path(saveLoc, "testMoveStart"))
+  write.csv(data.frame(a = 1, b = 2), file = file.path(saveLoc, "testMoveStart", "file.csv"), row.names = FALSE)
+  plpModelTemp <- plpResult$model
+  plpModelTemp$model <- file.path(saveLoc, "testMoveStart")
+  attr(plpModelTemp, "saveType") <- "file"
+
   savePlpModel(plpModel = plpModelTemp, dirPath = file.path(saveLoc, "testMoveEnd"))
 
   expect_equal(dir(file.path(saveLoc, "testMoveStart")), dir(file.path(saveLoc, "testMoveEnd", "model")))
@@ -136,8 +139,8 @@ test_that("savePlpResult", {
 test_that("loadPlpResultError", {
   expect_error(loadPlpResult(dirPath = NULL))
   expect_error(loadPlpResult(dirPath = "madeup/dfdfd/j"))
-  write.csv(c(1), file.path(saveLoc, "file2.csv"))
-  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file2.csv")))
+  write.csv(c(0), file.path(saveLoc, "file2.csv"))
+  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file1.csv")))
 })
 
 test_that("loadPlpResult", {
@@ -164,12 +167,14 @@ test_that("loadPlpResult", {
 
 
 test_that("savePlpShareable works", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   # check it works
   savePlpShareable(plpResult, file.path(saveLoc, "plpFriendly"), minCellCount = 0)
   shareableLoad <- loadPlpShareable(file.path(saveLoc, "plpFriendly"))
 
   # check covariateSummary
-  testthat::expect_equal(nrow(shareableLoad$covariateSummary), nrow(plpResult$covariateSummary))
+  expect_equal(nrow(shareableLoad$covariateSummary), nrow(plpResult$covariateSummary))
 
   # check performanceEvaluation
   expect_equal(
@@ -224,9 +229,9 @@ test_that("applyMinCellCount works", {
     minCellCount = 5
   )
   # check nothing removed
-  testthat::expect_equal(2, sum(minCellResult$covariate_count != -1))
-  testthat::expect_equal(2, sum(minCellResult$with_no_outcome_covariate_count != -1))
-  testthat::expect_equal(2, sum(minCellResult$with_outcome_covariate_count != -1))
+  expect_equal(2, sum(minCellResult$covariate_count != -1))
+  expect_equal(2, sum(minCellResult$with_no_outcome_covariate_count != -1))
+  expect_equal(2, sum(minCellResult$with_outcome_covariate_count != -1))
 
   # now check values are removed
   minCellResult <- applyMinCellCount(
@@ -235,8 +240,8 @@ test_that("applyMinCellCount works", {
     result = result,
     minCellCount = 10
   )
-  testthat::expect_equal(0, sum(minCellResult$covariate_count == -1))
-  testthat::expect_equal(minCellResult$with_no_outcome_covariate_count[2], -1)
-  testthat::expect_equal(1, sum(minCellResult$with_no_outcome_covariate_count == -1))
-  testthat::expect_equal(1, sum(minCellResult$with_outcome_covariate_count == -1))
+  expect_equal(0, sum(minCellResult$covariate_count == -1))
+  expect_equal(minCellResult$with_no_outcome_covariate_count[2], -1)
+  expect_equal(1, sum(minCellResult$with_no_outcome_covariate_count == -1))
+  expect_equal(1, sum(minCellResult$with_outcome_covariate_count == -1))
 })

@@ -507,7 +507,7 @@ calibrationInLargeIntercept <- function(prediction) {
   inverseLog <- log(prediction$value / (1 - prediction$value))
   y <- ifelse(prediction$outcomeCount > 0, 1, 0)
 
-  intercept <- suppressWarnings(stats::glm(y ~ offset(1 * inverseLog), family = "binomial"))
+  intercept <- suppressWarnings(stats::glm(y ~ stats::offset(1 * inverseLog), family = stats::binomial()))
   intercept <- intercept$coefficients[1]
 
   return(intercept)
@@ -525,7 +525,7 @@ calibrationWeak <- function(prediction) {
   inverseLog <- log(prediction$value / (1 - prediction$value))
   y <- ifelse(prediction$outcomeCount > 0, 1, 0)
 
-  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = "binomial"))
+  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = stats::binomial()))
 
   result <- data.frame(
     intercept = vals$coefficients[1],

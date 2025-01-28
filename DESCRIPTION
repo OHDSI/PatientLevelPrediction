@@ -39,13 +39,16 @@ Imports:
     tidyr,
     utils
 Suggests:
+    curl,
     Eunomia (>= 2.0.0),
     ggplot2,
     gridExtra,
     IterativeHardThresholding,
     knitr,
+    lightgbm,
     Metrics,
     mgcv,
+    OhdsiShinyAppBuilder (>= 1.0.0),
     parallel,
     polspline,
     readr,
@@ -55,14 +58,11 @@ Suggests:
     rmarkdown,
     RSQLite,
     scoring,
-    OhdsiShinyAppBuilder (>= 1.0.0),
     survival,
     survminer,
     testthat,
     withr,
-    xgboost (> 1.3.2.1),
-    lightgbm
+    xgboost (> 1.3.2.1)
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Config/testthat/edition: 3
-Config/testthat/parallel: TRUE

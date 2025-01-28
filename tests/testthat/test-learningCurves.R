@@ -13,9 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-context("LearningCurves")
 
-
+if (internet) {
 # learningCurve
 learningCurve <- PatientLevelPrediction::createLearningCurve(
   plpData = plpData,
@@ -30,10 +29,12 @@ learningCurve <- PatientLevelPrediction::createLearningCurve(
     normalize = TRUE
   )
 )
+}
 
 test_that("learningCurve output correct", {
-  testthat::expect_true(is.data.frame(learningCurve))
-  testthat::expect_equal(sum(colnames(learningCurve) %in% c(
+  skip_if_offline()  
+  expect_true(is.data.frame(learningCurve))
+  expect_equal(sum(colnames(learningCurve) %in% c(
     "trainFraction",
     "Train_AUROC",
     "nPredictors",
@@ -41,34 +42,36 @@ test_that("learningCurve output correct", {
     "Train_outcomeCount"
   )), 5)
 
-  testthat::expect_equal(learningCurve$trainFraction, c(0.6, 0.7) * 100)
+  expect_equal(learningCurve$trainFraction, c(0.6, 0.7) * 100)
 })
 
 test_that("plotLearningCurve", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   test <- plotLearningCurve(
     learningCurve = learningCurve,
     metric = "AUROC"
   )
 
   # test the plot works
-  testthat::expect_s3_class(test, "ggplot")
+  expect_s3_class(test, "ggplot")
 
   test <- plotLearningCurve(
     learningCurve = learningCurve,
     metric = "AUPRC"
   )
-  testthat::expect_s3_class(test, "ggplot")
+  expect_s3_class(test, "ggplot")
 
   test <- plotLearningCurve(
     learningCurve = learningCurve,
     metric = "sBrier"
   )
-  testthat::expect_s3_class(test, "ggplot")
+  expect_s3_class(test, "ggplot")
 })
 
 test_that("getTrainFractions works", {
+  skip_if_offline()
   learningCurve <- PatientLevelPrediction::createLearningCurve(
     plpData = tinyPlpData,
     outcomeId = outcomeId, parallel = FALSE, cores = -1,
@@ -84,8 +87,8 @@ test_that("getTrainFractions works", {
       normalize = TRUE
     )
   )
-  testthat::expect_true(is.data.frame(learningCurve))
-  testthat::expect_equal(sum(colnames(learningCurve) %in% c(
+  expect_true(is.data.frame(learningCurve))
+  expect_equal(sum(colnames(learningCurve) %in% c(
     "trainFraction",
     "Train_AUROC",
     "nPredictors",

@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,9 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("Formatting")
 
 createCovariateData <- function() {
   # testing manually constructed data...
@@ -103,6 +100,7 @@ test_that("MapIds with a cohort", {
 
 # switch of all messages
 test_that("toSparseM", {
+  skip_if_offline()
   cohorts <- data.frame(
     rowId = 1:6,
     subjectId = 1:6,
@@ -127,37 +125,37 @@ test_that("toSparseM", {
     daysToEvent = c(150, 40)
   )
 
-  FplpData <- list(
+  fPlpData <- list(
     cohorts = cohorts,
     outcomes = outcomes,
     covariateData = createCovariateData()
   )
-  class(FplpData) <- "plpData"
-  Fpopulation <- data.frame(
+  class(fPlpData) <- "plpData"
+  pFopulation <- data.frame(
     rowId = c(1, 3:6),
     outcomeCount = c(1, 0, 0, 0, 0)
   )
 
   # test gbm coo to sparse matrix
-  sparseMat.test <- toSparseM(FplpData, Fpopulation, map = NULL)
-  matrix.real <- matrix(rep(0, 5 * 7), ncol = 7)
+  sparseMatTest <- toSparseM(fPlpData, pFopulation, map = NULL)
+  matrixReal <- matrix(rep(0, 5 * 7), ncol = 7)
   x <- c(1, 1, 1, 3, 3, 3, 5, 5)
   y <- c(5, 6, 7, 1, 2, 7, 3, 4)
-  for (a in 1:8) matrix.real[x[a], y[a]] <- 1
-  expect_that(as.matrix(sparseMat.test$dataMatrix), is_equivalent_to(matrix.real))
+  for (a in 1:8) matrixReal[x[a], y[a]] <- 1
+  expect_equal(as.matrix(sparseMatTest$dataMatrix), matrixReal)
 
 
   # check map works by permuting it and checking the result
-  sparseMat.test$covariateMap <- sparseMat.test$covariateMap %>% dplyr::arrange(.data$covariateId)
-  sparseMat.test$covariateMap$columnId <- 1:7
-  withMapTest <- toSparseM(FplpData, Fpopulation, map = sparseMat.test$covariateMap)
+  sparseMatTest$covariateMap <- sparseMatTest$covariateMap %>% dplyr::arrange(.data$covariateId)
+  sparseMatTest$covariateMap$columnId <- 1:7
+  withMapTest <- toSparseM(fPlpData, pFopulation, map = sparseMatTest$covariateMap)
 
 
-  matrix.real <- matrix(rep(0, 5 * 7), ncol = 7)
+  matrixReal <- matrix(rep(0, 5 * 7), ncol = 7)
   x <- c(1, 1, 1, 3, 3, 3, 5, 5)
   y <- c(6, 7, 5, 7, 1, 2, 3, 4)
-  for (a in 1:8) matrix.real[x[a], y[a]] <- 1
-  expect_that(as.matrix(withMapTest$dataMatrix), is_equivalent_to(matrix.real))
+  for (a in 1:8) matrixReal[x[a], y[a]] <- 1
+  expect_equal(as.matrix(withMapTest$dataMatrix), matrixReal)
 
 
   # ==================================
@@ -166,13 +164,13 @@ test_that("toSparseM", {
   # objects from helper-object.R
   test <- toSparseM(plpData, population, map = NULL)
   compTest <- as.matrix(test$dataMatrix)
-  testthat::expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
-  testthat::expect_equal(nrow(compTest), length(population$rowId))
-  testthat::expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>%
+  expect_equal(test$labels %>% dplyr::tally() %>% dplyr::pull(), length(population$rowId))
+  expect_equal(nrow(compTest), length(population$rowId))
+  expect_true(ncol(compTest) <= plpData$covariateData$covariateRef %>%
     dplyr::tally() %>%
     dplyr::pull())
-  testthat::expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
-  testthat::expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
+  expect_equal(ncol(compTest), test$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  expect_equal(ncol(compTest), test$covariateMap %>% dplyr::tally() %>% dplyr::pull())
 })
 
 test_that("checkRam", {
@@ -212,7 +210,7 @@ formattingData <- list(
   covariateData = formattingCovs
 )
 
-test_that("testCorrectLables", {
+test_that("testCorrectLabels", {
   data <- toSparseM(plpData = formattingData)
 
   expect_equal(

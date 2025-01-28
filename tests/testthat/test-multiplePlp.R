@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,10 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("MultiplePlp")
-
 analysis1 <- createModelDesign(
   targetId = 1,
   outcomeId = outcomeId,
@@ -84,6 +80,7 @@ test_that("loading analyses settings", {
 test_that("test run multiple", {
   skip_if_not_installed("ResultModelManager")
   skip_on_cran()
+  skip_if_offline()
 
   analysis3 <- createModelDesign(
     targetId = 1,
@@ -129,6 +126,7 @@ test_that("test run multiple", {
 test_that("validateMultiplePlp errors", {
   skip_if_not_installed("ResultModelManager")
   skip_on_cran()
+  skip_if_offline()
   PatientLevelPrediction::validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "multiple"),
     validationDatabaseDetails = databaseDetails,

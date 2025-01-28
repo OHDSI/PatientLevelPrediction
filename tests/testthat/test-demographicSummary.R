@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,9 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("DemographicSummary binary")
 
 test_that("getDemographicSummary", {
   prediction <- data.frame(
@@ -33,7 +30,7 @@ test_that("getDemographicSummary", {
     typeColumn = "evaluation"
   )
 
-  expect_that(ncol(demoSum), equals(12))
+  expect_equal(ncol(demoSum), 12)
   expect_true("evaluation" %in% colnames(demoSum))
 
   # check correct gender length
@@ -65,8 +62,8 @@ test_that("getDemographicSummary", {
     timepoint = 365
   )
 
-  expect_is(demoSumSurv, "data.frame")
-  expect_that(ncol(demoSumSurv), equals(8))
+  expect_s3_class(demoSumSurv, "data.frame")
+  expect_equal(ncol(demoSumSurv), 8)
   expect_true("evaluation" %in% colnames(demoSumSurv))
 
   # check correct gender length

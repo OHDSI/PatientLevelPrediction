@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,35 +13,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-context("Validation")
-
 # Test unit for the creation of the study externalValidatePlp
-modelVal <- loadPlpModel(file.path(saveLoc, "Test", "plpResult", "model"))
-validationDatabaseDetailsVal <- databaseDetails # from run multiple tests
-validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
-recalSet <- createValidationSettings(recalibrate = "weakRecalibration")
-saveLocation <- file.path(saveLoc, "extern")
+if (internet &&
+  identical(Sys.getenv("NOT_CRAN"), "true") &&
+  rlang::is_installed("Eunomia")) {
+  modelVal <- loadPlpModel(file.path(saveLoc, "Test", "plpResult", "model"))
+  validationDatabaseDetailsVal <- databaseDetails # from run multiple tests
+  validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
+  recalSet <- createValidationSettings(recalibrate = "weakRecalibration")
+  saveLocation <- file.path(saveLoc, "extern")
+  setEV <- function(model = modelVal,
+                    validationDatabaseDetails = validationDatabaseDetailsVal,
+                    validationRestrictPlpDataSettings = validationRestrictPlpDataSettingsVal,
+                    settings = recalSet,
+                    outputFolder = saveLocation) {
+    result <- externalValidateDbPlp(
+      plpModel = model,
+      validationDatabaseDetails = validationDatabaseDetails,
+      validationRestrictPlpDataSettings = validationRestrictPlpDataSettings,
+      settings = settings,
+      outputFolder = outputFolder
+    )
 
-setEV <- function(
-    model = modelVal,
-    validationDatabaseDetails = validationDatabaseDetailsVal,
-    validationRestrictPlpDataSettings = validationRestrictPlpDataSettingsVal,
-    settings = recalSet,
-    outputFolder = saveLocation) {
-  result <- externalValidateDbPlp(
-    plpModel = model,
-    validationDatabaseDetails = validationDatabaseDetails,
-    validationRestrictPlpDataSettings = validationRestrictPlpDataSettings,
-    settings = settings,
-    outputFolder = outputFolder
-  )
-
-  return(result)
+    return(result)
+  }
 }
 
-
 test_that("incorrect input externalValidateDbPlp checks work", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   # fails when plpResult is NULL
   expect_error(externalValidateDbPlp(setEV(model = NULL)))
   # fails when plpResult is not class 'plpResult'
@@ -64,8 +64,10 @@ test_that("incorrect input externalValidateDbPlp checks work", {
 
 
 test_that("external validate", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   exVal <- setEV()
-  testthat::expect_equal(class(exVal[[1]]), "externalValidatePlp")
+  expect_equal(class(exVal[[1]]), "externalValidatePlp")
 })
 
 test_that("fromDesignOrModel helper works", {
@@ -150,7 +152,7 @@ test_that("single createValidationDesign works with all arguments", {
   outcomeId <- 2
   plpModelList <- list("model1", "model2")
   populationSettings <- createStudyPopulationSettings()
-  restrictPlpDataSettings <- createRestrictPlpDataSettings() # Replace with actual restrictPlpDataSettings object
+  restrictPlpDataSettings <- createRestrictPlpDataSettings() 
   recalibrate <- c("recalibrationInTheLarge")
   runCovariateSummary <- FALSE
 
@@ -195,6 +197,8 @@ test_that("createValidationDesigns correctly handles multiple restrictSettings",
 })
 
 test_that("createValidationSettings errors with <10 outcomes", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   tinyRestrictPlpDataSettings <- createRestrictPlpDataSettings(
     sampleSize = 30,
   )
@@ -218,6 +222,8 @@ test_that("createValidationSettings errors with <10 outcomes", {
 })
 
 test_that("createDownloadTasks handles single design correctly", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -231,6 +237,8 @@ test_that("createDownloadTasks handles single design correctly", {
 })
 
 test_that("createDownloadTasks handles multiple designs correctly", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -250,6 +258,8 @@ test_that("createDownloadTasks handles multiple designs correctly", {
 })
 
 test_that("createDownloadTasks handles duplicated designs correctly", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -273,6 +283,8 @@ test_that("createDownloadTasks handles duplicated designs correctly", {
 })
 
 test_that("createDownloadTasks with different restrictSettings", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -299,6 +311,8 @@ test_that("createDownloadTasks with different restrictSettings", {
 })
 
 test_that("createDownloadTasks works with multiple outcomeIds", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -327,6 +341,8 @@ test_that("createDownloadTasks works with multiple outcomeIds", {
 })
 
 test_that("createDownloadTasks with multiple covSettings", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   modelVal2 <- modelVal
   design1 <- createValidationDesign(
     targetId = 1,
@@ -348,6 +364,8 @@ test_that("createDownloadTasks with multiple covSettings", {
 })
 
 test_that("createDownloadTasks when restrictSettings come from models", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,

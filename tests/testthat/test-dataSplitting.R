@@ -1,5 +1,5 @@
 # @file test_DataSplitting.R
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,19 +14,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-library("testthat")
-context("Data splitting")
-
-
 # make sure pop is all plpData people
-
-populationT <- plpData$cohorts
-populationT$outcomeCount <- sample(c(0, 1), nrow(populationT), replace = TRUE)
-attr(populationT, "metaData")$outcomeId <- outcomeId
-attr(populationT, "metaData")$populationSettings <- list(madeup = TRUE)
-attr(populationT, "metaData")$restrictPlpDataSettings <- list(madeup = TRUE)
-attr(populationT, "metaData")$attrition <- c(1, 2, 3)
-
+if (internet) {
+  populationT <- plpData$cohorts
+  populationT$outcomeCount <- sample(c(0, 1), nrow(populationT), replace = TRUE)
+  attr(populationT, "metaData")$outcomeId <- outcomeId
+  attr(populationT, "metaData")$populationSettings <- list(madeup = TRUE)
+  attr(populationT, "metaData")$restrictPlpDataSettings <- list(madeup = TRUE)
+  attr(populationT, "metaData")$attrition <- c(1, 2, 3)
+}
 # check correct inputs
 testFraction1 <- sample(9, 1) / 10
 trainFraction1 <- 1 - testFraction1
@@ -54,7 +50,7 @@ defaultSetting <- function(
 test_that("createDefaultSplitSetting", {
   splitSettings <- defaultSetting()
 
-  expect_is(splitSettings, "splitSettings")
+  expect_s3_class(splitSettings, "splitSettings")
 
   expectFun <- "randomSplitter"
   if (type1 == "time") {
@@ -130,6 +126,7 @@ test_that("createDefaultSplitSetting", {
 
 
 test_that("Main split function: splitData", {
+  skip_if_offline()
   # check default settings with test/train
   splitSettings <- defaultSetting()
 
@@ -140,14 +137,14 @@ test_that("Main split function: splitData", {
   )
 
   # check class
-  expect_is(splitData, "splitData")
+  expect_s3_class(splitData, "splitData")
 
   # should have test/train
   expect_equal(names(splitData), c("Train", "Test"))
 
   # train and test are CovariateData
-  expect_is(splitData$Train$covariateData, "CovariateData")
-  expect_is(splitData$Test$covariateData, "CovariateData")
+  expect_s4_class(splitData$Train$covariateData, "CovariateData")
+  expect_s4_class(splitData$Test$covariateData, "CovariateData")
 
   # Train has labels/folds/covariateData
   expect_equal(names(splitData$Train), c("labels", "folds", "covariateData"))
@@ -163,7 +160,7 @@ test_that("Main split function: splitData", {
     plpData$metaData$databaseDetails$cdmDatabaseSchema
   )
 
-  expect_is(attr(splitData$Train, "metaData")$restrictPlpDataSettings, "list")
+  expect_type(attr(splitData$Train, "metaData")$restrictPlpDataSettings, "list")
   expect_equal(
     attr(splitData$Train, "metaData")$covariateSettings,
     plpData$metaData$covariateSettings
@@ -232,6 +229,7 @@ test_that("Main split function: splitData", {
 })
 
 test_that("dataSummary works", {
+  skip_if_offline()
   splitSettings <- defaultSetting(
     testFraction = 0,
     trainFraction = 1
@@ -283,7 +281,7 @@ test_that("Data stratified splitting", {
   test <- randomSplitter(population = dsPopulation3, splitSettings = splitSettings)
   test <- merge(dsPopulation3, test)
   test <- table(test$outcomeCount, test$index)
-  expect_that(sum(test), equals(size))
+  expect_equal(sum(test), size)
 
   # test the training fraction parameter for learning curves
   size <- 500
@@ -341,7 +339,7 @@ test_that("Data splitting by time", {
   test <- timeSplitter(population = dsPopulation2, splitSettings = splitSettings)
   test <- merge(dsPopulation2, test)
   test <- table(test$outcomeCount, test$index)
-  expect_that(sum(test), equals(size))
+  expect_equal(sum(test), size)
 
   # test the training fraction parameter for learning curves
   size <- 500
@@ -425,6 +423,7 @@ test_that("Data splitting by subject", {
 })
 
 test_that("Existing data splitter works", {
+  skip_if_offline()
   # split by age
   age <- population$ageYear
   # create empty index same lengths as age
@@ -441,7 +440,7 @@ test_that("Existing data splitter works", {
   )
 
   # test only old people in test
-  expect_equal( 
+  expect_equal(
     length(ageSplit$Test$labels$rowId),
     sum(age > 43)
   )

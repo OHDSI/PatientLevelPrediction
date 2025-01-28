@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,12 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-context("FeatureImportance")
-
-# Test unit for the creation of the study externalValidatePlp
-
 
 test_that("pfi feature importance returns data.frame", {
+  skip_if_offline()
   # limit to a sample of 2 covariates for faster test
   covariates <- plpResult$model$covariateImportance %>%
     dplyr::filter("covariateValue" != 0) %>%
@@ -45,6 +42,7 @@ test_that("pfi feature importance returns data.frame", {
 })
 
 test_that("pfi feature importance works with logger or without covariates", {
+  skip_if_offline()
   pfiTest <- pfi(tinyResults, population, nanoData,
     cores = 1,
     covariates = NULL, log = file.path(tempdir(), "pfiLog")
