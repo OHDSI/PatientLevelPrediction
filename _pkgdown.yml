@@ -75,6 +75,9 @@ reference:
       - savePlpData
       - loadPlpData
       - getCohortCovariateData
+      - print.plpData
+      - print.summary.plpData
+      - summary.plpData
   - title: "Settings for designing a prediction models"
     desc: >
       Design settings required when developing a model.
