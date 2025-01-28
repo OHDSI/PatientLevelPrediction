@@ -2,30 +2,14 @@
 title: "Best Practice Research"
 author: "Jenna Reps, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Best Practices}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
 ---
 
 ```{=html}
 <!--
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Best Practices}
+%\VignetteEncdoing{UTF-8}
 -->
 ```
 ## Best practice publications using the OHDSI PatientLevelPrediction framework
@@ -234,7 +218,7 @@ Evaluation
 A novel method to estimate external validation using aggregate statistics  
 </td>
 <td>
-<a href=''> Study under review </a>
+Study under review
 </td>
 </tr>    
 

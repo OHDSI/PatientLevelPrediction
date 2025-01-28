@@ -36,5 +36,5 @@ for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target coho
 Run a list of predictions diagnoses
 }
 \details{
-This function will run all specified prediction design diagnoses as defined using .
+This function will run all specified prediction design diagnoses.
 }

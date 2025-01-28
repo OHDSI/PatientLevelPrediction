@@ -29,6 +29,9 @@ extractDatabaseToCsv(
 
 \item{fileAppend}{If set to a string this will be appended to the start of the csv file names}
 }
+\value{
+The directory path where the results were saved
+}
 \description{
 Exports all the results from a database into csv files
 }

@@ -15,7 +15,7 @@ plotPlp(plpResult, saveLocation = NULL, typeColumn = "evaluation")
 (to stratify the plots)}
 }
 \value{
-TRUE if it ran
+TRUE if it ran, plots are saved in the specified directory
 }
 \description{
 Plot all the PatientLevelPrediction plots

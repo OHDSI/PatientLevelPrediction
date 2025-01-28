@@ -1,6 +1,8 @@
 template:
+  bootstrap: 5
   params:
     bootswatch: cosmo
+  light-switch: true
 
 development:
   mode: auto
@@ -16,10 +18,8 @@ navbar:
     left:
     - home
     - intro
-    - videos
     - reference
     - articles
-    - tutorial
     - benchmarks
     - predictors
     - bestpractice
@@ -75,6 +75,9 @@ reference:
       - savePlpData
       - loadPlpData
       - getCohortCovariateData
+      - print.plpData
+      - print.summary.plpData
+      - summary.plpData
   - title: "Settings for designing a prediction models"
     desc: >
       Design settings required when developing a model.
@@ -209,7 +212,7 @@ reference:
       - plotLearningCurve
   - title: "Simulation"
     desc: >
-      Functions for simulating cohort method data objects.
+      Functions for simulating PLP data objects.
     contents:
       - simulatePlpData
       - plpDataSimulationProfile
@@ -228,32 +231,17 @@ reference:
       - setPythonEnvironment
   - title: "Evaluation measures"
     contents:
-      - accuracy
       - averagePrecision
       - brierScore
       - calibrationLine
       - computeAuc
-      - f1Score
-      - falseDiscoveryRate
-      - falseNegativeRate
-      - falseOmissionRate
-      - falsePositiveRate
       - ici
       - modelBasedConcordance
-      - negativeLikelihoodRatio
-      - negativePredictiveValue
-      - positiveLikelihoodRatio
-      - positivePredictiveValue
-      - sensitivity
-      - specificity
       - computeGridPerformance
-      - diagnosticOddsRatio
       - getCalibrationSummary
       - getDemographicSummary
       - getThresholdSummary
-      - getThresholdSummary_binary
       - getPredictionDistribution
-      - getPredictionDistribution_binary
   - title: "Saving/loading models as json"
     desc: >
       Functions for saving or loading models as json
@@ -276,5 +264,6 @@ reference:
       - predictCyclops
       - predictGlm
       - createGlmModel
+      - createSklearnModel
     
 

@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,12 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("Recalibration")
-
-
 prediction <- data.frame(
   rowId = 1:100,
   value = c(runif(20) / 30, runif(80) / 300),
@@ -44,7 +38,7 @@ test_that("recalibrationInTheLarge", {
     method = "recalibrationInTheLarge"
   )
 
-  testthat::expect_true(sum(test$evaluationType == "recalibrationInTheLarge") == 100)
+  expect_true(sum(test$evaluationType == "recalibrationInTheLarge") == 100)
 })
 
 
@@ -55,11 +49,13 @@ test_that("weakRecalibration", {
     method = "weakRecalibration"
   )
 
-  testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
+  expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })
 
 
 test_that("recalibratePlpRefit", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   newPop <- plpResult$prediction %>%
     dplyr::select(-"value") %>%
     dplyr::filter(.data$evaluationType %in% c("Test", "Train"))
@@ -77,10 +73,10 @@ test_that("recalibratePlpRefit", {
   )
 
   if (!is.null(testRecal)) {
-    testthat::expect_true(
+    expect_true(
       sum(testRecal$evaluationType == "recalibrationRefit") > 0
     )
-    testthat::expect_s3_class(testRecal, "data.frame")
+    expect_s3_class(testRecal, "data.frame")
   }
 
   testRecalWithModel <- recalibratePlpRefit(
@@ -114,5 +110,5 @@ test_that("survival", {
     method = "weakRecalibration"
   )
 
-  testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
+  expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })

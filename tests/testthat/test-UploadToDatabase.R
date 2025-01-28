@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-
-context("UploadToDatabase")
-
 # only run this during CI in main repo
 if (Sys.getenv("CI") == "true" &&
   Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
@@ -40,7 +36,7 @@ if (Sys.getenv("CI") == "true" &&
   }
 }
 test_that("test createDatabaseSchemaSettings works", {
-  skip_if(Sys.getenv("CI") != "true", "not run on CI")
+  skip_if(Sys.getenv("CI") != "true", "only run on CI")
   skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema,
@@ -49,13 +45,13 @@ test_that("test createDatabaseSchemaSettings works", {
   )
 
   # check inputs as expected
-  testthat::expect_true(databaseSchemaSettings$resultSchema == ohdsiDatabaseSchema)
-  testthat::expect_true(databaseSchemaSettings$tablePrefix == "")
-  testthat::expect_true(databaseSchemaSettings$targetDialect == targetDialect)
-  testthat::expect_true(databaseSchemaSettings$cohortDefinitionSchema == ohdsiDatabaseSchema)
-  testthat::expect_true(databaseSchemaSettings$databaseDefinitionSchema == ohdsiDatabaseSchema)
-  testthat::expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == "")
-  testthat::expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == "")
+  expect_true(databaseSchemaSettings$resultSchema == ohdsiDatabaseSchema)
+  expect_true(databaseSchemaSettings$tablePrefix == "")
+  expect_true(databaseSchemaSettings$targetDialect == targetDialect)
+  expect_true(databaseSchemaSettings$cohortDefinitionSchema == ohdsiDatabaseSchema)
+  expect_true(databaseSchemaSettings$databaseDefinitionSchema == ohdsiDatabaseSchema)
+  expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == "")
+  expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == "")
 
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema,
@@ -67,13 +63,11 @@ test_that("test createDatabaseSchemaSettings works", {
     tablePrefixDatabaseDefinitionTables = "b"
   )
 
-  testthat::expect_true(databaseSchemaSettings$cohortDefinitionSchema == "test 123")
-  testthat::expect_true(databaseSchemaSettings$databaseDefinitionSchema == "test234")
-  testthat::expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == "A_")
-  testthat::expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == "B_")
-
-
-  testthat::expect_true(class(databaseSchemaSettings) == "plpDatabaseResultSchema")
+  expect_true(databaseSchemaSettings$cohortDefinitionSchema == "test 123")
+  expect_true(databaseSchemaSettings$databaseDefinitionSchema == "test234")
+  expect_true(databaseSchemaSettings$tablePrefixCohortDefinitionTables == "A_")
+  expect_true(databaseSchemaSettings$tablePrefixDatabaseDefinitionTables == "B_")
+  expect_true(class(databaseSchemaSettings) == "plpDatabaseResultSchema")
 })
 
 
@@ -82,12 +76,12 @@ test_that("test createDatabaseDetails works", {
     cdmDatabaseSchemas = paste0("database", 1:5)
   )
 
-  testthat::expect_true(length(databaseList) == length(paste0("database", 1:5)))
-  testthat::expect_true(class(databaseList) == "list")
-  testthat::expect_true(!is.null(databaseList$database1$databaseDetails))
-  testthat::expect_true(!is.null(databaseList$database1$databaseMetaData))
+  expect_true(length(databaseList) == length(paste0("database", 1:5)))
+  expect_true(class(databaseList) == "list")
+  expect_true(!is.null(databaseList$database1$databaseDetails))
+  expect_true(!is.null(databaseList$database1$databaseMetaData))
 
-  testthat::expect_equal(
+  expect_equal(
     databaseList$database1$databaseDetails$databaseMetaDataId,
     databaseList$database1$databaseMetaData$databaseId
   )
@@ -95,7 +89,7 @@ test_that("test createDatabaseDetails works", {
 
 
 test_that("database creation", {
-  skip_if(Sys.getenv("CI") != "true", "not run on CI")
+  skip_if(Sys.getenv("CI") != "true", "only run on CI")
   skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
@@ -107,7 +101,7 @@ test_that("database creation", {
   )
 
   # check the results table is created
-  testthat::expect_true(DatabaseConnector::existsTable(
+  expect_true(DatabaseConnector::existsTable(
     connection = conn,
     databaseSchema = ohdsiDatabaseSchema,
     tableName = paste0(appendRandom("test"), "_PERFORMANCES")
@@ -116,7 +110,7 @@ test_that("database creation", {
 
 
 test_that("results uploaded to database", {
-  skip_if(Sys.getenv("CI") != "true", "not run on CI")
+  skip_if(Sys.getenv("CI") != "true", "only run on CI")
   skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   resultsLoc <- file.path(saveLoc, "dbUp")
 
@@ -160,13 +154,13 @@ test_that("results uploaded to database", {
   sql <- "select count(*) as N from @resultSchema.@appendperformances;"
   sql <- SqlRender::render(sql, resultSchema = ohdsiDatabaseSchema, append = appendRandom("test_"))
   res <- DatabaseConnector::querySql(conn, sql)
-  testthat::expect_true(res$N[1] > 0)
+  expect_true(res$N[1] > 0)
 
   # add test: check model location has result?
 })
 
 test_that("database deletion", {
-  skip_if(Sys.getenv("CI") != "true", "not run on CI")
+  skip_if(Sys.getenv("CI") != "true", "only run on CI")
   skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
   createPlpResultTables(
     connectionDetails = connectionRedshift,
@@ -178,10 +172,22 @@ test_that("database deletion", {
   )
 
   # check the results table is then deleted
-  testthat::expect_false(DatabaseConnector::existsTable(
+  expect_false(DatabaseConnector::existsTable(
     connection = conn,
     databaseSchema = ohdsiDatabaseSchema,
     tableName = paste0(appendRandom("test"), "_PERFORMANCES")
+  ))
+  
+  expect_false(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom("test"), "_migration")
+  ))
+  
+  expect_false(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = ohdsiDatabaseSchema,
+    tableName = paste0(appendRandom("test"), "_package_version")
   ))
 })
 
@@ -192,8 +198,9 @@ if (Sys.getenv("CI") == "true" && Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/Pati
 
 # code to test sqlite creation, result and diagnostic upload all in one
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
   resultsLoc <- file.path(saveLoc, "sqliteTest")
 
   savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
@@ -214,7 +221,7 @@ test_that("temporary sqlite with results works", {
   )
 
   # expect the database to exist
-  testthat::expect_true(file.exists(sqliteLocation))
+  expect_true(file.exists(sqliteLocation))
 
   cdmDatabaseSchema <- "main"
   ohdsiDatabaseSchema <- "main"
@@ -228,12 +235,12 @@ test_that("temporary sqlite with results works", {
   # check the results table is populated
   sql <- "select count(*) as N from main.performances;"
   res <- DatabaseConnector::querySql(conn, sql)
-  testthat::expect_true(res$N[1] > 0)
+  expect_true(res$N[1] > 0)
 
   # check the diagnostic table is populated
   sql <- "select count(*) as N from main.diagnostics;"
   res <- DatabaseConnector::querySql(conn, sql)
-  testthat::expect_true(res$N[1] > 0)
+  expect_true(res$N[1] > 0)
 
   # disconnect
   DatabaseConnector::disconnect(conn)
@@ -241,8 +248,8 @@ test_that("temporary sqlite with results works", {
 
 # SQL lite test
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
   externalVal <- plpResult
   externalVal$model$model <- "none"
   externalVal$model$trainDetails <- NULL
@@ -261,7 +268,7 @@ test_that("temporary sqlite with results works", {
   )
 
   # expect the database to exist
-  testthat::expect_true(file.exists(sqliteLocation))
+  expect_true(file.exists(sqliteLocation))
 
   cdmDatabaseSchema <- "main"
   ohdsiDatabaseSchema <- "main"
@@ -275,7 +282,7 @@ test_that("temporary sqlite with results works", {
   # check the results table is populated
   sql <- "select count(*) as N from main.performances;"
   res <- DatabaseConnector::querySql(conn, sql)
-  testthat::expect_true(res$N[1] > 0)
+  expect_true(res$N[1] > 0)
 
 
   # check export to csv
@@ -285,10 +292,10 @@ test_that("temporary sqlite with results works", {
     csvFolder = file.path(saveLoc, "csvFolder")
   )
 
-  testthat::expect_true(dir.exists(file.path(saveLoc, "csvFolder")))
-  testthat::expect_true(length(dir(file.path(saveLoc, "csvFolder"))) > 0)
-  testthat::expect_true(dir.exists(file.path(saveLoc, "csvFolder", "models"))) # new
-  testthat::expect_true(length(dir(file.path(saveLoc, "csvFolder", "models"))) > 0) # new
+  expect_true(dir.exists(file.path(saveLoc, "csvFolder")))
+  expect_true(length(dir(file.path(saveLoc, "csvFolder"))) > 0)
+  expect_true(dir.exists(file.path(saveLoc, "csvFolder", "models"))) # new
+  expect_true(length(dir(file.path(saveLoc, "csvFolder", "models"))) > 0) # new
   # disconnect
   DatabaseConnector::disconnect(conn)
 })
@@ -296,20 +303,20 @@ test_that("temporary sqlite with results works", {
 # importFromCsv test here as can use previous csv saving
 test_that("import from csv", {
   # TODO remove dependancy on previous test
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
   cohortDef <- extractCohortDefinitionsCSV(
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(cohortDef, "data.frame"))
-  testthat::expect_true(ncol(cohortDef) == 4)
+  expect_true(inherits(cohortDef, "data.frame"))
+  expect_true(ncol(cohortDef) == 4)
 
   databaseList <- extractDatabaseListCSV(
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(databaseList, "list"))
-  testthat::expect_true(!is.null(databaseList[[1]]$databaseDetails))
-  testthat::expect_true(!is.null(databaseList[[1]]$databaseMetaData))
+  expect_true(inherits(databaseList, "list"))
+  expect_true(!is.null(databaseList[[1]]$databaseDetails))
+  expect_true(!is.null(databaseList[[1]]$databaseMetaData))
 
   # model designs work
   modeldesignsRow <- data.frame(
@@ -321,21 +328,21 @@ test_that("import from csv", {
   )
   res <- getModelDesignSettingTable(modeldesignsRow)
   # expect res to be a data.frame, check values?
-  testthat::expect_true(inherits(res, "data.frame"))
+  expect_true(inherits(res, "data.frame"))
 
   modelDesign <- getModelDesignCsv(
     modelDesignSettingTable = res,
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(modelDesign, "modelDesign"))
+  expect_true(inherits(modelDesign, "modelDesign"))
 
   # performance works
   res <- getPerformanceEvaluationCsv(
     performanceId = 1,
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(res, "list"))
-  testthat::expect_true(
+  expect_true(inherits(res, "list"))
+  expect_true(
     sum(names(res) %in%
       c(
         "evaluationStatistics", "thresholdSummary",
@@ -350,14 +357,14 @@ test_that("import from csv", {
     performanceId = 1,
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(obj, "externalValidatePlp") | inherits(obj, "runPlp"))
+  expect_true(inherits(obj, "externalValidatePlp") | inherits(obj, "runPlp"))
 
   # test diagnostic extracted
   diag <- extractDiagnosticFromCsv(
     diagnosticId = 1,
     csvFolder = file.path(saveLoc, "csvFolder")
   )
-  testthat::expect_true(inherits(diag, "diagnosePlp") | is.null(diag))
+  expect_true(inherits(diag, "diagnosePlp") | is.null(diag))
 
 
 
@@ -396,7 +403,7 @@ test_that("import from csv", {
     modelSaveLocation = file.path(csvServerLoc, "models"),
     csvTableAppend = ""
   )
-  testthat::expect_true(res)
+  expect_true(res)
 
   # check some of the tables
 })
@@ -404,8 +411,8 @@ test_that("import from csv", {
 
 # new - check null model just reports message
 test_that("message if model is null", {
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
   model2 <- list(noModel = TRUE)
   attr(model2, "predictionFunction") <- "noModel"
   attr(model2, "saveType") <- "RtoJson"
@@ -440,7 +447,7 @@ test_that("message if model is null", {
     tablePrefix = ""
   )
 
-  testthat::expect_message(
+  expect_message(
     addMultipleRunPlpToDatabase(
       connectionDetails = nullModelResultConnDetails,
       databaseSchemaSettings = nullModelDatabaseSchema,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/RunMultiplePlp.R
 \name{createModelDesign}
 \alias{createModelDesign}
-\title{Specify settings for deceloping a single model}
+\title{Specify settings for developing a single model}
 \usage{
 createModelDesign(
   targetId,
@@ -46,7 +46,7 @@ createModelDesign(
 A list with analysis settings used to develop a single prediction model
 }
 \description{
-Specify settings for deceloping a single model
+Specify settings for developing a single model
 }
 \details{
 This specifies a single analysis for developing as single model

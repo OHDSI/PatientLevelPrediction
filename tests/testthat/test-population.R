@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,10 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("Population")
-
 defaultSettings <- function(
     binary = TRUE,
     includeAllOutcomes = FALSE,
@@ -51,7 +47,7 @@ defaultSettings <- function(
 
 test_that("createStudyPopulation correct class", {
   populationSettings <- createStudyPopulationSettings()
-  expect_is(populationSettings, "populationSettings")
+  expect_s3_class(populationSettings, "populationSettings")
 })
 
 test_that("createStudyPopulation binary", {
@@ -263,13 +259,15 @@ test_that("createStudyPopulation endAnchor", {
 # washout, requireTimeAtRisk are checked. Additionally, error messages are checked.
 
 test_that("population creation parameters", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
     outcomeId = outcomeId,
     populationSettings = defaultSettings()
   )
 
-  expect_is(studyPopulation, "data.frame")
+  expect_s3_class(studyPopulation, "data.frame")
 
   nrOutcomes1 <- sum(studyPopulation$outcomeCount)
   expect_gt(nrOutcomes1, 0)
@@ -390,18 +388,18 @@ test_that("population creation parameters", {
     daysToCohortEnd = rep(1, 20),
     daysToObsEnd = c(40, rep(900, 19))
   )
-  PplpData <- plpData
-  PplpData$outcomes <- outcomes
-  PplpData$cohorts <- cohorts
+  pPlpData <- plpData
+  pPlpData$outcomes <- outcomes
+  pPlpData$cohorts <- cohorts
 
-  attr(PplpData$cohorts, "metaData") <- list(attrition = data.frame(
+  attr(pPlpData$cohorts, "metaData") <- list(attrition = data.frame(
     outcomeId = 1, description = "test",
     targetCount = 20, uniquePeople = 20,
     outcomes = 3
   ))
 
-  Ppop <- createStudyPopulation(
-    plpData = PplpData,
+  pop <- createStudyPopulation(
+    plpData = pPlpData,
     outcomeId = 1,
     populationSettings = defaultSettings(
       includeAllOutcomes = TRUE,
@@ -411,10 +409,10 @@ test_that("population creation parameters", {
   )
 
   # person 1 and 4 should be retruned
-  expect_equal(Ppop$rowId[Ppop$outcomeCount > 0], c(1, 4))
+  expect_equal(pop$rowId[pop$outcomeCount > 0], c(1, 4))
 
-  Ppop2 <- createStudyPopulation(
-    plpData = PplpData,
+  pop2 <- createStudyPopulation(
+    plpData = pPlpData,
     outcomeId = 1,
     populationSettings = defaultSettings(
       includeAllOutcomes = TRUE,
@@ -426,10 +424,10 @@ test_that("population creation parameters", {
   )
 
   # person 4 only as person 1 has it before
-  expect_equal(Ppop2$rowId[Ppop2$outcomeCount > 0], c(4))
+  expect_equal(pop2$rowId[pop2$outcomeCount > 0], c(4))
 
-  Ppop3 <- createStudyPopulation(
-    plpData = PplpData,
+  pop3 <- createStudyPopulation(
+    plpData = pPlpData,
     outcomeId = 1,
     populationSettings = defaultSettings(
       includeAllOutcomes = FALSE,
@@ -442,11 +440,11 @@ test_that("population creation parameters", {
   )
 
   # 4 only should be retruned
-  expect_equal(Ppop3$rowId[Ppop3$outcomeCount > 0], c(4))
+  expect_equal(pop3$rowId[pop3$outcomeCount > 0], c(4))
 
   # creates min warning due to no data...
-  Ppop5 <- createStudyPopulation(
-    plpData = PplpData,
+  pop5 <- createStudyPopulation(
+    plpData = pPlpData,
     outcomeId = 1,
     populationSettings = defaultSettings(
       binary = TRUE,
@@ -465,16 +463,18 @@ test_that("population creation parameters", {
   )
 
   # should have no outcomes
-  expect_equal(is.null(Ppop5), TRUE)
+  expect_equal(is.null(pop5), TRUE)
 })
 
-testthat::test_that("Providing an existing population and skipping population creation works", {
+test_that("Providing an existing population and skipping population creation works", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   popSize <- 400
   newPopulation <- population[sample.int(nrow(population), popSize), ]
 
   tinyPlpData$population <- newPopulation
 
-  plpResults <- runPlp(
+  tempResults <- runPlp(
     plpData = tinyPlpData,
     outcomeId = 2,
     analysisId = "1",
@@ -489,10 +489,10 @@ testthat::test_that("Providing an existing population and skipping population cr
     )
   )
 
-  trainPredictions <- plpResults$prediction %>%
+  trainPredictions <- tempResults$prediction %>%
     dplyr::filter(.data$evaluationType == "Train") %>%
     nrow()
-  testPredictions <- plpResults$prediction %>%
+  testPredictions <- tempResults$prediction %>%
     dplyr::filter(.data$evaluationType == "Test") %>%
     nrow()
   expect_equal(popSize, trainPredictions + testPredictions)

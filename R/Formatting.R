@@ -1,6 +1,6 @@
 # @file formatting.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -28,8 +28,6 @@
 #'                                      data extracted from the CDM.
 #' @param cohort                        If specified the plpData is restricted to the rowIds in the cohort (otherwise plpData$labels is used)
 #' @param map                           A covariate map (telling us the column number for covariates)
-#' @examples
-#' # TODO
 #'
 #' @return
 #' Returns a list, containing the data as a sparse matrix, the plpData covariateRef
@@ -42,6 +40,7 @@
 #'
 #' @export
 toSparseM <- function(plpData, cohort = NULL, map = NULL) {
+  start <- Sys.time()
   ParallelLogger::logInfo(paste0("starting toSparseM"))
 
   ParallelLogger::logDebug(
@@ -106,6 +105,8 @@ toSparseM <- function(plpData, cohort = NULL, map = NULL) {
     covariateRef = as.data.frame(newcovariateData$covariateRef),
     covariateMap = as.data.frame(newcovariateData$mapping)
   )
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0("toSparseM took ", delta, " ", attr(delta, "units")))
   return(result)
 }
 
@@ -115,6 +116,7 @@ toSparseM <- function(plpData, cohort = NULL, map = NULL) {
 #' @param covariateData a covariateData object
 #' @param cohort        if specified rowIds restricted to the ones in cohort
 #' @param mapping       A pre defined mapping to use
+#' @returns a new covariateData object with remapped covariate and row ids
 #' @export
 MapIds <- function(
     covariateData,

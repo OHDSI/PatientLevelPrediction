@@ -2,7 +2,8 @@
 % Please edit documentation in R/LightGBM.R
 \name{setLightGBM}
 \alias{setLightGBM}
-\title{Create setting for gradient boosting machine model using lightGBM (https://github.com/microsoft/LightGBM/tree/master/R-package).}
+\title{Create setting for gradient boosting machine model using lightGBM 
+(https://github.com/microsoft/LightGBM/tree/master/R-package).}
 \usage{
 setLightGBM(
   nthread = 20,
@@ -45,7 +46,8 @@ setLightGBM(
 \item{seed}{An option to add a seed when training the final model}
 }
 \description{
-Create setting for gradient boosting machine model using lightGBM (https://github.com/microsoft/LightGBM/tree/master/R-package).
+Create setting for gradient boosting machine model using lightGBM 
+(https://github.com/microsoft/LightGBM/tree/master/R-package).
 }
 \examples{
 model.lightgbm <- setLightGBM(

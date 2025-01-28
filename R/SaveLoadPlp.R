@@ -1,6 +1,6 @@
-# @file PlpSaveLoad.R
+# @file SaveLoadPlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of CohortMethod
 #
@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Save the cohort data to folder
+#' Save the plpData to folder
 #'
 #' @description
 #' \code{savePlpData} saves an object of type plpData to folder.
@@ -27,11 +27,9 @@
 #'                           not yet exist.
 #' @param envir              The environment for to evaluate variables when saving
 #' @param overwrite          Whether to force overwrite an existing file
-#' @details
-#' The data will be written to a set of files in the folder specified by the user.
-#'
-#' @examples
-#' # todo
+#' @return
+#' Called for its side effect, the data will be written to a set of files in the 
+#' folder specified by the user.
 #'
 #' @export
 savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
@@ -65,7 +63,7 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
 }
 
-#' Load the cohort data from a folder
+#' Load the plpData from a folder
 #'
 #' @description
 #' \code{loadPlpData} loads an object of type plpData from a folder in the file
@@ -79,10 +77,6 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
 #'
 #' @return
 #' An object of class plpData.
-#'
-#' @examples
-#' # todo
-#'
 #' @export
 loadPlpData <- function(file, readOnly = TRUE) {
   if (!file.exists(file)) {
@@ -112,6 +106,7 @@ loadPlpData <- function(file, readOnly = TRUE) {
 #'
 #' @param plpModel                   A trained classifier returned by running \code{runPlp()$model}
 #' @param dirPath                  A location to save the model to
+#' @return                         The directory path where the model was saved
 #'
 #' @export
 savePlpModel <- function(plpModel, dirPath) {
@@ -135,7 +130,7 @@ savePlpModel <- function(plpModel, dirPath) {
     x = plpModel$covariateImportance,
     file = file.path(dirPath, "covariateImportance.csv"),
     row.names = FALSE
-  )
+  ) 
 
   # save the trainDetails
   if (!is.null(plpModel$trainDetails)) {
@@ -235,6 +230,7 @@ saveModelPart <- function(model, savetype, dirPath) {
 #' Loads a plp model that was saved using \code{savePlpModel()}
 #'
 #' @param dirPath                  The location of the model
+#' @return                         The plpModel object
 #'
 #' @export
 loadPlpModel <- function(dirPath) {
@@ -335,6 +331,7 @@ loadPlpModel <- function(dirPath) {
 #' @param prediction                   The prediciton data.frame
 #' @param dirPath                     The directory to save the prediction RDS
 #' @param fileName                    The name of the RDS file that will be saved in dirPath
+#' @return                            The file location where the prediction was saved
 #'
 #' @export
 savePrediction <- function(prediction, dirPath, fileName = "prediction.rds") {
@@ -353,7 +350,7 @@ savePrediction <- function(prediction, dirPath, fileName = "prediction.rds") {
 #' Loads the prediciton  RDS file
 #'
 #' @param fileLocation                     The location with the saved prediction
-#'
+#' @return                                 The prediction data.frame
 #' @export
 loadPrediction <- function(fileLocation) {
   # TODO check inupts
@@ -368,6 +365,7 @@ loadPrediction <- function(fileLocation) {
 #'
 #' @param result                      The result of running runPlp()
 #' @param dirPath                     The directory to save the csv
+#' @return                            The directory path where the results were saved
 #'
 #' @export
 savePlpResult <- function(result, dirPath) {
@@ -393,6 +391,7 @@ savePlpResult <- function(result, dirPath) {
 #' Loads the evaluation
 #'
 #' @param dirPath                     The directory where the evaluation was saved
+#' @return                            The runPlp object
 #'
 #' @export
 loadPlpResult <- function(dirPath) {
@@ -420,8 +419,9 @@ loadPlpResult <- function(dirPath) {
 #' Saves the main results json/csv files (these files can be read by the shiny app)
 #'
 #' @param result                      An object of class runPlp with development or validation results
-#' @param saveDirectory                     The directory the save the results as csv files
+#' @param saveDirectory               The directory the save the results as csv files
 #' @param minCellCount                Minimum cell count for the covariateSummary and certain evaluation results
+#' @return                            The directory path where the results were saved
 #'
 #' @export
 savePlpShareable <- function(result, saveDirectory, minCellCount = 10) {
@@ -502,6 +502,7 @@ removeList <- function(x) {
 #' Load the main results from json/csv files into a runPlp object
 #'
 #' @param loadDirectory                     The directory with the results as json/csv files
+#' @return                                  The runPlp object
 #'
 #' @export
 loadPlpShareable <- function(loadDirectory) {
@@ -631,6 +632,7 @@ removeCellCount <- function(
 #' @param minCellCount   The min value to show in cells that are sensitive (values less than this value will be replaced with -1)
 #' @param sensitiveColumns A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.
 #' @param fileAppend     If set to a string this will be appended to the start of the csv file names
+#' @return The directory path where the results were saved
 #'
 #' @export
 extractDatabaseToCsv <- function(

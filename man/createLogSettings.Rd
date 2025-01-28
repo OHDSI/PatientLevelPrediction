@@ -34,3 +34,6 @@ Create the settings for logging the progression of the analysis
 \details{
 Returns an object of class \code{logSettings} that specifies the logger settings
 }
+\examples{
+createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
+}

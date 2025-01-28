@@ -13,7 +13,12 @@ evaluatePlp(prediction, typeColumn = "evaluationType")
 stratify the evaluation}
 }
 \value{
-A list containing the performance values
+An object of class plpEvaluation containing the following components
+- evaluationStatistics: A data frame containing the evaluation statistics'
+- thresholdSummary: A data frame containing the threshold summary'
+- demographicSummary: A data frame containing the demographic summary'
+- calibrationSummary: A data frame containing the calibration summary'
+- predictionDistribution: A data frame containing the prediction distribution'
 }
 \description{
 Evaluates the performance of the patient level prediction model

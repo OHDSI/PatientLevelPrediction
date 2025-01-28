@@ -1,3 +1,20 @@
+# @file HelperFunctions.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 removeInvalidString <- function(string) {
   modString <- gsub("_", " ", string)
   modString <- gsub("\\.", " ", modString)
@@ -8,14 +25,27 @@ removeInvalidString <- function(string) {
 
 #' Check if the required packages for survival analysis are installed
 #' @keywords internal
+#' @noRd
 checkSurvivalPackages <- function() {
   rlang::check_installed(c("survival", "polspline"),
     reason = "Please install the required packages for survival analysis"
   )
 }
 
+checkSklearn <- function() {
+  rlang::check_installed(
+    "reticulate",
+    reason = "Reticulate is required to use the Python models"
+  )
+  tryCatch({
+    reticulate::import("sklearn")
+  }, error = function(e) {
+    stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
+  })
+}
+
 #' Create a temporary model location
-#'
+#' @return A string for the location of the temporary model location
 #' @export
 createTempModelLoc <- function() {
   repeat {
@@ -32,6 +62,11 @@ createTempModelLoc <- function() {
 #' This function joins two lists
 #' @param a   A list
 #' @param b   Another list
+#' @return the joined list
+#' @examples
+#' a <- list(a = 1, b = 2)
+#' b <- list(c = 3, d = 4)
+#' listAppend(a, b)
 #'
 #' @export
 listAppend <- function(a, b) {
@@ -50,16 +85,16 @@ listAppend <- function(a, b) {
 }
 
 
-#' Sets up a virtual environment to use for PLP (can be conda or python)
+#' Sets up a python environment to use for PLP (can be conda or venv)
 #'
 #' @details
-#' This function creates a virtual environment that can be used by PatientLevelPrediction
-#' and installs all the required package dependancies.  If using python, pip must be set up.
+#' This function creates a python environment that can be used by PatientLevelPrediction
+#' and installs all the required package dependancies. 
 #'
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
 #' @param condaPythonVersion String, Python version to use when creating a conda environment
-#'
+#' @return hidden location of the created conda or virtual python environment
 #' @export
 configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11") {
   if (is.null(envtype)) {
@@ -105,14 +140,15 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
   return(invisible(location))
 }
 
-#' Use the virtual environment created using configurePython()
+#' Use the python environment created using configurePython()
 #'
 #' @details
-#' This function sets PatientLevelPrediction to use a virtual environment
+#' This function sets PatientLevelPrediction to use a python environment
 #'
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
 #'
+#' @return A string indicating the which python environment will be used
 #' @export
 setPythonEnvironment <- function(envname = "PLP", envtype = NULL) {
   if (is.null(envtype)) {

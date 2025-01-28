@@ -2,30 +2,12 @@
 title: "Adding Custom Feature Engineering Functions"
 author: "Jenna Reps, Egill Fridgeirsson"
 date: "`r Sys.Date()`"
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Custom FeatureEngineering}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adding Custom Feature Engineering Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
-
-```{=html}
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Adding Custom Feature Engineering}
--->
-```
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
@@ -33,9 +15,9 @@ library(PatientLevelPrediction)
 
 # Introduction
 
-This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
+This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
-**We invite you to share your new feature engineering functions with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
+**We invite you to share your new feature engineering functions with the OHDSI community through our [GitHub repository](https://github.com/OHDSI/PatientLevelPrediction).**
 
 # Feature Engineering Function Code Structure
 
@@ -163,6 +145,6 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

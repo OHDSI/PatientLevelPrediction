@@ -1,4 +1,4 @@
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,12 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("LightGBM")
-
-
 test_that("LightGBM settings work", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
@@ -41,9 +35,9 @@ test_that("LightGBM settings work", {
     seed = seed
   )
 
-  expect_is(lgbmSet, "modelSettings")
+  expect_s3_class(lgbmSet, "modelSettings")
   expect_equal(lgbmSet$fitFunction, "fitRclassifier")
-  expect_is(lgbmSet$param, "list")
+  expect_type(lgbmSet$param, "list")
 
   expect_equal(attr(lgbmSet$param, "settings")$modelType, "LightGBM")
   expect_equal(attr(lgbmSet$param, "settings")$seed, seed)
@@ -76,15 +70,15 @@ test_that("LightGBM settings expected errors", {
   # checking Gradient Boosting Machine
   # =====================================
 
-  testthat::expect_error(setLightGBM(numIterations = -1))
-  testthat::expect_error(setLightGBM(numLeaves = -1))
-  testthat::expect_error(setLightGBM(numLeaves = 10000000))
-  testthat::expect_error(setLightGBM(learningRate = -2))
-  testthat::expect_error(setLightGBM(seed = "F"))
-  testthat::expect_error(setLightGBM(lambdaL1 = -1))
-  testthat::expect_error(setLightGBM(lambdaL2 = -1))
-  testthat::expect_error(setLightGBM(scalePosWeight = -1))
-  testthat::expect_error(setLightGBM(isUnbalance = TRUE, scalePosWeight = 0.5))
+  expect_error(setLightGBM(numIterations = -1))
+  expect_error(setLightGBM(numLeaves = -1))
+  expect_error(setLightGBM(numLeaves = 10000000))
+  expect_error(setLightGBM(learningRate = -2))
+  expect_error(setLightGBM(seed = "F"))
+  expect_error(setLightGBM(lambdaL1 = -1))
+  expect_error(setLightGBM(lambdaL2 = -1))
+  expect_error(setLightGBM(scalePosWeight = -1))
+  expect_error(setLightGBM(isUnbalance = TRUE, scalePosWeight = 0.5))
 })
 
 
@@ -93,6 +87,7 @@ test_that("LightGBM settings expected errors", {
 test_that("LightGBM working checks", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
+  skip_if_offline()
   modelSettings <- setLightGBM(numIterations = 10, maxDepth = 3, learningRate = 0.1, numLeaves = 31, minDataInLeaf = 10, lambdaL1 = 0, lambdaL2 = 0)
 
   fitModel <- fitPlp(

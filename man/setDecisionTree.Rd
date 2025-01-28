@@ -41,11 +41,9 @@ setDecisionTree(
 
 \item{seed}{The random state seed}
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for the scikit-learn DecisionTree with python
-}
-\examples{
-\dontrun{
-model.decisionTree <- setDecisionTree(maxDepth = 10, minSamplesLeaf = 10, seed = NULL)
-}
 }

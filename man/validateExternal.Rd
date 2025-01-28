@@ -23,6 +23,9 @@ using \code{createLogSettings}}
 \item{outputFolder}{The directory to save the validation results to
 (subfolders are created per database in validationDatabaseDetails)}
 }
+\value{
+A list of results
+}
 \description{
 externalValidatePlp - Validate model performance on new data
 }

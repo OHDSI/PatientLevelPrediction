@@ -14,7 +14,7 @@ getThresholdSummary(prediction, predictionType, typeColumn = "evaluation")
 \item{typeColumn}{A column that is used to stratify the results}
 }
 \value{
-A data.frame with all the measures
+A data.frame with TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
 }
 \description{
 Calculate all measures for sparse ROC

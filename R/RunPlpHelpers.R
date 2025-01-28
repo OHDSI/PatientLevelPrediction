@@ -1,6 +1,6 @@
 # @file RunPlpHelpers.R
 #
-# Copyright 2024 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -52,6 +52,11 @@ checkInputs <- function(inputs) {
 
   checkIsClass(inputs[["plpData"]], c("plpData"))
   checkIsClass(inputs[["outcomeId"]], c("numeric", "integer"))
+  
+  if (FeatureExtraction::isTemporalCovariateData(inputs$plpData$covariateData)
+      && (is.null(attr(inputs$modelSettings$param, "temporalModel")))) {
+    stop("Temporal covariates detected but chosen model does not support temporal covariates")
+  }
 
   for (inputName in inputNames[!inputNames %in% c("plpData", "outcomeId")]) {
     ParallelLogger::logDebug(paste0(

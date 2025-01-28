@@ -1,6 +1,6 @@
 # @file predict.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -29,11 +29,9 @@
 #' @param timepoint                        The timepoint to predict risk (survival models only)
 #' @return
 #' A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
-#'
-
-# parent predict that calls the others
 #' @export
 predictPlp <- function(plpModel, plpData, population, timepoint) {
+  start <- Sys.time()
   if (is.null(plpModel)) {
     stop("No model input")
   }
@@ -111,6 +109,9 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   metaData$featureEngineering <- featureEngineering
 
   attr(prediction, "metaData") <- metaData
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Prediction done in: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
 }
 

@@ -1,14 +1,32 @@
-#' Get a calibration per age/gender groups
+# @file DemographicSummary.R
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#' Get a demographic summary
 #'
 #' @details
-#' Generates a data.frame with the calibration per each 5 year age group and gender group
+#' Generates a data.frame with a prediction summary per each 5 year age group 
+#' and gender group
 #'
 #' @param prediction            A prediction object
 #' @param predictionType        The type of prediction (binary or survival)
 #' @param typeColumn            A column that is used to stratify the results
 #'
 #' @return
-#' A dataframe with the calibration summary
+#' A dataframe with the demographic summary
 #' @export
 getDemographicSummary <- function(
     prediction,

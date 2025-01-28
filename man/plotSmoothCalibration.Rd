@@ -53,5 +53,5 @@ Plot the smooth calibration as detailed in Calster et al. "A calibration heirarc
 was defined: from utopia to empirical data" (2016)
 }
 \details{
-Create a plot showing the smoothed calibration #'
+Create a plot showing the smoothed calibration
 }

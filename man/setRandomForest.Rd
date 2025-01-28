@@ -2,7 +2,7 @@
 % Please edit documentation in R/SklearnClassifierSettings.R
 \name{setRandomForest}
 \alias{setRandomForest}
-\title{Create setting for random forest model with python (very fast)}
+\title{Create setting for random forest model using sklearn}
 \usage{
 setRandomForest(
   ntrees = list(100, 500),
@@ -60,14 +60,9 @@ setRandomForest(
 
 \item{seed}{A seed when training the final model}
 }
+\value{
+a modelSettings object
+}
 \description{
-Create setting for random forest model with python (very fast)
-}
-\examples{
-\dontrun{
-model.rf <- setRandomForest(
-  mtries = list("auto", 5, 20), ntrees = c(10, 100),
-  maxDepth = c(5, 20)
-)
-}
+Create setting for random forest model using sklearn
 }

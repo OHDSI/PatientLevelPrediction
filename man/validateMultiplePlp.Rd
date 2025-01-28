@@ -26,6 +26,9 @@ validateMultiplePlp(
 
 \item{saveDirectory}{The location to save to validation results}
 }
+\value{
+Nothing. The results are saved to the saveDirectory
+}
 \description{
 This function loads all the models in a multiple plp analysis folder and
 validates the models on new data

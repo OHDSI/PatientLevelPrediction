@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,27 +13,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-context("extractPlp")
-
 test_that("summary.plpData", {
+  skip_if_offline()
   attr(plpData$outcomes, "metaData")$outcomeIds <- c(outcomeId)
   sum <- summary.plpData(plpData)
-  testthat::expect_equal(class(sum), "summary.plpData")
+  expect_equal(class(sum), "summary.plpData")
 })
 
 test_that("getPlpData errors", {
-  testthat::expect_error(
+  expect_error(
     getPlpData(
       databaseDetails = list(targetId = NULL)
     )
   )
-  testthat::expect_error(
+  expect_error(
     getPlpData(
       databaseDetails = list(targetId = c(1, 2))
     )
   )
-  testthat::expect_error(
+  expect_error(
     getPlpData(
       databaseDetails = list(targetId = 1, outcomeIds = NULL)
     )
@@ -42,25 +40,27 @@ test_that("getPlpData errors", {
 
 
 test_that("getPlpData works", {
-  testthat::expect_true(is(plpData, "plpData"))
+  skip_if_offline()
+  expect_true(is(plpData, "plpData"))
 })
 
 test_that("getCovariateData", {
-  testthat::expect_error(getCovariateData())
+  expect_error(getCovariateData())
 })
 
 test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
-  testthat::expect_error(createDatabaseDetails(
+  expect_error(createDatabaseDetails(
     connectionDetails = list(),
     cdmDatabaseSchema = "main",
     cdmDatabaseId = NULL,
     targetId = 1,
-    outcomeIds = outcomeId
+    outcomeIds = 3
   ))
 })
 
 test_that("getPlpData checks covariateSettings object", {
-  testthat::expect_error(getPlpData(
+  skip_if_offline()
+  expect_error(getPlpData(
     databaseDetails = list(targetId = 1, outcomeIds = outcomeId),
     covariateSettings = list()
   ))

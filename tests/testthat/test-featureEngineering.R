@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,10 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-context("FeatureEngineering")
-
-
 testFEFun <- function(type = "none") {
   result <- createFeatureEngineeringSettings(type = type)
   return(result)
@@ -26,15 +22,17 @@ testFEFun <- function(type = "none") {
 test_that("createFeatureEngineeringSettings correct class", {
   featureEngineeringSettings <- testFEFun()
 
-  expect_is(featureEngineeringSettings, "featureEngineeringSettings")
+  expect_s3_class(featureEngineeringSettings, "featureEngineeringSettings")
 
   checkFun <- "sameData"
   expect_equal(attr(featureEngineeringSettings, "fun"), checkFun)
 })
 
-testUniFun <- function(k = 100) {
-  result <- createUnivariateFeatureSelection(k = k)
-  return(result)
+if (rlang::is_installed("reticulate")) {
+  testUniFun <- function(k = 100) {
+    result <- createUnivariateFeatureSelection(k = k)
+    return(result)
+  }
 }
 
 test_that("createUnivariateFeatureSelection correct class", {
@@ -43,7 +41,7 @@ test_that("createUnivariateFeatureSelection correct class", {
   k <- sample(1000, 1)
   featureEngineeringSettings <- testUniFun(k = k)
 
-  expect_is(featureEngineeringSettings, "featureEngineeringSettings")
+  expect_s3_class(featureEngineeringSettings, "featureEngineeringSettings")
   expect_equal(featureEngineeringSettings$k, k)
   expect_equal(attr(featureEngineeringSettings, "fun"), "univariateFeatureSelection")
 
@@ -56,6 +54,7 @@ test_that("createUnivariateFeatureSelection correct class", {
 test_that("univariateFeatureSelection", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
+  skip_if_offline()
   k <- 20 + sample(10, 1)
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -90,7 +89,7 @@ test_that("createRandomForestFeatureSelection correct class", {
     maxDepth = maxDepthTest
   )
 
-  expect_is(featureEngineeringSettings, "featureEngineeringSettings")
+  expect_s3_class(featureEngineeringSettings, "featureEngineeringSettings")
   expect_equal(featureEngineeringSettings$ntrees, ntreesTest)
   expect_equal(featureEngineeringSettings$max_depth, maxDepthTest)
   expect_equal(attr(featureEngineeringSettings, "fun"), "randomForestFeatureSelection")
@@ -129,6 +128,7 @@ test_that("createRandomForestFeatureSelection correct class", {
 test_that("randomForestFeatureSelection", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
+  skip_if_offline()
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -156,6 +156,7 @@ test_that("randomForestFeatureSelection", {
 test_that("featureSelection is applied on test_data", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
+  skip_if_offline()
   k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -189,7 +190,7 @@ test_that("createSplineSettings correct class", {
     knots = 4
   )
 
-  expect_is(featureEngineeringSettings, "featureEngineeringSettings")
+  expect_s3_class(featureEngineeringSettings, "featureEngineeringSettings")
   expect_equal(featureEngineeringSettings$knots, 4)
   expect_equal(featureEngineeringSettings$continousCovariateId, 12)
   expect_equal(attr(featureEngineeringSettings, "fun"), "splineCovariates")
@@ -198,7 +199,8 @@ test_that("createSplineSettings correct class", {
   expect_error(createSplineSettings(knots = NULL))
 })
 
-test_that("createSplineSettings correct class", {
+test_that("splineCovariates works", {
+  skip_if_offline()
   knots <- 4
   featureEngineeringSettings <- createSplineSettings(
     continousCovariateId = 12101,
@@ -207,11 +209,11 @@ test_that("createSplineSettings correct class", {
   data(plpDataSimulationProfile)
   trainData <- simulatePlpData(plpDataSimulationProfile, n = 200)
 
-  N <- 50
+  n <- 50
   trainData$covariateData$covariates <- data.frame(
-    rowId = sample(trainData$cohorts$rowId, N),
-    covariateId = rep(12101, N),
-    covariateValue = sample(10, N, replace = TRUE)
+    rowId = sample(trainData$cohorts$rowId, n),
+    covariateId = rep(12101, n),
+    covariateValue = sample(10, n, replace = TRUE)
   )
 
   trainData$covariateData$analysisRef <- data.frame(
@@ -236,14 +238,16 @@ test_that("createSplineSettings correct class", {
     featureEngineeringSettings = featureEngineeringSettings
   )
 
-  testthat::expect_true(1 < nrow(as.data.frame(newData$covariateData$analysisRef)))
-  testthat::expect_true((knots + 1) == nrow(as.data.frame(newData$covariateData$covariateRef)))
-  testthat::expect_true((knots + 1) == length(table(as.data.frame(newData$covariateData$covariates)$covariateId)))
+  expect_true(1 < nrow(as.data.frame(newData$covariateData$analysisRef)))
+  expect_true((knots + 1) == nrow(as.data.frame(newData$covariateData$covariateRef)))
+  expect_true((knots + 1) == length(table(as.data.frame(newData$covariateData$covariates)$covariateId)))
 })
 
 
 test_that("createStratifiedImputationSettings correct class", {
+  skip_if_offline()
   ageSplits <- c(33, 38, 42)
+
   featureEngineeringSettings <- createStratifiedImputationSettings(
     covariateId = 12101,
     ageSplits = ageSplits
@@ -280,7 +284,7 @@ test_that("createStratifiedImputationSettings correct class", {
     featureEngineeringSettings = featureEngineeringSettings
   )
 
-  testthat::expect_true(nrow(stratifiedMeans) == 8)
+  expect_true(nrow(stratifiedMeans) == 8)
 
   imputedData <- imputeMissingMeans(
     trainData = nanoData,
@@ -289,7 +293,7 @@ test_that("createStratifiedImputationSettings correct class", {
     stratifiedMeans = stratifiedMeans
   )
 
-  testthat::expect_equal(
+  expect_equal(
     imputedData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId == 12101) %>%
       dplyr::pull(.data$rowId) %>%

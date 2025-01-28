@@ -1,6 +1,6 @@
 # @file SklearnClassifier.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -166,10 +166,7 @@ predictPythonSklearn <- function(plpModel,
       reticulate::r_to_py(file.path(plpModel$model, "model.pkl"))
     model <- joblib$load(os$path$join(modelLocation))
   }
-  included <-
-    plpModel$covariateImportance$columnId[plpModel$covariateImportance$included >
-      0] # does this include map?
-  pythonData <- reticulate::r_to_py(newData[, included, drop = FALSE])
+  pythonData <- reticulate::r_to_py(newData)
 
   # make dense if needed
   if (plpModel$preprocessing$requireDenseMatrix) {

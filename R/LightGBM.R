@@ -1,5 +1,5 @@
 # @file LightGBM.R
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for gradient boosting machine model using lightGBM (https://github.com/microsoft/LightGBM/tree/master/R-package).
+#' Create setting for gradient boosting machine model using lightGBM 
+#' (https://github.com/microsoft/LightGBM/tree/master/R-package).
 #'
 #' @param nthread           The number of computer threads to use (how many cores do you have?)
 #' @param earlyStopRound    If the performance does not increase over earlyStopRound number of trees then training stops (this prevents overfitting)

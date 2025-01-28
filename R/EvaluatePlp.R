@@ -1,6 +1,6 @@
-# @file Evaluate.R
+# @file EvaluatePlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -26,11 +26,16 @@
 #' @param typeColumn                         The column name in the prediction object that is used to
 #'                                           stratify the evaluation
 #' @return
-#' A list containing the performance values
-#'
-
+#' An object of class plpEvaluation containing the following components
+#' - evaluationStatistics: A data frame containing the evaluation statistics'
+#' - thresholdSummary: A data frame containing the threshold summary'
+#' - demographicSummary: A data frame containing the demographic summary'
+#' - calibrationSummary: A data frame containing the calibration summary'
+#' - predictionDistribution: A data frame containing the prediction distribution'
+#' 
 #' @export
 evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
+  start <- Sys.time()
   # checking inputs
   # ========================================
   modelType <- attr(prediction, "metaData")$modelType
@@ -138,7 +143,9 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   )
 
   class(result) <- "plpEvaluation"
-
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Time to calculate evaluation metrics: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 
@@ -154,7 +161,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
 #' @param prediction         the prediction object found in the plpResult object
 #'
 #' @return
-#' model-based concordance value
+#' The model-based concordance value
 #'
 #' @export
 modelBasedConcordance <- function(prediction) {

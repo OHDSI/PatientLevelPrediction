@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,15 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-context("Diagnostic")
-
-
 test_that("getMaxEndDaysFromCovariates works", {
   covariateSettings <- FeatureExtraction::createCovariateSettings(
     useDemographicsGender = TRUE,
     endDays = -1
   )
-  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), -1)
+  expect_equal(getMaxEndDaysFromCovariates(covariateSettings), -1)
 
   covariateSettings <- list(
     FeatureExtraction::createCovariateSettings(
@@ -34,7 +31,7 @@ test_that("getMaxEndDaysFromCovariates works", {
       endDays = 2
     )
   )
-  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 2)
+  expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 2)
 
   covariateSettings <- list(
     FeatureExtraction::createCovariateSettings(
@@ -50,16 +47,17 @@ test_that("getMaxEndDaysFromCovariates works", {
       cohortDatabaseSchema = "", cohortTable = ""
     )
   )
-  testthat::expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 5)
+  expect_equal(getMaxEndDaysFromCovariates(covariateSettings), 5)
 
   # if no covariate setting has endDays return 0
-  testthat::expect_equal(
+  expect_equal(
     getMaxEndDaysFromCovariates(list(empty = list(gfg = 2), empty2 = list(ff = 1))),
     0
   )
 })
 
 test_that("test diagnosePlp works", {
+  skip_if_offline()
   test <- diagnosePlp(
     plpData = tinyPlpData,
     outcomeId = outcomeId,
@@ -78,10 +76,10 @@ test_that("test diagnosePlp works", {
     preprocessSettings = createPreprocessSettings()
   )
   # check results are a list
-  testthat::expect_is(test, "diagnosePlp")
+  expect_s3_class(test, "diagnosePlp")
 
   # check list names
-  testthat::expect_equal(
+  expect_equal(
     sum(names(test) %in%
       c(
         "summary", "participants", "predictors",
@@ -92,24 +90,25 @@ test_that("test diagnosePlp works", {
   )
 
   # check the results are saved into the databaseName directory
-  testthat::expect_equal(TRUE, dir.exists(file.path(saveLoc, "diagnostics")))
-  testthat::expect_equal(TRUE, file.exists(file.path(saveLoc, "diagnostics", "diagnoseTest", "diagnosePlp.rds")))
+  expect_equal(TRUE, dir.exists(file.path(saveLoc, "diagnostics")))
+  expect_equal(TRUE, file.exists(file.path(saveLoc, "diagnostics", "diagnoseTest", "diagnosePlp.rds")))
 
-  testthat::expect_is(test$summary, "data.frame")
-  testthat::expect_is(test$participants, "data.frame")
-  testthat::expect_is(test$predictors, "data.frame") # rename this outcome survival?
-  testthat::expect_is(test$outcomes, "data.frame")
-  testthat::expect_is(test$databaseSchema, "character")
+  expect_s3_class(test$summary, "data.frame")
+  expect_s3_class(test$participants, "data.frame")
+  expect_s3_class(test$predictors, "data.frame") # rename this outcome survival?
+  expect_s3_class(test$outcomes, "data.frame")
+  expect_type(test$databaseSchema, "character")
 
-  testthat::expect_true(!is.null(test$modelDesign$targetId))
-  testthat::expect_true(!is.null(test$modelDesign$outcomeId))
-  testthat::expect_true(!is.null(test$modelDesign$restrictPlpDataSettings))
-  testthat::expect_true(!is.null(test$modelDesign$covariateSettings))
-  testthat::expect_true(!is.null(test$modelDesign$populationSettings))
+  expect_true(!is.null(test$modelDesign$targetId))
+  expect_true(!is.null(test$modelDesign$outcomeId))
+  expect_true(!is.null(test$modelDesign$restrictPlpDataSettings))
+  expect_true(!is.null(test$modelDesign$covariateSettings))
+  expect_true(!is.null(test$modelDesign$populationSettings))
 })
 
 
 test_that("test diagnoseMultiplePlp works", {
+  skip_if_offline()
   analysis1 <- createModelDesign(
     targetId = 1,
     outcomeId = outcomeId,
@@ -158,10 +157,10 @@ test_that("test diagnoseMultiplePlp works", {
   )
 
   # file.path(saveDirectory,'settings.csv') exits
-  testthat::expect_true(file.exists(file.path(saveLoc, "diagnosticsMultiple", "settings.csv")))
+  expect_true(file.exists(file.path(saveLoc, "diagnosticsMultiple", "settings.csv")))
 
   # file.path(saveDirectory, settings$analysisId, 'diagnosePlp.rds') exists
-  testthat::expect_true(length(dir(file.path(saveLoc, "diagnosticsMultiple"), pattern = "Analysis_")) == 2)
+  expect_true(length(dir(file.path(saveLoc, "diagnosticsMultiple"), pattern = "Analysis_")) == 2)
 
-  testthat::expect_true(file.exists(file.path(saveLoc, "diagnosticsMultiple", "Analysis_1", "diagnosePlp.rds")))
+  expect_true(file.exists(file.path(saveLoc, "diagnosticsMultiple", "Analysis_1", "diagnosePlp.rds")))
 })

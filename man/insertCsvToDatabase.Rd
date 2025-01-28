@@ -27,8 +27,10 @@ insertCsvToDatabase(
 Returns a data.frame indicating whether the results were inported into the database
 }
 \description{
-This function converts a folder with csv results into plp objects and loads them into a plp result database
+This function converts a folder with csv results into plp objects and loads 
+them into a plp result database
 }
 \details{
-The user needs to have plp csv results in a single folder and an existing plp result database
+The user needs to have plp csv results in a single folder and an existing plp 
+result database
 }

@@ -1,6 +1,6 @@
 # @file Glm.R 
 #
-# Copyright 2024 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -15,6 +15,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 #' predict using a logistic regression model
 #' 
 #' @description
@@ -30,7 +31,6 @@
 #' @export
 #' @return A dataframe containing the prediction for each person in the 
 #' population
-#' @export
 predictGlm <- function(plpModel, data, cohort) {
   start <- Sys.time()
   
@@ -82,7 +82,8 @@ predictGlm <- function(plpModel, data, cohort) {
 #' linear predictors to outcome probabilities. For generalized linear models
 #' this is the inverse of the link function. Supported values is only
 #' "logistic" for logistic regression model at the moment. 
-#' @return A model object containing the model and the prediction function.
+#' @return A model object containing the model (Coefficients and intercept)
+#' and the prediction function.
 #' @export
 createGlmModel <- function(coefficients,
                            intercept = 0,

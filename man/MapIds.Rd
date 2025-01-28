@@ -13,6 +13,9 @@ MapIds(covariateData, cohort = NULL, mapping = NULL)
 
 \item{mapping}{A pre defined mapping to use}
 }
+\value{
+a new covariateData object with remapped covariate and row ids
+}
 \description{
 this functions takes covariate data and a cohort/population and remaps
 the covariate and row ids, restricts to pop and saves/creates mapping

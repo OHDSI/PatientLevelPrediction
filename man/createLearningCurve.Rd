@@ -91,19 +91,3 @@ A learning curve object containing the various performance measures
 Creates a learning curve object, which can be plotted using the
  \code{plotLearningCurve()} function.
 }
-\examples{
-\dontrun{
-# define model
-modelSettings <- PatientLevelPrediction::setLassoLogisticRegression()
-
-# create learning curve
-learningCurve <- PatientLevelPrediction::createLearningCurve(
-  population,
-  plpData,
-  modelSettings
-)
-# plot learning curve
-PatientLevelPrediction::plotLearningCurve(learningCurve)
-}
-
-}

@@ -9,6 +9,9 @@ sklearnFromJson(path)
 \arguments{
 \item{path}{path to the model json file}
 }
+\value{
+a sklearn python model object
+}
 \description{
 Loads sklearn python model from json
 }

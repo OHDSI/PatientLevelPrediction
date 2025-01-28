@@ -1,3 +1,21 @@
+# @file EvaluationSummary.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
+# This file is part of PatientLevelPrediction
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 getEvaluationStatistics <- function(
     prediction,
     predictionType,
@@ -322,11 +340,6 @@ calculateEStatisticsBinary <- function(prediction) {
   )
 }
 
-
-# ==================================
-# Fucntions for the summary
-# ==================================
-
 #' Compute the area under the ROC curve
 #'
 #' @details
@@ -336,6 +349,8 @@ calculateEStatisticsBinary <- function(prediction) {
 #' @param prediction            A prediction object as generated using the
 #'                              \code{\link{predict}} functions.
 #' @param confidenceInterval    Should 95 percebt confidence intervals be computed?
+#'
+#' @return A data.frame containing the AUC and optionally the 95% confidence interval
 #'
 #' @export
 computeAuc <- function(
@@ -387,9 +402,9 @@ brierScore <- function(prediction) {
 #' @param prediction            A prediction object
 #' @param numberOfStrata        The number of groups to split the prediction into
 #'
-#' @details
-#' Calculates the calibration from prediction object
-#'
+#' @return
+#' A list containing the calibrationLine coefficients, the aggregate data used 
+#' to fit the line and the Hosmer-Lemeshow goodness of fit test
 #' @export
 calibrationLine <- function(prediction, numberOfStrata = 10) {
   outPpl <- unique(prediction$rowId)
@@ -455,7 +470,7 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
 #' @param prediction            A prediction object
 #'
 #' @return
-#' The average precision
+#' The average precision value
 #'
 #' @export
 averagePrecision <- function(prediction) {
@@ -478,7 +493,6 @@ calibrationInLarge <- function(prediction) {
     observedRisk = sum(prediction$outcomeCount) / nrow(prediction),
     N = nrow(prediction)
   )
-
   return(result)
 }
 
@@ -493,7 +507,7 @@ calibrationInLargeIntercept <- function(prediction) {
   inverseLog <- log(prediction$value / (1 - prediction$value))
   y <- ifelse(prediction$outcomeCount > 0, 1, 0)
 
-  intercept <- suppressWarnings(stats::glm(y ~ offset(1 * inverseLog), family = "binomial"))
+  intercept <- suppressWarnings(stats::glm(y ~ stats::offset(1 * inverseLog), family = stats::binomial()))
   intercept <- intercept$coefficients[1]
 
   return(intercept)
@@ -511,7 +525,7 @@ calibrationWeak <- function(prediction) {
   inverseLog <- log(prediction$value / (1 - prediction$value))
   y <- ifelse(prediction$outcomeCount > 0, 1, 0)
 
-  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = "binomial"))
+  vals <- suppressWarnings(stats::glm(y ~ inverseLog, family = stats::binomial()))
 
   result <- data.frame(
     intercept = vals$coefficients[1],
@@ -521,16 +535,16 @@ calibrationWeak <- function(prediction) {
   return(result)
 }
 
-#' Calculate the Integrated Calibration Information from Austin and Steyerberg
+#' Calculate the Integrated Calibration Index from Austin and Steyerberg
 #' https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281
 #'
 #' @details
-#' Calculate the Integrated Calibration Information
+#' Calculate the Integrated Calibration Index
 #'
 #' @param prediction         the prediction object found in the plpResult object
 #'
 #' @return
-#' Integrated Calibration Information
+#' Integrated Calibration Index value or NULL if the calculation fails
 #'
 #' @export
 ici <- function(prediction) {
@@ -570,5 +584,5 @@ ici <- function(prediction) {
       return(ICI)
     }
   }
-  return(-1)
+  return(NULL)
 }

@@ -1,5 +1,5 @@
 # @file DataSplitting.R
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -96,6 +96,7 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
 #' Create the settings for defining how the plpData are split into
 #' test/validation/train sets using an existing split - good to use for 
 #' reproducing results from a different run 
+#' 
 #' @param splitIds (data.frame) A data frame with rowId and index columns of 
 #' type integer/numeric. Index is -1 for test set, positive integer for train 
 #' set folds
@@ -118,7 +119,14 @@ createExistingSplitSettings <- function(splitIds) {
 #' Split the plpData into test/train sets using a splitting settings of class 
 #' \code{splitSettings}
 #'
-#' @details
+#' @param plpData   An object of type \code{plpData} - the patient level 
+#' prediction data extracted from the CDM.
+#' @param population The population created using \code{createStudyPopulation} 
+#' that define who will be used to develop the model
+#' @param splitSettings An object of type \code{splitSettings} specifying the 
+#' split - the default can be created using \code{createDefaultSplitSetting}
+#'
+#' @return
 #' Returns a list containing the training data (Train) and optionally the test
 #' data (Test). Train is an Andromeda object containing
 #' \itemize{\item covariates: a table (rowId, covariateId, covariateValue)
@@ -136,19 +144,11 @@ createExistingSplitSettings <- function(splitIds) {
 #'          \item labels: a table (rowId, outcomeCount, ...) for each data
 #' point in the test data (outcomeCount is the class label)
 #'          }
-#' @param plpData   An object of type \code{plpData} - the patient level 
-#' prediction data extracted from the CDM.
-#' @param population The population created using \code{createStudyPopulation} 
-#' that define who will be used to develop the model
-#' @param splitSettings An object of type \code{splitSettings} specifying the 
-#' split - the default can be created using \code{createDefaultSplitSetting}
-#'
-#' @return
-#' An object of class \code{splitSettings}
 #' @export
 splitData <- function(plpData = plpData,
                       population = population,
                       splitSettings = splitSettings) {
+  start <- Sys.time()
   fun <- attr(splitSettings, "fun")
   args <- list(
     population = population,
@@ -260,6 +260,8 @@ splitData <- function(plpData = plpData,
   }
 
   class(result) <- "splitData"
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Data split in ", signif(delta, 3), " ", attr(delta, "units"))
   return(result)
 }
 
@@ -312,18 +314,7 @@ randomSplitter <- function(population, splitSettings) {
   if (!is.null(seed)) {
     set.seed(seed)
   }
-
-  if (length(table(population$outcomeCount)) <= 1 ||
-    sum(population$outcomeCount > 0) < 10) {
-    stop("Outcome only occurs in fewer than 10 people or only one class")
-  }
-
-  if (floor(sum(population$outcomeCount > 0) * train / nfold) < 5) {
-    stop(paste0("Insufficient (", sum(population$outcomeCount > 0), ")
-      outcomes for choosen nfold value, please reduce"))
-  }
-
-
+  checkOutcomes(population, train, nfold)
   ParallelLogger::logInfo(paste0(
     "Creating a ",
     test * 100,
@@ -593,4 +584,26 @@ existingSplitter <- function(population, splitSettings) {
     stop("Not all rowIds in splitIds are in the population")
   }
   return(splitIds)
+}
+
+checkOutcomes <- function(population, train, nfold) {
+  if (!is.null(options("plp.outcomes")[[1]])) {
+    if (sum(population$outcomeCount > 0) < options("plp.outcomes")[[1]]) {
+      stop("Outcome count is less than specified option plp.outcomes: ", 
+        options("plp.outcomes")[[1]])
+    }
+
+  } else {
+    # plp default minimum outcomes, less < 10 in total or less than 5 in train folds
+    if (length(table(population$outcomeCount)) <= 1 ||
+      sum(population$outcomeCount > 0) < 10) {
+      stop("Outcome only occurs in fewer than 10 people or only one class")
+    }
+
+    if (floor(sum(population$outcomeCount > 0) * train / nfold) < 5) {
+      stop(paste0("Insufficient (", sum(population$outcomeCount > 0), ")
+        outcomes for choosen nfold value, please reduce"))
+    } 
+  }
+  return(invisible(TRUE))
 }

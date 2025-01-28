@@ -2,25 +2,18 @@
 title: "Building patient-level predictive models"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[C]{Building Predictive Models}
-    - \fancyfoot[C]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[C]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Building patient-level predictive models}
+  %\VignetteEncoding{UTF-8}
 ---
 
-<!--
-%\VignetteEngine{knitr::rmarkdown}
-%\VignetteIndexEntry{Building patient-level predictive models}
--->
+```{css, echo=FALSE}
+img {
+  max-width: 100%;
+}
+```
 
 ```{r echo=FALSE,message=FALSE,warning=FALSE,eval=TRUE}
 library(PatientLevelPrediction)
@@ -46,13 +39,13 @@ In our [`paper`](https://academic.oup.com/jamia/article/25/8/969/4989437), we pr
 
 Figure 1, illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
-![The prediction problem](Figure1.webp)
+![The prediction problem](./images/Figure1.avif)
 
 As shown in Figure 2, to define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we have to make design choices for the model we like to develop, and determine the observational datasets to perform internal and external validation. This conceptual framework works for all type of prediction problems, for example those presented in Figure 3.
 
-![Design choices](studydesign.webp)
+![Design choices](./images/studydesign.avif)
 
-![Examples of prediction problems](problems.webp)
+![Examples of prediction problems](./images/problems.avif)
 
 This vignette describes how you can use the `PatientLevelPrediction` package to build patient-level predictive models. The package enables data extraction, model building, and model evaluation using data from databases that are translated into the OMOP CDM. In this vignette we assume you have installed the package correctly using the `vignette('InstallationGuide')`.
 
@@ -180,18 +173,18 @@ Both methods are described below for our example prediction problem.
 
 ### ATLAS cohort builder
 
-![Figure 4: Target Cohort Atrial Fibrillation](example1/ATLAS_T.webp)
+![Figure 4: Target Cohort Atrial Fibrillation](example1/ATLAS_T.avif)
 
 ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 4 shows how we created the Atrial Fibrillation cohort and Figure 5 shows how we created the stroke cohort in ATLAS.
 
-![Figure 5: Outcome Cohort Stroke](example1/ATLAS_O.webp)
+![Figure 5: Outcome Cohort Stroke](example1/ATLAS_O.avif)
 
 The T and O cohorts can be found here:
 
 -   Atrial Fibrillaton (T): <https://atlas-demo.ohdsi.org/#/cohortdefinition/1770326>
 -   Stroke (O) : <https://atlas-demo.ohdsi.org/#/cohortdefinition/1769448> 
 
-In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
+In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](https://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
 Note that when a cohort is created in ATLAS the `cohortId` is needed to extract the data in R. The `cohortId` can be found at the top of the ATLAS screen, e.g. 1769447 in Figure 4.
 
@@ -301,9 +294,9 @@ FROM
   
 ```
 
-This is parameterized SQL which can be used by the [`SqlRender`](http://github.com/OHDSI/SqlRender) package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
+This is parameterized SQL which can be used by the [`SqlRender`](https://github.com/OHDSI/SqlRender) package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
-To execute this `sql` against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](http://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails()`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
+To execute this `sql` against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](https://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails()`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
 
 ```{r tidy=FALSE,eval=FALSE}
 library(DatabaseConnector)
@@ -603,18 +596,18 @@ Both methods are described below for our example prediction problem.
 
 ### ATLAS cohort builder
 
-![Target Cohort ACE inhibitors](example2/aceinhibitors.webp)
+![Target Cohort ACE inhibitors](example2/aceinhibitors.avif)
 
 ATLAS allows you to define cohorts interactively by specifying cohort entry and cohort exit criteria. Cohort entry criteria involve selecting one or more initial events, which determine the start date for cohort entry, and optionally specifying additional inclusion criteria which filter to the qualifying events. Cohort exit criteria are applied to each cohort entry record to determine the end date when the person's episode no longer qualifies for the cohort. For the outcome cohort the end date is less relevant. As an example, Figure 6 shows how we created the ACE inhibitors cohort and Figure 7 shows how we created the angioedema cohort in ATLAS.
 
-![Outcome Cohort Angioedema](example2/angioedema.webp)
+![Outcome Cohort Angioedema](example2/angioedema.avif)
 
 The T and O cohorts can be found here:
 
 -   Ace inhibitors (T): <https://atlas-demo.ohdsi.org/#/cohortdefinition/1770617>
 -   Angioedema (O) : <https://atlas-demo.ohdsi.org/#/cohortdefinition/1770616>
 
-In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](http://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
+In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](https://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
 
 Note that when a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found at the top of the ATLAS screen, e.g. 1770617 in Figure 6.
 
@@ -700,9 +693,9 @@ For our example study, we need to create at table to hold the cohort data and we
     
 ```
 
-This is parameterized SQL which can be used by the [`SqlRender`](http://github.com/OHDSI/SqlRender) package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
+This is parameterized SQL which can be used by the [`SqlRender`](https://github.com/OHDSI/SqlRender) package. We use parameterized SQL so we do not have to pre-specify the names of the CDM and result schemas. That way, if we want to run the SQL on a different schema, we only need to change the parameter values; we do not have to change the SQL code. By also making use of translation functionality in `SqlRender`, we can make sure the SQL code can be run in many different environments.
 
-To execute this sql against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](http://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
+To execute this sql against our CDM we first need to tell R how to connect to the server. `PatientLevelPrediction` uses the [`DatabaseConnector`](https://github.com/ohdsi/DatabaseConnector) package, which provides a function called `createConnectionDetails`. Type `?createConnectionDetails` for the specific settings required for the various database management systems (DBMS). For example, one might connect to a PostgreSQL database using this code:
 
 ```{r tidy=FALSE,eval=FALSE}
 connectionDetails <- createConnectionDetails(
@@ -837,7 +830,7 @@ populationSettings <- createStudyPopulationSettings(
 
 When developing a prediction model using supervised learning (when you have features paired with labels for a set of patients), the first step is to design the development/internal validation process. This requires specifying how to select the model hyper-parameters, how to learn the model parameters and how to fairly evaluate the model. In general, the validation set is used to pick hyper-parameters, the training set is used to learn the model parameters and the test set is used to perform fair internal validation. However, cross-validation can be implemented to pick the hyper-parameters on the training data (so a validation data set is not required). Cross validation can also be used to estimate internal validation (so a testing data set is not required).
 
-In small data the best approach for internal validation has been shown to be boostrapping. However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is just important to have some form of fair evaluation (use a test set or cross validation). For full details see [our BMJ open paper](add%20link).
+In small data the best approach for internal validation has been shown to be bootstrapping. However, in big data (many patients and many features) bootstrapping is generally not feasible. In big data our research has shown that it is just important to have some form of fair evaluation (use a test set or cross validation). For full details see [our BMJ open paper](https://bmjopen.bmj.com/content/11/12/e050146.long).
 
 In the PatientLevelPrediction package, the splitSettings define how the plpData are partitioned into training/validation/testing data. Cross validation is always done, but using a test set is optional (when the data are small, it may be optimal to not use a test set). For the splitSettings we can use the type (stratified/time/subject) and testFraction parameters to split the data in a 75%-25% split and run the patient-level prediction pipeline:
 
@@ -960,7 +953,7 @@ The script we created manually above can also be automatically created using a p
 
     <dt>Create a new prediction study and select your target and outcome cohorts.</dt>
 
-    <dd>![](atlasplp1.webp)</dd>
+    <dd>![](images/atlasplp1.avif)</dd>
 
     </dl>
 
@@ -968,7 +961,7 @@ The script we created manually above can also be automatically created using a p
 
     <dt>Specify one or more analysis settings.</dt>
 
-    <dd>![](atlasplp2.web)</dd>
+    <dd>![](images/atlasplp2.avif)</dd>
 
     </dl>
 
@@ -978,7 +971,7 @@ The script we created manually above can also be automatically created using a p
 
     <dt>Specify the trainings settigns</dt>
 
-    <dd>![](atlasplp3.webp)</dd>
+    <dd>![](images/atlasplp3.avif)</dd>
 
     </dl>
 
@@ -986,7 +979,7 @@ The script we created manually above can also be automatically created using a p
 
     <dt>Specify the execution settings</dt>
 
-    <dd>![](atlasplp4.web)</dd>
+    <dd>![](images/atlasplp4.avif)</dd>
 
     </dl>
 
@@ -1000,7 +993,7 @@ ATLAS can build a R package for you that will execute the full study against you
 
     <dd>
 
-    ![R package download functionality in ATLAS](atlasdownload1.webp)
+    ![R package download functionality in ATLAS](images/atlasdownload1.avif)
 
     </dd>
 
@@ -1012,7 +1005,7 @@ ATLAS can build a R package for you that will execute the full study against you
 
     <dd>
 
-    ![R package download functionality in ATLAS](atlasdownload2.webp)
+    ![R package download functionality in ATLAS](images/atlasdownload2.avif)
 
     </dd>
 
@@ -1030,7 +1023,7 @@ You can interactively view the results by running: `viewPlp(runPlp=lrResults)`. 
 
 <dd>
 
-![Summary of all the performance measures of the analyses](shinysummary.webp)
+![Summary of all the performance measures of the analyses](images/shinysummary.avif)
 
 </dd>
 
@@ -1038,7 +1031,7 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 
 <dd>
 
-![Example of the interactive ROC curve](shinyroc.webp)
+![Example of the interactive ROC curve](images/shinyroc.avif)
 
 </dd>
 
@@ -1058,7 +1051,7 @@ The Receiver Operating Characteristics (ROC) plot shows the sensitivity against 
 
 <dd>
 
-![Receiver Operating Characteristic Plot](sparseRoc.webp)
+![Receiver Operating Characteristic Plot](images/sparseRoc.avif)
 
 </dd>
 
@@ -1070,7 +1063,7 @@ The calibration plot shows how close the predicted risk is to the observed risk.
 
 <dd>
 
-![Calibration Plot](sparseCalibration.webp)
+![Calibration Plot](images/sparseCalibration.avif)
 
 </dd>
 
@@ -1092,7 +1085,7 @@ The example below is from another study that better demonstrates the impact of u
 
 <dd>
 
-![Smooth Calibration plot](smoothCalibration.jpeg)
+![Smooth Calibration plot](images/smoothCalibration.avif)
 
 </dd>
 
@@ -1104,7 +1097,7 @@ The preference distribution plots are the preference score distributions corresp
 
 <dd>
 
-![Preference Plot](preferencePDF.webp)
+![Preference Plot](images/preferencePDF.avif)
 
 </dd>
 
@@ -1118,7 +1111,7 @@ The box plots in the Figure show that the predicted probability of the outcome i
 
 <dd>
 
-![Prediction Distribution Box Plot](predictionDistribution.wwebp)
+![Prediction Distribution Box Plot](images/predictionDistribution.avif)
 
 </dd>
 
@@ -1132,7 +1125,7 @@ The results for our example of look very promising since the mean values of the 
 
 <dd>
 
-![Similarity plots of train and test set](generalizability.webp)
+![Similarity plots of train and test set](images/generalizability.avif)
 
 </dd>
 
@@ -1146,7 +1139,7 @@ The plot shows that the mean of most of the covariates is higher for subjects wi
 
 <dd>
 
-![Variabel scatter Plot](variableScatterplot.webp)
+![Variabel scatter Plot](images/variableScatterplot.avif)
 
 </dd>
 
@@ -1178,7 +1171,7 @@ For Recall the denominator does not depend on the classifier threshold (Tp+Fn is
 
 <dd>
 
-![Precision Recall Plot](precisionRecall.webp)
+![Precision Recall Plot](images/precisionRecall.avif)
 
 </dd>
 
@@ -1192,7 +1185,7 @@ The results show that our model is well calibrated across gender and age groups.
 
 <dd>
 
-![Demographic Summary Plot](demographicSummary.webp)
+![Demographic Summary Plot](images/demographicSummary.avif)
 
 </dd>
 
@@ -1268,7 +1261,7 @@ citation("Cyclops")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.
 
@@ -1282,7 +1275,7 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     <dt>Require minimum time-at-risk for all person in the target cohort</dt>
 
-    <dd>![](popdef1.webp)</dd>
+    <dd>![](images/popdef1.avif)</dd>
 
     </dl>
 
@@ -1290,7 +1283,7 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     <dt>Require minumum time-at-risk for target cohort, except for persons with outcomes during time-at-risk.</dt>
 
-    <dd>![](popdef2.webp)</dd>
+    <dd>![](images/popdef2.avif)</dd>
 
     </dl>
 
@@ -1303,7 +1296,7 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
 <dt>Include all persons in the target cohort exclude persons with prior outcomes</dt>
 
-<dd>![](popdef3.webp)</dd>
+<dd>![](images/popdef3.avif)</dd>
 
 </dl>
 
@@ -1311,7 +1304,7 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     <dt>Require minimum time-at-risk for target cohort, except for persons with outcomes during time-at-risk, exclude persons with prior outcomes</dt>
 
-    <dd>![](popdef4.webp)</dd>
+    <dd>![](images/popdef4.avif)</dd>
 
     </dl>
 
@@ -1324,7 +1317,7 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
 <dt>Include all persons in target cohort exclude persons with prior outcomes</dt>
 
-<dd>![](popdef5.webp)</dd>
+<dd>![](images/popdef5.avif)</dd>
 
 </dl>
 
@@ -1332,6 +1325,6 @@ In the figures below the effect is shown of the removeSubjectsWithPriorOutcome, 
 
     <dt>Include all persons in target cohort</dt>
 
-    <dd>![](popdef6.webp)</dd>
+    <dd>![](images/popdef6.avif)</dd>
 
     </dl>

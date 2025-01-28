@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,12 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("CyclopsModels")
-
-
 # ================ SETTING TESTINGS
 
 
@@ -28,10 +22,10 @@ test_that("set LR inputs", {
   # =====================================
 
   model_set <- setLassoLogisticRegression()
-  testthat::expect_that(model_set, testthat::is_a("modelSettings"))
+  expect_s3_class(model_set, "modelSettings")
 
   expect_equal(model_set$fitFunction, "fitCyclopsModel")
-  expect_is(model_set$param, "list")
+  expect_type(model_set$param, "list")
 
   expect_equal(model_set$param$priorParams$priorType, "laplace")
 
@@ -102,10 +96,10 @@ test_that("set cox regression inputs", {
   # =====================================
 
   modelSet <- setCoxModel()
-  testthat::expect_that(modelSet, testthat::is_a("modelSettings"))
+  expect_s3_class(modelSet, "modelSettings")
 
   expect_equal(modelSet$fitFunction, "fitCyclopsModel")
-  expect_is(modelSet$param, "list")
+  expect_type(modelSet$param, "list")
 
   expect_equal(modelSet$param$priorParams$priorType, "laplace")
 
@@ -174,10 +168,10 @@ test_that("set IHT inputs", {
   # checking IHT
   # =====================================
   modelSet <- setIterativeHardThresholding()
-  testthat::expect_that(modelSet, testthat::is_a("modelSettings"))
+  expect_s3_class(modelSet, "modelSettings")
 
   expect_equal(modelSet$fitFunction, "fitCyclopsModel")
-  expect_is(modelSet$param, "list")
+  expect_type(modelSet$param, "list")
 
   expect_equal(attr(modelSet$param, "settings")$modelType, "logistic")
   expect_equal(attr(modelSet$param, "settings")$priorfunction, "IterativeHardThresholding::createIhtPrior")
@@ -220,10 +214,10 @@ test_that("set IHT inputs", {
 test_that("test IHT incorrect inputs", {
   skip_if_not_installed("IterativeHardThresholding")
   skip_on_cran()
-  testthat::expect_error(setIterativeHardThresholding(K = 0))
-  testthat::expect_error(setIterativeHardThresholding(penalty = "L1"))
-  testthat::expect_error(setIterativeHardThresholding(fitBestSubset = "true"))
-  testthat::expect_error(setIterativeHardThresholding(seed = "F"))
+  expect_error(setIterativeHardThresholding(K = 0))
+  expect_error(setIterativeHardThresholding(penalty = "L1"))
+  expect_error(setIterativeHardThresholding(fitBestSubset = "true"))
+  expect_error(setIterativeHardThresholding(seed = "F"))
 })
 
 
@@ -231,6 +225,7 @@ test_that("test IHT incorrect inputs", {
 # ================ FUNCTION TESTING
 
 test_that("test logistic regression runs", {
+  skip_if_offline()
   modelSettings <- setLassoLogisticRegression()
 
   fitModel <- fitPlp(

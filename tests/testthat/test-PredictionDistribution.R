@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,27 +13,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-context("PredictionDistribution")
-
 test_that("getPredictionDistribution binary type", {
-  Eprediction <- data.frame(
+  ePrediction <- data.frame(
     value = runif(100),
     outcomeCount = round(runif(100)),
     evaluation = rep("Test", 100)
   )
   predSum <- getPredictionDistribution(
-    prediction = Eprediction,
+    prediction = ePrediction,
     predictionType = "binary",
     typeColumn = "evaluation"
   )
 
-  expect_that(nrow(predSum), equals(2))
-  expect_that(ncol(predSum), equals(12))
+  expect_equal(nrow(predSum), 2)
+  expect_equal(ncol(predSum), 12)
 
 
 
   predBinary <- getPredictionDistribution_binary(
-    prediction = Eprediction,
+    prediction = ePrediction,
     evaluation = rep("Test", 100),
     evalColumn = "evaluation"
   )
@@ -43,14 +41,14 @@ test_that("getPredictionDistribution binary type", {
 
 
 test_that("getPredictionDistribution survival type", {
-  Eprediction <- data.frame(
+  ePrediction <- data.frame(
     value = runif(100),
     outcomeCount = round(runif(100)),
     evaluation = rep("Test", 100)
   )
 
   predSurvival <- getPredictionDistribution_survival(
-    prediction = Eprediction,
+    prediction = ePrediction,
     evaluation = rep("Test", 100),
     evalColumn = "evaluation"
   )

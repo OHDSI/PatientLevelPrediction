@@ -77,11 +77,9 @@ setMLP(
 
 \item{seed}{A seed for the model}
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for neural network model with python
-}
-\examples{
-\dontrun{
-model.mlp <- setMLP()
-}
 }

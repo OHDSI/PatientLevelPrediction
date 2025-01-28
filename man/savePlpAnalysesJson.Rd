@@ -19,21 +19,12 @@ savePlpAnalysesJson(
 
 \item{saveDirectory}{The directory to save the modelDesignList settings}
 }
+\value{
+The json string of the ModelDesignList
+}
 \description{
 Save the modelDesignList to a json file
 }
 \details{
 This function creates a json file with the modelDesignList saved
-}
-\examples{
-\dontrun{
-savePlpAnalysesJson(
-  modelDesignList = list(
-    createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()),
-    createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
-  ),
-  saveDirectory = "C:/bestModels"
-)
-}
-
 }

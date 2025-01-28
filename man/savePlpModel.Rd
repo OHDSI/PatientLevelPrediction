@@ -11,6 +11,9 @@ savePlpModel(plpModel, dirPath)
 
 \item{dirPath}{A location to save the model to}
 }
+\value{
+The directory path where the model was saved
+}
 \description{
 Saves the plp model
 }

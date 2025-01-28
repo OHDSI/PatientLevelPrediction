@@ -13,6 +13,10 @@ migrateDataModel(connectionDetails, databaseSchema, tablePrefix = "")
 
 \item{tablePrefix}{(Optional) Use if a table prefix is used before table names (e.g. "cd_")}
 }
+\value{
+Nothing. Is called for side effects of migrating data model in the 
+database
+}
 \description{
 Migrate data from current state to next state
 

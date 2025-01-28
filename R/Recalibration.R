@@ -1,6 +1,6 @@
 # @file Recalibration.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -185,6 +185,7 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' @param columnType                      The column name where the strata types are specified
 #' @return
 #' An prediction dataframe with the recalibrated predictions added
+#' @noRd
 #' @keywords internal
 recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
   if (attr(prediction, "metaData")$modelType == "binary") {
@@ -220,6 +221,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 #' @return
 #' An prediction dataframe with the recalibrated predictions added
 #' @keywords internal
+#' @noRd
 weakRecalibration <- function(prediction, columnType = "evaluationType") {
   # if binary:
   if (attr(prediction, "metaData")$modelType == "binary") {

@@ -1,6 +1,6 @@
 # @file LearningCurve.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -67,21 +67,6 @@
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
-#'
-#' @examples
-#' \dontrun{
-#' # define model
-#' modelSettings <- PatientLevelPrediction::setLassoLogisticRegression()
-#'
-#' # create learning curve
-#' learningCurve <- PatientLevelPrediction::createLearningCurve(
-#'   population,
-#'   plpData,
-#'   modelSettings
-#' )
-#' # plot learning curve
-#' PatientLevelPrediction::plotLearningCurve(learningCurve)
-#' }
 #'
 #' @export
 createLearningCurve <- function(
@@ -311,9 +296,6 @@ learningCurveHelper <- function(result, trainFractions) {
   return(result)
 }
 
-
-
-
 #' @title plotLearningCurve
 #'
 #' @description Create a plot of the learning curve using the object returned
@@ -342,19 +324,6 @@ learningCurveHelper <- function(result, trainFractions) {
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 #' file in a different format.
-#'
-#' @examples
-#' \dontrun{
-#' # create learning curve object
-#' learningCurve <- createLearningCurve(
-#'   population,
-#'   plpData,
-#'   modelSettings
-#' )
-#' # plot the learning curve
-#' plotLearningCurve(learningCurve)
-#' }
-#'
 #' @export
 plotLearningCurve <- function(
     learningCurve,

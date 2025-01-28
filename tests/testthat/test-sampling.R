@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,10 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("Sampling")
-
 testType <- sample(c("none", "underSample", "overSample"), 1)
 testNumberOutcomestoNonOutcomes <- 2
 testSampleSeed <- sample(10000, 1)
@@ -38,7 +34,7 @@ sampleSettingFunc <- function(
 
 test_that("createSampleSettings works", {
   sampleSettings <- sampleSettingFunc()
-  expect_is(sampleSettings, "sampleSettings")
+  expect_s3_class(sampleSettings, "sampleSettings")
 
   sampleFun <- "sameData"
   if (testType == "underSample") {
@@ -91,6 +87,8 @@ test_that("createSampleSettings expected errors", {
 
 
 test_that("sampleData outputs are correct", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   newTrainData <- trainData
   attr(newTrainData, "metaData")$sampleSettings <- NULL # remove for test
 
@@ -130,6 +128,8 @@ test_that("sampleData outputs are correct", {
 
 
 test_that("underSampleData works", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   newTrainData <- trainData
 
   sampleSettings <- list(
@@ -159,6 +159,8 @@ test_that("underSampleData works", {
 
 
 test_that("overSampleData works", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   newTrainData <- trainData
 
   sampleSettings <- list(
