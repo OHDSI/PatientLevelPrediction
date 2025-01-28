@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,25 +13,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("Prediction")
-
-
 test_that("prediction inputs", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   # =====================================
   # check prediction
   # =====================================
-  testthat::expect_error(predictPlp(
+  expect_error(predictPlp(
     model = NULL, population = population,
     plpData = plpData
   ))
-  testthat::expect_error(predictPlp(
+  expect_error(predictPlp(
     model = list(), population = NULL,
     plpData = plpData
   ))
-  testthat::expect_error(predictPlp(
+  expect_error(predictPlp(
     model = list(), population = population,
     plpData = NULL
   ))
@@ -39,6 +35,8 @@ test_that("prediction inputs", {
 
 
 test_that("prediction works", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   # =====================================
   # check prediction
   # =====================================
@@ -48,19 +46,19 @@ test_that("prediction works", {
     plpData = plpData
   )
   pred <- pred[order(pred$rowId), ]
-  plpResult$prediction <- plpResult$prediction[order(plpResult$prediction$rowId), ]
-  testthat::expect_equal(
+  tempPrediction <- plpResult$prediction[order(plpResult$prediction$rowId), ]
+  expect_equal(
     nrow(pred),
     nrow(population)
   )
 
-  rowId <- plpResult$prediction$rowId[plpResult$prediction$evaluationType == "Test"][1]
+  rowId <- tempPrediction$rowId[tempPrediction$evaluationType == "Test"][1]
 
-  testthat::expect_equal(
+  expect_equal(
     pred$value[pred$rowId == rowId],
-    plpResult$prediction$value[
-      plpResult$prediction$evaluationType == "Test" &
-        plpResult$prediction$rowId == rowId
+    tempPrediction$value[
+      tempPrediction$evaluationType == "Test" &
+        tempPrediction$rowId == rowId
     ]
   )
 
@@ -76,6 +74,8 @@ test_that("prediction works", {
 
 
 test_that("applyTidyCovariateData", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   covariateIds <- plpData$covariateData$covariateRef %>%
     dplyr::select("covariateId") %>%
     dplyr::pull()

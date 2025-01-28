@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,12 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("RClassifier")
-
-
 test_that("GBM settings work", {
   skip_if_not_installed("xgboost")
   skip_on_cran()
@@ -38,9 +32,9 @@ test_that("GBM settings work", {
     seed = seed
   )
 
-  expect_is(gbmSet, "modelSettings")
+  expect_s3_class(gbmSet, "modelSettings")
   expect_equal(gbmSet$fitFunction, "fitRclassifier")
-  expect_is(gbmSet$param, "list")
+  expect_type(gbmSet$param, "list")
 
   expect_equal(attr(gbmSet$param, "settings")$modelType, "Xgboost")
   expect_equal(attr(gbmSet$param, "settings")$seed, seed)
@@ -70,22 +64,23 @@ test_that("GBM settings expected errors", {
   # checking Gradient Boosting Machine
   # =====================================
 
-  testthat::expect_error(setGradientBoostingMachine(ntrees = -1))
-  testthat::expect_error(setGradientBoostingMachine(minChildWeight = -1))
-  testthat::expect_error(setGradientBoostingMachine(maxDepth = 0))
-  testthat::expect_error(setGradientBoostingMachine(learnRate = -2))
-  testthat::expect_error(setGradientBoostingMachine(seed = "F"))
-  testthat::expect_error(setGradientBoostingMachine(lambda = -1))
-  testthat::expect_error(setGradientBoostingMachine(alpha = -1))
-  testthat::expect_error(setGradientBoostingMachine(scalePosWeight = -1))
+  expect_error(setGradientBoostingMachine(ntrees = -1))
+  expect_error(setGradientBoostingMachine(minChildWeight = -1))
+  expect_error(setGradientBoostingMachine(maxDepth = 0))
+  expect_error(setGradientBoostingMachine(learnRate = -2))
+  expect_error(setGradientBoostingMachine(seed = "F"))
+  expect_error(setGradientBoostingMachine(lambda = -1))
+  expect_error(setGradientBoostingMachine(alpha = -1))
+  expect_error(setGradientBoostingMachine(scalePosWeight = -1))
 })
 
 
 
 
 test_that("GBM working checks", {
-  skip_if_not_installed("xgboost")
+  skip_if_not_installed(c("xgboost", "Eunomia"))
   skip_on_cran()
+  skip_if_offline()
   modelSettings <- setGradientBoostingMachine(ntrees = 10,
     maxDepth = 3, learnRate = 0.1)
 

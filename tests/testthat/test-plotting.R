@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,73 +14,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-
-context("Plotting")
 # TODO: add input checks and test these...
-
 test_that("plots", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   # test all the outputs are ggplots
   test <- plotSparseRoc(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotPredictedPDF(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotPreferencePDF(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotPrecisionRecall(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotF1Measure(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   if (!is.null(plpResult$performanceEvaluation$demographicSummary)) {
     test <- plotDemographicSummary(plpResult, typeColumn = "evaluation")
-    testthat::expect_s3_class(test, "arrangelist")
+    expect_s3_class(test, "arrangelist")
   }
 
   test <- plotSparseCalibration(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotPredictionDistribution(plpResult, typeColumn = "evaluation")
-  testthat::expect_s3_class(test, "arrangelist")
+  expect_s3_class(test, "arrangelist")
 
   test <- plotVariableScatterplot(plpResult$covariateSummary)
-  testthat::expect_s3_class(test, "ggplot")
+  expect_s3_class(test, "ggplot")
 
   test <- plotGeneralizability(plpResult$covariateSummary, fileName = NULL)
-  testthat::expect_s3_class(test, "grob")
+  expect_s3_class(test, "grob")
 })
 
 
 test_that("outcomeSurvivalPlot", {
   skip_if_not_installed("survminer")
   skip_on_cran()
+  skip_if_offline()
   # test the plot works
   test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
-  testthat::expect_s3_class(test, "ggsurvplot")
+  expect_s3_class(test, "ggsurvplot")
 
-  testthat::expect_error(outcomeSurvivalPlot())
-  testthat::expect_error(outcomeSurvivalPlot(plpData = NULL))
-  testthat::expect_error(outcomeSurvivalPlot(outcomeId = 094954))
+  expect_error(outcomeSurvivalPlot())
+  expect_error(outcomeSurvivalPlot(plpData = NULL))
+  expect_error(outcomeSurvivalPlot(outcomeId = 094954))
 })
 
 
 test_that("plotPlp", {
   skip_if_not_installed(c("ggplot2", "gridExtra"))
   skip_on_cran()
+  skip_if_offline()
   # test the plot works
   test <- plotPlp(
     plpResult = plpResult,
     saveLocation = file.path(saveLoc, "plots"),
     typeColumn = "evaluation"
   )
-  testthat::expect_equal(test, TRUE)
-  testthat::expect_equal(dir.exists(file.path(saveLoc, "plots")), TRUE)
+  expect_equal(test, TRUE)
+  expect_equal(dir.exists(file.path(saveLoc, "plots")), TRUE)
 
   # expect plots to be there
   expect_true(length(dir(file.path(saveLoc, "plots"))) > 0)
@@ -89,6 +88,7 @@ test_that("plotPlp", {
 test_that("plotSmoothCalibration", {
   skip_if_not_installed(c("ggplot2", "mgcv"))
   skip_on_cran()
+  skip_if_offline()
   # test the plot works
   test <- plotSmoothCalibration(
     plpResult = plpResult,
@@ -97,9 +97,9 @@ test_that("plotSmoothCalibration", {
     bins = 20,
     saveLocation = file.path(saveLoc, "plots")
   )
-  testthat::expect_s3_class(test$test$smoothPlot, c("gg", "ggplot"))
-  testthat::expect_s3_class(test$test$histPlot, c("gg", "ggplot"))
-  testthat::expect_true(
+  expect_s3_class(test$test$smoothPlot, c("gg", "ggplot"))
+  expect_s3_class(test$test$histPlot, c("gg", "ggplot"))
+  expect_true(
     file.exists(
       file.path(saveLoc, "plots", "smoothCalibrationTest.pdf")
     )
@@ -116,7 +116,7 @@ test_that("plotSmoothCalibration", {
     sample = TRUE,
     saveLocation = NULL
   )
-  testthat::expect_s3_class(test2$test$smoothPlot, c("gg", "ggplot"))
+  expect_s3_class(test2$test$smoothPlot, c("gg", "ggplot"))
 })
 
 test_that("Smooth calibration plot works with rcs", {
@@ -131,24 +131,27 @@ test_that("Smooth calibration plot works with rcs", {
     bins = 20,
     fileName = NULL
   )
-  testthat::expect_s3_class(test3$test$smoothPlot, c("gg", "ggplot"))
-  testthat::expect_s3_class(test3$test$histPlot, c("gg", "ggplot"))
-  testthat::expect_true( # is this tested needed again?
+  expect_s3_class(test3$test$smoothPlot, c("gg", "ggplot"))
+  expect_s3_class(test3$test$histPlot, c("gg", "ggplot"))
+  expect_true( # is this tested needed again?
     file.exists(
       file.path(saveLoc, "plots", "smoothCalibrationTest.pdf")
     )
   )
 })
 
-nbData <- getNetBenefit(plpResult, evalType = "Test")
+if (internet && rlang::is_installed("Eunomia")) {
+  nbData <- getNetBenefit(plpResult, evalType = "Test")
+}
 test_that("getNetBenefit returns the correct dataframe", {
-
+  skip_if_offline()
   expect_s3_class(nbData, "data.frame")
   expectedColumns <- c("threshold", "TP", "FP", "netBenefit", "treatAll", "treatNone")
   expect_true(all(expectedColumns %in% colnames(nbData)))
 })
 
 test_that("getNetBenefit computes the net benefit correctly", {
+  skip_if_offline()
   threshold <- nbData$threshold[[1]]
   truePositives <- nbData$TP[[1]]
   falsePositives <- nbData$FP[[1]]
@@ -158,13 +161,17 @@ test_that("getNetBenefit computes the net benefit correctly", {
 })
 
 test_that("getNetBenefit handles invalid evalType gracefully", {
-  expect_error(getNetBenefit(plpResult, evalType = "InvalidType"),
-               "No prediction data found for evaluation type InvalidType")
+  skip_if_offline()
+  expect_error(
+    getNetBenefit(plpResult, evalType = "InvalidType"),
+    "No prediction data found for evaluation type InvalidType"
+  )
 })
 
 test_that("plotNetBenefit returns a grob object", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = "Test")
   expect_true(inherits(plot, "arrangelist"))
 })
@@ -172,16 +179,18 @@ test_that("plotNetBenefit returns a grob object", {
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   tempDir <- tempfile()
   plotNetBenefit(plpResult, saveLocation = tempDir, fileName = "netBenefit.png", evalType = "Test")
   expect_true(file.exists(file.path(tempDir, "netBenefit.png")))
-  #Clean up
+  # Clean up
   file.remove(file.path(tempDir, "netBenefit.png"))
 })
 
 test_that("plotNetBenefit handles NULL evalType", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   expect_true(inherits(plot, "arrangelist"))
 })
@@ -190,6 +199,7 @@ test_that("plotNetBenefit handles NULL evalType", {
 test_that("plotNetBenefit creates correct number of plots when evalType is NULL", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
+  skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   # Since evalType is NULL, it should plot for all unique evaluation types
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)

@@ -1,4 +1,4 @@
-# Copyright 2022 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,10 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-
-context("CovariateExtras")
 
 test_that("settings creation", {
   covSet <- createCohortCovariateSettings(
@@ -83,6 +79,7 @@ test_that("settings creation errors", {
 })
 
 test_that("extraction works", {
+  skip_if_offline()
   covSet <- createCohortCovariateSettings(
     cohortName = "covariateName",
     settingId = 4,

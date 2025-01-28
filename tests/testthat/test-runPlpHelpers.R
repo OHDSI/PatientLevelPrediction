@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,11 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("runPlpHelpers")
-
 test_that("check printHeader runs", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   header <- printHeader(
     plpData = plpData,
     targetId = 1,
@@ -26,10 +24,12 @@ test_that("check printHeader runs", {
     analysisName = "test",
     executionDateTime = Sys.time()
   )
-  expect_is(header, "logical")
+  expect_type(header, "logical")
 })
 
 test_that("checkInputs", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
   check <- checkInputs(
     list(
       plpData = plpData,
@@ -38,7 +38,7 @@ test_that("checkInputs", {
     )
   )
 
-  expect_is(check, "logical")
+  expect_type(check, "logical")
   expect_equal(check, TRUE)
 
   # error as NULL plpData
@@ -96,7 +96,7 @@ test_that("createExecuteSettings", {
     runCovariateSummary = runCovariateSummary
   )
 
-  expect_is(executeSettings, "executeSettings")
+  expect_s3_class(executeSettings, "executeSettings")
   expect_equal(executeSettings$runSplitData, runSplitData)
   expect_equal(executeSettings$runSampleData, runSampleData)
   expect_equal(executeSettings$runfeatureEngineering, runfeatureEngineering)
@@ -175,7 +175,7 @@ test_that("createExecuteSettings", {
 
 test_that("createDefaultExecuteSettings", {
   executeSettings <- createDefaultExecuteSettings()
-  expect_is(executeSettings, "executeSettings")
+  expect_s3_class(executeSettings, "executeSettings")
   expect_equal(executeSettings$runSplitData, TRUE)
   expect_equal(executeSettings$runSampleData, FALSE)
   expect_equal(executeSettings$runfeatureEngineering, FALSE)

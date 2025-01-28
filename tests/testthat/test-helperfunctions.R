@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,21 +13,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("HelperFunctions")
-
 # how to test checkPlpInstallation?
 
 
 test_that("createTempModelLoc", {
-  testthat::expect_equal(class(PatientLevelPrediction:::createTempModelLoc()), "character")
+  expect_equal(class(PatientLevelPrediction:::createTempModelLoc()), "character")
 })
 
 list1 <- list(a = 1:2, b = 5:6)
 list2 <- list(c = 1:5)
 test_that("listAppend", {
-  testthat::expect_equal(length(listAppend(list1, list2)), 3)
+  expect_equal(length(listAppend(list1, list2)), 3)
 })
 
 # how to test configurePython?
@@ -35,8 +31,8 @@ test_that("listAppend", {
 test_that("setPythonEnvironment", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  testthat::expect_error(setPythonEnvironment(envname = "madeup34343"))
-  testthat::expect_equal(class(setPythonEnvironment(envname = "madeup34343", envtype = "conda")), "character")
+  expect_error(setPythonEnvironment(envname = "madeup34343"))
+  expect_equal(class(setPythonEnvironment(envname = "madeup34343", envtype = "conda")), "character")
 })
 
 test_that("Borrowed cut2", {

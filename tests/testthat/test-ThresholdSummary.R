@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -13,43 +13,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-library("testthat")
-context("ThresholdSummary")
-
-
 test_that("getThresholdSummary binary", {
-  Eprediction <- data.frame(
+  ePrediction <- data.frame(
     value = runif(100),
     outcomeCount = round(runif(100)),
     evaluation = rep("Test", 100)
   )
 
   thresSum <- getThresholdSummary(
-    prediction = Eprediction,
+    prediction = ePrediction,
     predictionType = "binary",
     typeColumn = "evaluation"
   )
 
   expect_true("evaluation" %in% colnames(thresSum))
-  expect_that(nrow(thresSum), equals(length(unique(Eprediction$value))))
-  expect_that(ncol(thresSum), equals(24))
+  expect_equal(nrow(thresSum), length(unique(ePrediction$value)))
+  expect_equal(ncol(thresSum), 24)
 
-  expect_that(
+  expect_equal(
     thresSum$truePositiveCount + thresSum$falseNegativeCount,
-    equals(rep(sum(Eprediction$outcomeCount), length(thresSum$truePositiveCount)))
+    rep(sum(ePrediction$outcomeCount), length(thresSum$truePositiveCount))
   )
 
-  expect_that(
+  expect_equal(
     thresSum$truePositiveCount + thresSum$falsePositiveCount +
       thresSum$trueNegativeCount + thresSum$falseNegativeCount,
-    equals(rep(nrow(Eprediction), length(thresSum$truePositiveCount)))
+    rep(nrow(ePrediction), length(thresSum$truePositiveCount))
   )
 
-  # now do bianry directly
-
   thresSumBin <- getThresholdSummary_binary(
-    prediction = Eprediction,
+    prediction = ePrediction,
     evalColumn = "evaluation"
   )
 
@@ -57,7 +50,7 @@ test_that("getThresholdSummary binary", {
 })
 
 test_that("getThresholdSummary survival", {
-  Eprediction <- data.frame(
+  ePrediction <- data.frame(
     value = c(
       (100 + sample(10, 50, replace = TRUE)),
       (105 + sample(10, 150, replace = TRUE))
@@ -68,210 +61,185 @@ test_that("getThresholdSummary survival", {
   )
 
   thresSum <- getThresholdSummary_survival(
-    prediction = Eprediction,
+    prediction = ePrediction,
     evalColumn = "evaluation",
     timepoint = 365
   )
 
   expect_true("evaluation" %in% colnames(thresSum))
   expect_true(nrow(thresSum) > 0)
-  expect_that(ncol(thresSum), equals(5))
+  expect_equal(ncol(thresSum), 5)
 })
-
-
-if (FALSE) {
-  test_that("f1Score", {
-    netben <- stdca(
-      data,
-      outcome,
-      ttoutcome,
-      timepoint,
-      predictors,
-      xstart = 0.01,
-      xstop = 0.99,
-      xby = 0.01,
-      ymin = -0.05,
-      probability = NULL,
-      harm = NULL,
-      graph = TRUE,
-      intervention = FALSE,
-      interventionper = 100,
-      smooth = FALSE,
-      loess.span = 0.1,
-      cmprsk = FALSE
-    )
-  })
-}
-
 
 
 test_that("f1Score", {
-  expect_that(f1Score(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(f1Score(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(f1Score(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(f1Score(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(f1Score(TP = 10, TN = 3, FN = 5, FP = 5), equals(0.6666667, tolerance = 0.0001))
+  expect_equal(f1Score(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(f1Score(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(f1Score(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(f1Score(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(f1Score(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(f1Score(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(f1Score(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(f1Score(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(f1Score(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(f1Score(TP = 10, TN = 3, FN = 5, FP = 5), 0.6666667,
+  tolerance = 1e-4)
 })
 
 test_that("accuracy", {
-  expect_that(accuracy(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(accuracy(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(accuracy(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(accuracy(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(accuracy(TP = 10, TN = 3, FN = 5, FP = 5), equals(13 / 23, tolerance = 0.0001))
+  expect_equal(accuracy(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(accuracy(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(accuracy(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(accuracy(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(accuracy(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(accuracy(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(accuracy(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(accuracy(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(accuracy(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(accuracy(TP = 10, TN = 3, FN = 5, FP = 5), 13 / 23)
 })
 
 test_that("sensitivity", {
-  expect_that(sensitivity(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(sensitivity(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(sensitivity(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(sensitivity(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(sensitivity(TP = 10, TN = 3, FN = 5, FP = 5), equals(10 / (10 + 5), tolerance = 0.0001))
+  expect_equal(sensitivity(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(sensitivity(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(sensitivity(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(sensitivity(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(sensitivity(TP = 10, TN = 3, FN = 5, FP = 5), (10 / (10 + 5)))
 })
 
 test_that("falseNegativeRate", {
-  expect_that(falseNegativeRate(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(falseNegativeRate(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(falseNegativeRate(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(falseNegativeRate(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(falseNegativeRate(TP = 10, TN = 3, FN = 5, FP = 5), equals(5 / (10 + 5), tolerance = 0.0001))
+  expect_equal(falseNegativeRate(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(falseNegativeRate(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(falseNegativeRate(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(falseNegativeRate(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(falseNegativeRate(TP = 10, TN = 3, FN = 5, FP = 5), 5 / (10 + 5))
 })
 
 test_that("falsePositiveRate", {
-  expect_that(falsePositiveRate(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(falsePositiveRate(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(falsePositiveRate(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(falsePositiveRate(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(falsePositiveRate(TP = 10, TN = 3, FN = 5, FP = 5), equals(5 / (5 + 3), tolerance = 0.0001))
+  expect_equal(falsePositiveRate(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(falsePositiveRate(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(falsePositiveRate(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(falsePositiveRate(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(falsePositiveRate(TP = 10, TN = 3, FN = 5, FP = 5), 5 / (5 + 3))
 })
 
 test_that("specificity", {
-  expect_that(specificity(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(specificity(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(specificity(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(specificity(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(specificity(TP = 10, TN = 3, FN = 5, FP = 5), equals(3 / (5 + 3), tolerance = 0.0001))
+  expect_equal(specificity(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(specificity(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(specificity(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(specificity(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(specificity(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(specificity(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(specificity(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(specificity(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(specificity(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(specificity(TP = 10, TN = 3, FN = 5, FP = 5), 3 / (5 + 3))
 })
 
 test_that("positivePredictiveValue", {
-  expect_that(positivePredictiveValue(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(positivePredictiveValue(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(positivePredictiveValue(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(positivePredictiveValue(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(positivePredictiveValue(TP = 10, TN = 3, FN = 5, FP = 5), equals(10 / (10 + 5), tolerance = 0.0001))
+  expect_equal(positivePredictiveValue(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(positivePredictiveValue(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(positivePredictiveValue(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(positivePredictiveValue(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(positivePredictiveValue(TP = 10, TN = 3, FN = 5, FP = 5), 10 / (10 + 5))
 })
 
 
 test_that("falseDiscoveryRate", {
-  expect_that(falseDiscoveryRate(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(falseDiscoveryRate(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(falseDiscoveryRate(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(falseDiscoveryRate(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(falseDiscoveryRate(TP = 10, TN = 3, FN = 5, FP = 5), equals(5 / (10 + 5), tolerance = 0.0001))
+  expect_equal(falseDiscoveryRate(TP = 0, TN = 0, FN = 0, FP = 0),NaN)
+  expect_error(falseDiscoveryRate(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(falseDiscoveryRate(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(falseDiscoveryRate(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(falseDiscoveryRate(TP = 10, TN = 3, FN = 5, FP = 5), 5 / (10 + 5))
 })
 
 test_that("negativePredictiveValue", {
-  expect_that(negativePredictiveValue(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(negativePredictiveValue(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(negativePredictiveValue(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(negativePredictiveValue(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(negativePredictiveValue(TP = 10, TN = 3, FN = 5, FP = 5), equals(3 / (5 + 3), tolerance = 0.0001))
+  expect_equal(negativePredictiveValue(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(negativePredictiveValue(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(negativePredictiveValue(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(negativePredictiveValue(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(negativePredictiveValue(TP = 10, TN = 3, FN = 5, FP = 5), 3 / (5 + 3))
 })
 
 test_that("falseOmissionRate", {
-  expect_that(falseOmissionRate(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(falseOmissionRate(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(falseOmissionRate(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(falseOmissionRate(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(falseOmissionRate(TP = 10, TN = 3, FN = 5, FP = 5), equals(5 / (5 + 3), tolerance = 0.0001))
+  expect_equal(falseOmissionRate(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(falseOmissionRate(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(falseOmissionRate(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(falseOmissionRate(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(falseOmissionRate(TP = 10, TN = 3, FN = 5, FP = 5), 5 / (5 + 3))
 })
 
 test_that("negativeLikelihoodRatio", {
-  expect_that(negativeLikelihoodRatio(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(negativeLikelihoodRatio(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(negativeLikelihoodRatio(TP = 10, TN = 3, FN = 5, FP = 5), equals((5 / (10 + 5)) / (3 / (5 + 3)), tolerance = 0.0001))
+  expect_equal(negativeLikelihoodRatio(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(negativeLikelihoodRatio(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(negativeLikelihoodRatio(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(negativeLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(negativeLikelihoodRatio(TP = 10, TN = 3, FN = 5, FP = 5), (5 / (10 + 5)) / (3 / (5 + 3)))
 })
 
 test_that("positiveLikelihoodRatio", {
-  expect_that(positiveLikelihoodRatio(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(positiveLikelihoodRatio(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(positiveLikelihoodRatio(TP = 10, TN = 3, FN = 5, FP = 5), equals((10 / (10 + 5)) / (5 / (5 + 3)), tolerance = 0.0001))
+  expect_equal(positiveLikelihoodRatio(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(positiveLikelihoodRatio(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(positiveLikelihoodRatio(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(positiveLikelihoodRatio(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(positiveLikelihoodRatio(TP = 10, TN = 3, FN = 5, FP = 5), (10 / (10 + 5)) / (5 / (5 + 3)))
 })
 
 
 test_that("diagnosticOddsRatio", {
-  expect_that(diagnosticOddsRatio(TP = 0, TN = 0, FN = 0, FP = 0), equals(NaN))
-  expect_that(diagnosticOddsRatio(TP = -1, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = -1, FN = 0, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = 3, FN = -1, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = 1, FN = 5, FP = -1), throws_error())
-  expect_that(diagnosticOddsRatio(TP = NULL, TN = 0, FN = 0, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = NULL, FN = 0, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = 3, FN = NULL, FP = 0), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 1, TN = 1, FN = 5, FP = NULL), throws_error())
-  expect_that(diagnosticOddsRatio(TP = 10, TN = 3, FN = 5, FP = 5), equals(((10 / (10 + 5)) / (5 / (5 + 3))) / ((5 / (10 + 5)) / (3 / (5 + 3))), tolerance = 0.0001))
+  expect_equal(diagnosticOddsRatio(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  expect_error(diagnosticOddsRatio(TP = -1, TN = 0, FN = 0, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = -1, FN = 0, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = 3, FN = -1, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = 1, FN = 5, FP = -1))
+  expect_error(diagnosticOddsRatio(TP = NULL, TN = 0, FN = 0, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = NULL, FN = 0, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = 3, FN = NULL, FP = 0))
+  expect_error(diagnosticOddsRatio(TP = 1, TN = 1, FN = 5, FP = NULL))
+  expect_equal(diagnosticOddsRatio(TP = 10, TN = 3, FN = 5, FP = 5), ((10 / (10 + 5)) / (5 / (5 + 3))) / ((5 / (10 + 5)) / (3 / (5 + 3))))
 })
