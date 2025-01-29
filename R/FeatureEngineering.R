@@ -535,9 +535,14 @@ randomForestFeatureSelection <- function(
 #' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
 #' @return An object of class \code{featureEngineeringSettings}
 #' @param type The type of normalization to use, either "minmax" or "robust"
+#' @param settings A list of settings for the normalization. 
+#' For robust normalization, the settings list can contain a boolean value for 
+#' clip, which clips the values to be between -3 and 3 after normalization. See 
+#' https://arxiv.org/abs/2407.04491 
 #' @return An object of class \code{featureEngineeringSettings}'
 #' @export
-createNormalizer <- function(type = "minmax") {
+createNormalizer <- function(type = "minmax",
+                             settings = list()) {
   featureEngineeringSettings <- list(
     type = type
   )
@@ -547,6 +552,8 @@ createNormalizer <- function(type = "minmax") {
     attr(featureEngineeringSettings, "fun") <- "minMaxNormalize"
   } else if (type == "robust") {
     attr(featureEngineeringSettings, "fun") <- "robustNormalize"
+    checkBoolean(settings$clip)
+    featureEngineeringSettings$settings <- settings
   }
 
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
@@ -640,9 +647,10 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
   return(outData)
 }
 
-#' A function that normalizes continous by the interquartile range and forces
-#' the resulting values to be between -3 and 3 with f(x) = x / sqrt(1 + (x/3)^2)
-#' @details uses (value - median) / iqr to normalize the data and then
+#' A function that normalizes continous by the interquartile range and 
+#' optionally forces the resulting values to be between -3 and 3 with 
+#' f(x) = x / sqrt(1 + (x/3)^2)
+#' '@details uses (value - median) / iqr to normalize the data and then can
 #' applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values.
 #' This forces the values to be between -3 and 3 while preserving the relative
 #' ordering of the values.
@@ -650,7 +658,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @param trainData The training data to be normalized
 #' @param featureEngineeringSettings The settings for the normalization
 #' @param done Whether the data has already been normalized (bool)
-#' @return The normalized data
+#' @return The `trainData` object with normalized data
 #' @keywords internal
 robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
@@ -694,13 +702,16 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
       # use ifelse to only normalize continous features
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+      dplyr::mutate(covariateValue = ifelse(
+        !is.na(.data$iqr) && !is.na(.data$median),
         (.data$covariateValue - .data$median) / .data$iqr,
         .data$covariateValue
       )) %>%
+      # optionally if settings$clip is TRUE.
       # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
       # ref: https://arxiv.org/abs/2407.04491
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) &&
+        !is.na(.data$median) && featureEngineeringSettings$settings$clip,
         .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
         .data$covariateValue
       )) %>%
@@ -718,11 +729,13 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
         by = "covariateId", copy = TRUE
       ) %>%
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && !is.na(.data$median),
         (.data$covariateValue - .data$median) / .data$iqr,
         .data$covariateValue
       )) %>%
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) & !is.na(.data$median),
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && 
+        !is.na(.data$median) &&
+        featureEngineeringSettings$settings$clip,
         .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
         .data$covariateValue
       )) %>%

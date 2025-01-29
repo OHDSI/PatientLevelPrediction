@@ -35,7 +35,7 @@ createIterativeImputer <- function(missingThreshold = 0.3,
                                         iterations = 5
                                       )
                                    )) {
-  ParallelLogger::logWarn("Imputation is experimental and may not work as expected. 
+  ParallelLogger::logWarn("Imputation is experimental and may have bugs. 
     Please report any issues on the GitHub repository.")
   checkIsClass(missingThreshold, "numeric")
   checkInStringVector(method, c("pmm"))
@@ -72,7 +72,7 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' @export
 createSimpleImputer <- function(method = "mean",
                                 missingThreshold = 0.3) {
-  ParallelLogger::logWarn("Imputation is experimental and may not work as expected,
+  ParallelLogger::logWarn("Imputation is experimental and may have bugs,
     please report any issues on the GitHub repository.")
   checkIsClass(method, "character")
   checkInStringVector(method, c("mean", "median"))

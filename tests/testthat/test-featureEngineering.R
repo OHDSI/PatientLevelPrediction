@@ -315,11 +315,16 @@ test_that("createNormalizer works", {
   expect_error(createNormalizer(type = "median"))
   expect_error(createNormalizer(type = "zscore"))
   expect_error(createNormalizer(type = "none"))
+  expect_error(createNormalizer(
+    type = "robust",
+    settings = list(clip = 3)
+  ))
 })
 
 test_that("normalization works", {
   normalizer <- createNormalizer(type = "minmax")
-  addFeature <- function(data, covariateId, minValue, maxValue) {
+  addFeature <- function(data, covariateId, minValue,
+                         maxValue, outliers = FALSE) {
     data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
     nSubjects <- nrow(data$labels)
     Andromeda::appendToTable(
@@ -330,6 +335,24 @@ test_that("normalization works", {
         covariateValue = runif(nSubjects, minValue, maxValue)
       )
     )
+    if (outliers) {
+      nOutliers <- floor(nSubjects / 10)
+      outlierRows <- sample(data$labels$rowId, nOutliers)
+      outlierValues <- runif(nOutliers, minValue * 10, maxValue * 10)
+      outlierData <- data.frame(
+        rowId = outlierRows,
+        covariateId = covariateId,
+        covariateValue = outlierValues
+      )
+      data$covariateData$covariates <- data$covariateData$covariates %>%
+        dplyr::filter(!(.data$rowId %in% outlierRows & 
+          .data$covariateId == covariateId))
+      Andromeda::appendToTable(
+        data$covariateData$covariates,
+        outlierData
+      )
+    }
+
     Andromeda::appendToTable(
       data$covariateData$covariateRef,
       data.frame(
@@ -354,9 +377,8 @@ test_that("normalization works", {
     return(data)
   }
   data <- addFeature(tinyTrainData, 12101, -10, 10)
-  normalizedData <- minMaxNormalize(data, normalizer)
-
   testNormData <- addFeature(testData, 12101, -10, 10)
+  normalizedData <- minMaxNormalize(data, normalizer)
   metaData <- attr(normalizedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings
   testNormalizedData <- minMaxNormalize(testNormData, testSettings, done = TRUE)
@@ -365,17 +387,46 @@ test_that("normalization works", {
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
   expect_true(all(feature >= 0) && all(feature <= 1))
-  testFeature <- testNormalizedData$covariateData$covariates %>%
+  newTestFeature <- testNormalizedData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
-  trainMin <- min(normalizedData$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
-  trainMax <- max(normalizedData$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
-  testNormFeature <- (testFeature - trainMin) / (trainMax - trainMin)
+  oldTestFeature <- testNormData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  oldTrainMin <- min(data$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
+  oldtrainMax <- max(data$covariateData$covariates %>% dplyr::filter(.data$covariateId == 12101) %>% dplyr::pull(.data$covariateValue))
+  testNormFeature <- (oldTestFeature - trainMin) / (trainMax - trainMin)
   expect_equal(testFeature, testNormFeature)
 
-  normalizer <- createNormalizer(type = "robust")
-  data <- addFeature(tinyTrainData, 12101, -10, 10)
-  testNormData <- addFeature(testData, 12101, -10, 10)
+  normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
+  data <- addFeature(tinyTrainData, 12101, -10, 10, outliers = TRUE)
+  testNormData <- addFeature(testData, 12101, -10, 10, outliers = TRUE)
+  newTrainData <- robustNormalize(data, normalizer)
+  metaData <- attr(newTrainData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$robustNormalize$settings$featureEngineeringSettings
+  newTestData <- robustNormalize(testNormData, testSettings, done = TRUE)
+  newTrainFeature <- newTrainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(newTrainFeature >= -3) && all(newTrainFeature <= 3))
+  oldTrainFeature <- data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  newTestFeature <- newTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  oldTestFeature <- testNormData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  testNormFeature <- (oldTestFeature - median(oldTrainFeature)) / IQR(oldTrainFeature)
+  testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 3)^2)
+  expect_true(all(newTestFeature >= -3) && all(newTestFeature <= 3))
+  expect_equal(newTestFeature, testNormFeature, tolerance = 1e-2)
+
+  # without clip now
+  normalizer <- createNormalizer(type = "robust", settings = list(clip = FALSE))
+  data <- addFeature(tinyTrainData, 12101, -10, 10, outliers = TRUE)
+  testNormData <- addFeature(testData, 12101, -10, 10, outliers = TRUE)
   newTrainData <- robustNormalize(data, normalizer)
   metaData <- attr(newTrainData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$robustNormalize$settings$featureEngineeringSettings
@@ -383,16 +434,24 @@ test_that("normalization works", {
   feature <- newTrainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
-  expect_true(all(feature >= -3) && all(feature <= 3))
-  trainFeature <- data$covariateData$covariates %>%
+  oldFeature <- data$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
-  testFeature <- newTestData$covariateData$covariates %>%
+  oldFeatureMax <- max(oldFeature)
+  oldFeatureMin <- min(oldFeature)
+  expect_true(all(feature >= oldFeatureMin) && all(feature <= oldFeatureMax))
+  oldTestFeature <- testNormData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
-  testNormFeature <- (testFeature - median(trainFeature)) / IQR(trainFeature)
-  testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 2)^2)
-  expect_true(all(testFeature >= -3) && all(testFeature <= 3))
+  newTestFeature <- newTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  testFeatureMax <- max(oldTestFeature)
+  testFeatureMin <- min(oldTestFeature)
+  testNormFeature <- (oldTestFeature - median(oldFeature)) / IQR(oldFeature)
+  expect_true(all(newTestFeature >= testFeatureMin) && 
+    all(newTestFeature <= testFeatureMax))
+  expect_equal(newTestFeature, testNormFeature, tolerance = 1e-2)
 })
 
 test_that("createRareFeatureRemover works", {
@@ -412,10 +471,10 @@ test_that("Removing rare features works", {
   expect_true(
     removedData$covariateData$covariates %>%
       dplyr::pull(.data$covariateId) %>%
-      dplyr::n_distinct() <= 
+      dplyr::n_distinct() <=
       tinyTrainData$covariateData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      dplyr::n_distinct()
+        dplyr::pull(.data$covariateId) %>%
+        dplyr::n_distinct()
   )
   metaData <- attr(removedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$removeRare$settings$featureEngineeringSettings
