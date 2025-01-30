@@ -18,7 +18,7 @@ if (rlang::is_installed("curl")) {
   internet <- FALSE
   message("Internet: ", internet)
 }
- 
+
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
@@ -180,3 +180,20 @@ if (internet && rlang::is_installed("Eunomia")) {
     saveDirectory = file.path(saveLoc, "tinyResults")
   )
 }
+
+withr::defer(
+  {
+    if (Sys.getenv("GITHUB_ACTIONS") == "true") {
+      # Remove the JDBC driver folder
+      jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
+      if (jarFolder != "") {
+        unlink(jarFolder, recursive = TRUE)
+      }
+    }
+    unlink(saveLoc, recursive = TRUE)
+    if (internet && rlang::is_installed("Eunomia")) {
+      unlink(connectionDetails$server())
+    }
+  },
+  envir = teardown_env()
+)
