@@ -42,14 +42,18 @@
 <url><loc>/dev/reference/createExistingSplitSettings.html</loc></url>
 <url><loc>/dev/reference/createFeatureEngineeringSettings.html</loc></url>
 <url><loc>/dev/reference/createGlmModel.html</loc></url>
+<url><loc>/dev/reference/createIterativeImputer.html</loc></url>
 <url><loc>/dev/reference/createLearningCurve.html</loc></url>
 <url><loc>/dev/reference/createLogSettings.html</loc></url>
 <url><loc>/dev/reference/createModelDesign.html</loc></url>
+<url><loc>/dev/reference/createNormalizer.html</loc></url>
 <url><loc>/dev/reference/createPlpResultTables.html</loc></url>
 <url><loc>/dev/reference/createPreprocessSettings.html</loc></url>
 <url><loc>/dev/reference/createRandomForestFeatureSelection.html</loc></url>
+<url><loc>/dev/reference/createRareFeatureRemover.html</loc></url>
 <url><loc>/dev/reference/createRestrictPlpDataSettings.html</loc></url>
 <url><loc>/dev/reference/createSampleSettings.html</loc></url>
+<url><loc>/dev/reference/createSimpleImputer.html</loc></url>
 <url><loc>/dev/reference/createSklearnModel.html</loc></url>
 <url><loc>/dev/reference/createSplineSettings.html</loc></url>
 <url><loc>/dev/reference/createStratifiedImputationSettings.html</loc></url>
@@ -77,6 +81,7 @@
 <url><loc>/dev/reference/insertCsvToDatabase.html</loc></url>
 <url><loc>/dev/reference/insertModelDesignInDatabase.html</loc></url>
 <url><loc>/dev/reference/insertResultsToSqlite.html</loc></url>
+<url><loc>/dev/reference/iterativeImpute.html</loc></url>
 <url><loc>/dev/reference/listAppend.html</loc></url>
 <url><loc>/dev/reference/listCartesian.html</loc></url>
 <url><loc>/dev/reference/loadPlpAnalysesJson.html</loc></url>
@@ -86,6 +91,7 @@
 <url><loc>/dev/reference/loadPlpShareable.html</loc></url>
 <url><loc>/dev/reference/loadPrediction.html</loc></url>
 <url><loc>/dev/reference/migrateDataModel.html</loc></url>
+<url><loc>/dev/reference/minMaxNormalize.html</loc></url>
 <url><loc>/dev/reference/modelBasedConcordance.html</loc></url>
 <url><loc>/dev/reference/outcomeSurvivalPlot.html</loc></url>
 <url><loc>/dev/reference/pfi.html</loc></url>
@@ -105,6 +111,7 @@
 <url><loc>/dev/reference/plotSparseRoc.html</loc></url>
 <url><loc>/dev/reference/plotVariableScatterplot.html</loc></url>
 <url><loc>/dev/reference/plpDataSimulationProfile.html</loc></url>
+<url><loc>/dev/reference/pmmFit.html</loc></url>
 <url><loc>/dev/reference/predictCyclops.html</loc></url>
 <url><loc>/dev/reference/predictGlm.html</loc></url>
 <url><loc>/dev/reference/predictPlp.html</loc></url>
@@ -113,6 +120,8 @@
 <url><loc>/dev/reference/print.summary.plpData.html</loc></url>
 <url><loc>/dev/reference/recalibratePlp.html</loc></url>
 <url><loc>/dev/reference/recalibratePlpRefit.html</loc></url>
+<url><loc>/dev/reference/removeRareFeatures.html</loc></url>
+<url><loc>/dev/reference/robustNormalize.html</loc></url>
 <url><loc>/dev/reference/runMultiplePlp.html</loc></url>
 <url><loc>/dev/reference/runPlp.html</loc></url>
 <url><loc>/dev/reference/savePlpAnalysesJson.html</loc></url>
@@ -133,6 +142,7 @@
 <url><loc>/dev/reference/setPythonEnvironment.html</loc></url>
 <url><loc>/dev/reference/setRandomForest.html</loc></url>
 <url><loc>/dev/reference/setSVM.html</loc></url>
+<url><loc>/dev/reference/simpleImpute.html</loc></url>
 <url><loc>/dev/reference/simulatePlpData.html</loc></url>
 <url><loc>/dev/reference/sklearnFromJson.html</loc></url>
 <url><loc>/dev/reference/sklearnToJson.html</loc></url>
