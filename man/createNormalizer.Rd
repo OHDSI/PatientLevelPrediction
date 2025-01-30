@@ -4,10 +4,15 @@
 \alias{createNormalizer}
 \title{Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"}
 \usage{
-createNormalizer(type = "minmax")
+createNormalizer(type = "minmax", settings = list())
 }
 \arguments{
 \item{type}{The type of normalization to use, either "minmax" or "robust"}
+
+\item{settings}{A list of settings for the normalization. 
+For robust normalization, the settings list can contain a boolean value for 
+clip, which clips the values to be between -3 and 3 after normalization. See 
+https://arxiv.org/abs/2407.04491}
 }
 \value{
 An object of class \code{featureEngineeringSettings}

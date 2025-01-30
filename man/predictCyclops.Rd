@@ -2,7 +2,7 @@
 % Please edit documentation in R/CyclopsModels.R
 \name{predictCyclops}
 \alias{predictCyclops}
-\title{Predict risk for a population using a Cyclops model}
+\title{Create predictive probabilities}
 \usage{
 predictCyclops(plpModel, data, cohort)
 }
@@ -17,11 +17,9 @@ predictCyclops(plpModel, data, cohort)
 \value{
 The value column in the result data.frame is: logistic: probabilities of the outcome, poisson:
 Poisson rate (per day) of the outome, survival: hazard rate (per day) of the outcome.
-
-The cohort dataframe with a new column "value" containing the predicted risk
 }
 \description{
-Predict risk for a population using a Cyclops model
+Create predictive probabilities
 }
 \details{
 Generates predictions for the population specified in plpData given the model.

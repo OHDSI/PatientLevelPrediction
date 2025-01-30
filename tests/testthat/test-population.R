@@ -486,7 +486,8 @@ test_that("Providing an existing population and skipping population creation wor
       runSplitData = TRUE,
       runPreprocessData = FALSE,
       runModelDevelopment = TRUE
-    )
+    ),
+    saveDirectory = file.path(saveLoc, "existingPopulation")
   )
 
   trainPredictions <- tempResults$prediction %>%
