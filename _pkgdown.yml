@@ -97,6 +97,10 @@ reference:
       - createUnivariateFeatureSelection
       - createSplineSettings
       - createStratifiedImputationSettings
+      - createNormalizer
+      - createSimpleImputer
+      - createIterativeImputer
+      - createRareFeatureRemover
   - title: "External validation"
     contents:
       - createValidationDesign
@@ -113,7 +117,7 @@ reference:
       - createDefaultExecuteSettings
   - title: "Binary Classification Models"
     desc: >
-      Functions for setting binary classifiers and their hyper-parameter search.
+      Functions for creating binary models
     contents:
       - setAdaBoost
       - setDecisionTree
@@ -127,7 +131,7 @@ reference:
       - setLightGBM
   - title: "Survival Models"
     desc: >
-      Functions for setting survival models and their hyper-parameter search.
+      Functions for creating survival models
     contents:
       - setCoxModel
   - title: "Single Patient-Level Prediction Model"
@@ -143,7 +147,7 @@ reference:
       - diagnosePlp
   - title: "Multiple Patient-Level Prediction Models"
     desc: >
-      Functions for training mutliple patient-level-prediction model in an efficient way.
+      Functions for training multiple patient-level-prediction model in an efficient way.
     contents:
       - createModelDesign
       - runMultiplePlp  
