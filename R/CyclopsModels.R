@@ -1,6 +1,6 @@
-# @file CyclopsModels.R
+# @file lassoLogisticRegression.R
 #
-# Copyright 2025 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -19,7 +19,7 @@
 
 fitCyclopsModel <- function(
     trainData,
-    modelSettings, 
+    modelSettings, # old:param,
     search = "adaptive",
     analysisId,
     ...) {
@@ -240,7 +240,7 @@ fitCyclopsModel <- function(
 
 
 
-#' Predict risk for a population using a Cyclops model
+#' Create predictive probabilities
 #'
 #' @details
 #' Generates predictions for the population specified in plpData given the model.
@@ -253,8 +253,6 @@ fitCyclopsModel <- function(
 #'                          \code{\link{fitPlp}}.
 #' @param data         The new plpData containing the covariateData for the new population
 #' @param cohort       The cohort to calculate the prediction for
-#'
-#' @return The cohort dataframe with a new column "value" containing the predicted risk
 #' @export
 predictCyclops <- function(plpModel, data, cohort) {
   start <- Sys.time()

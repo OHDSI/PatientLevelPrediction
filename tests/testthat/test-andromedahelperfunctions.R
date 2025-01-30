@@ -15,15 +15,19 @@
 # limitations under the License.
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test
-# batcheRestrict test
 test_that("batchRestrict", {
   skip_if_offline()
   metaData <- attr(plpData$covariateData, "metaData")
-  covariateData <- PatientLevelPrediction:::batchRestrict(plpData$covariateData, population, sizeN = 1000000)
+  covariateData <-
+    PatientLevelPrediction:::batchRestrict(
+      plpData$covariateData,
+      population,
+      sizeN = 1000000
+    )
   expect_s4_class(covariateData, "CovariateData")
 
-  expect_equal(names(metaData), names(attr(covariateData, "metaData")))
+  expect_equal(
+    names(metaData),
+    names(attr(covariateData, "metaData"))
+  )
 })
-
-
-# can't test clearffTempDir or checkffFolder?

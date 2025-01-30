@@ -83,11 +83,14 @@ createUnivariateFeatureSelection <- function(k = 100) {
     "reticulate",
     reason = "This function requires the reticulate package to be installed"
   )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("This function requires the scikit-learn package to be installed")
-  })
+  tryCatch(
+    {
+      reticulate::import("sklearn")
+    },
+    error = function(e) {
+      stop("This function requires the scikit-learn package to be installed")
+    }
+  )
 
   checkIsClass(k, "integer")
   checkHigherEqual(k, 0)
@@ -116,11 +119,14 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
     "reticulate",
     reason = "This function requires the reticulate package to be installed"
   )
-  tryCatch({
-    reticulate::import("sklearn")
-  }, error = function(e) {
-    stop("This function requires the scikit-learn package to be installed")
-  })
+  tryCatch(
+    {
+      reticulate::import("sklearn")
+    },
+    error = function(e) {
+      stop("This function requires the scikit-learn package to be installed")
+    }
+  )
   checkIsClass(ntrees, c("numeric", "integer"))
   checkIsClass(maxDepth, c("numeric", "integer"))
   checkHigher(ntrees, 0)
@@ -203,8 +209,8 @@ splineCovariates <- function(
   )
 
   # add the feature engineering in
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
   ParallelLogger::logInfo("Finished splineCovariates")
@@ -224,7 +230,7 @@ splineMap <- function(
     as.data.frame()
 
   designMatrix <- splines::bs(
-    x = measurements$covariateValue, 
+    x = measurements$covariateValue,
     knots = knots[2:(length(knots) - 1)],
     Boundary.knots = knots[c(1, length(knots))]
   )
@@ -260,7 +266,8 @@ splineMap <- function(
   Andromeda::appendToTable(
     tbl = data$covariateData$covariateRef,
     data = data.frame(
-      covariateId = covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
+      covariateId =
+        covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
       covariateName = paste(
         paste0(covariateName, " spline component "),
         1:ncol(designMatrix)
@@ -456,8 +463,8 @@ univariateFeatureSelection <- function(
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
 
@@ -517,10 +524,331 @@ randomForestFeatureSelection <- function(
     )
   )
 
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngeering
   )
 
   return(trainData)
+}
+
+#' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
+#' @return An object of class \code{featureEngineeringSettings}
+#' @param type The type of normalization to use, either "minmax" or "robust"
+#' @param settings A list of settings for the normalization. 
+#' For robust normalization, the settings list can contain a boolean value for 
+#' clip, which clips the values to be between -3 and 3 after normalization. See 
+#' https://arxiv.org/abs/2407.04491 
+#' @return An object of class \code{featureEngineeringSettings}'
+#' @export
+createNormalizer <- function(type = "minmax",
+                             settings = list()) {
+  featureEngineeringSettings <- list(
+    type = type
+  )
+  checkIsClass(type, "character")
+  checkInStringVector(type, c("minmax", "robust"))
+  if (type == "minmax") {
+    attr(featureEngineeringSettings, "fun") <- "minMaxNormalize"
+  } else if (type == "robust") {
+    attr(featureEngineeringSettings, "fun") <- "robustNormalize"
+    checkBoolean(settings$clip)
+    featureEngineeringSettings$settings <- settings
+  }
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' A function that normalizes continous features to have values between 0 and 1
+#' @details uses value - min / (max - min) to normalize the data
+#' @param trainData The training data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param done Whether the data has already been normalized (bool)
+#' @return The normalized data
+#' @keywords internal
+minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
+  start <- Sys.time()
+  if (!done) {
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    ParallelLogger::logInfo("Starting min-max normalization of continuous features")
+    # fit the normalization
+    # find continuous features from trainData$covariateData$analysisRef
+    continousFeatures <- outData$covariateData$analysisRef %>%
+      dplyr::filter(.data$isBinary == "N") %>%
+      dplyr::select("analysisId") %>%
+      dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::pull(.data$covariateId)
+
+    # get max of each feature
+    outData$covariateData$minMaxs <- outData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(
+        max = max(.data$covariateValue, na.rm = TRUE),
+        min = min(.data$covariateValue, na.rm = TRUE)
+      ) %>%
+      dplyr::collect()
+    on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
+
+    # save the normalization
+    attr(featureEngineeringSettings, "minMaxs") <-
+      outData$covariateData$minMaxs %>% dplyr::collect()
+
+    # apply the normalization to trainData
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(outData$covariateData$minMaxs, by = "covariateId") %>%
+      # use ifelse to only normalize if min and max are not NA as is the case
+      # for continous features, else return original value
+      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
+        (.data$covariateValue - min) / (max - min),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("max", "min"))
+    outData$covariateData$minMaxs <- NULL
+    done <- TRUE
+  } else {
+    ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    # apply the normalization to test data by using saved normalization values
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
+        by = "covariateId", copy = TRUE
+      ) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
+        (.data$covariateValue - min) / (max - min),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("max", "min"))
+  }
+  featureEngineering <- list(
+    funct = "minMaxNormalize",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      done = done
+    )
+  )
+
+  attr(outData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished min-max normalization of continuous features in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
+  return(outData)
+}
+
+#' A function that normalizes continous by the interquartile range and 
+#' optionally forces the resulting values to be between -3 and 3 with 
+#' f(x) = x / sqrt(1 + (x/3)^2)
+#' '@details uses (value - median) / iqr to normalize the data and then can
+#' applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values.
+#' This forces the values to be between -3 and 3 while preserving the relative
+#' ordering of the values.
+#' based on https://arxiv.org/abs/2407.04491 for more details
+#' @param trainData The training data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param done Whether the data has already been normalized (bool)
+#' @return The `trainData` object with normalized data
+#' @keywords internal
+robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
+  start <- Sys.time()
+  if (!done) {
+    ParallelLogger::logInfo("Starting robust normalization of continuous features")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    # find continuous features from trainData$covariateData$analysisRef
+    continousFeatures <- outData$covariateData$analysisRef %>%
+      dplyr::filter(.data$isBinary == "N") %>%
+      dplyr::select("analysisId") %>%
+      dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
+      dplyr::pull(.data$covariateId)
+
+    # get (25, 75)% quantiles of each feature
+    # sqlite (used by Andromeda) doesn't have quantile function, so we need to load the extension
+    # to get upper_quartile and lower_quartile_functions
+    RSQLite::initExtension(outData$covariateData, "math")
+
+    outData$covariateData$quantiles <- outData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(
+        q25 = dplyr::sql("lower_quartile(covariateValue)"),
+        q75 = dplyr::sql("upper_quartile(covariateValue)"),
+        median = stats::median(.data$covariateValue, na.rm = TRUE)
+      ) %>%
+      dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+      dplyr::select(-c("q75", "q25")) %>%
+      dplyr::collect()
+    on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
+
+    # save the normalization
+    attr(featureEngineeringSettings, "quantiles") <-
+      outData$covariateData$quantiles %>% dplyr::collect()
+
+    # apply the normalization to trainData
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
+      # use ifelse to only normalize continous features
+      dplyr::mutate(covariateValue = ifelse(
+        !is.na(.data$iqr) && !is.na(.data$median),
+        (.data$covariateValue - .data$median) / .data$iqr,
+        .data$covariateValue
+      )) %>%
+      # optionally if settings$clip is TRUE.
+      # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
+      # ref: https://arxiv.org/abs/2407.04491
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) &&
+        !is.na(.data$median) && featureEngineeringSettings$settings$clip,
+        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("median", "iqr"))
+    done <- TRUE
+  } else {
+    ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    # apply the normalization to test data by using saved normalization values
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
+        by = "covariateId", copy = TRUE
+      ) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && !is.na(.data$median),
+        (.data$covariateValue - .data$median) / .data$iqr,
+        .data$covariateValue
+      )) %>%
+      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && 
+        !is.na(.data$median) &&
+        featureEngineeringSettings$settings$clip,
+        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+        .data$covariateValue
+      )) %>%
+      dplyr::select(-c("median", "iqr"))
+  }
+  featureEngineering <- list(
+    funct = "robustNormalize",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      done = done
+    )
+  )
+
+  attr(outData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished robust normalization in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
+  return(outData)
+}
+
+#' Create the settings for removing rare features
+#' @param threshold The minimum fraction of the training data that must have a
+#' feature for it to be included
+#' @return An object of class \code{featureEngineeringSettings}
+#' @export
+createRareFeatureRemover <- function(threshold = 0.001) {
+  checkIsClass(threshold, c("numeric"))
+  checkHigherEqual(threshold, 0)
+  checkLower(threshold, 1)
+  featureEngineeringSettings <- list(
+    threshold = threshold
+  )
+  attr(featureEngineeringSettings, "fun") <- "removeRareFeatures"
+
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+}
+
+#' A function that removes rare features from the data
+#' @details removes features that are present in less than a certain fraction of the population
+#' @param trainData The data to be normalized
+#' @param featureEngineeringSettings The settings for the normalization
+#' @param done Whether to find and remove rare features or remove them only (bool)
+#' @return The data with rare features removed
+#' @keywords internal
+removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FALSE) {
+  start <- Sys.time()
+  if (!done) {
+    ParallelLogger::logInfo(
+      "Removing features rarer than threshold: ", featureEngineeringSettings$threshold,
+      " from the data"
+    )
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    rareFeatures <- outData$covariateData$covariates %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(count = dplyr::n()) %>%
+      dplyr::collect()
+    rareFeatures <- rareFeatures %>%
+      dplyr::mutate(ratio = .data$count / (
+        outData$covariateData$covariates %>%
+          dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
+          dplyr::pull()
+      )) %>%
+      dplyr::filter(.data$ratio <= featureEngineeringSettings$threshold) %>%
+      dplyr::pull(c("covariateId"))
+
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::filter(!.data$covariateId %in% rareFeatures)
+    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
+      dplyr::filter(!.data$covariateId %in% rareFeatures)
+
+    attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
+
+    done <- TRUE
+  } else {
+    ParallelLogger::logInfo(
+      "Applying rare feature removal with rate below: ",
+      featureEngineeringSettings$threshold, " to test data"
+    )
+    outData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    outData$covariateData$covariates <- outData$covariateData$covariates %>%
+      dplyr::filter(
+        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
+      )
+    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
+      dplyr::filter(
+        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
+      )
+  }
+  featureEngineering <- list(
+    funct = "removeRareFeatures",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      done = done
+    )
+  )
+  attr(outData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0(
+    "Finished rare feature removal in ",
+    signif(delta, 3), " ", attr(delta, "units")
+  ))
+  return(outData)
 }

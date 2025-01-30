@@ -236,12 +236,12 @@ overSampleData <- function(trainData, sampleSettings) {
       addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(newRowId = .data$newRowId + max(sampleTrainData$labels$rowId))
 
       addTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$folds <- dplyr::inner_join(addTrainData$folds, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE)
+      addTrainData$folds <- dplyr::inner_join(addTrainData$folds, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE, by = "rowId")
       addTrainData$folds <- addTrainData$folds %>% dplyr::mutate(rowId = .data$newRowId)
       addTrainData$folds <- dplyr::select(addTrainData$folds, -dplyr::starts_with("newRowId"))
 
       addTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$covariateData$covariates <- dplyr::inner_join(addTrainData$covariateData$covariates, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE)
+      addTrainData$covariateData$covariates <- dplyr::inner_join(addTrainData$covariateData$covariates, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE, by = "rowId")
       addTrainData$covariateData$covariates <- addTrainData$covariateData$covariates %>% dplyr::mutate(rowId = .data$newRowId)
       addTrainData$covariateData$covariates <- dplyr::select(addTrainData$covariateData$covariates, -dplyr::starts_with("newRowId"))
 

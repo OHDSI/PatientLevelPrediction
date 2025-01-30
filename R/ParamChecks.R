@@ -84,7 +84,7 @@ checkIsClass <- function(parameter, classes) {
 checkInStringVector <- function(parameter, values) {
   name <- deparse(substitute(parameter))
   if (!parameter %in% values) {
-    ParallelLogger::logError(paste0(name, " should be ", paste0(as.character(values), collapse = "or ")))
+    ParallelLogger::logError(paste0(name, " should be ", paste0(as.character(values), collapse = " or ")))
     stop(paste0(name, " has incorrect value"))
   }
   return(TRUE)

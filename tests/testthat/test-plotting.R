@@ -15,6 +15,7 @@
 # limitations under the License.
 
 # TODO: add input checks and test these...
+pdf(file = NULL)
 test_that("plots", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
@@ -205,3 +206,4 @@ test_that("plotNetBenefit creates correct number of plots when evalType is NULL"
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)
   expect_equal(length(plot[[1]]$grobs) - 1, length(evalTypes)) # -1 for text grob
 })
+dev.off()
