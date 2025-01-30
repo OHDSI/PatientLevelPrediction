@@ -26,3 +26,7 @@ This includes normalising the data and removing rare or redundant features.
 Redundant features are features that within an analysisId together cover
 all obervations.
 }
+\keyword{The}
+\keyword{data}
+\keyword{internal}
+\keyword{processed}

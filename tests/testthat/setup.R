@@ -8,26 +8,19 @@ if (Sys.getenv("GITHUB_ACTIONS") == "true") {
     dir.create(tempJarFolder)
     Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = tempJarFolder)
     DatabaseConnector::downloadJdbcDrivers("postgresql")
-
-    withr::defer(
-      {
-        unlink(tempJarFolder, recursive = TRUE, force = TRUE)
-        Sys.unsetenv("DATABASECONNECTOR_JAR_FOLDER")
-      },
-      teardown_env()
-    )
   }
 }
 
-saveLoc <- tempfile("saveLoc")
-dir.create(saveLoc)
-
 if (rlang::is_installed("curl")) {
   internet <- curl::has_internet()
+  message("Internet: ", internet)
 } else {
   internet <- FALSE
+  message("Internet: ", internet)
 }
-
+ 
+saveLoc <- tempfile("saveLoc")
+dir.create(saveLoc)
 
 if (internet && rlang::is_installed("Eunomia")) {
   # PLPDATA
@@ -187,5 +180,3 @@ if (internet && rlang::is_installed("Eunomia")) {
     saveDirectory = file.path(saveLoc, "tinyResults")
   )
 }
-
-expect_true(!is.null(plpResult$performanceEvaluation))

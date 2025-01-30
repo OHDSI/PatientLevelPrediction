@@ -41,6 +41,7 @@ Imports:
 Suggests:
     curl,
     Eunomia (>= 2.0.0),
+    glmnet,
     ggplot2,
     gridExtra,
     IterativeHardThresholding,

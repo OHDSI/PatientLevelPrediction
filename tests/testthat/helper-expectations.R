@@ -1,5 +1,6 @@
 # common tests that can be grouped together, such as testing the output from fitplp
 expect_correct_fitPlp <- function(plpModel, trainData) {
+  outcomeId <- 3
   # predictions are same amount as labels
   multiplicativeFactor <- dplyr::n_distinct(plpModel$prediction %>%
     dplyr::pull(.data$evaluationType))

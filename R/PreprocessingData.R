@@ -50,7 +50,6 @@ createPreprocessSettings <- function(
   return(preprocessingSettings)
 }
 
-
 #' A function that wraps around FeatureExtraction::tidyCovariateData to normalise 
 #' the data and remove rare or redundant features
 #'
@@ -63,6 +62,8 @@ createPreprocessSettings <- function(
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
+#' @keywords internal
+#' The data processed
 #' @return The covariateData object with the processed covariates
 preprocessData <- function(covariateData,
                            preprocessSettings) {

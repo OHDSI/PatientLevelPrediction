@@ -426,7 +426,6 @@ runPlp <- function(
   class(results) <- c("runPlp")
   
   ParallelLogger::logInfo("Run finished successfully.")
-  
   # save the results
   ParallelLogger::logInfo(paste0("Saving PlpResult"))
   tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
