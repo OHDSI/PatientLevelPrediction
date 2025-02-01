@@ -93,25 +93,27 @@ checkInputs <- function(inputs) {
 #'
 #' @param runSplitData            TRUE or FALSE whether to split data into train/test
 #' @param runSampleData           TRUE or FALSE whether to over or under sample
-#' @param runfeatureEngineering   TRUE or FALSE whether to do feature engineering
+#' @param runFeatureEngineering   TRUE or FALSE whether to do feature engineering
 #' @param runPreprocessData       TRUE or FALSE whether to do preprocessing
 #' @param runModelDevelopment     TRUE or FALSE whether to develop the model
 #' @param runCovariateSummary     TRUE or FALSE whether to create covariate summary
 #'
 #' @return
 #' list with TRUE/FALSE for each part of runPlp
-#'
+#' @examples
+#' # create settings with only split and model development
+#' createExecuteSettings(runSplitData = TRUE, runModelDevelopment = TRUE) 
 #' @export
 createExecuteSettings <- function(
     runSplitData = FALSE,
     runSampleData = FALSE,
-    runfeatureEngineering = FALSE,
+    runFeatureEngineering = FALSE,
     runPreprocessData = FALSE,
     runModelDevelopment = FALSE,
     runCovariateSummary = FALSE) {
   checkIsClass(runSplitData, "logical")
   checkIsClass(runSampleData, "logical")
-  checkIsClass(runfeatureEngineering, "logical")
+  checkIsClass(runFeatureEngineering, "logical")
   checkIsClass(runPreprocessData, "logical")
   checkIsClass(runModelDevelopment, "logical")
   checkIsClass(runCovariateSummary, "logical")
@@ -119,7 +121,7 @@ createExecuteSettings <- function(
   result <- list(
     runSplitData = runSplitData,
     runSampleData = runSampleData,
-    runfeatureEngineering = runfeatureEngineering,
+    runFeatureEngineering = runFeatureEngineering,
     runPreprocessData = runPreprocessData,
     runModelDevelopment = runModelDevelopment,
     runCovariateSummary = runCovariateSummary
@@ -137,12 +139,14 @@ createExecuteSettings <- function(
 #' @return
 #' list with TRUE for split, preprocess, model development and covariate summary
 #'
+#' @examples
+#' createDefaultExecuteSettings()
 #' @export
 createDefaultExecuteSettings <- function() {
   createExecuteSettings(
     runSplitData = TRUE,
     runSampleData = FALSE,
-    runfeatureEngineering = FALSE,
+    runFeatureEngineering = FALSE,
     runPreprocessData = TRUE,
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE

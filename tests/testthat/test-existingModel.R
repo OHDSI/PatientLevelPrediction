@@ -123,17 +123,17 @@ test_that("Externally trained sklearn model works", {
   skip_on_cran()
   skip_if_offline()
   # change map to be some random order
-  covariateIds <- tinyTrainData$covariateData$covariates %>% 
-  dplyr::pull(.data$covariateId) %>%
-  unique()
+  covariateIds <- tinyTrainData$covariateData$covariates %>%
+    dplyr::pull(.data$covariateId) %>%
+    unique()
   map <- data.frame(
     columnId = sample(1:20, length(covariateIds)),
     covariateId = sample(covariateIds, length(covariateIds))
- )
+  )
   matrixData <- toSparseM(tinyTrainData, map = map)
   matrix <- matrixData$dataMatrix %>%
     Matrix::as.matrix()
-  
+
   # fit with sklearn
   xMatrix <- reticulate::r_to_py(matrix)
   y <- reticulate::r_to_py(tinyTrainData$labels$outcomeCount)
@@ -161,7 +161,50 @@ test_that("Externally trained sklearn model works", {
     populationSettings = populationSettings
   )
   prediction <- predictPlp(plpModel, testData, testData$labels)
-  
+
   expect_equal(mean(prediction$value), mean(externalPredictions))
+  expect_correct_predictions(prediction, testData)
+})
+
+test_that("Create existing GLM model works", {
+  expect_error(createGlmModel(coefficients = data.frame(
+    weights = c(1, 2),
+    covariateId = c(1, 2)
+  )))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c("1", "2"),
+    covariateId = c(1, 2)
+  )))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c("1", "2")
+  )))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), intercept = "2"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "linear"))
+  model <- createGlmModel(
+    coefficients = data.frame(
+      coefficient = c(1, 2),
+      covariateId = c(1, 2)
+    ),
+    intercept = 2,
+    mapping = "logistic"
+  )
+  expect_equal(attr(model, "modelType"), "binary")
+  expect_equal(attr(model, "saveType"), "RToJson")
+  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+})
+
+test_that("Existing glm model works", {
+  model <- createGlmModel(coefficients = data.frame(
+    coefficient = c(0.05),
+    covariateId = c(1002)
+  ), intercept = -2.5)
+  prediction <- predictPlp(model, testData, testData$labels)
   expect_correct_predictions(prediction, testData)
 })

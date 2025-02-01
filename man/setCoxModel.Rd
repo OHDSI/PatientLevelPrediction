@@ -36,7 +36,7 @@ setCoxModel(
 \item{maxIterations}{Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error}
 }
 \value{
-`modelSettings` object
+\code{modelSettings} object
 }
 \description{
 Create setting for lasso Cox model

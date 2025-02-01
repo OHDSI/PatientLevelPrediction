@@ -34,7 +34,8 @@
 #' @return
 #' Returns NULL but uploads multiple diagnosePlp results into the database schema specified in databaseSchemaSettings
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 addMultipleDiagnosePlpToDatabase <- function(
     connectionDetails,
     databaseSchemaSettings,
@@ -82,7 +83,8 @@ addMultipleDiagnosePlpToDatabase <- function(
 #' @return
 #' Returns NULL but uploads the diagnostic into the database schema specified in databaseSchemaSettings
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 addDiagnosePlpToDatabase <- function(
     diagnosePlp,
     connectionDetails,

@@ -172,7 +172,7 @@ if (internet && rlang::is_installed("Eunomia")) {
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = FALSE,
-      runfeatureEngineering = FALSE,
+      runFeatureEngineering = FALSE,
       runPreprocessData = TRUE,
       runModelDevelopment = TRUE,
       runCovariateSummary = FALSE

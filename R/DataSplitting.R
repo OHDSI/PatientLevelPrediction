@@ -46,6 +46,9 @@
 #'
 #' @return
 #' An object of class \code{splitSettings}
+#' @examples
+#' createDefaultSplitSetting(testFraction=0.25, trainFraction=0.75, nfold=3,
+#'                           splitSeed=42)
 #' @export
 createDefaultSplitSetting <- function(testFraction = 0.25,
                                       trainFraction = 0.75,
@@ -101,6 +104,9 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
 #' type integer/numeric. Index is -1 for test set, positive integer for train 
 #' set folds
 #' @return An object of class \code{splitSettings}
+#' @examples
+#' createExistingSplitSettings(splitIds = data.frame(rowId = c(1, 2, 3, 4, 5),
+#'                                                   index = c(1, 2, -1, 1, 2)))
 #' @export
 createExistingSplitSettings <- function(splitIds) {
   checkIsClass(splitIds, "data.frame")

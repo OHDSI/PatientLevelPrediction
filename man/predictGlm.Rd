@@ -7,7 +7,7 @@
 predictGlm(plpModel, data, cohort)
 }
 \arguments{
-\item{plpModel}{An object of type \code{plpModel} - a patient level 
+\item{plpModel}{An object of type \code{plpModel} - a patient level
 prediction model}
 
 \item{data}{An object of type \code{plpData} - the patient level prediction
@@ -18,7 +18,7 @@ data extracted from the CDM.}
 without the outcome known}
 }
 \value{
-A dataframe containing the prediction for each person in the 
+A dataframe containing the prediction for each person in the
 population
 }
 \description{

@@ -2,8 +2,8 @@
 % Please edit documentation in R/FeatureEngineering.R
 \name{robustNormalize}
 \alias{robustNormalize}
-\title{A function that normalizes continous by the interquartile range and 
-optionally forces the resulting values to be between -3 and 3 with 
+\title{A function that normalizes continous by the interquartile range and
+optionally forces the resulting values to be between -3 and 3 with
 f(x) = x / sqrt(1 + (x/3)^2)
 '@details uses (value - median) / iqr to normalize the data and then can
 applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values.
@@ -21,11 +21,11 @@ robustNormalize(trainData, featureEngineeringSettings, done = FALSE)
 \item{done}{Whether the data has already been normalized (bool)}
 }
 \value{
-The `trainData` object with normalized data
+The \code{trainData} object with normalized data
 }
 \description{
-A function that normalizes continous by the interquartile range and 
-optionally forces the resulting values to be between -3 and 3 with 
+A function that normalizes continous by the interquartile range and
+optionally forces the resulting values to be between -3 and 3 with
 f(x) = x / sqrt(1 + (x/3)^2)
 '@details uses (value - median) / iqr to normalize the data and then can
 applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values.

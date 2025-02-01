@@ -17,3 +17,11 @@ A message describing the object
 \description{
 Print a plpData object
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+plpData <- getEunomiaPlpData()
+print(plpData)
+}
+\dontshow{\}) # examplesIf}
+}

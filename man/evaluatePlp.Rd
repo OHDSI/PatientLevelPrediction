@@ -14,11 +14,13 @@ stratify the evaluation}
 }
 \value{
 An object of class plpEvaluation containing the following components
-- evaluationStatistics: A data frame containing the evaluation statistics'
-- thresholdSummary: A data frame containing the threshold summary'
-- demographicSummary: A data frame containing the demographic summary'
-- calibrationSummary: A data frame containing the calibration summary'
-- predictionDistribution: A data frame containing the prediction distribution'
+\itemize{
+\item evaluationStatistics: A data frame containing the evaluation statistics'
+\item thresholdSummary: A data frame containing the threshold summary'
+\item demographicSummary: A data frame containing the demographic summary'
+\item calibrationSummary: A data frame containing the calibration summary'
+\item predictionDistribution: A data frame containing the prediction distribution'
+}
 }
 \description{
 Evaluates the performance of the patient level prediction model

@@ -12,7 +12,8 @@ savePlpModel(plpModel, dirPath)
 \item{dirPath}{A location to save the model to}
 }
 \value{
-The directory path where the model was saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                    The directory path where the model was saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Saves the plp model

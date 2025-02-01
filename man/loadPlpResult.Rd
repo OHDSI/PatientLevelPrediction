@@ -10,7 +10,8 @@ loadPlpResult(dirPath)
 \item{dirPath}{The directory where the evaluation was saved}
 }
 \value{
-The runPlp object
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The runPlp object
+}\if{html}{\out{</div>}}
 }
 \description{
 Loads the evalaution dataframe

@@ -17,3 +17,11 @@ A summary of the object containing the number of people, outcomes and covariates
 \description{
 Summarize a plpData object
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+plpData <- getEunomiaPlpData()
+summary(plpData)
+}
+\dontshow{\}) # examplesIf}
+}

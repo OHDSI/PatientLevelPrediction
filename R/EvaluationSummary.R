@@ -351,14 +351,16 @@ calculateEStatisticsBinary <- function(prediction) {
 #' @param confidenceInterval    Should 95 percebt confidence intervals be computed?
 #'
 #' @return A data.frame containing the AUC and optionally the 95% confidence interval
-#'
+#' @examples 
+#' prediction <- data.frame(
+#'   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#'   outcomeCount = c(0, 1, 0, 1, 1))
+#' computeAuc(prediction)
 #' @export
 computeAuc <- function(
     prediction,
     confidenceInterval = FALSE) {
-  if (attr(prediction, "metaData")$modelType != "binary") {
-    stop("Computing AUC is only implemented for binary classification models")
-  }
+  checkDataframe(prediction, c("value", "outcomeCount"), c("numeric", "numeric"))
 
   if (confidenceInterval) {
     return(aucWithCi(prediction = prediction$value, truth = prediction$outcomeCount))
@@ -384,11 +386,15 @@ aucWithoutCi <- function(prediction, truth) {
 #' @details
 #' Calculates the brierScore from prediction object
 #'
-#' @param prediction            A prediction object
+#' @param prediction            A prediction dataframe
 #'
 #' @return
 #' A list containing the brier score and the scaled brier score
-#'
+#' @examples
+#' prediction <- data.frame(
+#'   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#'   outcomeCount = c(0, 1, 0, 1, 1))
+#' brierScore(prediction)
 #' @export
 brierScore <- function(prediction) {
   brier <- sum((prediction$outcomeCount - prediction$value)^2) / nrow(prediction)
@@ -405,6 +411,11 @@ brierScore <- function(prediction) {
 #' @return
 #' A list containing the calibrationLine coefficients, the aggregate data used 
 #' to fit the line and the Hosmer-Lemeshow goodness of fit test
+#' @examples
+#' prediction <- data.frame(
+#'   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#'   outcomeCount = c(0, 1, 0, 1, 1))
+#' calibrationLine(prediction, numberOfStrata = 1)
 #' @export
 calibrationLine <- function(prediction, numberOfStrata = 10) {
   outPpl <- unique(prediction$rowId)
@@ -471,7 +482,12 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
 #'
 #' @return
 #' The average precision value
-#'
+#' @examples
+#' prediction <- data.frame(
+#'   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#'   outcomeCount = c(0, 1, 0, 1, 1)
+#' )
+#' averagePrecision(prediction)
 #' @export
 averagePrecision <- function(prediction) {
   lab.order <- prediction$outcomeCount[order(-prediction$value)]

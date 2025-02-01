@@ -14,7 +14,8 @@ savePlpShareable(result, saveDirectory, minCellCount = 10)
 \item{minCellCount}{Minimum cell count for the covariateSummary and certain evaluation results}
 }
 \value{
-The directory path where the results were saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The directory path where the results were saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Save the plp result as json files and csv files for transparent sharing

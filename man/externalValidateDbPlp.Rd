@@ -29,11 +29,13 @@ specifying how the logging is done}
 }
 \value{
 An externalValidatePlp object containing the following components
-- model: The model object
-- executionSummary: A list of execution details
-- prediction: A dataframe containing the predictions
-- performanceEvaluation: A dataframe containing the performance metrics
-- covariateSummary: A dataframe containing the covariate summary
+\itemize{
+\item model: The model object
+\item executionSummary: A list of execution details
+\item prediction: A dataframe containing the predictions
+\item performanceEvaluation: A dataframe containing the performance metrics
+\item covariateSummary: A dataframe containing the covariate summary
+}
 }
 \description{
 This function extracts data using a user specified connection and cdm_schema, applied the model and then calcualtes the performance

@@ -40,6 +40,6 @@ A dataframe with the covariateIds and the pfi (change in AUC caused by permuting
 Calculate the permutation feature importance (pfi) for a PLP model.
 }
 \details{
-The function permutes the each covariate/features <repeats> times and
+The function permutes the each covariate/features \if{html}{\out{<repeats>}} times and
 calculates the mean AUC change caused by the permutation.
 }

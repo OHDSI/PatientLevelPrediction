@@ -12,7 +12,7 @@ createSimpleImputer(method = "mean", missingThreshold = 0.3)
 \item{missingThreshold}{The threshold for missing values to be imputed vs removed}
 }
 \value{
-The settings for the single imputer of class `featureEngineeringSettings`
+The settings for the single imputer of class \code{featureEngineeringSettings}
 }
 \description{
 This function creates the settings for a simple imputer

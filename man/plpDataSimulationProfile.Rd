@@ -7,12 +7,12 @@
 \format{
 A data frame containing the following elements:
 \describe{
-  \item{covariatePrevalence}{prevalence of all covariates}
-  \item{outcomeModels}{regression model parameters to simulate outcomes}
-  \item{metaData}{settings used to simulate the profile}
-  \item{covariateRef}{covariateIds and covariateNames}
-  \item{timePrevalence}{time window}
-  \item{exclusionPrevalence}{prevalence of exclusion of covariates}
+\item{covariatePrevalence}{prevalence of all covariates}
+\item{outcomeModels}{regression model parameters to simulate outcomes}
+\item{metaData}{settings used to simulate the profile}
+\item{covariateRef}{covariateIds and covariateNames}
+\item{timePrevalence}{time window}
+\item{exclusionPrevalence}{prevalence of exclusion of covariates}
 }
 }
 \usage{

@@ -31,6 +31,13 @@
 #'
 #' @return
 #' An object of class \code{sampleSettings}
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' # even rate of outcomes to non-outcomes
+#' sampleSetting <- createSampleSettings(type = "underSample", 
+#'                                       numberOutcomestoNonOutcomes = 1, 
+#'                                       sampleSeed = 42)
+#' }
 #' @export
 createSampleSettings <- function(type = "none",
                                  numberOutcomestoNonOutcomes = 1,

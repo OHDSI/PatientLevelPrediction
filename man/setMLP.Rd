@@ -33,11 +33,11 @@ setMLP(
 
 \item{activation}{(list) Activation function for the hidden layer.
 \itemize{
-   \item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
-   \item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
-   \item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
-   \item "relu": the rectified linear unit function, returns f(x) = max(0, x)
- }}
+\item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
+\item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
+\item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
+\item "relu": the rectified linear unit function, returns f(x) = max(0, x)
+}}
 
 \item{solver}{(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)}
 

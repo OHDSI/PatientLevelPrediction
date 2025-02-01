@@ -19,16 +19,16 @@ function.}
 
 \item{metric}{Specifies the metric to be plotted:
 \itemize{
-  \item{\code{'AUROC'} - use the area under the Receiver Operating
-    Characteristic curve}
-  \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
-  \item{\code{'sBrier'} - use the scaled Brier score}
+\item{\code{'AUROC'} - use the area under the Receiver Operating
+Characteristic curve}
+\item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
+\item{\code{'sBrier'} - use the scaled Brier score}
 }}
 
 \item{abscissa}{Specify the abscissa metric to be plotted:
 \itemize{
-  \item{\code{'events'} - use number of events}
-  \item{\code{'observations'} - use number of observations}
+\item{\code{'events'} - use number of events}
+\item{\code{'observations'} - use number of observations}
 }}
 
 \item{plotTitle}{Title of the learning curve plot.}

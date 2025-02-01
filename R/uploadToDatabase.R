@@ -174,7 +174,24 @@ insertResultsToSqlite <- function(
 #'
 #' @return
 #' Returns NULL but creates or deletes the required tables in the specified database schema(s).
-#'
+#' @examplesIf rlang::is_installed("RSQLite")
+#' # create a sqlite database with the PatientLevelPrediction result tables
+#' connectionDetails <- DatabaseConnector::createConnectionDetails(
+#'   dbms = "sqlite",
+#'   server = file.path(tempdir(), "test.sqlite"))
+#' createPlpResultTables(connectionDetails = connectionDetails,
+#'                       targetDialect = "sqlite",
+#'                       resultSchema = "main",
+#'                       tablePrefix = "plp_")
+#' # delete the tables
+#' createPlpResultTables(connectionDetails = connectionDetails,
+#'                       targetDialect = "sqlite",
+#'                       resultSchema = "main",
+#'                       deleteTables = TRUE,
+#'                       createTables = FALSE,
+#'                       tablePrefix = "plp_")
+#' # clean up the database file
+#' unlink(file.path(tempdir(), "test.sqlite"))
 #' @export
 createPlpResultTables <- function(
     connectionDetails,
@@ -295,7 +312,8 @@ createPlpResultTables <- function(
 #' @return
 #' Returns NULL but uploads all the results in resultLocation to the PatientLevelPrediction result tables in resultSchema
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 addMultipleRunPlpToDatabase <- function(
     connectionDetails,
     databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
@@ -375,6 +393,9 @@ addMultipleRunPlpToDatabase <- function(
 #'
 #' @return
 #' Returns a list of class 'plpDatabaseResultSchema' with all the database settings
+#' @examples
+#' createDatabaseSchemaSettings(resultSchema = "cdm",
+#'                              tablePrefix = "plp_")
 #'
 #' @export
 createDatabaseSchemaSettings <- function(
@@ -433,7 +454,8 @@ createDatabaseSchemaSettings <- function(
 #' @return
 #' Returns a data.frame with the database details
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 createDatabaseList <- function(
     cdmDatabaseSchemas,
     cdmDatabaseNames,
@@ -504,7 +526,8 @@ createDatabaseList <- function(
 #' @return
 #' Returns a data.frame with the database details
 #'
-#' @export
+#' @keywords internal
+#' @noRd
 addRunPlpToDatabase <- function(
     runPlp,
     connectionDetails,

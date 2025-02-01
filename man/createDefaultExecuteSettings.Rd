@@ -15,3 +15,6 @@ Creates default list of settings specifying what parts of runPlp to execute
 \details{
 runs split, preprocess, model development and covariate summary
 }
+\examples{
+createDefaultExecuteSettings()
+}

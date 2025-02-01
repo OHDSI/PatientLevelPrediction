@@ -509,7 +509,7 @@ lrResults <- runPlp(
   executeSettings = createExecuteSettings(
     runSplitData = TRUE,
     runSampleData = TRUE,
-    runfeatureEngineering = TRUE,
+    runFeatureEngineering = TRUE,
     runPreprocessData = TRUE,
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE
@@ -908,7 +908,7 @@ gbmResults <- runPlp(
   executeSettings = createExecuteSettings(
     runSplitData = TRUE,
     runSampleData = TRUE,
-    runfeatureEngineering = TRUE,
+    runFeatureEngineering = TRUE,
     runPreprocessData = TRUE,
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE

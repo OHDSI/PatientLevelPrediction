@@ -18,7 +18,7 @@
 #' Create the settings for preprocessing the trainData.
 #'
 #' @details
-#' Returns an object of class \code{preprocessingSettings} that specifies how to
+#' Returns an object of class `preprocessingSettings` that specifies how to
 #' preprocess the training data
 #'
 #' @param minFraction The minimum fraction of target population who must have a 
@@ -27,7 +27,10 @@
 #' (Default: TRUE)
 #' @param removeRedundancy Whether to remove redundant features (Default: TRUE)
 #' @return
-#' An object of class \code{preprocessingSettings}
+#' An object of class `preprocessingSettings`
+#' @examples
+#' # Create the settings for preprocessing, remove no features, normalise the data
+#' createPreprocessSettings(minFraction = 0.0, normalize = TRUE, removeRedundancy = FALSE)
 #' @export
 createPreprocessSettings <- function(
     minFraction = 0.001,

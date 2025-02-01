@@ -40,9 +40,19 @@
 #' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
 #'
 #' @return
-#' A setting object of class \code{restrictPlpDataSettings} containing a list of 
-#' getPlpData extra settings
-#'
+#' A setting object of class \code{restrictPlpDataSettings} containing a list of
+#' the settings: \itemize{
+#' \item{`studyStartDate`: A calendar date specifying the minimum date that a cohort index date can appear}
+#' \item{`studyEndDate`: A calendar date specifying the maximum date that a cohort index date can appear}
+#' \item{`firstExposureOnly`: Should only the first exposure per subject be included}
+#' \item{`washoutPeriod`: The mininum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+#' \item{`sampleSize`: If not NULL, the number of people to sample from the target cohort}
+#' }
+#' @examples
+#' # restrict 2010, first exposure only, require washout period of 365 day
+#' # and sample 1000 people
+#' createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
+#' firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)
 #' @export
 createRestrictPlpDataSettings <- function(
     studyStartDate = "",
@@ -108,8 +118,36 @@ createRestrictPlpDataSettings <- function(
 #' @param cohortId                       (depreciated: use targetId) old input for the target cohort id
 #'
 #' @return
-#' A list with the the database specific settings 
-#'
+#' A list with the the database specific settings: \itemize{
+#' \item{`connectionDetails`: An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
+#' \item{`cdmDatabaseSchema`: The name of the database schema that contains the OMOP CDM instance.}
+#' \item{`cdmDatabaseName`: A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified).}
+#' \item{`cdmDatabaseId`: A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified).}
+#' \item{`tempEmulationSchema`: The name of a databae schema where you want all temporary tables to be managed. Requires create/insert permissions to this database.}
+#' \item{`cohortDatabaseSchema`: The name of the database schema that is the location where the target cohorts are available. Requires read permissions to this schema.}
+#' \item{`cohortTable`: The tablename that contains the target cohorts. Expectation is cohortTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+#' \item{`outcomeDatabaseSchema`: The name of the database schema that is the location where the data used to define the outcome cohorts is available. Requires read permissions to this database.}
+#' \item{`outcomeTable`: The tablename that contains the outcome cohorts. Expectation is outcomeTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+#' \item{`targetId`: An integer specifying the cohort id for the target cohort}
+#' \item{`outcomeIds`: A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
+#' \item{`cdmVersion`: Define the OMOP CDM version used: currently support "4" and "5".}
+#' }
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' # create the database details for Eunomia example database
+#' createDatabaseDetails(
+#'   connectionDetails = connectionDetails,
+#'   cdmDatabaseSchema = "main",
+#'   cdmDatabaseName = "main",
+#'   cohortDatabaseSchema = "main",
+#'   cohortTable = "cohort",
+#'   outcomeDatabaseSchema = "main",
+#'   outcomeTable = "cohort",
+#'   targetId = 1,
+#'   outcomeIds = 3,
+#'   cdmVersion = 5)
+#' }
 #' @export
 createDatabaseDetails <- function(
     connectionDetails,
@@ -171,6 +209,28 @@ createDatabaseDetails <- function(
   return(result)
 }
 
+
+plpDataObjectDoc <- function() {
+  paste0(r"(
+ An object of type `plpData`, containing information on the cohorts, their
+ outcomes, and baseline covariates. Information about multiple outcomes can be
+ captured at once for efficiency reasons. This object is a list with the
+ following components: \describe{ \item{outcomes}{A data frame listing the 
+ outcomes per person, including the time to event, and the outcome id} 
+ \item{cohorts}{A data frame listing the persons in each cohort, listing their
+ exposure status as well as the time to the end of the observation period and 
+ time to the end of the cohort} \item{covariateData}{An Andromeda object created 
+ with the `FeatureExtraction` package. This object contains the following items: 
+ \describe{ \item{covariates}{An Andromeda table listing the covariates per 
+ person in the two cohorts. This is done using a sparse representation:
+ covariates with a value of 0 are omitted to save space. Usually has three 
+ columns, rowId, covariateId and covariateValue'.} \item{covariateRef}{An 
+ Andromeda table describing the covariates that have been extracted.} 
+ \item{AnalysisRef}{An Andromeda table with information about which analysisIds 
+ from 'FeatureExtraction' were used.} }}})")
+}
+NULL
+
 #' Extract the patient level prediction data from the server
 #' @description
 #' This function executes a large set of SQL statements against the database in OMOP CDM format to
@@ -192,22 +252,40 @@ createDatabaseDetails <- function(
 #' @param covariateSettings            An object of type \code{covariateSettings} or a list of such objects as created using the
 #'                                     \code{createCovariateSettings} function in the
 #'                                     \code{FeatureExtraction} package.
-#' @param restrictPlpDataSettings Extra settings to apply to the target population while extracting data.  
+#' @param restrictPlpDataSettings Extra settings to apply to the target population while extracting data.
 #' Created using \code{createRestrictPlpDataSettings()}. This is optional.
 #'
-#' @return
-#' Returns an object of type \code{plpData}, containing information on the cohorts, their
-#' outcomes, and baseline covariates. Information about multiple outcomes can be captured at once for
-#' efficiency reasons. This object is a list with the following components: \describe{
-#' \item{outcomes}{A data frame listing the outcomes per person, including the time to event, and
-#' the outcome id. Outcomes are not yet filtered based on risk window, since this is done at
-#' a later stage.} \item{cohorts}{A data frame listing the persons in each cohort, listing their
-#' exposure status as well as the time to the end of the observation period and time to the end of the
-#' cohort (usually the end of the exposure era).} \item{covariates}{An Andromeda object listing the
-#' baseline covariates per person in the two cohorts. This is done using a sparse representation:
-#' covariates with a value of 0 are omitted to save space. Usually has three columns,
-#' rowId, covariateId and covariateValue'.} \item{covariateRef}{An Andromeda object describing the covariates that have been extracted.}
-#' \item{AnalysisRef}{An Andromeda object with information about which analysisIds from 'FeatureExtraction' were used.} } 
+#' @return 'r plpDataObjectDoc()`
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#'  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#'  Eunomia::createCohorts(connectionDetails)
+#'  outcomeId <- 3 # GIbleed
+#'
+#'  databaseDetails <- createDatabaseDetails(
+#'    connectionDetails = connectionDetails,
+#'    cdmDatabaseSchema = "main",
+#'    cdmDatabaseName = "main",
+#'    cohortDatabaseSchema = "main",
+#'    cohortTable = "cohort",
+#'    outcomeDatabaseSchema = "main",
+#'    outcomeTable = "cohort",
+#'    targetId = 1,
+#'    outcomeIds = outcomeId,
+#'    cdmVersion = 5
+#'  )
+#'
+#'  covariateSettings <- FeatureExtraction::createCovariateSettings(
+#'    useDemographicsAge = TRUE,
+#'    useDemographicsGender = TRUE,
+#'    useConditionOccurrenceAnyTimePrior = TRUE
+#'  )
+#'
+#'  plpData <- getPlpData(
+#'    databaseDetails = databaseDetails,
+#'    covariateSettings = covariateSettings,
+#'    restrictPlpDataSettings = createRestrictPlpDataSettings()
+#'  )}
 #' @export
 getPlpData <- function(
     databaseDetails,
@@ -254,13 +332,15 @@ getPlpData <- function(
   )
 
   renderedSql <- readChar(pathToSql, file.info(pathToSql)$size)
-  renderArgs <- list(sql = renderedSql,
+  renderArgs <- list(
+    sql = renderedSql,
     cdm_database_schema = databaseDetails$cdmDatabaseSchema,
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
     cdm_version = databaseDetails$cdmVersion,
-    target_id = databaseDetails$targetId)
-  
+    target_id = databaseDetails$targetId
+  )
+
   if (!is.null(restrictPlpDataSettings$sampleSize)) {
     renderArgs$study_start_date <- restrictPlpDataSettings$studyStartDate
     renderArgs$study_end_date <- restrictPlpDataSettings$studyEndDate
@@ -269,9 +349,9 @@ getPlpData <- function(
     renderArgs$use_sample <- !is.null(restrictPlpDataSettings$sampleSize)
     renderArgs$sample_number <- restrictPlpDataSettings$sampleSize
   }
-  
+
   renderedSql <- do.call(SqlRender::render, renderArgs)
-  
+
   renderedSql <- SqlRender::translate(
     sql = renderedSql,
     targetDialect = dbms,
@@ -440,6 +520,11 @@ getPlpData <- function(
 #' @param x The plpData object to print
 #' @param ... Additional arguments
 #' @return A message describing the object
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' plpData <- getEunomiaPlpData()
+#' print(plpData)
+#' }
 #' @export
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
@@ -453,6 +538,11 @@ print.plpData <- function(x, ...) {
 #' @param object The plpData object to summarize
 #' @param ... Additional arguments
 #' @return A summary of the object containing the number of people, outcomes and covariates
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' plpData <- getEunomiaPlpData()
+#' summary(plpData)
+#' }
 #' @export
 summary.plpData <- function(object, ...) {
   people <- length(unique(object$cohorts$subjectId))
@@ -484,6 +574,12 @@ summary.plpData <- function(object, ...) {
 #' @param x The summary.plpData object to print
 #' @param ... Additional arguments
 #' @return A message describing the object
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' plpData <- getEunomiaPlpData()
+#' summary <- summary(plpData)
+#' print(summary)
+#' }
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
   writeLines("")
@@ -502,4 +598,59 @@ print.summary.plpData <- function(x, ...) {
   writeLines("Covariates:")
   writeLines(paste("Number of covariates:", x$covariateCount))
   writeLines(paste("Number of non-zero covariate values:", x$covariateValueCount))
+}
+
+#' Create a plpData object from the Eunomia database'
+#' @description
+#' This function creates a plpData object from the Eunomia database. It gets
+#' the connection details, creates the cohorts, and extracts the data. The cohort
+#' is predicting GIbleed in new users of celecoxib.
+#' @param covariateSettings A list of covariateSettings objects created using the
+#' \code{createCovariateSettings} function in the \code{FeatureExtraction} package.
+#' If nothing is specified covariates with age, gender, conditions and drug era are used.
+#' @return `r plpDataObjectDoc()`
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' covariateSettings <- FeatureExtraction::createCovariateSettings(
+#'   useDemographicsAge = TRUE,
+#'   useDemographicsGender = TRUE,
+#'   useConditionOccurrenceAnyTimePrior = TRUE
+#' )
+#' plpData <- getEunomiaPlpData(covariateSettings = covariateSettings)
+#' }
+#' @export
+getEunomiaPlpData <- function(covariateSettings = NULL) {
+  rlang::is_installed("Eunomia")
+  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+  Eunomia::createCohorts(connectionDetails)
+  outcomeId <- 3 # GIbleed
+
+  databaseDetails <- createDatabaseDetails(
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = "main",
+    cdmDatabaseName = "main",
+    cohortDatabaseSchema = "main",
+    cohortTable = "cohort",
+    outcomeDatabaseSchema = "main",
+    outcomeTable = "cohort",
+    targetId = 1,
+    outcomeIds = outcomeId,
+    cdmVersion = 5
+  )
+
+  if (is.null(covariateSettings)) {
+    covariateSettings <- FeatureExtraction::createCovariateSettings(
+      useDemographicsAge = TRUE,
+      useDemographicsGender = TRUE,
+      useConditionOccurrenceAnyTimePrior = TRUE,
+      useDrugEraAnyTimePrior = TRUE
+    )
+  }
+
+  plpData <- getPlpData(
+    databaseDetails = databaseDetails,
+    covariateSettings = covariateSettings,
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  return(plpData)
 }

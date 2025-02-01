@@ -43,15 +43,13 @@ The default is none.}
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
-                                        \itemize{
-                                        \item setLassoLogisticRegression() A lasso logistic regression model
-                                        \item setGradientBoostingMachine() A gradient boosting machine
-                                        \item setAdaBoost() An ada boost model
-                                        \item setRandomForest() A random forest model
-                                        \item setDecisionTree() A decision tree model
-                                        \item setKNN() A KNN model
-
-                                        }}
+\itemize{
+\item setLassoLogisticRegression() A lasso logistic regression model
+\item setGradientBoostingMachine() A gradient boosting machine
+\item setAdaBoost() An ada boost model
+\item setRandomForest() A random forest model
+\item setDecisionTree() A decision tree model
+}}
 
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
@@ -63,10 +61,11 @@ and whether to normalise the covariates before training}
 \value{
 An object containing the model or location where the model is saved, the data selection settings, the preprocessing
 and training settings as well as various performance measures obtained by the model.
-
-\item{distribution}{list for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index) }
-\item{incident}{list for each O of incidence of O in T during TAR}
-\item{characterization}{list for each O of Characterization of T, TnO, Tn~O}
+\itemize{
+\item{\code{distribution}: List for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index) }
+\item{\code{incident}: List for each O of incidence of O in T during TAR}
+\item{\code{characterization}: List for each O of Characterization of T, TnO, Tn~O}
+}
 }
 \description{
 This function runs a set of prediction diagnoses to help pick a suitable T, O, TAR and determine

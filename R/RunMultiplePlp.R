@@ -251,33 +251,38 @@ runMultiplePlp <- function(
 #'
 #' @return
 #' A list with analysis settings used to develop a single prediction model
-#'
+#' 
+#' @examples
+#' createModelDesign(
+#'   targetId = 1,
+#'   outcomeId = 2,
+#'   modelSettings = setLassoLogisticRegression(seed=42),
+#'   populationSettings = createStudyPopulationSettings(),
+#'   restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+#'   splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'   runCovariateSummary = TRUE
+#' )
 #' @export
 createModelDesign <- function(
-    targetId,
-    outcomeId,
-    restrictPlpDataSettings = createRestrictPlpDataSettings(),
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    targetId = NULL,
+    outcomeId = NULL,
+    restrictPlpDataSettings = NULL,
+    populationSettings = NULL,
+    covariateSettings = NULL,
     featureEngineeringSettings = NULL,
     sampleSettings = NULL,
     preprocessSettings = NULL,
     modelSettings = NULL,
-    splitSettings = createDefaultSplitSetting(
-      type = "stratified",
-      testFraction = 0.25,
-      trainFraction = 0.75,
-      splitSeed = 123,
-      nfold = 3
-    ),
+    splitSettings = NULL,
     runCovariateSummary = TRUE) {
-  checkIsClass(targetId, c("numeric", "integer"))
-  checkIsClass(outcomeId, c("numeric", "integer"))
+  checkIsClass(targetId, c("numeric", "integer", "NULL"))
+  checkIsClass(outcomeId, c("numeric", "integer", "NULL"))
 
-  checkIsClass(populationSettings, c("populationSettings"))
-  checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
-  checkIsClass(covariateSettings, c("covariateSettings", "list"))
-  checkIsClass(splitSettings, "splitSettings")
+  checkIsClass(populationSettings, c("populationSettings", "NULL"))
+  checkIsClass(restrictPlpDataSettings, c("restrictPlpDataSettings", "NULL"))
+  checkIsClass(covariateSettings, c("covariateSettings", "list", "NULL"))
+  checkIsClass(splitSettings, c("splitSettings", "NULL"))
 
   useFE <- FALSE
   if (!is.null(featureEngineeringSettings)) {
@@ -329,7 +334,7 @@ createModelDesign <- function(
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = useSample,
-      runfeatureEngineering = useFE,
+      runFeatureEngineering = useFE,
       runPreprocessData = usePreprocess,
       runModelDevelopment = !is.null(modelSettings),
       runCovariateSummary = runCovariateSummary

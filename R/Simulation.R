@@ -41,16 +41,9 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
 
   personsPerCov <- stats::rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
   personsPerCov[personsPerCov > n] <- n
-  rowId <- sapply(personsPerCov, function(x, n) sample.int(size = x, n), n = n)
-  rowId <- do.call("c", rowId)
+  rowId <- unlist(sapply(personsPerCov[personsPerCov > 0], function(x, n) sample.int(size = x, n), n = n))
   covariateIds <- as.numeric(names(covariatePrevalence))
-  covariateId <- unlist(sapply(1:length(personsPerCov),
-    function(x, personsPerCov, covariateIds) {
-      rep(covariateIds[x], personsPerCov[x])
-    },
-    personsPerCov = personsPerCov,
-    covariateIds = covariateIds
-  ))
+  covariateId <- rep(covariateIds, personsPerCov)
 
   covariateValue <- rep(1, length(covariateId))
   covariateData <- Andromeda::andromeda(
@@ -79,8 +72,8 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   cohorts$gender[sample((1:nrow(cohorts)), nrow(cohorts) / 2)] <- 8507
 
   writeLines("Generating outcomes")
-  allOutcomes <- data.frame()
-  for (i in 1:length(plpDataSimulationProfile$metaData$outcomeIds)) {
+  allOutcomes <- vector("list", length(plpDataSimulationProfile$metaData$outcomeIds))
+  for (i in seq_along(plpDataSimulationProfile$metaData$outcomeIds)) {
     coefficients <- data.frame(
       betas = as.numeric(plpDataSimulationProfile$outcomeModels[[i]]),
       covariateIds = names(plpDataSimulationProfile$outcomeModels[[i]])
@@ -97,14 +90,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
     outcomes$outcomeId <- plpDataSimulationProfile$metaData$outcomeIds[i]
     outcomes$daysToEvent <- round(stats::runif(nrow(outcomes), 0, outcomes$time))
     outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
-    allOutcomes <- rbind(allOutcomes, outcomes)
+    allOutcomes[[i]] <- outcomes
   }
 
   covariateData$coefficients <- NULL
-
-  # add indexes for covariate summary
-  Andromeda::createIndex(tbl = covariateData$covariates, columnNames = "rowId", indexName = "covsum_rowId")
-  Andromeda::createIndex(tbl = covariateData$covariates, columnNames = "covariateId", indexName = "covsum_covariateId")
 
   # Remove rownames else they will be copied to the ffdf objects:
   metaData <- list()

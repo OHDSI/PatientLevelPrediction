@@ -14,7 +14,7 @@ configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 \item{condaPythonVersion}{String, Python version to use when creating a conda environment}
 }
 \value{
-hidden location of the created conda or virtual python environment
+location of the created conda or virtual python environment
 }
 \description{
 Sets up a python environment to use for PLP (can be conda or venv)
@@ -22,4 +22,9 @@ Sets up a python environment to use for PLP (can be conda or venv)
 \details{
 This function creates a python environment that can be used by PatientLevelPrediction
 and installs all the required package dependancies.
+}
+\examples{
+\dontrun{ # don't modify environment in examples
+ configurePython(envname="PLP", envtype="conda")
+}
 }

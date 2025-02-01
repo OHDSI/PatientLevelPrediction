@@ -10,7 +10,8 @@ loadPlpModel(dirPath)
 \item{dirPath}{The location of the model}
 }
 \value{
-The plpModel object
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                    The plpModel object
+}\if{html}{\out{</div>}}
 }
 \description{
 loads the plp model

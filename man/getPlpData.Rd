@@ -17,18 +17,7 @@ getPlpData(databaseDetails, covariateSettings, restrictPlpDataSettings = NULL)
 Created using \code{createRestrictPlpDataSettings()}. This is optional.}
 }
 \value{
-Returns an object of type \code{plpData}, containing information on the cohorts, their
-outcomes, and baseline covariates. Information about multiple outcomes can be captured at once for
-efficiency reasons. This object is a list with the following components: \describe{
-\item{outcomes}{A data frame listing the outcomes per person, including the time to event, and
-the outcome id. Outcomes are not yet filtered based on risk window, since this is done at
-a later stage.} \item{cohorts}{A data frame listing the persons in each cohort, listing their
-exposure status as well as the time to the end of the observation period and time to the end of the
-cohort (usually the end of the exposure era).} \item{covariates}{An Andromeda object listing the
-baseline covariates per person in the two cohorts. This is done using a sparse representation:
-covariates with a value of 0 are omitted to save space. Usually has three columns,
-rowId, covariateId and covariateValue'.} \item{covariateRef}{An Andromeda object describing the covariates that have been extracted.}
-\item{AnalysisRef}{An Andromeda object with information about which analysisIds from 'FeatureExtraction' were used.} }
+'r plpDataObjectDoc()`
 }
 \description{
 This function executes a large set of SQL statements against the database in OMOP CDM format to
@@ -44,4 +33,37 @@ schema. Covariates are automatically extracted from the appropriate tables withi
 If you wish to exclude concepts from covariates you will need to
 manually add the concept_ids and descendants to the \code{excludedCovariateConceptIds} of the
 \code{covariateSettings} argument.
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+ connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+ Eunomia::createCohorts(connectionDetails)
+ outcomeId <- 3 # GIbleed
+
+ databaseDetails <- createDatabaseDetails(
+   connectionDetails = connectionDetails,
+   cdmDatabaseSchema = "main",
+   cdmDatabaseName = "main",
+   cohortDatabaseSchema = "main",
+   cohortTable = "cohort",
+   outcomeDatabaseSchema = "main",
+   outcomeTable = "cohort",
+   targetId = 1,
+   outcomeIds = outcomeId,
+   cdmVersion = 5
+ )
+
+ covariateSettings <- FeatureExtraction::createCovariateSettings(
+   useDemographicsAge = TRUE,
+   useDemographicsGender = TRUE,
+   useConditionOccurrenceAnyTimePrior = TRUE
+ )
+
+ plpData <- getPlpData(
+   databaseDetails = databaseDetails,
+   covariateSettings = covariateSettings,
+   restrictPlpDataSettings = createRestrictPlpDataSettings()
+ )}
+\dontshow{\}) # examplesIf}
 }

@@ -94,7 +94,11 @@ listAppend <- function(a, b) {
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
 #' @param condaPythonVersion String, Python version to use when creating a conda environment
-#' @return hidden location of the created conda or virtual python environment
+#' @return location of the created conda or virtual python environment
+#' @examples
+#' \dontrun{ # don't modify environment in examples
+#'  configurePython(envname="PLP", envtype="conda")
+#' }
 #' @export
 configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11") {
   if (is.null(envtype)) {

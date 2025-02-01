@@ -14,7 +14,8 @@ savePrediction(prediction, dirPath, fileName = "prediction.rds")
 \item{fileName}{The name of the RDS file that will be saved in dirPath}
 }
 \value{
-The file location where the prediction was saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The file location where the prediction was saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Saves the prediction dataframe to RDS

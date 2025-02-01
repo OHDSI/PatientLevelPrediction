@@ -10,7 +10,7 @@ fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
 \item{trainData}{An object of type \code{trainData} created using \code{splitData}
 data extracted from the CDM.}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using 
+\item{modelSettings}{An object of class \code{modelSettings} created using
 one of the \code{createModelSettings} functions}
 
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
@@ -30,7 +30,7 @@ An object of class \code{plpModel} containing:
 \item{covariateImportance}{The covariate importance for the model}
 }
 \description{
-Train various models using a default parameter grid search or user specified 
+Train various models using a default parameter grid search or user specified
 parameters
 }
 \details{

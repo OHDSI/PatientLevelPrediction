@@ -172,12 +172,8 @@ reference:
     contents:
       - insertResultsToSqlite
       - createPlpResultTables
-      - addMultipleRunPlpToDatabase
-      - addRunPlpToDatabase
       - createDatabaseSchemaSettings 
       - createDatabaseList
-      - addDiagnosePlpToDatabase
-      - addMultipleDiagnosePlpToDatabase
       - extractDatabaseToCsv
       - insertCsvToDatabase
       - insertModelDesignInDatabase

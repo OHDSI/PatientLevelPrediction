@@ -20,3 +20,8 @@ Create the settings for random foreat based feature selection
 \details{
 Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
 }
+\examples{
+\dontrun{ # requires python and scikit-learn
+featureSeletor <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+}
+}

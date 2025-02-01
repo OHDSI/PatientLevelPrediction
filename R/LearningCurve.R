@@ -67,7 +67,16 @@
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
-#'
+#' @examplesIf rlang::is_installed("Eunomia")
+#' \donttest{
+#' plpData <- getEunomiaPlpData()
+#' outcomeId <- 3
+#' modelSettings <- setLassoLogisticRegression(seed=42)
+#' learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
+#' saveDirectory = file.path(tempdir(), "learningCurve"))
+#' # clean up
+#' unlink(file.path(tempdir(), "learningCurve"), recursive = TRUE)
+#' }
 #' @export
 createLearningCurve <- function(
     plpData,
@@ -91,7 +100,7 @@ createLearningCurve <- function(
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = FALSE,
-      runfeatureEngineering = FALSE,
+      runFeatureEngineering = FALSE,
       runPreprocessData = TRUE,
       runModelDevelopment = TRUE,
       runCovariateSummary = FALSE

@@ -20,6 +20,6 @@ A dataframe with the demographic summary
 Get a demographic summary
 }
 \details{
-Generates a data.frame with a prediction summary per each 5 year age group 
+Generates a data.frame with a prediction summary per each 5 year age group
 and gender group
 }

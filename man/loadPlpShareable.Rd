@@ -10,7 +10,8 @@ loadPlpShareable(loadDirectory)
 \item{loadDirectory}{The directory with the results as json/csv files}
 }
 \value{
-The runPlp object
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                             The runPlp object
+}\if{html}{\out{</div>}}
 }
 \description{
 Loads the plp result saved as json/csv files for transparent sharing

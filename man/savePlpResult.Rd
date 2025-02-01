@@ -12,7 +12,8 @@ savePlpResult(result, dirPath)
 \item{dirPath}{The directory to save the csv}
 }
 \value{
-The directory path where the results were saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The directory path where the results were saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Saves the result from runPlp into the location directory

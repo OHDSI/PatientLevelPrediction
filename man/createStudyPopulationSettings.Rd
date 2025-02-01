@@ -54,7 +54,7 @@ specified).}
 \item{restrictTarToCohortEnd}{If using a survival model and you want the time-at-risk to end at the cohort end date set this to T}
 }
 \value{
-An object of type populationSettings containing all the settings required 
+An object of type populationSettings containing all the settings required
 for creating the study population
 }
 \description{

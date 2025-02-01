@@ -23,7 +23,7 @@ plotNetBenefit(
 
 \item{fileName}{Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.}
 
-\item{evalType}{Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted}
+\item{evalType}{Which evaluation type to plot for. For example \code{Test}, \code{Train}. If NULL everything is plotted}
 
 \item{ylim}{The y limits for the plot, if NULL the limits are calculated from the data}
 

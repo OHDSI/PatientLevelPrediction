@@ -39,14 +39,14 @@ in the final model. default is the intercept}
 \item{tolerance}{Numeric: maximum relative change in convergence criterionfrom
 from successive iterations to achieve convergence}
 
-\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt 
+\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt
 before returning a failed-to-converge error}
 
-\item{priorCoefs}{Use coefficients from a previous model as starting 
+\item{priorCoefs}{Use coefficients from a previous model as starting
 points for model fit (transfer learning}
 }
 \value{
-`modelSettings` object
+\code{modelSettings} object
 }
 \description{
 Create modelSettings for lasso logistic regression

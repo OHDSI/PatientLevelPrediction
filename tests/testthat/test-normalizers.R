@@ -115,7 +115,7 @@ test_that("normalization works", {
           dplyr::pull(.data$covariateValue))
         trainIQR <- IQR(data$covariateData$covariates %>%
           dplyr::filter(.data$covariateId == 12101) %>%
-          dplyr::pull(.data$covariateValue), type = 1)
+          dplyr::pull(.data$covariateValue))
         testNormFeature <- (testFeature - trainMedian) / trainIQR
         if (clip) {
           testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 3)^2)

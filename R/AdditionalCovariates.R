@@ -198,9 +198,14 @@ getCohortCovariateData <- function(
 #' @param analysisId  The analysisId for the covariate
 #'
 #' @return
-#' An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
+#' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId
 #'  cohortId x 100000 + settingId x 1000 + analysisId
-#'
+#' @examples
+#' createCohortCovariateSettings(cohortName="testCohort",
+#'                               settingId=1,
+#'                               cohortId=1,
+#'                               cohortDatabaseSchema="cohorts",
+#'                               cohortTable="cohort_table")
 #' @export
 createCohortCovariateSettings <- function(
     cohortName,

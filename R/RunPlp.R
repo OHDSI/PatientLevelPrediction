@@ -220,7 +220,7 @@ runPlp <- function(
     dataSummary(data)
   }
   
-  if (executeSettings$runfeatureEngineering) {
+  if (executeSettings$runFeatureEngineering) {
     
     data$Train <- tryCatch(
       {

@@ -10,7 +10,8 @@ loadPrediction(fileLocation)
 \item{fileLocation}{The location with the saved prediction}
 }
 \value{
-The prediction data.frame
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                            The prediction data.frame
+}\if{html}{\out{</div>}}
 }
 \description{
 Loads the prediciton dataframe to csv

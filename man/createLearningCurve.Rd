@@ -21,7 +21,7 @@ createLearningCurve(
   preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
   logSettings = createLogSettings(),
   executeSettings = createExecuteSettings(runSplitData = TRUE, runSampleData = FALSE,
-    runfeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
+    runFeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
     runCovariateSummary = FALSE)
 )
 }
@@ -65,7 +65,7 @@ Therefore, it is recommended to provide \code{trainEvents} rather than
 \code{trainFractions}. Note, providing \code{trainEvents} will override
 your input to \code{trainFractions}. The format should be as follows:
 \itemize{
-  \item \code{c(500, 1000, 1500) } - a list of training events
+\item \code{c(500, 1000, 1500) } - a list of training events
 }}
 
 \item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
@@ -84,10 +84,23 @@ specifying how the logging is done}
 }
 \value{
 A learning curve object containing the various performance measures
- obtained by the model for each training set fraction. It can be plotted
- using \code{plotLearningCurve}.
+obtained by the model for each training set fraction. It can be plotted
+using \code{plotLearningCurve}.
 }
 \description{
 Creates a learning curve object, which can be plotted using the
- \code{plotLearningCurve()} function.
+\code{plotLearningCurve()} function.
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+plpData <- getEunomiaPlpData()
+outcomeId <- 3
+modelSettings <- setLassoLogisticRegression(seed=42)
+learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
+saveDirectory = file.path(tempdir(), "learningCurve"))
+# clean up
+unlink(file.path(tempdir(), "learningCurve"), recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

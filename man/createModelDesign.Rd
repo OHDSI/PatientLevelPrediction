@@ -5,17 +5,16 @@
 \title{Specify settings for developing a single model}
 \usage{
 createModelDesign(
-  targetId,
-  outcomeId,
-  restrictPlpDataSettings = createRestrictPlpDataSettings(),
-  populationSettings = createStudyPopulationSettings(),
-  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+  targetId = NULL,
+  outcomeId = NULL,
+  restrictPlpDataSettings = NULL,
+  populationSettings = NULL,
+  covariateSettings = NULL,
   featureEngineeringSettings = NULL,
   sampleSettings = NULL,
   preprocessSettings = NULL,
   modelSettings = NULL,
-  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
-    trainFraction = 0.75, splitSeed = 123, nfold = 3),
+  splitSettings = NULL,
   runCovariateSummary = TRUE
 )
 }
@@ -50,4 +49,16 @@ Specify settings for developing a single model
 }
 \details{
 This specifies a single analysis for developing as single model
+}
+\examples{
+createModelDesign(
+  targetId = 1,
+  outcomeId = 2,
+  modelSettings = setLassoLogisticRegression(seed=42),
+  populationSettings = createStudyPopulationSettings(),
+  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+  splitSettings = createDefaultSplitSetting(splitSeed = 42),
+  runCovariateSummary = TRUE
+)
 }

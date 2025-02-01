@@ -18,7 +18,7 @@ not yet exist.}
 \item{overwrite}{Whether to force overwrite an existing file}
 }
 \value{
-Called for its side effect, the data will be written to a set of files in the 
+Called for its side effect, the data will be written to a set of files in the
 folder specified by the user.
 }
 \description{

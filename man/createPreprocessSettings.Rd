@@ -11,10 +11,10 @@ createPreprocessSettings(
 )
 }
 \arguments{
-\item{minFraction}{The minimum fraction of target population who must have a 
+\item{minFraction}{The minimum fraction of target population who must have a
 covariate for it to be included in the model training}
 
-\item{normalize}{Whether to normalise the covariates before training 
+\item{normalize}{Whether to normalise the covariates before training
 (Default: TRUE)}
 
 \item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)}
@@ -28,4 +28,8 @@ Create the settings for preprocessing the trainData.
 \details{
 Returns an object of class \code{preprocessingSettings} that specifies how to
 preprocess the training data
+}
+\examples{
+# Create the settings for preprocessing, remove no features, normalise the data
+createPreprocessSettings(minFraction = 0.0, normalize = TRUE, removeRedundancy = FALSE)
 }
