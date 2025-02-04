@@ -51,3 +51,30 @@ Extracts covariates based on cohorts
 The user specifies a cohort and time period and then a covariate is constructed whether they are in the
 cohort during the time periods relative to target population cohort index
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes too long to run and requires internet
+library(DatabseConnector)
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+# create some cohort of people born in 1969, index date is their date of birth
+con <- connect(connectionDetails)
+executeSql(con, "INSERT INTO main.cohort 
+                 SELECT 1969 as COHORT_DEFINITION_ID, PERSON_ID as SUBJECT_ID,
+                 BIRTH_DATETIME as COHORT_START_DATE, BIRTH_DATETIME as COHORT_END_DATE
+                 FROM main.person WHERE YEAR_OF_BIRTH = 1969")
+covariateData <- getCohortCovariateData(connection = con,
+                                        cdmDatabaseSchema = "main",
+                                        aggregated = FALSE,
+                                        rowIdField = "SUBJECT_ID",
+                                       cohortTable = "cohort",
+                                        covariateSettings = createCohortCovariateSettings(
+                                                               cohortName="summerOfLove",
+                                                               cohortId=1969, 
+                                                               settingId=1,
+                                                               cohortDatabaseSchema="main",
+                                                               cohortTable="cohort"))
+covariateData$covariateRef
+covariateData$covariates
+}
+\dontshow{\}) # examplesIf}
+}

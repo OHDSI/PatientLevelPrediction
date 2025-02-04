@@ -92,8 +92,8 @@ Creates a learning curve object, which can be plotted using the
 \code{plotLearningCurve()} function.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet() ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes too long to run and requires internet connection
 plpData <- getEunomiaPlpData()
 outcomeId <- 3
 modelSettings <- setLassoLogisticRegression(seed=42)

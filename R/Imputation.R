@@ -27,6 +27,8 @@
 #' - iterations: The number of iterations to use for imputation
 #' @return The settings for the iterative imputer of class `featureEngineeringSettings`
 #' @examples
+#' # create imputer to impute values with missingness less than 30% using 
+#' # predictive mean matching in 5 iterations with 5 donors
 #' createIterativeImputer(missingThreshold = 0.3, method = "pmm",
 #'                        methodSettings = list(pmm = list(k = 5, iterations = 5)))
 #' @export
@@ -72,6 +74,10 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' @param method The method to use for imputation, either "mean" or "median"
 #' @param missingThreshold The threshold for missing values to be imputed vs removed
 #' @return The settings for the single imputer of class `featureEngineeringSettings`
+#' @examples
+#' # create imputer to impute values with missingness less than 10% using the median
+#' # of observed values
+#' createSimpleImputer(method = "median", missingThreshold = 0.10)
 #' @export
 createSimpleImputer <- function(method = "mean",
                                 missingThreshold = 0.3) {

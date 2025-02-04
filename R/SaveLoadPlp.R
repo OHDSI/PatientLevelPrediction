@@ -77,6 +77,14 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
 #'
 #' @return
 #' An object of class plpData.
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=500)
+#' saveLoc <- file.path(tempdir(), "loadPlpData")
+#' savePlpData(plpData, saveLoc)
+#' dir(saveLoc)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
 #' @export
 loadPlpData <- function(file, readOnly = TRUE) {
   if (!file.exists(file)) {
@@ -231,7 +239,20 @@ saveModelPart <- function(model, savetype, dirPath) {
 #'
 #' @param dirPath                  The location of the model
 #' @return                         The plpModel object
-#'
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "loadPlpModel")
+#' plpResult <- runPlp(plpData, outcomeId=3, saveDirectory = saveLoc)
+#' savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
+#' loadedModel <- loadPlpModel(file.path(saveLoc, "savedModel"))
+#' # show design of loaded model
+#' str(loadedModel$modelDesign)
+#' 
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 loadPlpModel <- function(dirPath) {
   if (!file.exists(dirPath)) {
@@ -323,19 +344,19 @@ loadPlpModel <- function(dirPath) {
 }
 
 
-#' Saves the prediction dataframe to RDS
+#' Saves the prediction dataframe to a json file
 #'
 #' @details
-#' Saves the prediction data frame returned by predict.R to an RDS file and returns the fileLocation where the prediction is saved
+#' Saves the prediction data frame returned by predict.R to an json file and 
+#' returns the fileLocation where the prediction is saved
 #'
-#' @param prediction                   The prediciton data.frame
-#' @param dirPath                     The directory to save the prediction RDS
-#' @param fileName                    The name of the RDS file that will be saved in dirPath
+#' @param prediction                  The prediciton data.frame
+#' @param dirPath                     The directory to save the prediction json
+#' @param fileName                    The name of the json file that will be saved
 #' @return                            The file location where the prediction was saved
 #'
 #' @export
-savePrediction <- function(prediction, dirPath, fileName = "prediction.rds") {
-  # TODO check inupts
+savePrediction <- function(prediction, dirPath, fileName = "prediction.json") {
   ParallelLogger::saveSettingsToJson(
     object = prediction,
     fileName = file.path(dirPath, fileName)
@@ -344,16 +365,25 @@ savePrediction <- function(prediction, dirPath, fileName = "prediction.rds") {
   return(file.path(dirPath, fileName))
 }
 
-#' Loads the prediciton dataframe to csv
+#' Loads the prediction dataframe to json
 #'
 #' @details
-#' Loads the prediciton  RDS file
+#' Loads the prediciton json file
 #'
 #' @param fileLocation                     The location with the saved prediction
 #' @return                                 The prediction data.frame
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "loadPrediction")
+#' results <- runPlp(plpData, outcomeId=3, saveDirectory = saveLoc)
+#' savePrediction(results$prediction, saveLoc)
+#' dir(saveLoc)
+#' loadedPrediction <- loadPrediction(file.path(saveLoc, "prediction.json"))
+#' }
 #' @export
 loadPrediction <- function(fileLocation) {
-  # TODO check inupts
   prediction <- ParallelLogger::loadSettingsFromJson(fileName = fileLocation)
   return(prediction)
 }
@@ -392,7 +422,17 @@ savePlpResult <- function(result, dirPath) {
 #'
 #' @param dirPath                     The directory where the evaluation was saved
 #' @return                            The runPlp object
-#'
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "loadPlpResult")
+#' results <- runPlp(plpData, outcomeId=3, saveDirectory = saveLoc)
+#' savePlpResult(results, saveLoc)
+#' loadedResults <- loadPlpResult(saveLoc)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 loadPlpResult <- function(dirPath) {
   if (!file.exists(dirPath)) {
@@ -503,7 +543,18 @@ removeList <- function(x) {
 #'
 #' @param loadDirectory                     The directory with the results as json/csv files
 #' @return                                  The runPlp object
-#'
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "loadPlpShareable")
+#' results <- runPlp(plpData, outcomeId=3, saveDirectory = saveLoc)
+#' savePlpShareable(results, saveLoc)
+#' dir(saveLoc)
+#' loadedResults <- loadPlpShareable(saveLoc)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 loadPlpShareable <- function(loadDirectory) {
   result <- list()
@@ -619,7 +670,6 @@ removeCellCount <- function(
 }
 
 
-# add test for this - cant save json to csv - remove this...
 #' Exports all the results from a database into csv files
 #'
 #' @details
@@ -633,7 +683,24 @@ removeCellCount <- function(
 #' @param sensitiveColumns A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.
 #' @param fileAppend     If set to a string this will be appended to the start of the csv file names
 #' @return The directory path where the results were saved
-#'
+#' @examples
+#' \donttest{ # takes too long
+#' # develop a simple model on simulated data
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=500)
+#' saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
+#' results <- runPlp(plpData, outcomeId=3)
+#' # now upload the results to a sqlite database
+#' databasePath <- insertResultsToSqlite(saveLoc)
+#' # now extract the results to csv
+#' connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = databasePath)
+#' extractDatabaseToCsv(connectionDetails = connectionDetails,
+#'                      csvFolder = file.path(saveLoc, "csv"))
+#' # show csv file
+#' list.files(file.path(saveLoc, "csv"))
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 extractDatabaseToCsv <- function(
     conn = NULL,

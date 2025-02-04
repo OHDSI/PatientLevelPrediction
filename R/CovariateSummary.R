@@ -35,12 +35,11 @@
 #' @param featureEngineering                 (currently not used )
 #'                                           A function or list of functions specifying any feature engineering
 #'                                           to create covariates before summarising
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
-#' plpData <- getEunomiaPlpData()
-#' covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohort)
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=100)
+#' covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #' head(covariateSummary)
-#' }
 #' @return
 #' A data.frame containing: CovariateCount, CovariateMean and CovariateStDev 
 #' for any specified stratification

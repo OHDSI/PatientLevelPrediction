@@ -28,13 +28,13 @@ Create a generalized linear model that can be used in the
 PatientLevelPrediction package.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{coefficients <- data.frame(
+coefficients <- data.frame(
   covariateId = c(1002),
   coefficient = c(0.05))
 model <- createGlmModel(coefficients, intercept = -2.5)
-plpData <- getEunomiaPlpData()
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=50)
 prediction <- predictPlp(model, plpData, plpData$cohorts)
-}
-\dontshow{\}) # examplesIf}
+# see the predicted risk values
+prediction$value
 }

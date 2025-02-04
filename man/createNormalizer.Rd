@@ -26,6 +26,6 @@ Create the settings for normalizing the data @param type The type of normalizati
 # create a minmax normalizer that normalizes the data between 0 and 1
 normalizer <- createNormalizer(type = "minmax")
 # create a robust normalizer that normalizes the data by the interquartile range
-# and clips the values to be between -3 and 3
+# and squeezes the values to be between -3 and 3
 normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
 }

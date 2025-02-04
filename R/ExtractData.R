@@ -49,7 +49,7 @@
 #' \item{`sampleSize`: If not NULL, the number of people to sample from the target cohort}
 #' }
 #' @examples
-#' # restrict 2010, first exposure only, require washout period of 365 day
+#' # restrict to 2010, first exposure only, require washout period of 365 day
 #' # and sample 1000 people
 #' createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
 #' firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)
@@ -132,8 +132,8 @@ createRestrictPlpDataSettings <- function(
 #' \item{`outcomeIds`: A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
 #' \item{`cdmVersion`: Define the OMOP CDM version used: currently support "4" and "5".}
 #' }
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long and requires internet
 #' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 #' # create the database details for Eunomia example database
 #' createDatabaseDetails(
@@ -144,8 +144,8 @@ createRestrictPlpDataSettings <- function(
 #'   cohortTable = "cohort",
 #'   outcomeDatabaseSchema = "main",
 #'   outcomeTable = "cohort",
-#'   targetId = 1,
-#'   outcomeIds = 3,
+#'   targetId = 1, # users of celecoxib
+#'   outcomeIds = 3, # GIbleed
 #'   cdmVersion = 5)
 #' }
 #' @export
@@ -256,12 +256,12 @@ NULL
 #' Created using \code{createRestrictPlpDataSettings()}. This is optional.
 #'
 #' @return 'r plpDataObjectDoc()`
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long and requires internet
+#'  # use Eunomia database
 #'  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 #'  Eunomia::createCohorts(connectionDetails)
 #'  outcomeId <- 3 # GIbleed
-#'
 #'  databaseDetails <- createDatabaseDetails(
 #'    connectionDetails = connectionDetails,
 #'    cdmDatabaseSchema = "main",
@@ -285,7 +285,8 @@ NULL
 #'    databaseDetails = databaseDetails,
 #'    covariateSettings = covariateSettings,
 #'    restrictPlpDataSettings = createRestrictPlpDataSettings()
-#'  )}
+#'  )
+#' }
 #' @export
 getPlpData <- function(
     databaseDetails,
@@ -520,11 +521,10 @@ getPlpData <- function(
 #' @param x The plpData object to print
 #' @param ... Additional arguments
 #' @return A message describing the object
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
-#' plpData <- getEunomiaPlpData()
+#' @examples  
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=10)
 #' print(plpData)
-#' }
 #' @export
 print.plpData <- function(x, ...) {
   writeLines("plpData object")
@@ -538,11 +538,10 @@ print.plpData <- function(x, ...) {
 #' @param object The plpData object to summarize
 #' @param ... Additional arguments
 #' @return A summary of the object containing the number of people, outcomes and covariates
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
-#' plpData <- getEunomiaPlpData()
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=10)
 #' summary(plpData)
-#' }
 #' @export
 summary.plpData <- function(object, ...) {
   people <- length(unique(object$cohorts$subjectId))
@@ -574,12 +573,11 @@ summary.plpData <- function(object, ...) {
 #' @param x The summary.plpData object to print
 #' @param ... Additional arguments
 #' @return A message describing the object
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
-#' plpData <- getEunomiaPlpData()
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=10)
 #' summary <- summary(plpData)
 #' print(summary)
-#' }
 print.summary.plpData <- function(x, ...) {
   writeLines("plpData object summary")
   writeLines("")
@@ -609,8 +607,8 @@ print.summary.plpData <- function(x, ...) {
 #' \code{createCovariateSettings} function in the \code{FeatureExtraction} package.
 #' If nothing is specified covariates with age, gender, conditions and drug era are used.
 #' @return `r plpDataObjectDoc()`
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long and requires internet
 #' covariateSettings <- FeatureExtraction::createCovariateSettings(
 #'   useDemographicsAge = TRUE,
 #'   useDemographicsGender = TRUE,
@@ -620,7 +618,7 @@ print.summary.plpData <- function(x, ...) {
 #' }
 #' @export
 getEunomiaPlpData <- function(covariateSettings = NULL) {
-  rlang::is_installed("Eunomia")
+  rlang::check_installed("Eunomia")
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   Eunomia::createCohorts(connectionDetails)
   outcomeId <- 3 # GIbleed
@@ -642,8 +640,8 @@ getEunomiaPlpData <- function(covariateSettings = NULL) {
     covariateSettings <- FeatureExtraction::createCovariateSettings(
       useDemographicsAge = TRUE,
       useDemographicsGender = TRUE,
-      useConditionOccurrenceAnyTimePrior = TRUE,
-      useDrugEraAnyTimePrior = TRUE
+      useConditionOccurrenceLongTerm = TRUE,
+      useDrugEraLongTerm = TRUE
     )
   }
 

@@ -105,6 +105,8 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
 #' set folds
 #' @return An object of class \code{splitSettings}
 #' @examples
+#' # rowId 1 is in fold 1, rowId 2 is in fold 2, rowId 3 is in the test set
+#' # rowId 4 is in fold 1, rowId 5 is in fold 2
 #' createExistingSplitSettings(splitIds = data.frame(rowId = c(1, 2, 3, 4, 5),
 #'                                                   index = c(1, 2, -1, 1, 2)))
 #' @export
@@ -153,7 +155,7 @@ createExistingSplitSettings <- function(splitIds) {
 #' @export
 splitData <- function(plpData = plpData,
                       population = population,
-                      splitSettings = splitSettings) {
+                      splitSettings = createDefaultSplitSetting(splitSeed = 42)) {
   start <- Sys.time()
   fun <- attr(splitSettings, "fun")
   args <- list(

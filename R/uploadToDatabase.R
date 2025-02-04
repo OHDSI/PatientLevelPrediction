@@ -106,11 +106,27 @@ insertRunPlpToSqlite <- function(
 #'
 #' @return
 #' Returns the location of the sqlite database file
-#'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long
+#' plpData <- getEunomiaPlpData()
+#' saveLoc <- file.path(tempdir(), "insertResultsToSqlite")
+#' results <- runPlp(plpData, outcomeId = 3, analysisId = 1, saveDirectory = saveLoc)
+#' databaseFile <- insertResultsToSqlite(saveLoc, cohortDefinitions = NULL, sqliteLocation = file.path(saveLoc, "sqlite"))
+#' # check there is some data in the database
+#' library(DatabaseConnector)
+#' connectionDetails <- createConnectionDetails(
+#'   dbms = "sqlite",
+#'   server = databaseFile)
+#' conn <- connect(connectionDetails)
+#' # All tables should be created
+#' getTableNames(conn, databaseSchema = "main")
+#' # There is data in the tables
+#' querySql(conn, "SELECT * FROM main.model_designs limit 10")
+#' }
 #' @export
 insertResultsToSqlite <- function(
     resultLocation,
-    cohortDefinitions,
+    cohortDefinitions = NULL,
     databaseList = NULL,
     sqliteLocation = file.path(resultLocation, "sqlite")) {
   if (!dir.exists(sqliteLocation)) {
@@ -407,9 +423,6 @@ createDatabaseSchemaSettings <- function(
     tablePrefixCohortDefinitionTables = tablePrefix,
     databaseDefinitionSchema = resultSchema,
     tablePrefixDatabaseDefinitionTables = tablePrefix) {
-  if (missing(resultSchema)) {
-    stop("resultSchema required")
-  }
   if (!inherits(x = resultSchema, what = "character")) {
     stop("resultSchema must be a string")
   }
@@ -927,8 +940,10 @@ getResultLocations <- function(resultLocation) {
     full.names = TRUE
   )
   # automatically find Results folder, to handle both plpResult/ and validationResult/
-  resultLocs <- file.path(resultLocs, dir(resultLocs, pattern = "Result"))
-
+  analysisFolders <- list.files(resultLocation, full.names = TRUE)
+  resultLocs <- unlist(lapply(analysisFolders, function(folder) { 
+    candidate <- list.files(folder, pattern = "^(plpResult|validationResult)$", full.names = TRUE)
+    if (length(candidate) > 0) candidate else NULL }))
 
   if (dir.exists(file.path(resultLocation, "Validation"))) {
     validationDatabases <- dir(file.path(resultLocation, "Validation"))

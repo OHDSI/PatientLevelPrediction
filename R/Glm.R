@@ -32,14 +32,16 @@
 #' "logistic" for logistic regression model at the moment. 
 #' @return A model object containing the model (Coefficients and intercept)
 #' and the prediction function.
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{coefficients <- data.frame(
+#' @examples
+#' coefficients <- data.frame(
 #'   covariateId = c(1002),
 #'   coefficient = c(0.05))
 #' model <- createGlmModel(coefficients, intercept = -2.5)
-#' plpData <- getEunomiaPlpData()
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=50)
 #' prediction <- predictPlp(model, plpData, plpData$cohorts)
-#' }
+#' # see the predicted risk values
+#' prediction$value
 #' @export
 createGlmModel <- function(coefficients,
                            intercept = 0,
@@ -95,6 +97,17 @@ createGlmModel <- function(coefficients,
 #' @param cohort The population dataframe created using
 #' \code{createStudyPopulation} who will have their risks predicted or a cohort
 #' without the outcome known
+#' @export
+#' @examples
+#' coefficients <- data.frame(
+#'   covariateId = c(1002),
+#'   coefficient = c(0.05))
+#' model <- createGlmModel(coefficients, intercept = -2.5)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=50)
+#' prediction <- predictGlm(model, plpData, plpData$cohorts)
+#' # see the predicted risk values
+#' head(prediction)
 #' @export
 #' @return A dataframe containing the prediction for each person in the 
 #' population

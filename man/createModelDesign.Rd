@@ -51,6 +51,8 @@ Specify settings for developing a single model
 This specifies a single analysis for developing as single model
 }
 \examples{
+# L1 logistic regression model to predict the outcomeId 2 using the targetId 2
+# with with default population, restrictPlp, split, and covariate settings
 createModelDesign(
   targetId = 1,
   outcomeId = 2,

@@ -36,6 +36,46 @@
 #' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 #'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                          cdmDatabaseSchema = "main",
+#'                                          cohortDatabaseSchema = "main",
+#'                                          cohortTable = "cohort",
+#'                                          outcomeDatabaseSchema = "main",
+#'                                          outcomeTable = "cohort",
+#'                                          targetId = 1,
+#'                                          outcomeIds = 2)
+#' Eunomia::createCohorts(connectionDetails = connectionDetails)
+#' covariateSettings <- FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE, useDemographicsAge = TRUE, useConditionOccurrenceLongTerm = TRUE)
+#' # GI Bleed in users of celecoxib
+#' modelDesign <- createModelDesign(targetId = 1, 
+#'                                  outcomeId = 3, 
+#'                                  modelSettings = setLassoLogisticRegression(seed = 42),
+#'                                  populationSettings = createStudyPopulationSettings(),
+#'                                  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'                                  covariateSettings = covariateSettings,
+#'                                  splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'                                  preprocessSettings = createPreprocessSettings())
+#' # GI Bleed in users of NSAIDs
+#' modelDesign2 <- createModelDesign(targetId = 4,
+#'                                   outcomeId = 3,
+#'                                   modelSettings = setLassoLogisticRegression(seed = 42),
+#'                                   populationSettings = createStudyPopulationSettings(),
+#'                                   restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'                                   covariateSettings = covariateSettings,
+#'                                   splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'                                   preprocessSettings = createPreprocessSettings())
+#' saveLoc <- file.path(tempdir(), "runMultiplePlp")
+#' multipleResults <- runMultiplePlp(databaseDetails = databaseDetails,
+#'                                   modelDesignList = list(modelDesign, modelDesign2),
+#'                                   saveDirectory = saveLoc)
+#' # You should see results for two developed models in the ouutput. The output is as well
+#' # uploaded to a sqlite database in the saveLoc/sqlite folder, 
+#' # The results can be explored in the shiny app by calling viewMultiplePlp(saveLoc)
+#'
+#' # clean up (viewing the results in the shiny app is won't work after this)
+#' unlink(saveLoc, recursive = TRUE)
 #' @export
 runMultiplePlp <- function(
     databaseDetails = createDatabaseDetails(),
@@ -253,6 +293,8 @@ runMultiplePlp <- function(
 #' A list with analysis settings used to develop a single prediction model
 #' 
 #' @examples
+#' # L1 logistic regression model to predict the outcomeId 2 using the targetId 2
+#' # with with default population, restrictPlp, split, and covariate settings
 #' createModelDesign(
 #'   targetId = 1,
 #'   outcomeId = 2,
@@ -413,6 +455,13 @@ savePlpAnalysesJson <- function(
 #'
 #' @param jsonFileLocation    The location of the file 'predictionAnalysisList.json' with the modelDesignList
 #' @return A list with the modelDesignList and cohortDefinitions
+#' @examples
+#' modelDesign <- createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression())
+#' saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
+#' savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
+#' loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
+#' # clean use
+#' unlink(saveLoc, recursive = TRUE)
 #' @export
 loadPlpAnalysesJson <- function(
     jsonFileLocation) {

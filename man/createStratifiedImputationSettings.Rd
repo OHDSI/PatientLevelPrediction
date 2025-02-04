@@ -2,7 +2,7 @@
 % Please edit documentation in R/FeatureEngineering.R
 \name{createStratifiedImputationSettings}
 \alias{createStratifiedImputationSettings}
-\title{Create the settings for adding a spline for continuous variables}
+\title{Create the settings for using stratified imputation.}
 \usage{
 createStratifiedImputationSettings(covariateId, ageSplits = NULL)
 }
@@ -15,8 +15,15 @@ createStratifiedImputationSettings(covariateId, ageSplits = NULL)
 An object of class \code{featureEngineeringSettings}
 }
 \description{
-Create the settings for adding a spline for continuous variables
+Create the settings for using stratified imputation.
 }
 \details{
-Returns an object of class \code{featureEngineeringSettings} that specifies how to do stratified imputation
+Returns an object of class \code{featureEngineeringSettings} that specifies
+how to do stratified imputation. This function splits the covariate into
+age groups and fits splines to the covariate within each age group. The spline
+values are then used to impute missing values.
+}
+\examples{
+# create a stratified imputation settings for covariate 1050 with age splits at 50 and 70
+stratifiedImputationSettings <- createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
 }

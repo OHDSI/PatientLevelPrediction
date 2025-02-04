@@ -18,11 +18,8 @@ A message describing the object
 Print a summary.plpData object
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{
-plpData <- getEunomiaPlpData()
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=10)
 summary <- summary(plpData)
 print(summary)
-}
-\dontshow{\}) # examplesIf}
 }

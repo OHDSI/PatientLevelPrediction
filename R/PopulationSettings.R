@@ -41,6 +41,12 @@
 #' @return
 #' An object of type populationSettings containing all the settings required 
 #' for creating the study population
+#' @examples
+#' # Create study population settings with a washout period of 30 days and a 
+#' # risk window of 1 to 90 days
+#' populationSettings <- createStudyPopulationSettings(washoutPeriod = 30, 
+#'                                                     riskWindowStart = 1,
+#'                                                     riskWindowEnd = 90)
 #' @export
 createStudyPopulationSettings <- function(
     binary = TRUE,
@@ -161,12 +167,22 @@ createStudyPopulationSettings <- function(
 #' \item{timeAtRisk}{The number of days in the risk window}
 #' \item{survivalTime}{The number of days until either the outcome or the end of the risk window}
 #' }
-#'
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 100)
+#' # Create study population, require time at risk of 30 days. The risk window is 1 to 90 days.
+#' populationSettings <- createStudyPopulationSettings(requireTimeAtRisk = TRUE,
+#'                                                      minTimeAtRisk = 30,
+#'                                                      riskWindowStart = 1,
+#'                                                      riskWindowEnd = 90)
+#' population <- createStudyPopulation(plpData, outcomeId = 3, populationSettings)
+#' }
 #' @export
 createStudyPopulation <- function(
     plpData,
     outcomeId,
-    populationSettings,
+    populationSettings = createStudyPopulationSettings(),
     population = NULL) {
   start <- Sys.time()
   checkIsClass(populationSettings, "populationSettings")

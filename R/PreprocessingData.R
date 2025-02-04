@@ -26,6 +26,9 @@
 #' @param normalize Whether to normalise the covariates before training 
 #' (Default: TRUE)
 #' @param removeRedundancy Whether to remove redundant features (Default: TRUE)
+#' Redundant features are features that within an analysisId together cover all
+#' observations. For example with ageGroups, if you have ageGroup 0-18 and 18-100
+#' and all patients are in one of these groups, then one of these groups is redundant.
 #' @return
 #' An object of class `preprocessingSettings`
 #' @examples
@@ -65,11 +68,17 @@ createPreprocessSettings <- function(
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
-#' @keywords internal
 #' The data processed
 #' @return The covariateData object with the processed covariates
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettings())
+#' # check age is normalized by max value
+#' preProcessedData$covariates %>% dplyr::filter(.data$covariateId == 1002)
+#' @export
 preprocessData <- function(covariateData,
-                           preprocessSettings) {
+                           preprocessSettings = createPreprocessSettings()) {
   metaData <- attr(covariateData, "metaData")
   preprocessSettingsInput <- preprocessSettings # saving this before adding covariateData
 

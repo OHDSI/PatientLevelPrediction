@@ -36,3 +36,22 @@ parameters
 \details{
 The user can define the machine learning model to train
 }
+\examples{
+\donttest{ # takes too long
+# simulate data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# create study population, split into train/test and preprocess with default settings
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population, createDefaultSplitSetting())
+data$Train$covariateData <- preprocessData(data$Train$covariateData)
+saveLoc <- file.path(tempdir(), "fitPlp")
+# fit a lasso logistic regression model using the training data
+plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                   analysisId=1, analysisPath=saveLoc)
+# show evaluationSummary for model
+evaluatePlp(plpModel$prediction)$evaluationSummary
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

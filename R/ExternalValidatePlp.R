@@ -170,7 +170,30 @@ externalValidatePlp <- function(plpModel,
 #' - prediction: A dataframe containing the predictions
 #' - performanceEvaluation: A dataframe containing the performance metrics
 #' - covariateSummary: A dataframe containing the covariate summary
-#'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long and requires internet
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' # first fit a model on some data, default is a L1 logistic regression
+#' results <- runPlp(plpData, outcomeId = 3, 
+#' populationSettings = createStudyPopulationSettings(requireTimeAtRisk=FALSE))
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails)
+#' # now validate the model on Eunomia
+#' validationDatabaseDetails <- createDatabaseDetails(
+#'   connectionDetails = connectionDetails,
+#'   cdmDatabaseSchema = "main",
+#'   cdmDatabaseName = "main",
+#'   cohortDatabaseSchema = "main",
+#'   cohortTable = "cohort",
+#'   outcomeDatabaseSchema = "main",
+#'   outcomeTable = "cohort",
+#'   targetId = 1, # users of celecoxib
+#'   outcomeIds = 3, # GIbleed
+#'   cdmVersion = 5)
+#' path <- file.path(tempdir(), "validation")
+#' externalValidateDbPlp(results$model, validationDatabaseDetails, outputFolder = path)
+#' }
 #' @export
 externalValidateDbPlp <- function(plpModel,
                                   validationDatabaseDetails = createDatabaseDetails(),
@@ -356,6 +379,10 @@ externalValidateDbPlp <- function(plpModel,
 #' @param runCovariateSummary              Whether to run the covariate summary for the validation data
 #' @return
 #' A setting object of class \code{validationSettings} containing a list of settings for externalValidatePlp
+#' @examples
+#' # do weak recalibration and don't run covariate summary
+#' createValidationSettings(recalibrate = "weakRecalibration", 
+#'                          runCovariateSummary = FALSE)
 #'
 #' @export
 createValidationSettings <- function(recalibrate = NULL,
@@ -392,6 +419,11 @@ createValidationSettings <- function(recalibrate = NULL,
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data
 #' @return A validation design object of class \code{validationDesign} or a list of such objects
+#' @examples
+#' # create a validation design for targetId 1 and outcomeId 2 one l1 model and 
+#' # one gradient boosting model
+#' createValidationDesign(1, 2, plpModelList = list(
+#' "pathToL1model", "PathToGBMModel"))
 #' @export
 createValidationDesign <-
   function(targetId,

@@ -35,12 +35,12 @@ manually add the concept_ids and descendants to the \code{excludedCovariateConce
 \code{covariateSettings} argument.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes too long and requires internet
+ # use Eunomia database
  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
  Eunomia::createCohorts(connectionDetails)
  outcomeId <- 3 # GIbleed
-
  databaseDetails <- createDatabaseDetails(
    connectionDetails = connectionDetails,
    cdmDatabaseSchema = "main",
@@ -64,6 +64,7 @@ manually add the concept_ids and descendants to the \code{excludedCovariateConce
    databaseDetails = databaseDetails,
    covariateSettings = covariateSettings,
    restrictPlpDataSettings = createRestrictPlpDataSettings()
- )}
+ )
+}
 \dontshow{\}) # examplesIf}
 }

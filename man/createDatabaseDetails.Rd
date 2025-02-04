@@ -86,8 +86,8 @@ This function simply stores the settings for communicating with the cdmDatabase 
 the target cohort and outcomes
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes too long and requires internet
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 # create the database details for Eunomia example database
 createDatabaseDetails(
@@ -98,8 +98,8 @@ createDatabaseDetails(
   cohortTable = "cohort",
   outcomeDatabaseSchema = "main",
   outcomeTable = "cohort",
-  targetId = 1,
-  outcomeIds = 3,
+  targetId = 1, # users of celecoxib
+  outcomeIds = 3, # GIbleed
   cdmVersion = 5)
 }
 \dontshow{\}) # examplesIf}

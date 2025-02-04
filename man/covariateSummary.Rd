@@ -44,11 +44,8 @@ by train and test set
 The function calculates various metrics to measure the performance of the model
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{
-plpData <- getEunomiaPlpData()
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=100)
 covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohort)
 head(covariateSummary)
-}
-\dontshow{\}) # examplesIf}
 }

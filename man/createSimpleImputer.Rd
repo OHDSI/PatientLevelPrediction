@@ -18,3 +18,8 @@ The settings for the single imputer of class \code{featureEngineeringSettings}
 This function creates the settings for a simple imputer
 which imputes missing values with the mean or median
 }
+\examples{
+# create imputer to impute values with missingness less than 10\% using the median
+# of observed values
+createSimpleImputer(method = "median", missingThreshold = 0.10)
+}

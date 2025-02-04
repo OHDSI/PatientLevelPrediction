@@ -29,7 +29,16 @@
 #' @param returnModel                      Logical: return the refitted model
 #' @return
 #' An prediction dataframe with the predictions of the recalibrated model added
-#'
+#' @examples
+#' \donttest{# takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' saveLoc <- file.path(tempdir(), "recalibratePlpRefit")
+#' plpResults <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' newData <- simulatePlpData(simulationProfile, n = 1000)
+#' newPopulation <- createStudyPopulation(newData, outcomeId = 3)
+#' predictions <- recalibratePlpRefit(plpModel = plpResults$model, newPopulation = newPopulation, newData = newData)
+#' }
 #' @export
 recalibratePlpRefit <- function(
     plpModel,
@@ -155,8 +164,25 @@ recalibratePlpRefit <- function(
 #' @param method                          Method used to recalibrate ('recalibrationInTheLarge' or 'weakRecalibration' )
 #' @return
 #' A prediction dataframe with the recalibrated predictions added
-#'
-
+#' @examples
+#' prediction <- data.frame(rowId = 1:100,
+#'                          value = runif(100),
+#'                          outcomeCount = rbinom(100, 1, 0.1),
+#'                          evaluationType = rep("validation", 100))
+#' attr(prediction, "metaData") <- list(modelType = "binary")
+#' # since value is unformally distributed but outcomeCount is not (prob <- 0.1)
+#' # the predictions are mis-calibrated
+#' outcomeRate <- mean(prediction$outcomeCount)
+#' observedRisk <- mean(prediction$value)
+#' message("outcome rate is: ", outcomeRate)
+#' message("observed risk is: ", observedRisk)
+#' # lets recalibrate the predictions
+#' prediction <- recalibratePlp(prediction, analysisId = "recalibration", method = "recalibrationInTheLarge")
+#' recalibratedRisk <- mean(prediction$value)
+#' message("recalibrated risk with recalibration in the large is: ", recalibratedRisk)
+#' prediction <- recalibratePlp(prediction, analysisId = "recalibration", method = "weakRecalibration")
+#' recalibratedRisk <- mean(prediction$value)
+#' message("recalibrated risk with weak recalibration is: ", recalibratedRisk)
 #' @export
 recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType",
                            method = c("recalibrationInTheLarge", "weakRecalibration")) {

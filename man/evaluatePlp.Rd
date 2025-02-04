@@ -28,3 +28,18 @@ Evaluates the performance of the patient level prediction model
 \details{
 The function calculates various metrics to measure the performance of the model
 }
+\examples{
+\donttest{ takes too long to run
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n= 1500)
+population <- createStudyPopulation(plpData, outcomeId = 3, 
+                                    populationSettings = createStudyPopulationSettings())
+data <- splitData(plpData, population, splitSettings=createDefaultSplitSetting(splitSeed=42))
+data$Train <- preprocessData(data$Train$covariateData, createPreprocessSettings())
+path <- file.path(tempdir(), "plp")
+model <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                analysisId=1, analysisPath = path)
+                analysisId=1, analysisPath = path)
+evaluatePlp(model$prediction) # Train and CV metrics
+}
+}

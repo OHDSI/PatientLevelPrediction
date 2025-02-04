@@ -49,7 +49,7 @@ This function creates the settings used to restrict the target cohort when calli
 Users need to specify the extra restrictions to apply when downloading the target cohort
 }
 \examples{
-# restrict 2010, first exposure only, require washout period of 365 day
+# restrict to 2010, first exposure only, require washout period of 365 day
 # and sample 1000 people
 createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
 firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)

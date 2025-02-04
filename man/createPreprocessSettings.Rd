@@ -17,7 +17,10 @@ covariate for it to be included in the model training}
 \item{normalize}{Whether to normalise the covariates before training
 (Default: TRUE)}
 
-\item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)}
+\item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)
+Redundant features are features that within an analysisId together cover all
+observations. For example with ageGroups, if you have ageGroup 0-18 and 18-100
+and all patients are in one of these groups, then one of these groups is redundant.}
 }
 \value{
 An object of class \code{preprocessingSettings}

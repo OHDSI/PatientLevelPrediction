@@ -116,7 +116,7 @@ test_that("simpleImpute works", {
   expect_equal(length(newFeature), nrow(imputedData$labels))
   expect_equal(mean(originalFeature), unique(imputedFeature))
 
-  missingTestData <- createMissingData(testData, 0.2)
+  missingTestData <- createMissingData(testData, 0.4)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
@@ -208,7 +208,7 @@ test_that("IterativeImputer works", {
   expect_true(length(newFeature) > length(originalFeature))
   expect_equal(length(newFeature), nrow(imputedData$labels))
 
-  missingTestData <- createMissingData(testData, 0.2)
+  missingTestData <- createMissingData(testData, 0.4)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings

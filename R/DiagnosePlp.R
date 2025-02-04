@@ -32,7 +32,6 @@
 #' for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
 #' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
-#'
 #' @export
 diagnoseMultiplePlp <- function(
     databaseDetails = createDatabaseDetails(),
@@ -235,6 +234,17 @@ diagnoseMultiplePlp <- function(
 #' \item{`incident`: List for each O of incidence of O in T during TAR}
 #' \item{`characterization`: List for each O of Characterization of T, TnO, Tn~O}
 #' }
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes long and requires internet
+#' 
+#' # load the data
+#' plpData <- getEunomiaPlpData()
+#' populationSettings <- createStudyPopulationSettings(minTimeAtRisk = 1)
+#' saveDirectory <- file.path(tempdir(), "diagnosePlp")
+#' diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, populationSettings = populationSettings, saveDirectory = saveDirectory)
+#' }
+#' # clean up
+#' unlink(saveDirectory, recursive = TRUE)
 #' @export
 diagnosePlp <- function(
     plpData = NULL,

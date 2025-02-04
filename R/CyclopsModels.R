@@ -253,6 +253,18 @@ fitCyclopsModel <- function(
 #'                          \code{\link{fitPlp}}.
 #' @param data         The new plpData containing the covariateData for the new population
 #' @param cohort       The cohort to calculate the prediction for
+#' @examples
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' population <- createStudyPopulation(plpData, outcomeId = 3)
+#' data <- splitData(plpData, population)
+#' plpModel <- fitPlp(data$Train, modelSettings = setLassoLogisticRegression(),
+#'                    analysisId = "test", analysisPath = NULL)
+#' prediction <- predictCyclops(plpModel, data$Test, data$Test$labels)
+#' # view prediction dataframe
+#' head(prediction)
+#' }
 #' @export
 predictCyclops <- function(plpModel, data, cohort) {
   start <- Sys.time()
@@ -294,7 +306,7 @@ predictCyclops <- function(plpModel, data, cohort) {
 }
 
 predictCyclopsType <- function(coefficients, population, covariateData, modelType = "logistic") {
-  if (!(modelType %in% c("logistic", "poisson", "survival", "cox"))) {
+  if (!(modelType %in% c("logistic", "poisson", "survival", "cox", "linear"))) {
     stop(paste("Unknown modelType:", modelType))
   }
   if (!FeatureExtraction::isCovariateData(covariateData)) {

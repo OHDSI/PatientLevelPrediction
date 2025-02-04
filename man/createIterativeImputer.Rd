@@ -31,6 +31,8 @@ which first removes features with more than \code{missingThreshold} missing valu
 and then imputes the missing values iteratively using chained equations
 }
 \examples{
+# create imputer to impute values with missingness less than 30\% using 
+# predictive mean matching in 5 iterations with 5 donors
 createIterativeImputer(missingThreshold = 0.3, method = "pmm",
                        methodSettings = list(pmm = list(k = 5, iterations = 5)))
 }

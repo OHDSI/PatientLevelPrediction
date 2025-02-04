@@ -35,7 +35,7 @@ Returns an object of class \code{sampleSettings} that specifies the sampling fun
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
-# even rate of outcomes to non-outcomes
+# sample even rate of outcomes to non-outcomes
 sampleSetting <- createSampleSettings(type = "underSample", 
                                       numberOutcomestoNonOutcomes = 1, 
                                       sampleSeed = 42)

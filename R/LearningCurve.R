@@ -67,13 +67,14 @@
 #' @return A learning curve object containing the various performance measures
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{
-#' plpData <- getEunomiaPlpData()
+#' @examplesIf rlang::is_installed("parallel")
+#' \donttest{ # takes too long
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
 #' outcomeId <- 3
 #' modelSettings <- setLassoLogisticRegression(seed=42)
 #' learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
-#' saveDirectory = file.path(tempdir(), "learningCurve"))
+#' saveDirectory = file.path(tempdir(), "learningCurve"), cores = 2)
 #' # clean up
 #' unlink(file.path(tempdir(), "learningCurve"), recursive = TRUE)
 #' }
@@ -333,6 +334,16 @@ learningCurveHelper <- function(result, trainFractions) {
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 #' file in a different format.
+#' @examplesIf rlang::is_installed("parallel")
+#' \donttest{ # takes too long to run
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' outcomeId <- 3
+#' modelSettings <- setLassoLogisticRegression(seed=42)
+#' learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
+#' saveDirectory = file.path(tempdir(), "learningCurve"), cores = 2)
+#' plotLearningCurve(learningCurve)
+#' }
 #' @export
 plotLearningCurve <- function(
     learningCurve,

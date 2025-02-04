@@ -70,12 +70,20 @@ createFeatureEngineeringSettings <- function(type = "none") {
 #' Create the settings for defining any feature selection that will be done
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies 
+#' the function that will be called and the settings. Uses the scikit-learn
+#' SelectKBest function with chi2 for univariate feature selection.
 #'
-#' @param k              This function returns the K features most associated (univariately) to the outcome
+#' @param k              This function returns the K features most associated 
+#' (univariately) to the outcome
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' \dontrun{ # requires python and scikit-learn
+#' # create a feature selection that selects the 100 most associated features
+#' featureSelector <- createUnivariateFeatureSelection(k = 100) 
+#' }
 #' @export
 createUnivariateFeatureSelection <- function(k = 100) {
   if (inherits(k, "numeric")) {
@@ -117,7 +125,7 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
 #' \dontrun{ # requires python and scikit-learn
-#' featureSeletor <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+#' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 #' }
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
@@ -160,6 +168,9 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' # create splines for age (1002) with 5 knots
+#' createSplineSettings(continousCovariateId = 1002, knots = 5, analysisId = 683)
 #' @export
 createSplineSettings <- function(
     continousCovariateId,
@@ -305,16 +316,22 @@ splineMap <- function(
 
 
 
-#' Create the settings for adding a spline for continuous variables
+#' Create the settings for using stratified imputation.
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies how to do stratified imputation
+#' Returns an object of class \code{featureEngineeringSettings} that specifies 
+#' how to do stratified imputation. This function splits the covariate into
+#' age groups and fits splines to the covariate within each age group. The spline
+#' values are then used to impute missing values.
 #'
 #' @param covariateId     The covariateId that needs imputed values
 #' @param ageSplits       A vector of age splits in years to create age groups
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' # create a stratified imputation settings for covariate 1050 with age splits at 50 and 70
+#' stratifiedImputationSettings <- createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
 #' @export
 createStratifiedImputationSettings <- function(
     covariateId,
@@ -550,7 +567,7 @@ randomForestFeatureSelection <- function(
 #' # create a minmax normalizer that normalizes the data between 0 and 1
 #' normalizer <- createNormalizer(type = "minmax")
 #' # create a robust normalizer that normalizes the data by the interquartile range
-#' # and clips the values to be between -3 and 3
+#' # and squeezes the values to be between -3 and 3
 #' normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
 #' @export
 createNormalizer <- function(type = "minmax",
@@ -775,8 +792,8 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @param threshold The minimum fraction of the training data that must have a
 #' feature for it to be included
 #' @return An object of class \code{featureEngineeringSettings}
-#' @examplesIf rlang::is_installed("Eunomia")
-#' \donttest{ 
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ # takes too long and requires internet
 #' # create a rare feature remover that removes features that are present in less
 #' # than 1% of the population
 #' rareFeatureRemover <- createRareFeatureRemover(threshold = 0.01)

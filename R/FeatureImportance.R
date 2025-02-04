@@ -34,6 +34,20 @@
 #'
 #' @return
 #' A dataframe with the covariateIds and the pfi (change in AUC caused by permuting the covariate) value
+#' @examples
+#' \donttest{ # takes too long
+#' # simulate some data
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' # now fit a model
+#' saveLoc <- file.path(tempdir(), "pfi")
+#' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' population <- createStudyPopulation(plpData, outcomeId = 3)
+#  # calculate permutation feature importance for nonzero coefficients
+#' pfi(plpResult, population, plpData, repeats = 1, cores = 1)
+#' # compare to model coefficients
+#' plpResult$model$covariateImportance %>% dplyr::filter(.data$covariateValue != 0)
+#' }
 #' @export
 pfi <- function(plpResult, population, plpData, repeats = 1,
                 covariates = NULL, cores = NULL, log = NULL,

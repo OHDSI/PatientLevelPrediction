@@ -23,3 +23,25 @@ Get a demographic summary
 Generates a data.frame with a prediction summary per each 5 year age group
 and gender group
 }
+\examples{
+\donttest{ # takes too long
+# simulate data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=500)
+# create study population, split into train/test and preprocess with default settings
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population, createDefaultSplitSetting())
+data$Train$covariateData <- preprocessData(data$Train$covariateData)
+saveLoc <- file.path(tempdir(), "demographicSummary")
+# fit a lasso logistic regression model using the training data
+plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                   analysisId=1, analysisPath=saveLoc)
+demographicSummary <- getDemographicSummary(plpModel$prediction, 
+                                            "binary", 
+                                            typeColumn = "evaluationType")
+# show the demographic summary dataframe
+str(demographicSummary)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

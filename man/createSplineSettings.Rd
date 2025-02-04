@@ -22,3 +22,7 @@ Create the settings for adding a spline for continuous variables
 \details{
 Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
 }
+\examples{
+# create splines for age (1002) with 5 knots
+createSplineSettings(continousCovariateId = 1002, knots = 5, analysisId = 683)
+}

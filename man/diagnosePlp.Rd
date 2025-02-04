@@ -76,3 +76,17 @@ Users can define set of Ts, Os, databases and population settings.  A list of da
 follow-up time distribution, time-to-event information, characteriszation details, time from last prior event,
 observation time distribution.
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes long and requires internet
+
+# load the data
+plpData <- getEunomiaPlpData()
+populationSettings <- createStudyPopulationSettings(minTimeAtRisk = 1)
+saveDirectory <- file.path(tempdir(), "diagnosePlp")
+diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, populationSettings = populationSettings, saveDirectory = saveDirectory)
+}
+# clean up
+unlink(saveDirectory, recursive = TRUE)
+\dontshow{\}) # examplesIf}
+}

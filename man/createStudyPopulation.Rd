@@ -7,7 +7,7 @@
 createStudyPopulation(
   plpData,
   outcomeId,
-  populationSettings,
+  populationSettings = createStudyPopulationSettings(),
   population = NULL
 )
 }
@@ -39,4 +39,16 @@ Create a study population
 \details{
 Create a study population by enforcing certain inclusion and exclusion criteria, defining
 a risk window, and determining which outcomes fall inside the risk window.
+}
+\examples{
+\donttest{ # takes too long
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 100)
+# Create study population, require time at risk of 30 days. The risk window is 1 to 90 days.
+populationSettings <- createStudyPopulationSettings(requireTimeAtRisk = TRUE,
+                                                     minTimeAtRisk = 30,
+                                                     riskWindowStart = 1,
+                                                     riskWindowEnd = 90)
+population <- createStudyPopulation(plpData, outcomeId = 3, populationSettings)
+}
 }

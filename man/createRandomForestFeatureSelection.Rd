@@ -22,6 +22,6 @@ Returns an object of class \code{featureEngineeringSettings} that specifies the 
 }
 \examples{
 \dontrun{ # requires python and scikit-learn
-featureSeletor <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 }
 }

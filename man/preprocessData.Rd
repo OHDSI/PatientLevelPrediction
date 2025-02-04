@@ -5,13 +5,14 @@
 \title{A function that wraps around FeatureExtraction::tidyCovariateData to normalise
 the data and remove rare or redundant features}
 \usage{
-preprocessData(covariateData, preprocessSettings)
+preprocessData(covariateData, preprocessSettings = createPreprocessSettings())
 }
 \arguments{
 \item{covariateData}{The covariate part of the training data created by \code{splitData} after being sampled and having
 any required feature engineering}
 
-\item{preprocessSettings}{The settings for the preprocessing created by \code{createPreprocessSettings}}
+\item{preprocessSettings}{The settings for the preprocessing created by \code{createPreprocessSettings}
+The data processed}
 }
 \value{
 The covariateData object with the processed covariates
@@ -26,7 +27,3 @@ This includes normalising the data and removing rare or redundant features.
 Redundant features are features that within an analysisId together cover
 all obervations.
 }
-\keyword{The}
-\keyword{data}
-\keyword{internal}
-\keyword{processed}

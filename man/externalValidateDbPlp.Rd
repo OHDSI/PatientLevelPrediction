@@ -44,3 +44,30 @@ This function extracts data using a user specified connection and cdm_schema, ap
 Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the
 number of cdm_schemas input with the performance on the new data
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ # takes too long and requires internet
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# first fit a model on some data, default is a L1 logistic regression
+results <- runPlp(plpData, outcomeId = 3, 
+populationSettings = createStudyPopulationSettings(requireTimeAtRisk=FALSE))
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+# now validate the model on Eunomia
+validationDatabaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = "main",
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main",
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = "main",
+  outcomeTable = "cohort",
+  targetId = 1, # users of celecoxib
+  outcomeIds = 3, # GIbleed
+  cdmVersion = 5)
+path <- file.path(tempdir(), "validation")
+externalValidateDbPlp(results$model, validationDatabaseDetails, outputFolder = path)
+}
+\dontshow{\}) # examplesIf}
+}

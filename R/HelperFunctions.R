@@ -46,6 +46,11 @@ checkSklearn <- function() {
 
 #' Create a temporary model location
 #' @return A string for the location of the temporary model location
+#' @examples
+#' modelLoc <- createTempModelLoc()
+#' dir.exists(modelLoc)
+#' # clean up
+#' unlink(modelLoc, recursive = TRUE)
 #' @export
 createTempModelLoc <- function() {
   repeat {

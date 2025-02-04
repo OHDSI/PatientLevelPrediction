@@ -7,7 +7,8 @@
 createUnivariateFeatureSelection(k = 100)
 }
 \arguments{
-\item{k}{This function returns the K features most associated (univariately) to the outcome}
+\item{k}{This function returns the K features most associated
+(univariately) to the outcome}
 }
 \value{
 An object of class \code{featureEngineeringSettings}
@@ -16,5 +17,13 @@ An object of class \code{featureEngineeringSettings}
 Create the settings for defining any feature selection that will be done
 }
 \details{
-Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+Returns an object of class \code{featureEngineeringSettings} that specifies
+the function that will be called and the settings. Uses the scikit-learn
+SelectKBest function with chi2 for univariate feature selection.
+}
+\examples{
+\dontrun{ # requires python and scikit-learn
+# create a feature selection that selects the 100 most associated features
+featureSelector <- createUnivariateFeatureSelection(k = 100) 
+}
 }
