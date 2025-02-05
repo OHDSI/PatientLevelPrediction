@@ -20,7 +20,7 @@
 #' @description
 #' Calculate the permutation feature importance (pfi) for a PLP model.
 #' @details
-#' The function permutes the each covariate/features <repeats> times and
+#' The function permutes the each covariate/features \code(repeats) times and
 #' calculates the mean AUC change caused by the permutation.
 #' @param plpResult                         An object of type \code{runPlp}
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted
