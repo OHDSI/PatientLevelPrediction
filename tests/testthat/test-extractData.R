@@ -88,3 +88,38 @@ test_that("getPlpData checks covariateSettings object", {
     covariateSettings = list(settings1, settings3)
   ))
 })
+
+test_that("Get Eunomia plp data works", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  plpData <- getEunomiaPlpData()
+
+  expect_s3_class(plpData, "plpData")
+  expect_true(is.list(plpData))
+  expect_true("cohorts" %in% names(plpData))
+  expect_true("covariateData" %in% names(plpData))
+  expect_true("outcomes" %in% names(plpData))
+  expect_true("metaData" %in% names(plpData))
+  expect_true(is.data.frame(plpData$cohorts))
+  expect_gt(nrow(plpData$cohorts), 0)
+  expect_true("covariates" %in% names(plpData$covariateData))
+  expect_true("covariateRef" %in% names(plpData$covariateData))
+  expect_true("analysisRef" %in% names(plpData$covariateData))
+  expect_equal(plpData$metaData$databaseDetails$outcomeIds, 3)
+})
+
+test_that("Get eunomia with custom covariates", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  cs <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = FALSE,
+    useDemographicsGender = FALSE,
+    useConditionOccurrenceLongTerm = TRUE,
+    useDrugEraLongTerm = TRUE
+  )
+  plpData <- getEunomiaPlpData(covariateSettings = cs)
+  expect_s3_class(plpData, "plpData")
+  covRef <- plpData$covariateData$covariateRef %>% dplyr::collect()
+  expect_false(1002 %in% covRef$covariateId)
+  expect_false(8532 %in% covRef$covariateId)
+})
