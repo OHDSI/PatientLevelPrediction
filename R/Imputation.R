@@ -613,10 +613,13 @@ pmmFit <- function(data, k = 5) {
 pmmPredict <- function(data, k = 5, imputer) {
   data$coefficients <- imputer$coefficients
   predictionMissing <- data$xMiss %>%
-    dplyr::inner_join(data$coefficients, by = "covariateId") %>%
+    dplyr::left_join(data$coefficients, by = "covariateId") %>%
     dplyr::mutate(values = .data$covariateValue * .data$values) %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise(value = sum(.data$values, na.rm = TRUE)) %>%
+    # rowId without any of nonzero coefficient will have NA
+    # and should use only intercept for prediction
+    dplyr::mutate(value = ifelse(is.na(.data$value), 0, .data$value)) %>%
     dplyr::select("rowId", "value")
   predictionMissing <- as.data.frame(predictionMissing)
   if (length(predictionMissing$value) == 0) {

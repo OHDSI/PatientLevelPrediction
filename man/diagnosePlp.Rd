@@ -78,15 +78,16 @@ observation time distribution.
 }
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ # takes long and requires internet
+\donttest{ \dontshow{ # takes too long }
 
 # load the data
 plpData <- getEunomiaPlpData()
 populationSettings <- createStudyPopulationSettings(minTimeAtRisk = 1)
 saveDirectory <- file.path(tempdir(), "diagnosePlp")
-diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, populationSettings = populationSettings, saveDirectory = saveDirectory)
-}
+diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, 
+     populationSettings = populationSettings, saveDirectory = saveDirectory)
 # clean up
 unlink(saveDirectory, recursive = TRUE)
+}
 \dontshow{\}) # examplesIf}
 }

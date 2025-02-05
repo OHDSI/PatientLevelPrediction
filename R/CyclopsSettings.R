@@ -20,24 +20,24 @@
 #'
 #' @param variance   	Numeric: prior distribution starting variance
 #' @param seed       An option to add a seed when training the model
-#' @param includeCovariateIds a set of covariate IDS to limit the analysis to
-#' @param noShrinkage a set of covariates whcih are to be forced to be includedin
-#' in the final model. default is the intercept
-#' @param threads    An option to set number of threads when training model
+#' @param includeCovariateIds a set of covariateIds to limit the analysis to
+#' @param noShrinkage a set of covariates whcih are to be forced to be included in
+#' in the final model. Default is the intercept
+#' @param threads    An option to set number of threads when training model.
 #' @param forceIntercept  	Logical: Force intercept coefficient into prior
 #' @param upperLimit  	Numeric: Upper prior variance limit for grid-search
 #' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
-#' @param tolerance   Numeric: maximum relative change in convergence criterionfrom
+#' @param tolerance   Numeric: maximum relative change in convergence criterion from
 #' from successive iterations to achieve convergence
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt 
 #' before returning a failed-to-converge error
 #' @param priorCoefs    Use coefficients from a previous model as starting 
-#' points for model fit (transfer learning
+#' points for model fit (transfer learning)
 #'
 #' @return `modelSettings` object
 #'
 #' @examples
-#' modelLasso <- setLassoLogisticRegression()
+#' modelLasso <- setLassoLogisticRegression(seed=42)
 #' @export
 setLassoLogisticRegression <- function(
     variance = 0.01,
@@ -202,8 +202,8 @@ setCoxModel <- function(
 #' 
 #' @return `modelSettings` object
 #'
-#' @examples
-#' modelIht <- setIterativeHardThresholding()
+#' @examplesIf rlang::is_installed("IterativeHardThresholding")
+#' modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
 #' @export
 setIterativeHardThresholding <- function(
     K = 10,

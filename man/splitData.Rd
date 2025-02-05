@@ -8,7 +8,7 @@
 splitData(
   plpData = plpData,
   population = population,
-  splitSettings = splitSettings
+  splitSettings = createDefaultSplitSetting(splitSeed = 42)
 )
 }
 \arguments{
@@ -43,4 +43,18 @@ point in the test data (outcomeCount is the class label)
 \description{
 Split the plpData into test/train sets using a splitting settings of class
 \code{splitSettings}
+}
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+population <- createStudyPopulation(plpData)
+splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
+                                           trainFraction = 0.50, nfold = 5)
+data = splitData(plpData, population, splitSettings)
+# test data should be ~500 rows (changes because of study population)
+nrow(data$Test$labels)
+# train data should be ~500 rows
+nrow(data$Train$labels)
+# should be five fold in the train data
+length(unique(data$Train$folds$index))
 }

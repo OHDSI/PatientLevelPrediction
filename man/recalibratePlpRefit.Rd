@@ -22,3 +22,18 @@ An prediction dataframe with the predictions of the recalibrated model added
 \description{
 Recalibrating a model by refitting it
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "recalibratePlpRefit")
+plpResults <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+newData <- simulatePlpData(simulationProfile, n = 1000)
+newPopulation <- createStudyPopulation(newData, outcomeId = 3)
+predictions <- recalibratePlpRefit(plpModel = plpResults$model, 
+                                   newPopulation = newPopulation, 
+                                   newData = newData)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

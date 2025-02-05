@@ -106,12 +106,13 @@ insertRunPlpToSqlite <- function(
 #'
 #' @return
 #' Returns the location of the sqlite database file
-#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long
+#' @examplesIf rlang::is_installed("RSQLite") && rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
 #' plpData <- getEunomiaPlpData()
 #' saveLoc <- file.path(tempdir(), "insertResultsToSqlite")
 #' results <- runPlp(plpData, outcomeId = 3, analysisId = 1, saveDirectory = saveLoc)
-#' databaseFile <- insertResultsToSqlite(saveLoc, cohortDefinitions = NULL, sqliteLocation = file.path(saveLoc, "sqlite"))
+#' databaseFile <- insertResultsToSqlite(saveLoc, cohortDefinitions = NULL, 
+#'                                       sqliteLocation = file.path(saveLoc, "sqlite"))
 #' # check there is some data in the database
 #' library(DatabaseConnector)
 #' connectionDetails <- createConnectionDetails(
@@ -122,6 +123,8 @@ insertRunPlpToSqlite <- function(
 #' getTableNames(conn, databaseSchema = "main")
 #' # There is data in the tables
 #' querySql(conn, "SELECT * FROM main.model_designs limit 10")
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
 #' }
 #' @export
 insertResultsToSqlite <- function(

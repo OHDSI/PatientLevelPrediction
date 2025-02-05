@@ -35,3 +35,16 @@ A list of ggplot objects or a single ggplot object if only one evaluation type i
 \description{
 Plot the net benefit
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotNetBenefit")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotNetBenefit(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

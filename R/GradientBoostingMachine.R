@@ -30,8 +30,8 @@
 #' @param seed       An option to add a seed when training the final model
 #' @return A modelSettings object that can be used to fit the model
 #'
-#' @examples
-#' model.gbm <- setGradientBoostingMachine(
+#' @examplesIf rlang::is_installed("xgboost")
+#' modelGbm <- setGradientBoostingMachine(
 #'   ntrees = c(10, 100), nthread = 20,
 #'   maxDepth = c(4, 6), learnRate = c(0.1, 0.3)
 #' )

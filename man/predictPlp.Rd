@@ -17,11 +17,22 @@ data extracted from the CDM.}
 \item{timepoint}{The timepoint to predict risk (survival models only)}
 }
 \value{
-A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
+A data frame containing the predicted risk values
 }
 \description{
 Predict the risk of the outcome using the input plpModel for the input plpData
 }
 \details{
 The function applied the trained model on the plpData to make predictions
+}
+\examples{
+coefficients <- data.frame(
+  covariateId = c(1002),
+  coefficient = c(0.05))
+model <- createGlmModel(coefficients, intercept = -2.5)
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=50)
+prediction <- predictPlp(model, plpData, plpData$cohorts)
+# see the predicted risk values
+head(prediction)
 }

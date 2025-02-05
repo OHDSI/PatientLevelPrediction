@@ -7,14 +7,14 @@
 createModelDesign(
   targetId = NULL,
   outcomeId = NULL,
-  restrictPlpDataSettings = NULL,
-  populationSettings = NULL,
-  covariateSettings = NULL,
+  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+  populationSettings = createStudyPopulationSettings(),
+  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
   featureEngineeringSettings = NULL,
   sampleSettings = NULL,
   preprocessSettings = NULL,
   modelSettings = NULL,
-  splitSettings = NULL,
+  splitSettings = createDefaultSplitSetting(),
   runCovariateSummary = TRUE
 )
 }

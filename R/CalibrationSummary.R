@@ -56,7 +56,7 @@ getCalibrationSummary <- function(
     prediction,
     predictionType,
     typeColumn = "evaluation",
-    numberOfStrata = 100,
+    numberOfStrata = 10,
     truncateFraction = 0.05) {
   evaluation <- do.call(
     what = paste0("getCalibrationSummary_", predictionType),

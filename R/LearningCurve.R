@@ -68,7 +68,7 @@
 #'  obtained by the model for each training set fraction. It can be plotted
 #'  using \code{plotLearningCurve}.
 #' @examplesIf rlang::is_installed("parallel")
-#' \donttest{ # takes too long
+#' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n = 1000)
 #' outcomeId <- 3
@@ -335,7 +335,7 @@ learningCurveHelper <- function(result, trainFractions) {
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 #' file in a different format.
 #' @examplesIf rlang::is_installed("parallel")
-#' \donttest{ # takes too long to run
+#' \donttest{ \dontshow{ # takes too long to run }
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n = 1000)
 #' outcomeId <- 3

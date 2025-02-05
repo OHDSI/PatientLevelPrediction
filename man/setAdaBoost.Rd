@@ -27,3 +27,10 @@ a modelSettings object
 \description{
 Create setting for AdaBoost with python DecisionTreeClassifier base estimator
 }
+\examples{
+\dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+model <- setAdaBoost(nEstimators = list(10),
+                     learningRate = list(0.1),
+                     seed = 42)
+}
+}

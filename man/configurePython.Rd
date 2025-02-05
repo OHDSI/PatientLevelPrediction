@@ -24,7 +24,7 @@ This function creates a python environment that can be used by PatientLevelPredi
 and installs all the required package dependancies.
 }
 \examples{
-\dontrun{ # don't modify environment in examples
+\dontrun{ \dontshow{ # don't modify environment in examples }
  configurePython(envname="PLP", envtype="conda")
 }
 }

@@ -22,7 +22,7 @@ the function that will be called and the settings. Uses the scikit-learn
 SelectKBest function with chi2 for univariate feature selection.
 }
 \examples{
-\dontrun{ # requires python and scikit-learn
+\dontrun{ \dontshow{ # requires python and scikit-learn }
 # create a feature selection that selects the 100 most associated features
 featureSelector <- createUnivariateFeatureSelection(k = 100) 
 }

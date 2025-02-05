@@ -133,7 +133,7 @@ createRestrictPlpDataSettings <- function(
 #' \item{`cdmVersion`: Define the OMOP CDM version used: currently support "4" and "5".}
 #' }
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long and requires internet
+#' \donttest{ \dontshow{ # takes too long }
 #' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 #' # create the database details for Eunomia example database
 #' createDatabaseDetails(
@@ -158,7 +158,7 @@ createDatabaseDetails <- function(
     cohortDatabaseSchema = cdmDatabaseSchema,
     cohortTable = "cohort",
     outcomeDatabaseSchema = cdmDatabaseSchema,
-    outcomeTable = "cohort",
+    outcomeTable = cohortTable,
     targetId = NULL,
     outcomeIds = NULL,
     cdmVersion = 5,
@@ -257,7 +257,7 @@ NULL
 #'
 #' @return 'r plpDataObjectDoc()`
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long and requires internet
+#' \donttest{ \dontshow{ # takes too long }
 #'  # use Eunomia database
 #'  connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 #'  Eunomia::createCohorts(connectionDetails)
@@ -608,7 +608,7 @@ print.summary.plpData <- function(x, ...) {
 #' If nothing is specified covariates with age, gender, conditions and drug era are used.
 #' @return `r plpDataObjectDoc()`
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long and requires internet
+#' \donttest{ \dontshow{ # takes too long }
 #' covariateSettings <- FeatureExtraction::createCovariateSettings(
 #'   useDemographicsAge = TRUE,
 #'   useDemographicsGender = TRUE,

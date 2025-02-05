@@ -22,7 +22,7 @@
 #' Converts the standard plpData to a sparse matrix
 #'
 #' @details
-#' This function converts the covariate file from ffdf in COO format into a sparse matrix from
+#' This function converts the covariates `Andromeda` table in COO format into a sparse matrix from
 #' the package Matrix
 #' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
 #'                                      data extracted from the CDM.
@@ -37,7 +37,20 @@
 #' \item{covariateRef}{The plpData covariateRef.}
 #' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
 #' }
-#'
+#' @examples
+#' \donttest{ \dontshow{ # takes too long }
+#' library(dplyr)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=100)
+#' # how many covariates are there before we convert to sparse matrix
+#' plpData$covariateData$covariates %>% 
+#'  dplyr::group_by(.data$covariateId) %>% 
+#'  dplyr::summarise(n = n()) %>% 
+#'  dplyr::collect() %>% nrow()
+#' sparseData <- toSparseM(plpData, cohort=plpData$cohorts)
+#' # how many covariates are there after we convert to sparse matrix'
+#' sparseData$dataMatrix@Dim[2]
+#' }
 #' @export
 toSparseM <- function(plpData, cohort = NULL, map = NULL) {
   start <- Sys.time()

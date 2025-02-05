@@ -41,7 +41,7 @@ createSimulationProfile <- function(plpData) {
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarize(
       mean = mean(.data$covariateValue, na.rm = TRUE),
-      sd = sd(.data$covariateValue, na.rm = TRUE),
+      sd = stats::sd(.data$covariateValue, na.rm = TRUE),
       min = min(.data$covariateValue, na.rm = TRUE),
       max = max(.data$covariateValue, na.rm = TRUE)
     ) %>%
@@ -95,6 +95,12 @@ createSimulationProfile <- function(plpData) {
 #' @return
 #' An object of type \code{plpData}.
 #'
+#' @examples
+#' # first load the simulation profile to use
+#' data("simulationProfile")
+#' # then generate the simulated data
+#' plpData <- simulatePlpData(simulationProfile, n = 100)
+#' nrow(plpData$cohorts)
 #' @export
 simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
@@ -119,12 +125,13 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
   )
 
   class(covariateData) <- "CovariateData"
+  attr(class(covariateData), "package") <- "FeatureExtraction"
 
   continuousCovariates <- plpDataSimulationProfile$covariateInfo$continuousCovariates
   continuousCovSim <- do.call(rbind, lapply(seq_len(nrow(continuousCovariates)), function(i) {
     info <- continuousCovariates[i, ]
     # Generate a value for every subject:
-    simValues <- round(rnorm(n, mean = info$mean, sd = info$sd))
+    simValues <- round(stats::rnorm(n, mean = info$mean, sd = info$sd))
     simValues <- pmin(pmax(simValues, info$min), info$max)
     data.frame(
       rowId = 1:n,
@@ -164,7 +171,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
       modelType = "logistic"
     )
     outcomes <- prediction
-    outcomes$outcomeCount <- rbinom(nrow(outcomes), size = 1, prob = outcomes$value)
+    outcomes$outcomeCount <- stats::rbinom(nrow(outcomes), size = 1, prob = outcomes$value)
     outcomes <- outcomes[outcomes$outcomeCount != 0, ]
     outcomes$outcomeId <- outcomeIds[i]
     outcomes$daysToEvent <- round(stats::runif(nrow(outcomes), 0, timeMax))

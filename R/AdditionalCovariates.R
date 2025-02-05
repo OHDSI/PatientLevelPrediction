@@ -39,8 +39,8 @@
 #' @return
 #' CovariateData object with covariates, covariateRef, and analysisRef tables
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long to run and requires internet
-#' library(DatabseConnector)
+#' \donttest{ \dontshow{ # takes too long to run }
+#' library(DatabaseConnector)
 #' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 #' # create some cohort of people born in 1969, index date is their date of birth
 #' con <- connect(connectionDetails)

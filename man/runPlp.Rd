@@ -6,8 +6,8 @@
 \usage{
 runPlp(
   plpData,
-  outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
+  analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
   analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
@@ -89,4 +89,19 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 \details{
 This function takes as input the plpData extracted from an OMOP CDM database and follows the specified settings to
 develop and internally validate a model for the specified outcomeId.
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# simulate some data
+data('simulationProfile')
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+# develop a model with the default settings
+saveLoc <- file.path(tempdir(), "runPlp")
+results <- runPlp(plpData = plpData, outcomeId = 3, analysisId = 1,
+                  saveDirectory = saveLoc) 
+# to check the results you can view the log file at saveLoc/1/plpLog.txt
+# or view with shiny app using viewPlp(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

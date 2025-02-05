@@ -53,8 +53,8 @@ cohort during the time periods relative to target population cohort index
 }
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ # takes too long to run and requires internet
-library(DatabseConnector)
+\donttest{ \dontshow{ # takes too long to run }
+library(DatabaseConnector)
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 # create some cohort of people born in 1969, index date is their date of birth
 con <- connect(connectionDetails)

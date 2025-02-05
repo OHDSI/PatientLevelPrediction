@@ -37,3 +37,42 @@ validates the models on new data
 Users need to input a location where the results of the multiple plp analyses
 are found and the connection and database settings for the new data
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long to run }
+# first develop a model using runMultiplePlp
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails = connectionDetails)
+databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+                                         cdmDatabaseId = "1",
+                                         cdmDatabaseName = "Eunomia",
+                                         cdmDatabaseSchema = "main",
+                                         targetId = 1,
+                                         outcomeIds = 3)
+covariateSettings <- 
+ FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE,
+   useDemographicsAge = TRUE, useConditionOccurrenceLongTerm = TRUE)
+modelDesign <- createModelDesign(targetId = 1, 
+                                 outcomeId = 3,
+                                 modelSettings = setLassoLogisticRegression(seed = 42),
+                                 covariateSettings = covariateSettings)
+saveLoc <- file.path(tempdir(), "valiateMultiplePlp", "development")
+results <- runMultiplePlp(databaseDetails = databaseDetails,
+               modelDesignList = list(modelDesign),
+               saveDirectory = saveLoc)
+# now validate the model on a Eunomia but with a different target
+analysesLocation <- saveLoc
+validationDatabaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+                                                   cdmDatabaseId = "2",
+                                                   cdmDatabaseName = "EunomiaNew",
+                                                   cdmDatabaseSchema = "main",
+                                                   targetId = 4,
+                                                   outcomeIds = 3)
+newSaveLoc <- file.path(tempdir(), "valiateMultiplePlp", "validation")
+validateMultiplePlp(analysesLocation = analysesLocation,
+                    validationDatabaseDetails = validationDatabaseDetails,
+                    saveDirectory = newSaveLoc)
+# the results could now be viewed in the shiny app with viewMultiplePlp(newSaveLoc)
+}
+\dontshow{\}) # examplesIf}
+}

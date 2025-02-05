@@ -27,3 +27,11 @@ This includes normalising the data and removing rare or redundant features.
 Redundant features are features that within an analysisId together cover
 all obervations.
 }
+\examples{
+library(dplyr)
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettings())
+# check age is normalized by max value
+preProcessedData$covariates \%>\% dplyr::filter(.data$covariateId == 1002)
+}

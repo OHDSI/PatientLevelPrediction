@@ -235,16 +235,17 @@ diagnoseMultiplePlp <- function(
 #' \item{`characterization`: List for each O of Characterization of T, TnO, Tn~O}
 #' }
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes long and requires internet
+#' \donttest{ \dontshow{ # takes too long }
 #' 
 #' # load the data
 #' plpData <- getEunomiaPlpData()
 #' populationSettings <- createStudyPopulationSettings(minTimeAtRisk = 1)
 #' saveDirectory <- file.path(tempdir(), "diagnosePlp")
-#' diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, populationSettings = populationSettings, saveDirectory = saveDirectory)
-#' }
+#' diagnosis <- diagnosePlp(plpData = plpData, outcomeId = 3, analysisId = 1, 
+#'      populationSettings = populationSettings, saveDirectory = saveDirectory)
 #' # clean up
 #' unlink(saveDirectory, recursive = TRUE)
+#' }
 #' @export
 diagnosePlp <- function(
     plpData = NULL,

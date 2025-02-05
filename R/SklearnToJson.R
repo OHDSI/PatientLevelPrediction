@@ -20,6 +20,16 @@
 #' @param     model a fitted sklearn python model object
 #' @param     path  path to the saved model file
 #' @return    nothing, saves the model to the path as json
+#' @examples
+#' \dontrun{ \dontshow{ # requires python environment with sklearn }
+#' sklearn <- reticulate::import("sklearn", convert = FALSE)
+#' model <- sklearn$tree$DecisionTreeClassifier()
+#' model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
+#' saveLoc <- file.path(tempdir() "model.json")
+#' sklearnToJson(model, saveLoc)
+#' dir(tempdir())
+#' unlink(saveLoc)
+#' }
 #' @export
 sklearnToJson <- function(model, path) {
   py <- reticulate::import_builtins(convert = FALSE)
@@ -50,6 +60,22 @@ sklearnToJson <- function(model, path) {
 #' @param     path  path to the model json file
 #' @return    a sklearn python model object
 #' @export
+#' @examples
+#' \dontrun{ \dontshow{ # requires python environment with sklearn }
+#' plpData <- getEunomiaPlpData()
+#' modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
+#'                                   minSamplesLeaf = list(1), maxFeatures = list(100))
+#' saveLocation <- file.path(tempdir(), "sklearnFromJson")
+#' results <- runPlp(plpData, modelSettings = modelSettings, saveDirectory = saveLocation)
+#' # view save model
+#' dir(results$model$model, full.names = TRUE)
+#' # load into a sklearn object
+#' model <- sklearnFromJson(file.path(results$model$model, "model.json"))
+#' # max depth is 3 as we set in beginning
+#' model$max_depth
+#' # clean up
+#' unlink(saveLocation, recursive = TRUE)
+#' }
 sklearnFromJson <- function(path) {
   py <- reticulate::import_builtins(convert = FALSE)
   json <- reticulate::import("json", convert = FALSE)

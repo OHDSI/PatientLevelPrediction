@@ -6,7 +6,7 @@
 \usage{
 insertResultsToSqlite(
   resultLocation,
-  cohortDefinitions,
+  cohortDefinitions = NULL,
   databaseList = NULL,
   sqliteLocation = file.path(resultLocation, "sqlite")
 )
@@ -28,4 +28,27 @@ This function create an sqlite database with the PLP result schema and inserts a
 }
 \details{
 This function can be used upload PatientLevelPrediction results into an sqlite database
+}
+\examples{
+\dontshow{if (rlang::is_installed("RSQLite") && rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+plpData <- getEunomiaPlpData()
+saveLoc <- file.path(tempdir(), "insertResultsToSqlite")
+results <- runPlp(plpData, outcomeId = 3, analysisId = 1, saveDirectory = saveLoc)
+databaseFile <- insertResultsToSqlite(saveLoc, cohortDefinitions = NULL, 
+                                      sqliteLocation = file.path(saveLoc, "sqlite"))
+# check there is some data in the database
+library(DatabaseConnector)
+connectionDetails <- createConnectionDetails(
+  dbms = "sqlite",
+  server = databaseFile)
+conn <- connect(connectionDetails)
+# All tables should be created
+getTableNames(conn, databaseSchema = "main")
+# There is data in the tables
+querySql(conn, "SELECT * FROM main.model_designs limit 10")
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

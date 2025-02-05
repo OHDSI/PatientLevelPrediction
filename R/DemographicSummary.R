@@ -28,7 +28,7 @@
 #' @return
 #' A dataframe with the demographic summary
 #' @examples
-#' \donttest{ # takes too long
+#' \donttest{ \dontshow{ # takes too long }
 #' # simulate data
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n=500)

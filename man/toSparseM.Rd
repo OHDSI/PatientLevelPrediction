@@ -27,6 +27,21 @@ This object is a list with the following components: \describe{
 Converts the standard plpData to a sparse matrix
 }
 \details{
-This function converts the covariate file from ffdf in COO format into a sparse matrix from
+This function converts the covariates \code{Andromeda} table in COO format into a sparse matrix from
 the package Matrix
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+library(dplyr)
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=100)
+# how many covariates are there before we convert to sparse matrix
+plpData$covariateData$covariates \%>\% 
+ dplyr::group_by(.data$covariateId) \%>\% 
+ dplyr::summarise(n = n()) \%>\% 
+ dplyr::collect() \%>\% nrow()
+sparseData <- toSparseM(plpData, cohort=plpData$cohorts)
+# how many covariates are there after we convert to sparse matrix'
+sparseData$dataMatrix@Dim[2]
+}
 }

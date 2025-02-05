@@ -29,8 +29,9 @@ from a prediction object
 }
 \examples{
 prediction <- data.frame(rowId = 1:100, 
-                       outcomeCount = rbinom(1:100, 1
-                        value = runif(100), 
-                        evaluation = rep("Train", 100)
-getThresholdSummary(prediction)
+                         outcomeCount = stats::rbinom(1:100, 1, prob=0.5),
+                         value = runif(100), 
+                         evaluation = rep("Train", 100))
+summary <- getThresholdSummary(prediction)
+str(summary)
 }

@@ -46,12 +46,17 @@ number of cdm_schemas input with the performance on the new data
 }
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ # takes too long and requires internet
+\donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n=1000)
 # first fit a model on some data, default is a L1 logistic regression
-results <- runPlp(plpData, outcomeId = 3, 
-populationSettings = createStudyPopulationSettings(requireTimeAtRisk=FALSE))
+saveLoc <- file.path(tempdir(), "development")
+results <- runPlp(plpData, 
+                  outcomeId = 3,
+                  saveDirectory = saveLoc,
+                  populationSettings = 
+                   createStudyPopulationSettings(requireTimeAtRisk=FALSE)
+                  )
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 Eunomia::createCohorts(connectionDetails)
 # now validate the model on Eunomia
@@ -68,6 +73,9 @@ validationDatabaseDetails <- createDatabaseDetails(
   cdmVersion = 5)
 path <- file.path(tempdir(), "validation")
 externalValidateDbPlp(results$model, validationDatabaseDetails, outputFolder = path)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+unlink(path, recursive = TRUE)
 }
 \dontshow{\}) # examplesIf}
 }

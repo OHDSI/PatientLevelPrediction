@@ -80,7 +80,7 @@ createFeatureEngineeringSettings <- function(type = "none") {
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
-#' \dontrun{ # requires python and scikit-learn
+#' \dontrun{ \dontshow{ # requires python and scikit-learn }
 #' # create a feature selection that selects the 100 most associated features
 #' featureSelector <- createUnivariateFeatureSelection(k = 100) 
 #' }
@@ -124,7 +124,7 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
-#' \dontrun{ # requires python and scikit-learn
+#' \dontrun{ \dontshow{ # requires python and scikit-learn }
 #' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 #' }
 #' @export
@@ -330,8 +330,10 @@ splineMap <- function(
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
-#' # create a stratified imputation settings for covariate 1050 with age splits at 50 and 70
-#' stratifiedImputationSettings <- createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
+#' # create a stratified imputation settings for covariate 1050 with age splits 
+#' # at 50 and 70
+#' stratifiedImputationSettings <- 
+#'   createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
 #' @export
 createStratifiedImputationSettings <- function(
     covariateId,
@@ -793,11 +795,13 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' feature for it to be included
 #' @return An object of class \code{featureEngineeringSettings}
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
-#' \donttest{ # takes too long and requires internet
+#' \donttest{ \dontshow{ # takes too long }
 #' # create a rare feature remover that removes features that are present in less
 #' # than 1% of the population
 #' rareFeatureRemover <- createRareFeatureRemover(threshold = 0.01)
 #' plpData <- getEunomiaPlpData()
+#' analysisId <- "rareFeatureRemover"
+#' saveLocation <- file.path(tempdir(), analysisId)
 #' results <- runPlp(
 #'   plpData = plpData,
 #'   featureEngineeringSettings = rareFeatureRemover,
@@ -806,9 +810,10 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #'    runModelDevelopment = TRUE,
 #'    runSplitData = TRUE,
 #'    runFeatureEngineering = TRUE),
-#'  saveDirectory = file.path(tempdir(), "rareFeatureRemover"))
+#'  saveDirectory = saveLocation,
+#'  analysisId = analysisId)
 #' # clean up 
-#' unlink(file.path(tempdir(), "rareFeatureRemover"), recursive = TRUE)
+#' unlink(saveLocation, recursive = TRUE)
 #' } 
 #' @export
 createRareFeatureRemover <- function(threshold = 0.001) {

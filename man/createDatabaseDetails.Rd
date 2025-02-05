@@ -13,7 +13,7 @@ createDatabaseDetails(
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
-  outcomeTable = "cohort",
+  outcomeTable = cohortTable,
   targetId = NULL,
   outcomeIds = NULL,
   cdmVersion = 5,
@@ -87,7 +87,7 @@ the target cohort and outcomes
 }
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ # takes too long and requires internet
+\donttest{ \dontshow{ # takes too long }
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 # create the database details for Eunomia example database
 createDatabaseDetails(

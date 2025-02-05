@@ -2,7 +2,7 @@ Package: PatientLevelPrediction
 Type: Package
 Title: Developing Patient Level Prediction Models Using the Observational Medical Outcomes Partnership Common Data Model
 Version: 6.4.0
-Date: 2025-01-31
+Date: 2025-02-05
 Authors@R: c(
     person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),

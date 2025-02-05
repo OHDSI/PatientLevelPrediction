@@ -6,7 +6,7 @@
 \usage{
 createStudyPopulation(
   plpData,
-  outcomeId,
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
   populationSettings = createStudyPopulationSettings(),
   population = NULL
 )
@@ -41,7 +41,7 @@ Create a study population by enforcing certain inclusion and exclusion criteria,
 a risk window, and determining which outcomes fall inside the risk window.
 }
 \examples{
-\donttest{ # takes too long
+\donttest{ \dontshow{ # takes too long } 
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 100)
 # Create study population, require time at risk of 30 days. The risk window is 1 to 90 days.

@@ -22,3 +22,10 @@ An object of type \code{plpData}.
 This function generates simulated data that is in many ways similar to the original data on which
 the simulation profile is based.
 }
+\examples{
+# first load the simulation profile to use
+data("simulationProfile")
+# then generate the simulated data
+plpData <- simulatePlpData(simulationProfile, n = 100)
+nrow(plpData$cohorts)
+}

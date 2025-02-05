@@ -21,3 +21,20 @@ Saves the result from runPlp into the location directory
 \details{
 Saves the result from runPlp into the location directory
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "savePlpResult")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+# save the results
+newSaveLoc <- file.path(tempdir(), "savePlpResult", "saved")
+savePlpResult(results, newSaveLoc)
+# show the saved results
+dir(newSaveLoc, recursive = TRUE, full.names = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+unlink(newSaveLoc, recursive = TRUE)
+}
+}

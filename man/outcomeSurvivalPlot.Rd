@@ -30,11 +30,19 @@ outcomeSurvivalPlot(
 \item{yLabel}{(string) The label for the y-axis}
 }
 \value{
-TRUE if it ran, produces a plot
+A \code{ggsurvplot} object
 }
 \description{
 Plot the outcome incidence over time
 }
 \details{
 This creates a survival plot that can be used to pick a suitable time-at-risk period
+}
+\examples{
+\dontshow{if (rlang::is_installed("survminer")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
+print(plotObject)
+\dontshow{\}) # examplesIf}
 }

@@ -24,3 +24,13 @@ folder specified by the user.
 \description{
 \code{savePlpData} saves an object of type plpData to folder.
 }
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "savePlpData")
+savePlpData(plpData, saveLoc)
+dir(saveLoc, full.names = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}

@@ -19,3 +19,12 @@ Load the multiple prediction json settings from a file
 This function interprets a json with the multiple prediction settings and creates a list
 that can be combined with connection settings to run a multiple prediction study
 }
+\examples{
+modelDesign <- createModelDesign(targetId = 1, outcomeId = 2, 
+                                 modelSettings = setLassoLogisticRegression())
+saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
+savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
+loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
+# clean use
+unlink(saveLoc, recursive = TRUE)
+}

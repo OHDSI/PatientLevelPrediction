@@ -8,7 +8,7 @@ getCalibrationSummary(
   prediction,
   predictionType,
   typeColumn = "evaluation",
-  numberOfStrata = 100,
+  numberOfStrata = 10,
   truncateFraction = 0.05
 )
 }

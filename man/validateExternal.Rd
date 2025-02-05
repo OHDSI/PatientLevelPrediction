@@ -2,12 +2,12 @@
 % Please edit documentation in R/ExternalValidatePlp.R
 \name{validateExternal}
 \alias{validateExternal}
-\title{externalValidatePlp - Validate model performance on new data}
+\title{validateExternal - Validate model performance on new data}
 \usage{
 validateExternal(
   validationDesignList,
   databaseDetails,
-  logSettings,
+  logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
   outputFolder
 )
 }
@@ -27,5 +27,31 @@ using \code{createLogSettings}}
 A list of results
 }
 \description{
-externalValidatePlp - Validate model performance on new data
+validateExternal - Validate model performance on new data
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# first fit a model on some data, default is a L1 logistic regression
+saveLoc <- file.path(tempdir(), "development")
+results <- runPlp(plpData, saveDirectory = saveLoc)
+# then create my validation design
+validationDesign <- createValidationDesign(1, 3, plpModelList = list(results$model))
+# I will validate on Eunomia example database
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+cdmDatabaseSchema = "main", cdmDatabaseName = "Eunomia", cdmDatabaseId = 1,
+targetId = 1, outcomeIds = 3)
+path <- file.path(tempdir(), "validation")
+validateExternal(validationDesign, databaseDetails, outputFolder = path)
+# see generated result files
+dir(path, recursive = TRUE)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+unlink(path, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

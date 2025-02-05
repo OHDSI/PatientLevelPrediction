@@ -33,16 +33,16 @@
 #' - calibrationSummary: A data frame containing the calibration summary'
 #' - predictionDistribution: A data frame containing the prediction distribution'
 #' @examples
-#' \donttest{ takes too long to run
+#' \donttest{ \dontshow{ # takes too long to run }
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n= 1500)
 #' population <- createStudyPopulation(plpData, outcomeId = 3, 
 #'                                     populationSettings = createStudyPopulationSettings())
 #' data <- splitData(plpData, population, splitSettings=createDefaultSplitSetting(splitSeed=42))
-#' data$Train <- preprocessData(data$Train$covariateData, createPreprocessSettings())
+#' data$Train$covariateData <- preprocessData(data$Train$covariateData, 
+#'                                            createPreprocessSettings())
 #' path <- file.path(tempdir(), "plp")
 #' model <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
-#'                 analysisId=1, analysisPath = path)
 #'                 analysisId=1, analysisPath = path)
 #' evaluatePlp(model$prediction) # Train and CV metrics
 #' }

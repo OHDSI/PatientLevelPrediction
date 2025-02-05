@@ -55,3 +55,25 @@ was defined: from utopia to empirical data" (2016)
 \details{
 Create a plot showing the smoothed calibration
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+# generate prediction dataaframe with 1000 patients
+predictedRisk <- stats::runif(1000)
+# overconfident for high risk patients
+actualRisk <- ifelse(predictedRisk < 0.5, predictedRisk, 0.5 + 0.5 * (predictedRisk - 0.5))
+outcomeCount <- stats::rbinom(1000, 1, actualRisk)
+# mock data frame
+prediction <- data.frame(rowId = 1:1000,
+                         value = predictedRisk, 
+                         outcomeCount = outcomeCount,
+                         evaluationType = "Test")
+attr(prediction, "modelType") <- "binary"
+calibrationSummary <- getCalibrationSummary(prediction, "binary",
+                                            numberOfStrata = 10,
+                                            typeColumn = "evaluationType")
+plpResults <- list()
+plpResults$performanceEvaluation$calibrationSummary <- calibrationSummary
+plpResults$prediction <- prediction
+plotSmoothCalibration(plpResults)
+\dontshow{\}) # examplesIf}
+}

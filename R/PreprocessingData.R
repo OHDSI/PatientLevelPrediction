@@ -71,6 +71,7 @@ createPreprocessSettings <- function(
 #' The data processed
 #' @return The covariateData object with the processed covariates
 #' @examples
+#' library(dplyr)
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n=1000)
 #' preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettings())

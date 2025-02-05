@@ -21,3 +21,17 @@ Saves the plp model
 \details{
 Saves the plp model to a user specificed folder
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "savePlpModel")
+plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+path <- savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
+# show the saved model
+dir(path, full.names = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

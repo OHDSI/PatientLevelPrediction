@@ -43,3 +43,20 @@ Calculate the permutation feature importance (pfi) for a PLP model.
 The function permutes the each covariate/features \if{html}{\out{<repeats>}} times and
 calculates the mean AUC change caused by the permutation.
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+library(dplyr)
+# simulate some data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# now fit a model
+saveLoc <- file.path(tempdir(), "pfi")
+plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+population <- createStudyPopulation(plpData, outcomeId = 3)
+pfi(plpResult, population, plpData, repeats = 1, cores = 1)
+# compare to model coefficients
+plpResult$model$covariateImportance \%>\% dplyr::filter(.data$covariateValue != 0)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

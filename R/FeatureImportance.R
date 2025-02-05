@@ -35,7 +35,8 @@
 #' @return
 #' A dataframe with the covariateIds and the pfi (change in AUC caused by permuting the covariate) value
 #' @examples
-#' \donttest{ # takes too long
+#' \donttest{ \dontshow{ # takes too long }
+#' library(dplyr)
 #' # simulate some data
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n=1000)
@@ -47,6 +48,8 @@
 #' pfi(plpResult, population, plpData, repeats = 1, cores = 1)
 #' # compare to model coefficients
 #' plpResult$model$covariateImportance %>% dplyr::filter(.data$covariateValue != 0)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
 #' }
 #' @export
 pfi <- function(plpResult, population, plpData, repeats = 1,

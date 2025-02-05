@@ -88,6 +88,7 @@ test_that("createIterativeImputer works", {
 })
 
 test_that("simpleImpute works", {
+  skip_if_offline()
   missingData <- createMissingData(tinyTrainData, 0.2)
 
   imputer <- createSimpleImputer(method = "mean", missingThreshold = 0.3)
@@ -177,6 +178,8 @@ test_that("simpleImpute works", {
 })
 
 test_that("IterativeImputer works", {
+  skip_if_offline()
+  skip_if_not_installed("glmnet")
   missingData <- createMissingData(tinyTrainData, 0.2)
   imputer <- createIterativeImputer(
     method = "pmm", missingThreshold = 0.3,

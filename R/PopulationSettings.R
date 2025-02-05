@@ -168,7 +168,7 @@ createStudyPopulationSettings <- function(
 #' \item{survivalTime}{The number of days until either the outcome or the end of the risk window}
 #' }
 #' @examples
-#' \donttest{ # takes too long
+#' \donttest{ \dontshow{ # takes too long } 
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n = 100)
 #' # Create study population, require time at risk of 30 days. The risk window is 1 to 90 days.
@@ -181,7 +181,7 @@ createStudyPopulationSettings <- function(
 #' @export
 createStudyPopulation <- function(
     plpData,
-    outcomeId,
+    outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
     populationSettings = createStudyPopulationSettings(),
     population = NULL) {
   start <- Sys.time()

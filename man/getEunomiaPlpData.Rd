@@ -36,7 +36,7 @@ is predicting GIbleed in new users of celecoxib.
 }
 \examples{
 \dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ # takes too long and requires internet
+\donttest{ \dontshow{ # takes too long }
 covariateSettings <- FeatureExtraction::createCovariateSettings(
   useDemographicsAge = TRUE,
   useDemographicsGender = TRUE,

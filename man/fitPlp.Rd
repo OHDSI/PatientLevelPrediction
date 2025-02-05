@@ -37,7 +37,7 @@ parameters
 The user can define the machine learning model to train
 }
 \examples{
-\donttest{ # takes too long
+\donttest{ \dontshow{ # takes too long }
 # simulate data
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n=1000)

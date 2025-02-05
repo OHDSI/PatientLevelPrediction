@@ -42,7 +42,7 @@
 #' \item{trainDetails}{The model meta data}
 #' \item{covariateImportance}{The covariate importance for the model}
 #' @examples
-#' \donttest{ # takes too long
+#' \donttest{ \dontshow{ # takes too long }
 #' # simulate data
 #' data("simulationProfile")
 #' plpData <- simulatePlpData(simulationProfile, n=1000)

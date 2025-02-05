@@ -24,6 +24,8 @@ age groups and fits splines to the covariate within each age group. The spline
 values are then used to impute missing values.
 }
 \examples{
-# create a stratified imputation settings for covariate 1050 with age splits at 50 and 70
-stratifiedImputationSettings <- createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
+# create a stratified imputation settings for covariate 1050 with age splits 
+# at 50 and 70
+stratifiedImputationSettings <- 
+  createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
 }

@@ -19,3 +19,16 @@ Loads the plp result saved as json/csv files for transparent sharing
 \details{
 Load the main results from json/csv files into a runPlp object
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "loadPlpShareable")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+savePlpShareable(results, saveLoc)
+dir(saveLoc)
+loadedResults <- loadPlpShareable(saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

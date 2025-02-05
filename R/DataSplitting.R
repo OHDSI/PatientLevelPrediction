@@ -152,6 +152,19 @@ createExistingSplitSettings <- function(splitIds) {
 #'          \item labels: a table (rowId, outcomeCount, ...) for each data
 #' point in the test data (outcomeCount is the class label)
 #'          }
+#' @examples 
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' population <- createStudyPopulation(plpData)
+#' splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
+#'                                            trainFraction = 0.50, nfold = 5)
+#' data = splitData(plpData, population, splitSettings)
+#' # test data should be ~500 rows (changes because of study population)
+#' nrow(data$Test$labels)
+#' # train data should be ~500 rows
+#' nrow(data$Train$labels)
+#' # should be five fold in the train data
+#' length(unique(data$Train$folds$index))
 #' @export
 splitData <- function(plpData = plpData,
                       population = population,
@@ -615,3 +628,4 @@ checkOutcomes <- function(population, train, nfold) {
   }
   return(invisible(TRUE))
 }
+
