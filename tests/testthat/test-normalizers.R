@@ -34,6 +34,7 @@ test_that("createNormalizer works", {
 })
 
 test_that("normalization works", {
+  skip_if_not_installed("RSQLite") # until Andromeda 1.0.0 is released
   addFeature <- function(data, covariateId, minValue,
                          maxValue, outliers = FALSE) {
     data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
@@ -113,9 +114,15 @@ test_that("normalization works", {
         trainMedian <- median(data$covariateData$covariates %>%
           dplyr::filter(.data$covariateId == 12101) %>%
           dplyr::pull(.data$covariateValue))
-        trainIQR <- IQR(data$covariateData$covariates %>%
-          dplyr::filter(.data$covariateId == 12101) %>%
-          dplyr::pull(.data$covariateValue))
+        if (inherits(data$covariateData, "SQLiteConnection")) {
+          trainIQR <- IQR(data$covariateData$covariates %>%
+            dplyr::filter(.data$covariateId == 12101) %>%
+            dplyr::pull(.data$covariateValue), type = 1)
+        } else {
+          trainIQR <- IQR(data$covariateData$covariates %>%
+            dplyr::filter(.data$covariateId == 12101) %>%
+            dplyr::pull(.data$covariateValue))
+        }
         testNormFeature <- (testFeature - trainMedian) / trainIQR
         if (clip) {
           testNormFeature <- testNormFeature / sqrt(1 + (testNormFeature / 3)^2)

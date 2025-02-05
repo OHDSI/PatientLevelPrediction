@@ -711,17 +711,32 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::pull(.data$covariateId)
 
     # get (25, 75)% quantiles of each feature
-    outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(
-        q25 = stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE), 
-        q75 = stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE),
-        median = stats::median(.data$covariateValue, na.rm = TRUE)
-      ) %>%
-      dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-      dplyr::select(-c("q75", "q25")) %>%
-      dplyr::collect()
+    if (inherits(outData$covariateData, "SQLiteConnection")) {
+      RSQLite::initExtension(outData$covariateData, "math")
+      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(
+          q25 = dplyr::sql("lower_quartile(covariateValue)"), 
+          q75 = dplyr::sql("upper_quartile(covariateValue)"),
+          median = stats::median(.data$covariateValue, na.rm = TRUE)
+        ) %>%
+        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::select(-c("q75", "q25")) %>%
+        dplyr::collect()
+    } else {
+      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(
+          q25 = stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE), 
+          q75 = stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE),
+          median = stats::median(.data$covariateValue, na.rm = TRUE)
+        ) %>%
+        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::select(-c("q75", "q25")) %>%
+        dplyr::collect()
+    }
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
 
     # save the normalization
