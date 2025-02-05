@@ -165,7 +165,7 @@ For our study we need to know when a person enters the target and outcome cohort
 
 How do we fill this table according to our cohort definitions? There are two options for this:
 
-1)  use the interactive cohort builder tool in [ATLAS](www.github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
+1)  use the interactive cohort builder tool in [ATLAS](https://www.github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
 
 2)  write your own custom SQL statements to fill the cohort table.
 
@@ -518,7 +518,7 @@ lrResults <- runPlp(
 )
 ```
 
-Under the hood the package will now use the [`Cyclops`](www.github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 75% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
+Under the hood the package will now use the [`Cyclops`](https://www.github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 74% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
 
 You can save the model using:
 
