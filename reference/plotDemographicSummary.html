@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Plot the Observed vs. expected incidence, by age and gender</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
       <div class="d-none name"><code>plotDemographicSummary.Rd</code></div>
     </div>
 
@@ -114,10 +114,10 @@ format.</p>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"plotDemographicSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">plpData</span>, outcomeId <span class="op">=</span> <span class="fl">3</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use timeStamp: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/RtmpLoLXve/plotDemographicSummary/2025-02-06-3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/RtmpwZ5nHb/plotDemographicSummary/2025-02-06-3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Patient-Level Prediction Package version 6.4.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-02-06 09:29:21.333048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-02-06 10:21:49.089694</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisID:         2025-02-06-3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisName:       Study details</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> TargetID:           1</span>
@@ -127,11 +127,11 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating population</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 954 observations, 954 unique subjects and 447 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0613 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0457 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> seed: 123</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 25% test and 75% train (into 3 folds) random stratified split by class</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 237 test cases and 717 train cases (239, 239, 239)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.305 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.233 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 239 patients with 112 outcomes - Fold 2 239 patients with 112 outcomes - Fold 3 239 patients with 112 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 70 covariates in train data</span>
@@ -140,7 +140,7 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 2 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.822 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.611 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 239 patients with 112 outcomes - Fold 2 239 patients with 112 outcomes - Fold 3 239 patients with 112 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 68 covariates in train data</span>
@@ -151,12 +151,12 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GLM fit status:  OK</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.168 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.307 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.133 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.236 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates and normalizing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.183 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.135 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.422 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.142 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0989 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.32 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for Test</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 55.41</span>
@@ -196,8 +196,8 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0171 - gradient:1.1268</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 0.94 intercept:         0.03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.55</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.262 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-02-06 09:29:23.802034</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.205 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-02-06 10:21:50.955345</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> This can take a while...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating binary labels</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Joining with strata</span>
@@ -214,13 +214,13 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TestWithOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Aggregating with labels and strata</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-02-06 09:29:24.707277</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.906 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-02-06 10:21:51.653854</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.699 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Run finished successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving PlpResult</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating directory to save model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/RtmpLoLXve/plotDemographicSummary/2025-02-06-3\plpResult</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 3.46 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/RtmpwZ5nHb/plotDemographicSummary/2025-02-06-3\plpResult</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 2.64 secs</span>
 <span class="r-in"><span><span class="fu">plotDemographicSummary</span><span class="op">(</span><span class="va">plpResult</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plotDemographicSummary-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># clean up </span></span></span>
