@@ -123,3 +123,31 @@ test_that("Get eunomia with custom covariates", {
   expect_false(1002 %in% covRef$covariateId)
   expect_false(8532 %in% covRef$covariateId)
 })
+
+test_that("plpDataObjectDoc returns expected documentation text", {
+  doc <- plpDataObjectDoc()
+  expect_type(doc, "character")
+  expect_true(nzchar(doc)) # Non-empty string
+  expect_true(grepl("plpData", doc))
+  expect_true(grepl("cohorts", doc))
+  expect_true(grepl("covariateData", doc))
+})
+
+test_that("Print and print summary plpData work", {
+  out <- capture.output(print(plpData))
+  expect_true(any(grepl("plpData object", out)))
+  expect_true(any(grepl("At risk concept ID: 1", out)))
+  expect_true(any(grepl("Outcome concept ID.s.: 3", out)))
+  summ <- summary(plpData)
+  expect_type(summ, "list")
+  expect_s3_class(summ, "summary.plpData")
+  expect_true("targetId" %in% names(summ$metaData))
+  expect_true("outcomeIds" %in% names(summ$metaData))
+  printed <- capture.output(print(summ))
+  expect_true(any(grepl("plpData object summary", printed)))
+  expect_true(any(grepl("At risk cohort concept ID: 1", printed)))
+  expect_true(any(grepl("Outcome concept ID.s.: 3", printed)))
+  expect_true(any(grepl("People: 1800", printed)))
+  expect_true(any(grepl("Number of covariates: 75", printed)))
+  expect_true(any(grepl("Number of non-zero covariate values: 21949", printed)))
+})
