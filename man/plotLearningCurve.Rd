@@ -19,16 +19,16 @@ function.}
 
 \item{metric}{Specifies the metric to be plotted:
 \itemize{
-  \item{\code{'AUROC'} - use the area under the Receiver Operating
-    Characteristic curve}
-  \item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
-  \item{\code{'sBrier'} - use the scaled Brier score}
+\item{\code{'AUROC'} - use the area under the Receiver Operating
+Characteristic curve}
+\item{\code{'AUPRC'} - use the area under the Precision-Recall curve}
+\item{\code{'sBrier'} - use the scaled Brier score}
 }}
 
 \item{abscissa}{Specify the abscissa metric to be plotted:
 \itemize{
-  \item{\code{'events'} - use number of events}
-  \item{\code{'observations'} - use number of observations}
+\item{\code{'events'} - use number of events}
+\item{\code{'observations'} - use number of observations}
 }}
 
 \item{plotTitle}{Title of the learning curve plot.}
@@ -36,11 +36,11 @@ function.}
 \item{plotSubtitle}{Subtitle of the learning curve plot.}
 
 \item{fileName}{Filename of plot to be saved, for example \code{'plot.png'}.
-See the function \code{ggsave} in the ggplot2 package for supported file 
+See the function \code{ggsave} in the ggplot2 package for supported file
 formats.}
 }
 \value{
-A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to 
+A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to
 file in a different format.
 }
 \description{
@@ -48,13 +48,15 @@ Create a plot of the learning curve using the object returned
 from \code{createLearningCurve}.
 }
 \examples{
-\dontrun{
-# create learning curve object
-learningCurve <- createLearningCurve(population,
-                                     plpData,
-                                     modelSettings)
-# plot the learning curve
+\dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long to run }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+outcomeId <- 3
+modelSettings <- setLassoLogisticRegression(seed=42)
+learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
+saveDirectory = file.path(tempdir(), "learningCurve"), cores = 2)
 plotLearningCurve(learningCurve)
 }
-
+\dontshow{\}) # examplesIf}
 }

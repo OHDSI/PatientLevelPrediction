@@ -7,14 +7,14 @@
 createCohortCovariateSettings(
   cohortName,
   settingId,
-  cohortDatabaseSchema,
-  cohortTable,
+  cohortDatabaseSchema = NULL,
+  cohortTable = NULL,
   cohortId,
   startDay = -30,
   endDay = 0,
-  count = F,
-  ageInteraction = F,
-  lnAgeInteraction = F,
+  count = FALSE,
+  ageInteraction = FALSE,
+  lnAgeInteraction = FALSE,
   analysisId = 456
 )
 }
@@ -23,9 +23,11 @@ createCohortCovariateSettings(
 
 \item{settingId}{A unique id for the covariate time and}
 
-\item{cohortDatabaseSchema}{The schema of the database with the cohort}
+\item{cohortDatabaseSchema}{The schema of the database with the cohort. If
+nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.}
 
-\item{cohortTable}{the table name that contains the covariate cohort}
+\item{cohortTable}{the table name that contains the covariate cohort. If
+nothing is specified then the cohortTable from databaseDetails at runtime is used.}
 
 \item{cohortId}{cohort id for the covariate cohort}
 
@@ -43,8 +45,8 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 \item{analysisId}{The analysisId for the covariate}
 }
 \value{
-An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
- cohortId x 100000 + settingId x 1000 + analysisId
+An object of class \code{covariateSettings} specifying how to create the cohort covariate with the covariateId
+cohortId x 100000 + settingId x 1000 + analysisId
 }
 \description{
 Extracts covariates based on cohorts
@@ -52,4 +54,11 @@ Extracts covariates based on cohorts
 \details{
 The user specifies a cohort and time period and then a covariate is constructed whether they are in the
 cohort during the time periods relative to target population cohort index
+}
+\examples{
+createCohortCovariateSettings(cohortName="testCohort",
+                              settingId=1,
+                              cohortId=1,
+                              cohortDatabaseSchema="cohorts",
+                              cohortTable="cohort_table")
 }

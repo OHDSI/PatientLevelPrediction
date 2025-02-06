@@ -7,12 +7,12 @@
 outcomeSurvivalPlot(
   plpData,
   outcomeId,
-  populationSettings = createStudyPopulationSettings(binary = T, includeAllOutcomes = T,
-    firstExposureOnly = FALSE, washoutPeriod = 0, removeSubjectsWithPriorOutcome = TRUE,
-    priorOutcomeLookback = 99999, requireTimeAtRisk = F, riskWindowStart = 1, startAnchor
-    = "cohort start", riskWindowEnd = 3650, endAnchor = "cohort start"),
-  riskTable = T,
-  confInt = T,
+  populationSettings = createStudyPopulationSettings(binary = TRUE, includeAllOutcomes =
+    TRUE, firstExposureOnly = FALSE, washoutPeriod = 0, removeSubjectsWithPriorOutcome =
+    TRUE, priorOutcomeLookback = 99999, requireTimeAtRisk = FALSE, riskWindowStart = 1,
+    startAnchor = "cohort start", riskWindowEnd = 3650, endAnchor = "cohort start"),
+  riskTable = TRUE,
+  confInt = TRUE,
   yLabel = "Fraction of those who are outcome free in target population"
 )
 }
@@ -30,11 +30,19 @@ outcomeSurvivalPlot(
 \item{yLabel}{(string) The label for the y-axis}
 }
 \value{
-TRUE if it ran
+A \code{ggsurvplot} object
 }
 \description{
 Plot the outcome incidence over time
 }
 \details{
 This creates a survival plot that can be used to pick a suitable time-at-risk period
+}
+\examples{
+\dontshow{if (rlang::is_installed("survminer")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
+print(plotObject)
+\dontshow{\}) # examplesIf}
 }

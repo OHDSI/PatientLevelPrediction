@@ -6,6 +6,7 @@
 \usage{
 getCohortCovariateData(
   connection,
+  tempEmulationSchema = NULL,
   oracleTempSchema = NULL,
   cdmDatabaseSchema,
   cdmVersion = "5",
@@ -20,7 +21,9 @@ getCohortCovariateData(
 \arguments{
 \item{connection}{The database connection}
 
-\item{oracleTempSchema}{The temp schema if using oracle}
+\item{tempEmulationSchema}{The schema to use for temp tables}
+
+\item{oracleTempSchema}{DEPRECATED The temp schema if using oracle}
 
 \item{cdmDatabaseSchema}{The schema of the OMOP CDM data}
 
@@ -39,7 +42,7 @@ getCohortCovariateData(
 \item{...}{additional arguments from FeatureExtraction}
 }
 \value{
-The models will now be in the package
+CovariateData object with covariates, covariateRef, and analysisRef tables
 }
 \description{
 Extracts covariates based on cohorts
@@ -47,4 +50,31 @@ Extracts covariates based on cohorts
 \details{
 The user specifies a cohort and time period and then a covariate is constructed whether they are in the
 cohort during the time periods relative to target population cohort index
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long to run }
+library(DatabaseConnector)
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+# create some cohort of people born in 1969, index date is their date of birth
+con <- connect(connectionDetails)
+executeSql(con, "INSERT INTO main.cohort 
+                 SELECT 1969 as COHORT_DEFINITION_ID, PERSON_ID as SUBJECT_ID,
+                 BIRTH_DATETIME as COHORT_START_DATE, BIRTH_DATETIME as COHORT_END_DATE
+                 FROM main.person WHERE YEAR_OF_BIRTH = 1969")
+covariateData <- getCohortCovariateData(connection = con,
+                                        cdmDatabaseSchema = "main",
+                                        aggregated = FALSE,
+                                        rowIdField = "SUBJECT_ID",
+                                       cohortTable = "cohort",
+                                        covariateSettings = createCohortCovariateSettings(
+                                                               cohortName="summerOfLove",
+                                                               cohortId=1969, 
+                                                               settingId=1,
+                                                               cohortDatabaseSchema="main",
+                                                               cohortTable="cohort"))
+covariateData$covariateRef
+covariateData$covariates
+}
+\dontshow{\}) # examplesIf}
 }

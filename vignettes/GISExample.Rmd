@@ -1,0 +1,266 @@
+---
+title: "Integration of GIS Data Into OHDSI Model Building"
+author: "Jared Houghtaling"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Integration of GIS Data Into OHDSI Model Building}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Integration of GIS Data into OHDSI Model Building
+
+## Motivation
+
+Although the proposed GIS extension tables have been approved by the broader OHDSI community, they are not yet integrated natively into the OHDSI tooling. These tables and the data they capture, however, can still be referenced in standard model building and analytics workflows. The purpose of this analytics demonstration is to show how data in the EXPOSURE_OCCURRENCE table can be utilized in the training and evaluation of an OMOP-specific patient-level-prediction (PLP) model. The analytic process we executed and describe below relies on a GIS-version of the Tufts Synthetic Dataset that has both EHR and geospatial data integrated; see the [description](https://github.com/OHDSI/GIS/issues/345#issuecomment-2417261931) of that dataset for more details about contents or access. Much of the work is based on the detailed vignette that describes custom feature engineering in PLP `vignette('AddingCustomFeatureEngineering')`
+
+## Step-by-Step Process
+
+### Step 1: Create Target & Outcome Cohorts
+
+We defined our `target` cohort within the sampling procedures when creating a subset of the Tufts Synthetic Data, and we described this process at length elsewhere. For the purposes of using the PLP package, we formalized this group of individuals in the cohort table using a simple cohort definition including all individuals with "any visit", and include that atlas-compatible json definition here for reference.
+
+We also created our `outcome` cohort - in this case, those patients with COPD or a conceptual descendant thereof - in Atlas and have shared the json definition (we also included an equivalent SQL script).
+
+### Step 2: Create Generic PLP Lasso Logistic Regression Model in R
+
+It is possible to create an R package that serves as a basis for a PLP model using Atlas, but given Atlas does not yet support the GIS extension, we have created this demo model directly using the PLP package.
+
+After configuring the environment (very important!) appropriately, we imported necessary packages and defined the relevant parameters about the data source:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+library(PatientLevelPrediction)
+library(dplyr)
+outputFolder <- "/ohdsi-gis/copdResultsPM25_NEW"
+saveDirectory <- outputFolder
+ExecutionDateTime <- Sys.time()
+logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+                                  "runPlp Log")
+analysisName = 'Generic PLP'
+
+# Details for connecting to the server:
+connectionDetails <- DatabaseConnector::createConnectionDetails(
+        dbms = 'spark',
+        server = '/default',
+        connectionString = '<REDACTED>'
+    )
+# Add the database containing the OMOP CDM data
+cdmDatabaseSchema <- 'gis_syn_dataset_5_4'
+# Add a sharebale name for the database containing the OMOP CDM data
+cdmDatabaseName <- 'TSD-GIS'
+# Add a database with read/write access as this is where the cohorts will be generated
+cohortDatabaseSchema <- 'gis_syn_dataset_5_4'
+tempEmulationSchema <- NULL
+# table name where the cohorts will be generated
+cohortTable <- 'cohort'
+```
+
+After defining parameters, we created a database settings object and launched the `runMultiplePLP` function to create a base `plpData` object:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+databaseDetails <- PatientLevelPrediction::createDatabaseDetails(
+        connectionDetails = connectionDetails, 
+        cdmDatabaseSchema = cdmDatabaseSchema, 
+        cdmDatabaseName = cdmDatabaseName, 
+        tempEmulationSchema = tempEmulationSchema, 
+        cohortDatabaseSchema = cohortDatabaseSchema, 
+        cohortTable = cohortTable, 
+        outcomeDatabaseSchema = cohortDatabaseSchema,  
+        outcomeTable = cohortTable, 
+        cdmVersion = 5
+)
+
+
+# Run very simple LR model against two cohorts created in Atlas. Use model 
+# as basis for augmented model with pollutants below 
+runMultiplePlp(
+   databaseDetails = databaseDetails,
+   modelDesignList = list(createModelDesign(targetId = 9, outcomeId = 8, modelSettings =
+                                              setLassoLogisticRegression())),
+   onlyFetchData = F,
+   cohortDefinitions = NULL,
+   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+                                     "runPlp Log"),
+   saveDirectory = outputFolder,
+   sqliteLocation = file.path(saveDirectory, "sqlite")
+ )
+```
+
+### Step 3: Split plpData object to train/test, augment labels with EXPOSURE_OCCURRENCE values
+
+The labels sub-object within `plpData` contains per-individual data elements like gender and age; we added an additional data element to this object derived from the `EXPOSURE_OCCURRENCE` table:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+cohortDefinitions <- NULL
+modelDesign <- createModelDesign(targetId = 9, outcomeId = 8, modelSettings = setLassoLogisticRegression())
+populationSettings <- modelDesign$populationSettings
+splitSettings <- modelDesign$splitSettings
+
+plpData <- loadPlpData("/ohdsi-gis/copdResultsPM25_B/targetId_9_L1")
+
+mySplit <- splitData (plpData = plpData,
+                      population = createStudyPopulation(plpData, 8, populationSettings),
+                      splitSettings = splitSettings)
+
+
+labelTrain <- mySplit$Train$labels
+conn <- DatabaseConnector::connect(connectionDetails)
+pollutants <- DatabaseConnector::querySql(conn, "SELECT person_id as subjectID, CAST(MEAN(value_as_number) AS DOUBLE) AS pmValue FROM gis_syn_dataset_5_4.exposure_occurrence WHERE value_as_number IS NOT NULL GROUP BY person_id;")
+labelTrainPol <- merge(x=labelTrain, y=pollutants, by.x = "subjectId", by.y = "SUBJECTID")
+
+mySplit$Train$labels <- labelTrainPol
+
+labelTest <- mySplit$Test$labels
+labelTestPol <- merge(x=labelTest, y=pollutants, by.x = "subjectId", by.y = "SUBJECTID")
+
+mySplit$Test$labels <- labelTestPol
+
+trainData <- mySplit$Train
+
+testData <- mySplit$Test
+```
+
+### Step 4: Reference augmented label objects in custom feature engineering function
+
+We would like to convert our per-patient labels into the `covariateData` structure referenced by the PLP workflow. To do this, we were able to follow the feature engineering vignette and create two functions, `createPollutants` and `implementPollutants`:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+createPollutants <- function(
+                     method = 'QNCV'
+                     ){
+  
+  # create list of inputs to implement function
+  featureEngineeringSettings <- list(
+    method = method
+    )
+  
+  # specify the function that will implement the sampling
+  attr(featureEngineeringSettings, "fun") <- "implementPollutants"
+
+  # make sure the object returned is of class "sampleSettings"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  return(featureEngineeringSettings)
+  
+}
+
+
+implementPollutants <- function(trainData, featureEngineeringSettings, model=NULL) {
+  if (is.null(model)) {
+    method <- featureEngineeringSettings$method
+    gisData <- trainData$labels
+    y <- gisData$outcomeCount
+    X <- gisData$PMVALUE
+    model <- mgcv::gam(
+      y ~ s(X, bs='cr', k=5, m=2)
+    )
+    newData <- data.frame(
+      rowId = gisData$rowId,
+      covariateId = 2052499839,
+      covariateValue = model$fitted.values 
+    )
+  }
+  else {
+    gisData <- trainData$labels
+    X <- gisData$PMVALUE
+    y <- gisData$outcomeCount
+    newData <- data.frame(y=y, X=X)
+    yHat <- predict(model, newData)
+    newData <- data.frame(
+      rowId = gisData$rowId,
+      covariateId = 2052499839,
+      covariateValue = yHat
+    )
+  }
+  # update covRef
+  Andromeda::appendToTable(trainData$covariateData$covariateRef, 
+                           data.frame(covariateId=2052499839,
+                                      covariateName='Average PM2.5 Concentrations',
+                                      analysisId=1,
+                                      conceptId=2052499839))
+  
+  # update covariates
+  Andromeda::appendToTable(trainData$covariateData$covariates, newData)
+  
+  featureEngineering <- list(
+    funct = 'implementPollutants',
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      model = model
+    )
+  )
+  
+  attr(trainData$covariateData, 'metaData')$featureEngineering = listAppend(
+    attr(trainData$covariateData, 'metaData')$featureEngineering,
+    featureEngineering
+  )
+  
+  trainData$model <- model
+  
+  return(trainData)
+}
+```
+
+We can then execute these functions to create training and test data objects that contain our extended covariates:
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+featureEngineeringSettingsPol <- createPollutants('QNCV')
+trainDataPol <- implementPollutants(trainData, featureEngineeringSettings)
+testDataPol <- implementPollutants(testData, featureEngineeringSettings, trainDataPol$model)
+```
+
+Note that if we plot the output model of the `GAM` fitting in the `implementPollutants` function, we end up with a plot that aligns well with our underlying relationship between Odds Ratio and PM2.5 concentration that we used to distribute our synthetic data by location:
+
+![Covariate Fit](images/gis1.avif)
+
+![OR Estimation](images/gis2.avif)
+
+### Step 5: Apply new train and test datasets to `runPlp` and evaluate output
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE, eval=FALSE}
+analysisId <- '1'
+analysisPath = file.path(saveDirectory, analysisId)
+
+settings <- list(
+  trainData = trainDataPol, 
+  modelSettings = setLassoLogisticRegression(),
+  analysisId = analysisId,
+  analysisPath = analysisPath
+)
+
+ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
+model <- tryCatch(
+  {
+    do.call(fitPlp, settings)
+  },
+  error = function(e) { ParallelLogger::logError(e); return(NULL)}
+)
+
+
+prediction <- model$prediction
+# remove prediction from model
+model$prediction <- NULL
+
+#apply to test data if exists:
+if('Test' %in% names(data)){
+predictionTest <- tryCatch(
+  {
+	predictPlp(
+	  plpModel = model, 
+	  plpData = testDataPol,
+	  population = testDataPol$labels
+	)
+  },
+  error = function(e) { ParallelLogger::logError(e); return(NULL)}
+)
+
+predictionTest$evaluationType <- 'Test'
+
+if(!is.null(predictionTest)){
+  prediction <- rbind(predictionTest, prediction[, colnames(prediction)!='index'])
+}
+
+
+}
+
+```

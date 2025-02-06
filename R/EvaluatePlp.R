@@ -1,6 +1,6 @@
-# @file Evaluate.R
+# @file EvaluatePlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -23,93 +23,130 @@
 #' @details
 #' The function calculates various metrics to measure the performance of the model
 #' @param prediction                         The patient level prediction model's prediction
-#' @param typeColumn                         The column name in the prediction object that is used to 
+#' @param typeColumn                         The column name in the prediction object that is used to
 #'                                           stratify the evaluation
 #' @return
-#' A list containing the performance values
-#'
-
+#' An object of class plpEvaluation containing the following components
+#' - evaluationStatistics: A data frame containing the evaluation statistics'
+#' - thresholdSummary: A data frame containing the threshold summary'
+#' - demographicSummary: A data frame containing the demographic summary'
+#' - calibrationSummary: A data frame containing the calibration summary'
+#' - predictionDistribution: A data frame containing the prediction distribution'
+#' @examples
+#' \donttest{ \dontshow{ # takes too long to run }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n= 1500)
+#' population <- createStudyPopulation(plpData, outcomeId = 3, 
+#'                                     populationSettings = createStudyPopulationSettings())
+#' data <- splitData(plpData, population, splitSettings=createDefaultSplitSetting(splitSeed=42))
+#' data$Train$covariateData <- preprocessData(data$Train$covariateData, 
+#'                                            createPreprocessSettings())
+#' path <- file.path(tempdir(), "plp")
+#' model <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+#'                 analysisId=1, analysisPath = path)
+#' evaluatePlp(model$prediction) # Train and CV metrics
+#' }
 #' @export
-evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
-
+evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
+  start <- Sys.time()
   # checking inputs
-  #========================================
+  # ========================================
   modelType <- attr(prediction, "metaData")$modelType
-  
+
   # could remove the bit below to let people add custom types (but currently
-  # we are thinking this should be set - so people should add a new type 
+  # we are thinking this should be set - so people should add a new type
   # evaluation into the package rather than use custom
-  if (!modelType %in% c("binary","survival")) {
-    stop('Currently only support binary or survival classification models')
+  if (!modelType %in% c("binary", "survival")) {
+    stop("Currently only support binary or survival classification models")
   }
-  
-  if(is.null(prediction$outcomeCount)){
-    stop('No outcomeCount column present')
+
+  if (is.null(prediction$outcomeCount)) {
+    stop("No outcomeCount column present")
   }
-  if(length(unique(prediction$value))==1){
-    stop('Cannot evaluate as predictions all the same value')
+  if (length(unique(prediction$value)) == 1) {
+    stop("Cannot evaluate as predictions all the same value")
   }
-  
+
   # 1) evaluationSummary
-  ParallelLogger::logTrace(paste0('Calulating evaluation summary Started @ ',Sys.time()))
+  ParallelLogger::logTrace(paste0("Calulating evaluation summary Started @ ", Sys.time()))
   evaluationStatistics <- getEvaluationStatistics(
-    prediction = prediction, 
+    prediction = prediction,
     predictionType = modelType,
     typeColumn = typeColumn
   )
-      
+
   # 2) thresholdSummary
   # need to update thresholdSummary this with all the requested values
-  ParallelLogger::logTrace(paste0('Calulating threshold summary Started @ ',Sys.time()))
-  thresholdSummary <- tryCatch({
-    getThresholdSummary(
-      prediction = prediction,
-      predictionType = modelType,
-      typeColumn = typeColumn
-    ) 
-  },
-    error = function(e){ParallelLogger::logInfo('getThresholdSummary error');ParallelLogger::logInfo(e);return(NULL)}
-  )
-      
-  # 3) demographicSummary
-  ParallelLogger::logTrace(paste0('Calulating Demographic Based Evaluation Started @ ',Sys.time()))
-  demographicSummary <- tryCatch({
-    getDemographicSummary(
-      prediction = prediction,
-      predictionType = modelType,
-      typeColumn = typeColumn
+  ParallelLogger::logTrace(paste0("Calulating threshold summary Started @ ", Sys.time()))
+  thresholdSummary <- tryCatch(
+    {
+      getThresholdSummary(
+        prediction = prediction,
+        predictionType = modelType,
+        typeColumn = typeColumn
       )
     },
-    error = function(e){ParallelLogger::logInfo('getDemographicSummary error');ParallelLogger::logInfo(e);return(NULL)}
+    error = function(e) {
+      ParallelLogger::logInfo("getThresholdSummary error")
+      ParallelLogger::logInfo(e)
+      return(NULL)
+    }
   )
-  
+
+  # 3) demographicSummary
+  ParallelLogger::logTrace(paste0("Calulating Demographic Based Evaluation Started @ ", Sys.time()))
+  demographicSummary <- tryCatch(
+    {
+      getDemographicSummary(
+        prediction = prediction,
+        predictionType = modelType,
+        typeColumn = typeColumn
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logInfo("getDemographicSummary error")
+      ParallelLogger::logInfo(e)
+      return(NULL)
+    }
+  )
+
   # 4) calibrationSummary
-  ParallelLogger::logTrace(paste0('Calculating Calibration Summary Started @ ',Sys.time()))
-  calibrationSummary <- tryCatch({
-    getCalibrationSummary(
-      prediction = prediction,
-      predictionType = modelType,
-      typeColumn = typeColumn,
-      numberOfStrata = 100,
-      truncateFraction = 0.01
-    )
-  },
-    error = function(e){ParallelLogger::logInfo('getCalibrationSummary error');ParallelLogger::logInfo(e);return(NULL)}
+  ParallelLogger::logTrace(paste0("Calculating Calibration Summary Started @ ", Sys.time()))
+  calibrationSummary <- tryCatch(
+    {
+      getCalibrationSummary(
+        prediction = prediction,
+        predictionType = modelType,
+        typeColumn = typeColumn,
+        numberOfStrata = 100,
+        truncateFraction = 0.01
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logInfo("getCalibrationSummary error")
+      ParallelLogger::logInfo(e)
+      return(NULL)
+    }
   )
-  
-  
+
+
   # 5) predictionDistribution - done
-  ParallelLogger::logTrace(paste0('Calculating Quantiles Started @ ',Sys.time()))
-  predictionDistribution <- tryCatch({
-    getPredictionDistribution(
-      prediction = prediction,
-      predictionType = modelType,
-      typeColumn = typeColumn
-    )
-  },
-    error = function(e){ParallelLogger::logInfo('getPredictionDistribution error');ParallelLogger::logInfo(e);return(NULL)}
+  ParallelLogger::logTrace(paste0("Calculating Quantiles Started @ ", Sys.time()))
+  predictionDistribution <- tryCatch(
+    {
+      getPredictionDistribution(
+        prediction = prediction,
+        predictionType = modelType,
+        typeColumn = typeColumn
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logInfo("getPredictionDistribution error")
+      ParallelLogger::logInfo(e)
+      return(NULL)
+    }
   )
-      
+
   result <- list(
     evaluationStatistics = evaluationStatistics,
     thresholdSummary = thresholdSummary,
@@ -118,38 +155,44 @@ evaluatePlp <- function(prediction, typeColumn = 'evaluationType'){
     predictionDistribution = predictionDistribution
   )
 
-  class(result) <- 'plpEvaluation'
-  
+  class(result) <- "plpEvaluation"
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Time to calculate evaluation metrics: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
   return(result)
-
 }
 
 
 
 
-#' Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
-#' as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
-#' 
+#' Calculate the model-based concordance, which is a calculation of the expected 
+#' discrimination performance of a model under the assumption the model predicts 
+#' the "TRUE" outcome as detailed in van Klaveren et al. 
+#' https://pubmed.ncbi.nlm.nih.gov/27251001/
+#'
 #' @details
 #' Calculate the model-based concordance
 #'
 #' @param prediction         the prediction object found in the plpResult object
-#' 
-#' @return
-#' model-based concordance value
 #'
+#' @return
+#' The model-based concordance value
+#' @examples
+#' prediction <- data.frame(value = runif(100))
+#' modelBasedConcordance(prediction)
 #' @export
-modelBasedConcordance <- function(prediction){
-  if (!length(prediction$value >0)){
+modelBasedConcordance <- function(prediction) {
+  if (!length(prediction$value > 0)) {
     stop("Prediction object not found")
   }
   prediction <- prediction$value
-  n<-length(prediction)
-  ord<-order(prediction)
-  prediction<-prediction[ord]
-  q.hat<-1-prediction
-  V1<-(prediction*(cumsum(q.hat)-q.hat)+q.hat*(sum(prediction)-cumsum(prediction)))/(n-1)
-  V2<-(prediction*(sum(q.hat)-q.hat)+q.hat*(sum(prediction)-prediction))/(n-1)
-  mb.c<-sum(V1)/sum(V2)
-  return(mb.c)
+  n <- length(prediction)
+  ord <- order(prediction)
+  prediction <- prediction[ord]
+  qHat <- 1 - prediction
+  v1 <- (prediction * (cumsum(qHat) - qHat) + 
+    qHat * (sum(prediction) - cumsum(prediction))) / (n - 1)
+  v2 <- (prediction * (sum(qHat) - qHat) + qHat * (sum(prediction) - prediction)) / (n - 1)
+  mbC <- sum(v1) / sum(v2)
+  return(mbC)
 }

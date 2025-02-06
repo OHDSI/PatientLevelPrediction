@@ -1,6 +1,6 @@
 # @file DatabaseMigration.R
 #
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -26,7 +26,9 @@
 #' @param connectionDetails             DatabaseConnector connection details object
 #' @param databaseSchema                String schema where database schema lives
 #' @param  tablePrefix                  (Optional) Use if a table prefix is used before table names (e.g. "cd_")
-#' 
+#'
+#' @return Nothing. Is called for side effects of migrating data model in the 
+#' database
 #' @export
 migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = "") {
   ParallelLogger::logInfo("Migrating data set")
@@ -56,7 +58,7 @@ migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = ""
 
 
 getDataMigrator <- function(connectionDetails, databaseSchema, tablePrefix = "") {
-  ensure_installed("ResultModelManager")
+  rlang::check_installed("ResultModelManager")
   
   ResultModelManager::DataMigrationManager$new(
     connectionDetails = connectionDetails,

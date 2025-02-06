@@ -14,7 +14,7 @@ covariateSummary(
 )
 }
 \arguments{
-\item{covariateData}{The covariateData part of the plpData that is 
+\item{covariateData}{The covariateData part of the plpData that is
 extracted using \code{getPlpData}}
 
 \item{cohort}{The patient cohort to calculate the summary}
@@ -23,7 +23,7 @@ extracted using \code{getPlpData}}
 
 \item{strata}{A data.frame containing the columns rowId, strataName}
 
-\item{variableImportance}{A data.frame with the columns covariateId and 
+\item{variableImportance}{A data.frame with the columns covariateId and
 value (the variable importance value)}
 
 \item{featureEngineering}{(currently not used )
@@ -31,15 +31,21 @@ A function or list of functions specifying any feature engineering
 to create covariates before summarising}
 }
 \value{
-A data.frame containing: CovariateCount	CovariateMean and CovariateStDev plus these values
+A data.frame containing: CovariateCount, CovariateMean and CovariateStDev
 for any specified stratification
 }
 \description{
-Summarises the covariateData to calculate the mean and standard deviation per covaraite
-if the labels are input it also stratifies this by class label and if the trainRowIds and testRowIds
+Summarises the covariateData to calculate the mean and standard deviation per covariate
+if the labels are given it also stratifies this by class label and if the trainRowIds and testRowIds
 specifying the patients in the train/test sets respectively are input, these values are also stratified
 by train and test set
 }
 \details{
 The function calculates various metrics to measure the performance of the model
+}
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=100)
+covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
+head(covariateSummary)
 }

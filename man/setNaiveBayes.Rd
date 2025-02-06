@@ -6,11 +6,22 @@
 \usage{
 setNaiveBayes()
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for naive bayes model with python
 }
 \examples{
-\dontrun{
-model.nb <- setNaiveBayes()
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it}
+plpData <- getEunomiaPlpData()
+model <- setNaiveBayes()
+analysisId <- "naiveBayes"
+saveLocation <- file.path(tempdir(), analysisId)
+results <- runPlp(plpData, modelSettings = model,
+                  saveDirectory = saveLocation,
+                  analysisId = analysisId)
+# clean up
+unlink(saveLocation, recursive = TRUE)
 }
 }

@@ -35,9 +35,12 @@ setCoxModel(
 
 \item{maxIterations}{Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error}
 }
+\value{
+\code{modelSettings} object
+}
 \description{
 Create setting for lasso Cox model
 }
 \examples{
-model.lr <- setCoxModel()
+coxL1 <- setCoxModel()
 }

@@ -1,6 +1,3 @@
-#Sys.setenv("R_TESTS" = "")
-#options(fftempdir = file.path(getwd(),'fftemp'))
 library(testthat)
 library(PatientLevelPrediction)
 test_check("PatientLevelPrediction")
-unlink('T:/Temp', recursive = T)

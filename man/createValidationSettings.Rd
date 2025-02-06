@@ -4,7 +4,7 @@
 \alias{createValidationSettings}
 \title{createValidationSettings define optional settings for performing external validation}
 \usage{
-createValidationSettings(recalibrate = NULL, runCovariateSummary = T)
+createValidationSettings(recalibrate = NULL, runCovariateSummary = TRUE)
 }
 \arguments{
 \item{recalibrate}{A vector of characters specifying the recalibration method to apply}
@@ -19,4 +19,10 @@ This function creates the settings required by externalValidatePlp
 }
 \details{
 Users need to specify whether they want to sample or recalibate when performing external validation
+}
+\examples{
+# do weak recalibration and don't run covariate summary
+createValidationSettings(recalibrate = "weakRecalibration", 
+                         runCovariateSummary = FALSE)
+
 }

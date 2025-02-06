@@ -4,7 +4,11 @@
 \alias{createLogSettings}
 \title{Create the settings for logging the progression of the analysis}
 \usage{
-createLogSettings(verbosity = "DEBUG", timeStamp = T, logName = "runPlp Log")
+createLogSettings(
+  verbosity = "DEBUG",
+  timeStamp = TRUE,
+  logName = "runPlp Log"
+)
 }
 \arguments{
 \item{verbosity}{Sets the level of the verbosity. If the log level is at or higher in priority than the logger threshold, a message will print. The levels are:
@@ -22,11 +26,16 @@ createLogSettings(verbosity = "DEBUG", timeStamp = T, logName = "runPlp Log")
 \item{logName}{A string reference for the logger}
 }
 \value{
-An object of class \code{logSettings}
+An object of class \code{logSettings} containing the settings for the logger
 }
 \description{
 Create the settings for logging the progression of the analysis
 }
 \details{
 Returns an object of class \code{logSettings} that specifies the logger settings
+}
+\examples{
+# create a log settings object with DENUG verbosity, timestamp and log name 
+# "runPlp Log". This needs to be passed to `runPlp`.
+createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
 }

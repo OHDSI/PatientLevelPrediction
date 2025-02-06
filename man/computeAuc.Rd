@@ -12,10 +12,19 @@ computeAuc(prediction, confidenceInterval = FALSE)
 
 \item{confidenceInterval}{Should 95 percebt confidence intervals be computed?}
 }
+\value{
+A data.frame containing the AUC and optionally the 95\% confidence interval
+}
 \description{
 Compute the area under the ROC curve
 }
 \details{
 Computes the area under the ROC curve for the predicted probabilities, given the true observed
 outcomes.
+}
+\examples{
+prediction <- data.frame(
+  value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  outcomeCount = c(0, 1, 0, 1, 1))
+computeAuc(prediction)
 }

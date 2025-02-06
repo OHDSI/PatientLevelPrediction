@@ -2,7 +2,8 @@
 % Please edit documentation in R/SklearnClassifierSettings.R
 \name{setMLP}
 \alias{setMLP}
-\title{Create setting for neural network model with python}
+\title{Create setting for neural network model with python's scikit-learn. For
+bigger models, consider using \code{DeepPatientLevelPrediction} package.}
 \usage{
 setMLP(
   hiddenLayerSizes = list(c(100), c(20)),
@@ -33,11 +34,11 @@ setMLP(
 
 \item{activation}{(list) Activation function for the hidden layer.
 \itemize{
-   \item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
-   \item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
-   \item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
-   \item "relu": the rectified linear unit function, returns f(x) = max(0, x)
- }}
+\item "identity": no-op activation, useful to implement linear bottleneck, returns f(x) = x
+\item "logistic": the logistic sigmoid function, returns f(x) = 1 / (1 + exp(-x)).
+\item "tanh": the hyperbolic tan function, returns f(x) = tanh(x).
+\item "relu": the rectified linear unit function, returns f(x) = max(0, x)
+}}
 
 \item{solver}{(list) The solver for weight optimization. (‘lbfgs’, ‘sgd’, ‘adam’)}
 
@@ -77,11 +78,15 @@ setMLP(
 
 \item{seed}{A seed for the model}
 }
+\value{
+a modelSettings object
+}
 \description{
-Create setting for neural network model with python
+Create setting for neural network model with python's scikit-learn. For
+bigger models, consider using \code{DeepPatientLevelPrediction} package.
 }
 \examples{
-\dontrun{
-model.mlp <- setMLP()
+\dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+model <- setMLP(hiddenLayerSizes = list(c(20)), alpha=list(3e-4), seed = 42)
 }
 }

@@ -2,9 +2,9 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{savePlpData}
 \alias{savePlpData}
-\title{Save the cohort data to folder}
+\title{Save the plpData to folder}
 \usage{
-savePlpData(plpData, file, envir = NULL, overwrite = F)
+savePlpData(plpData, file, envir = NULL, overwrite = FALSE)
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} as generated using
@@ -17,13 +17,20 @@ not yet exist.}
 
 \item{overwrite}{Whether to force overwrite an existing file}
 }
+\value{
+Called for its side effect, the data will be written to a set of files in the
+folder specified by the user.
+}
 \description{
 \code{savePlpData} saves an object of type plpData to folder.
 }
-\details{
-The data will be written to a set of files in the folder specified by the user.
-}
 \examples{
-# todo
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "savePlpData")
+savePlpData(plpData, saveLoc)
+dir(saveLoc, full.names = TRUE)
 
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }

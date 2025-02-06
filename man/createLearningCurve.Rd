@@ -7,7 +7,7 @@
 createLearningCurve(
   plpData,
   outcomeId,
-  parallel = T,
+  parallel = TRUE,
   cores = 4,
   modelSettings,
   saveDirectory = getwd(),
@@ -18,11 +18,11 @@ createLearningCurve(
   trainEvents = NULL,
   sampleSettings = createSampleSettings(),
   featureEngineeringSettings = createFeatureEngineeringSettings(),
-  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = T),
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
   logSettings = createLogSettings(),
-  executeSettings = createExecuteSettings(runSplitData = T, runSampleData = F,
-    runfeatureEngineering = F, runPreprocessData = T, runModelDevelopment = T,
-    runCovariateSummary = F)
+  executeSettings = createExecuteSettings(runSplitData = TRUE, runSampleData = FALSE,
+    runFeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
+    runCovariateSummary = FALSE)
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ data extracted from the CDM.}
 \item{analysisId}{(integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.}
 
 \item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
-specifies how the data class labels are defined and addition any exclusions to apply to the 
+specifies how the data class labels are defined and addition any exclusions to apply to the
 plpData cohort}
 
 \item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
@@ -65,7 +65,7 @@ Therefore, it is recommended to provide \code{trainEvents} rather than
 \code{trainFractions}. Note, providing \code{trainEvents} will override
 your input to \code{trainFractions}. The format should be as follows:
 \itemize{
-  \item \code{c(500, 1000, 1500) } - a list of training events
+\item \code{c(500, 1000, 1500) } - a list of training events
 }}
 
 \item{sampleSettings}{An object of type \code{sampleSettings} that specifies any under/over sampling to be done.
@@ -73,35 +73,35 @@ The default is none.}
 
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
-\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
-target population who must have a covariate for it to be included in the model training                            
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
+target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
 
-\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
 }
 \value{
 A learning curve object containing the various performance measures
- obtained by the model for each training set fraction. It can be plotted
- using \code{plotLearningCurve}.
+obtained by the model for each training set fraction. It can be plotted
+using \code{plotLearningCurve}.
 }
 \description{
 Creates a learning curve object, which can be plotted using the
- \code{plotLearningCurve()} function.
+\code{plotLearningCurve()} function.
 }
 \examples{
-\dontrun{
-# define model
-modelSettings = PatientLevelPrediction::setLassoLogisticRegression()
-
-# create learning curve
-learningCurve <- PatientLevelPrediction::createLearningCurve(population,
-                                                             plpData,
-                                                             modelSettings)
-# plot learning curve
-PatientLevelPrediction::plotLearningCurve(learningCurve)
+\dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+outcomeId <- 3
+modelSettings <- setLassoLogisticRegression(seed=42)
+learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
+saveDirectory = file.path(tempdir(), "learningCurve"), cores = 2)
+# clean up
+unlink(file.path(tempdir(), "learningCurve"), recursive = TRUE)
 }
-
+\dontshow{\}) # examplesIf}
 }

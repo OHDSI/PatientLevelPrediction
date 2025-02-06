@@ -24,3 +24,16 @@ Create predictive probabilities
 \details{
 Generates predictions for the population specified in plpData given the model.
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population)
+plpModel <- fitPlp(data$Train, modelSettings = setLassoLogisticRegression(),
+                   analysisId = "test", analysisPath = NULL)
+prediction <- predictCyclops(plpModel, data$Test, data$Test$labels)
+# view prediction dataframe
+head(prediction)
+}
+}

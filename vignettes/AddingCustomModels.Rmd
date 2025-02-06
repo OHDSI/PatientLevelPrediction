@@ -2,28 +2,14 @@
 title: "Adding Custom Patient-Level Prediction Algorithms"
 author: "Jenna Reps, Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek"
 date: "`r Sys.Date()`"
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
 ---
 
 ```{=html}
 <!--
-%\VignetteEngine{knitr::knitr}
+%\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Adding Custom Patient-Level Prediction Algorithms}
+%\VignetteEncoding{UTF-8}
 -->
 ```
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
@@ -32,9 +18,9 @@ library(PatientLevelPrediction)
 
 # Introduction
 
-This vignette describes how you can add your own custom algorithms in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This allows you to fully leverage the OHDSI PatientLevelPrediction framework for model development and validation. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/master/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can add your own custom algorithms in the Observational Health Data Sciencs and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package. This allows you to fully leverage the OHDSI PatientLevelPrediction framework for model development and validation. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
-**We invite you to share your new algorithms with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
+**We invite you to share your new algorithms with the OHDSI community through our [GitHub repository](https://github.com/OHDSI/PatientLevelPrediction).**
 
 # Algorithm Code Structure
 
@@ -50,42 +36,41 @@ The set\<Name\> is a function that takes as input the different hyper-parameter 
 The param object can have a setttings attribute containing any extra settings. For example to specify the model name and the seed used for reproducibility:
 
 ```{r, echo = TRUE, eval=FALSE}
-attr(param, 'settings') <- list(
+attr(param, "settings") <- list(
   seed = 12,
   modelName = "Special classifier"
-  )
+)
 ```
 
 For example, if you were adding a model called madeUp that has two hyper-parameters then the set function should be:
 
 ```{r tidy=FALSE,eval=FALSE}
-setMadeUp <- function(a=c(1,4,10), b=2, seed=NULL){
+setMadeUp <- function(a = c(1, 4, 10), b = 2, seed = NULL) {
   # add input checks here...
-  
+
   param <- split(
     expand.grid(
-      a=a, 
-      b=b
+      a = a,
+      b = b
     ),
-    1:(length(a)*length(b))
-    )
-  
-  attr(param, 'settings') <- list(
+    1:(length(a) * length(b))
+  )
+
+  attr(param, "settings") <- list(
     modelName = "Made Up",
     requiresDenseMatrix = TRUE,
     seed = seed
-    )
-  
+  )
+
   # now create list of all combinations:
   result <- list(
-    fitFunction = 'fitMadeUp', # this will be called to train the made up model
+    fitFunction = "fitMadeUp", # this will be called to train the made up model
     param = param
   )
-  class(result) <- 'modelSettings' 
-  
+  class(result) <- "modelSettings"
+
   return(result)
 }
-
 ```
 
 ## Fit
@@ -140,36 +125,35 @@ Note: If a new modelType is desired, then the evalaution code within PatientLeve
 A full example of a custom 'binary' classifier fit function is:
 
 ```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(trainData, modelSettings, search, analysisId){
-  
+fitMadeUp <- function(trainData, modelSettings, search, analysisId) {
   param <- modelSettings$param
-  
+
   # **************** code to train the model here
-  # trainedModel <- this code should apply each hyper-parameter combination   
+  # trainedModel <- this code should apply each hyper-parameter combination
   # (param[[i]]) using the specified search (e.g., cross validation)
   #                 then pick out the best hyper-parameter setting
-  #                 and finally fit a model on the whole train data using the 
+  #                 and finally fit a model on the whole train data using the
   #                 optimal hyper-parameter settings
   # ****************
-  
+
   # **************** code to apply the model to trainData
   # prediction <- code to apply trainedModel to trainData
   # ****************
-  
+
   # **************** code to get variable importance (if possible)
   # varImp <- code to get importance of each variable in trainedModel
   # ****************
-  
-  
+
+
   # construct the standard output for a model:
-  result <- list(model = trainedModel,
-                 prediction = prediction, # the train and maybe the cross validation predictions for the trainData
-                 preprocessing = list(
-                   featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
-      
-                 ),
+  result <- list(
+    model = trainedModel,
+    prediction = prediction, # the train and maybe the cross validation predictions for the trainData
+    preprocessing = list(
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
+      requireDenseMatrix = attr(param, "settings")$requiresDenseMatrix,
+    ),
     modelDesign = list(
       outcomeId = attr(trainData, "metaData")$outcomeId,
       targetId = attr(trainData, "metaData")$targetId,
@@ -177,37 +161,34 @@ fitMadeUp <- function(trainData, modelSettings, search, analysisId){
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
-      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings, 
+      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings,
       modelSettings = list(
-        model = attr(param, 'settings')$modelName, # the model name
+        model = attr(param, "settings")$modelName, # the model name
         param = param,
         finalModelParameters = param[[bestInd]], # best hyper-parameters
-        extraSettings = attr(param, 'settings')
+        extraSettings = attr(param, "settings")
       ),
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
-    
     trainDetails = list(
       analysisId = analysisId,
       developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
-      attrition = attr(trainData, "metaData")$attrition, 
+      attrition = attr(trainData, "metaData")$attrition,
       trainingTime = timeToTrain, # how long it took to train the model
       trainingDate = Sys.Date(),
       hyperParamSearch = hyperSummary # the hyper-parameters and performance data.frame
     ),
-    covariateImportance = merge(trainData$covariateData$covariateRef, varImp, by='covariateId') # add variable importance to covariateRef if possible
+    covariateImportance = merge(trainData$covariateData$covariateRef, varImp, by = "covariateId") # add variable importance to covariateRef if possible
   )
-  class(result) <- 'plpModel'
-  attr(result, 'predictionFunction') <- 'madeupPrediction'
-  attr(result, 'modelType') <- 'binary'
+  class(result) <- "plpModel"
+  attr(result, "predictionFunction") <- "madeupPrediction"
+  attr(result, "modelType") <- "binary"
   return(result)
-    
 }
-
 ```
 
-You could make the fitMadeUp function cleaner by adding helper function in the MadeUp.R file that are called by the fit function (for example a function to run cross validation). It is important to ensure there is a valid prediction function (the one specified by `attr(result, 'predictionFunction') <- 'madeupPrediction'` is `madeupPrediction()`) as specified below.
+You could make the fitMadeUp function cleaner by adding helper function in the MadeUp.R file that are called by the fit function (for example a function to run cross validation). It is important to ensure there is a valid prediction function (the one specified by `attr(result, "predictionFunction") <- "madeupPrediction"` is `madeupPrediction()`) as specified below.
 
 ## Predict
 
@@ -218,17 +199,15 @@ The prediction function takes as input the plpModel returned by fit, new data an
 For example:
 
 ```{r tidy=FALSE,eval=FALSE}
-madeupPrediction <- function(plpModel, data, cohort){ 
-
+madeupPrediction <- function(plpModel, data, cohort) {
   # ************* code to do prediction for each rowId in cohort
   # predictionValues <- code to do prediction here returning the predicted risk
-  #               (value) for each rowId in cohort 
+  #               (value) for each rowId in cohort
   #**************
-  
-  prediction <- merge(cohort, predictionValues, by='rowId')
-  attr(prediction, "metaData") <- list(modelType = attr(plpModel, 'modelType')) 
+
+  prediction <- merge(cohort, predictionValues, by = "rowId")
+  attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
   return(prediction)
-  
 }
 ```
 
@@ -239,117 +218,115 @@ Below a fully functional algorithm example is given, however we highly recommend
 ## Set
 
 ```{r tidy=FALSE,eval=FALSE}
-setMadeUp <- function(a=c(1,4,6), b=2, seed=NULL){
+setMadeUp <- function(a = c(1, 4, 6), b = 2, seed = NULL) {
   # add input checks here...
-  
-  if(is.null(seed)){
-    seed <- sample(100000,1)
+
+  if (is.null(seed)) {
+    seed <- sample(100000, 1)
   }
-  
+
   param <- split(
     expand.grid(
-      a=a, 
-      b=b
+      a = a,
+      b = b
     ),
-    1:(length(a)*length(b))
-    )
-  
-  attr(param, 'settings') <- list(
+    1:(length(a) * length(b))
+  )
+
+  attr(param, "settings") <- list(
     modelName = "Made Up",
     requiresDenseMatrix = TRUE,
     seed = seed
-    )
-  
+  )
+
   # now create list of all combinations:
   result <- list(
-    fitFunction = 'fitMadeUp', # this will be called to train the made up model
+    fitFunction = "fitMadeUp", # this will be called to train the made up model
     param = param
   )
-  class(result) <- 'modelSettings' 
-  
+  class(result) <- "modelSettings"
+
   return(result)
 }
-
 ```
 
 ## Fit
 
 ```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(trainData, modelSettings, search, analysisId){
-
+fitMadeUp <- function(trainData, modelSettings, search, analysisId) {
   # set the seed for reproducibility
   param <- modelSettings$param
-  set.seed(attr(param, 'settings')$seed)
-  
+  set.seed(attr(param, "settings")$seed)
+
   # add folds to labels:
-  trainData$labels <- merge(trainData$labels, trainData$folds, by= 'rowId')
+  trainData$labels <- merge(trainData$labels, trainData$folds, by = "rowId")
   # convert data into sparse R Matrix:
-  mappedData <- toSparseM(trainData,map=NULL)
+  mappedData <- toSparseM(trainData, map = NULL)
   matrixData <- mappedData$dataMatrix
   labels <- mappedData$labels
   covariateRef <- mappedData$covariateRef
 
-  #============= STEP 1 ======================================
+  # ============= STEP 1 ======================================
   # pick the best hyper-params and then do final training on all data...
-  writeLines('Cross validation')
-  param.sel <- lapply(
-    param, 
-    function(x){
+  writeLines("Cross validation")
+  paramSel <- lapply(
+    param,
+    function(x) {
       do.call(
-        made_up_model, 
+        madeUpModel,
         list(
-          param = x, 
-          final = F, 
-          data = matrixData, 
+          param = x,
+          final = FALSE,
+          data = matrixData,
           labels = labels
-          )  
+        )
       )
-      }
-    )
-  hyperSummary <- do.call(rbind, lapply(param.sel, function(x) x$hyperSum))
+    }
+  )
+  hyperSummary <- do.call(rbind, lapply(paramSel, function(x) x$hyperSum))
   hyperSummary <- as.data.frame(hyperSummary)
-  hyperSummary$auc <- unlist(lapply(param.sel, function(x) x$auc)) 
-  param.sel <- unlist(lapply(param.sel, function(x) x$auc))
-  bestInd <- which.max(param.sel)
-  
-  #get cross val prediction for best hyper-parameters
+  hyperSummary$auc <- unlist(lapply(paramSel, function(x) x$auc))
+  paramSel <- unlist(lapply(paramSel, function(x) x$auc))
+  bestInd <- which.max(paramSel)
+
+  # get cross val prediction for best hyper-parameters
   prediction <- param.sel[[bestInd]]$prediction
-  prediction$evaluationType <- 'CV'
-  
-  writeLines('final train')
+  prediction$evaluationType <- "CV"
+
+  writeLines("final train")
   finalResult <- do.call(
-    made_up_model, 
+    madeUpModel,
     list(
-      param = param[[bestInd]], 
-      final = T, 
-      data = matrixData, 
+      param = param[[bestInd]],
+      final = TRUE,
+      data = matrixData,
       labels = labels
-      )  
     )
-  
+  )
+
   trainedModel <- finalResult$model
-  
+
   # prediction risk on training data:
-  finalResult$prediction$evaluationType <- 'Train'
-  
+  finalResult$prediction$evaluationType <- "Train"
+
   # get CV and train prediction
   prediction <- rbind(prediction, finalResult$prediction)
-  
+
   varImp <- covariateRef %>% dplyr::collect()
   # no feature importance available
-  vqrImp$covariateValue <- 0 
-  
- timeToTrain <- Sys.time() - start
+  vqrImp$covariateValue <- 0
+
+  timeToTrain <- Sys.time() - start
 
   # construct the standard output for a model:
-  result <- list(model = trainedModel,
-                 prediction = prediction, 
+  result <- list(
+    model = trainedModel,
+    prediction = prediction,
     preprocessing = list(
-                   featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = attr(param, 'settings')$requiresDenseMatrix,
-      
-                 ),
+      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
+      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
+      requireDenseMatrix = attr(param, "settings")$requiresDenseMatrix,
+    ),
     modelDesign = list(
       outcomeId = attr(trainData, "metaData")$outcomeId,
       targetId = attr(trainData, "metaData")$targetId,
@@ -357,91 +334,84 @@ fitMadeUp <- function(trainData, modelSettings, search, analysisId){
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
-      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings, 
+      prerocessSettings = attr(trainData$covariateData, "metaData")$prerocessSettings,
       modelSettings = list(
-        model = attr(param, 'settings')$modelName, # the model name
+        model = attr(param, "settings")$modelName, # the model name
         param = param,
         finalModelParameters = param[[bestInd]], # best hyper-parameters
-        extraSettings = attr(param, 'settings')
+        extraSettings = attr(param, "settings")
       ),
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
-    
     trainDetails = list(
       analysisId = analysisId,
       developmentDatabase = attr(trainData, "metaData")$cdmDatabaseSchema,
-      attrition = attr(trainData, "metaData")$attrition, 
+      attrition = attr(trainData, "metaData")$attrition,
       trainingTime = timeToTrain, # how long it took to train the model
       trainingDate = Sys.Date(),
       hyperParamSearch = hyperSummary # the hyper-parameters and performance data.frame
     ),
-    covariateImportance = merge(trainData$covariateData$covariateRef, varImp, by='covariateId') # add variable importance to covariateRef if possible
-  ),
-    covariateImportance = varImp
+    covariateImportance = merge(trainData$covariateData$covariateRef, varImp, by = "covariateId") # add variable importance to covariateRef if possible
   )
-  class(result) <- 'plpModel'
-  attr(result, 'predictionFunction') <- 'madeupPrediction'
-  attr(result, 'modelType') <- 'binary'
+  class(result) <- "plpModel"
+  attr(result, "predictionFunction") <- "madeupPrediction"
+  attr(result, "modelType") <- "binary"
   return(result)
-    
 }
-
 ```
 
 ## Helpers
 
-In the fit model a helper function `made_up_model` is called, this is the function that trains a model given the data, labels and hyper-parameters.
+In the fit model a helper function `madeUpModel` is called, this is the function that trains a model given the data, labels and hyper-parameters.
 
 ```{r tidy=FALSE,eval=FALSE}
-made_up_model <- function(param, data, final=F, labels){
-  
-  if(final==F){
+madeUpModel <- function(param, data, final = FALSE, labels) {
+  if (final == FALSE) {
     # add value column to store all predictions
     labels$value <- rep(0, nrow(labels))
     attr(labels, "metaData") <- list(modelType = "binary")
-    
+
     foldPerm <- c() # this holds CV aucs
-    for(index in 1:max(labels$index)){
+    for (index in 1:max(labels$index)) {
       model <- madeup::model(
-        x = data[labels$index!=index,], # remove left out fold
-        y = labels$outcomeCount[labels$index!=index],
-        a = param$a, 
+        x = data[labels$index != index, ], # remove left out fold
+        y = labels$outcomeCount[labels$index != index],
+        a = param$a,
         b = param$b
       )
-      
+
       # predict on left out fold
-      pred <- stats::predict(model, data[labels$index==index,])
-      labels$value[labels$index==index] <- pred
-      
-      # calculate auc on help out fold  
-      aucVal <- computeAuc(labels[labels$index==index,])
-      foldPerm<- c(foldPerm,aucVal)    
+      pred <- stats::predict(model, data[labels$index == index, ])
+      labels$value[labels$index == index] <- pred
+
+      # calculate auc on help out fold
+      aucVal <- computeAuc(labels[labels$index == index, ])
+      foldPerm <- c(foldPerm, aucVal)
     }
     auc <- computeAuc(labels) # overal AUC
-
   } else {
     model <- madeup::model(
-      x = data, 
+      x = data,
       y = labels$outcomeCount,
       a = param$a,
       b = param$b
-      )
-    
+    )
+
     pred <- stats::predict(model, data)
     labels$value <- pred
-    attr(labels, "metaData") <- list(modelType = "binary") 
+    attr(labels, "metaData") <- list(modelType = "binary")
     auc <- computeAuc(labels)
     foldPerm <- auc
   }
-  
+
   result <- list(
     model = model,
     auc = auc,
     prediction = labels,
     hyperSum = c(a = a, b = b, fold_auc = foldPerm)
   )
-  
+
   return(result)
 }
 ```
@@ -451,41 +421,38 @@ made_up_model <- function(param, data, final=F, labels){
 The final step is to create a predict function for the model. In the example above the predeiction function `attr(result, 'predictionFunction') <- 'madeupPrediction'` was madeupPrediction, so a `madeupPrediction` function is required when applying the model. The predict function needs to take as input the plpModel returned by the fit function, new data to apply the model on and the cohort specifying the patients of interest to make the prediction for.
 
 ```{r tidy=FALSE,eval=FALSE}
-madeupPrediction <- function(plpModel, data , cohort){ 
-  
-  if(class(data) == 'plpData'){
+madeupPrediction <- function(plpModel, data, cohort) {
+  if (class(data) == "plpData") {
     # convert
     matrixObjects <- toSparseM(
-      plpData = data, 
+      plpData = data,
       cohort = cohort,
-      map = plpModel$covariateImportance %>% 
+      map = plpModel$covariateImportance %>%
         dplyr::select("columnId", "covariateId")
     )
-    
+
     newData <- matrixObjects$dataMatrix
     cohort <- matrixObjects$labels
-    
-  }else{
+  } else {
     newData <- data
   }
-  
-  if(class(plpModel) == 'plpModel'){
+
+  if (class(plpModel) == "plpModel") {
     model <- plpModel$model
-  } else{
+  } else {
     model <- plpModel
   }
-  
-  cohort$value <- stats::predict(model, data)
-  
+
+  cohort$value <- stats::predict(model, newData)
+
   # fix the rowIds to be the old ones
   # now use the originalRowId and remove the matrix rowId
-  cohort <- cohort %>% 
+  cohort <- cohort %>%
     dplyr::select(-"rowId") %>%
     dplyr::rename(rowId = "originalRowId")
-  
-  attr(cohort, "metaData") <- list(modelType = attr(plpModel, 'modelType')) 
+
+  attr(cohort, "metaData") <- list(modelType = attr(plpModel, "modelType"))
   return(cohort)
-  
 }
 ```
 
@@ -501,6 +468,6 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

@@ -8,7 +8,7 @@ createFeatureEngineeringSettings(type = "none")
 }
 \arguments{
 \item{type}{(character) Choice of:  \itemize{
-\item'none' No feature engineering - this is the default 
+\item'none' No feature engineering - this is the default
 }}
 }
 \value{
@@ -19,4 +19,7 @@ Create the settings for defining any feature engineering that will be done
 }
 \details{
 Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+}
+\examples{
+createFeatureEngineeringSettings(type = "none")
 }

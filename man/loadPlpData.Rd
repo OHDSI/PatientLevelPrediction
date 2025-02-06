@@ -2,7 +2,7 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{loadPlpData}
 \alias{loadPlpData}
-\title{Load the cohort data from a folder}
+\title{Load the plpData from a folder}
 \usage{
 loadPlpData(file, readOnly = TRUE)
 }
@@ -22,6 +22,11 @@ system.
 The data will be written to a set of files in the folder specified by the user.
 }
 \examples{
-# todo
-
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "loadPlpData")
+savePlpData(plpData, saveLoc)
+dir(saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }

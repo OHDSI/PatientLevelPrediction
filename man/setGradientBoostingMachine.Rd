@@ -38,11 +38,17 @@ setGradientBoostingMachine(
 
 \item{seed}{An option to add a seed when training the final model}
 }
+\value{
+A modelSettings object that can be used to fit the model
+}
 \description{
 Create setting for gradient boosting machine model using gbm_xgboost implementation
 }
 \examples{
-model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
-                           maxDepth=c(4,6), learnRate=c(0.1,0.3))
-
+\dontshow{if (rlang::is_installed("xgboost")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+modelGbm <- setGradientBoostingMachine(
+  ntrees = c(10, 100), nthread = 20,
+  maxDepth = c(4, 6), learnRate = c(0.1, 0.3)
+)
+\dontshow{\}) # examplesIf}
 }

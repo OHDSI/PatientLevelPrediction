@@ -2,37 +2,16 @@
 title: "Patient-Level Prediction Installation Guide"
 author: "Jenna Reps, Peter R. Rijnbeek, Egill Fridgeirsson"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[CO,CE]{Installation Guide}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  word_document:
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Patient-Level Prediction Installation Guide}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{=html}
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Installation guide}
--->
-```
 # Introduction
 
-This vignette describes how you need to install the Observational Health Data Science and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package under Windows, Mac, and Linux.
+This vignette describes how you need to install the Observational Health Data Science and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package under Windows, Mac, and Linux.
 
 # Software Prerequisites
 
@@ -40,18 +19,18 @@ This vignette describes how you need to install the Observational Health Data Sc
 
 Under Windows the OHDSI Patient Level Prediction (PLP) package requires installing:
 
--   R (<https://cran.cnr.berkeley.edu/> ) - (R \>= 4.0.0, but latest is recommended)
--   Rstudio (<https://www.rstudio.com/> )
--   Java (<http://www.java.com> )
+-   R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is recommended)
+-   Rstudio (<https://posit.co/> )
+-   Java (<https://www.java.com> )
 -   RTools (<https://cran.r-project.org/bin/windows/Rtools/>)
 
 ## Mac/Linux Users
 
 Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires installing:
 
--   R (<https://cran.cnr.berkeley.edu/> ) - (R \>= 4.0.0, but latest is recommended)
--   Rstudio (<https://www.rstudio.com/> )
--   Java (<http://www.java.com> )
+-   R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is recommended)
+-   Rstudio (<https://posit.co/> )
+-   Java (<https://www.java.com> )
 -   Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
 
 # Installing the Package
@@ -80,13 +59,12 @@ Many of the classifiers in the `PatientLevelPrediction` use a Python backend. To
 ```{r, echo = TRUE, message = FALSE, warning = FALSE,tidy=FALSE,eval=FALSE}
 library(PatientLevelPrediction)
 reticulate::install_miniconda()
-configurePython(envname='r-reticulate', envtype='conda')
-
+configurePython(envname = "r-reticulate", envtype = "conda")
 ```
 
 # Installation issues
 
-Installation issues need to be posted in our issue tracker: <http://github.com/OHDSI/PatientLevelPrediction/issues>
+Installation issues need to be posted in our issue tracker: <https://github.com/OHDSI/PatientLevelPrediction/issues>
 
 The list below provides solutions for some common issues:
 
@@ -107,13 +85,13 @@ usethis::edit_r_profile()
 and add
 
 ```{r eval=FALSE}
-Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep=":"))
+Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep = ":"))
 ```
 
 to the file then save. Where your python bin location is the location returned by
 
 ```{r eval=FALSE}
-reticulate::conda_list() 
+reticulate::conda_list()
 ```
 
 e.g., My PLP virtual environment location was /anaconda3/envs/PLP/bin/python so I added:\
@@ -129,6 +107,6 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

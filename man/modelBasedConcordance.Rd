@@ -2,8 +2,10 @@
 % Please edit documentation in R/EvaluatePlp.R
 \name{modelBasedConcordance}
 \alias{modelBasedConcordance}
-\title{Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
-as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/}
+\title{Calculate the model-based concordance, which is a calculation of the expected
+discrimination performance of a model under the assumption the model predicts
+the "TRUE" outcome as detailed in van Klaveren et al.
+https://pubmed.ncbi.nlm.nih.gov/27251001/}
 \usage{
 modelBasedConcordance(prediction)
 }
@@ -11,12 +13,18 @@ modelBasedConcordance(prediction)
 \item{prediction}{the prediction object found in the plpResult object}
 }
 \value{
-model-based concordance value
+The model-based concordance value
 }
 \description{
-Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
-as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+Calculate the model-based concordance, which is a calculation of the expected
+discrimination performance of a model under the assumption the model predicts
+the "TRUE" outcome as detailed in van Klaveren et al.
+https://pubmed.ncbi.nlm.nih.gov/27251001/
 }
 \details{
 Calculate the model-based concordance
+}
+\examples{
+prediction <- data.frame(value = runif(100))
+modelBasedConcordance(prediction)
 }

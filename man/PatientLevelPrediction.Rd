@@ -11,22 +11,27 @@ A package for running predictions using data in the OMOP CDM
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://ohdsi.github.io/PatientLevelPrediction}
+  \item \url{https://ohdsi.github.io/PatientLevelPrediction/}
   \item \url{https://github.com/OHDSI/PatientLevelPrediction}
   \item Report bugs at \url{https://github.com/OHDSI/PatientLevelPrediction/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Jenna Reps \email{jreps@its.jnj.com}
+\strong{Maintainer}: Egill Fridgeirsson \email{e.fridgeirsson@erasmusmc.nl}
 
 Authors:
 \itemize{
+  \item Jenna Reps \email{jreps@its.jnj.com}
   \item Martijn Schuemie
   \item Marc Suchard
   \item Patrick Ryan
   \item Peter Rijnbeek
-  \item Egill Fridgeirsson
+}
+
+Other contributors:
+\itemize{
+  \item Observational Health Data Science and Informatics [copyright holder]
 }
 
 }

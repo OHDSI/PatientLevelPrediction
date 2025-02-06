@@ -9,6 +9,26 @@ sklearnFromJson(path)
 \arguments{
 \item{path}{path to the model json file}
 }
+\value{
+a sklearn python model object
+}
 \description{
 Loads sklearn python model from json
+}
+\examples{
+\dontrun{ \dontshow{ # requires python environment with sklearn }
+plpData <- getEunomiaPlpData()
+modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
+                                  minSamplesLeaf = list(1), maxFeatures = list(100))
+saveLocation <- file.path(tempdir(), "sklearnFromJson")
+results <- runPlp(plpData, modelSettings = modelSettings, saveDirectory = saveLocation)
+# view save model
+dir(results$model$model, full.names = TRUE)
+# load into a sklearn object
+model <- sklearnFromJson(file.path(results$model$model, "model.json"))
+# max depth is 3 as we set in beginning
+model$max_depth
+# clean up
+unlink(saveLocation, recursive = TRUE)
+}
 }

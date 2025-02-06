@@ -1,6 +1,6 @@
 # @file AdditionalCovariates.R
 #
-# Copyright 2022 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -24,7 +24,9 @@
 #' cohort during the time periods relative to target population cohort index
 #'
 #' @param connection  The database connection
-#' @param oracleTempSchema  The temp schema if using oracle
+
+#' @param tempEmulationSchema The schema to use for temp tables
+#' @param oracleTempSchema  DEPRECATED The temp schema if using oracle
 #' @param cdmDatabaseSchema  The schema of the OMOP CDM data
 #' @param cdmVersion  version of the OMOP CDM data
 #' @param cohortTable  the table name that contains the target population cohort
@@ -35,22 +37,52 @@
 #' @param ...  additional arguments from FeatureExtraction
 #'
 #' @return
-#' The models will now be in the package
-#'
+#' CovariateData object with covariates, covariateRef, and analysisRef tables
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long to run }
+#' library(DatabaseConnector)
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' # create some cohort of people born in 1969, index date is their date of birth
+#' con <- connect(connectionDetails)
+#' executeSql(con, "INSERT INTO main.cohort 
+#'                  SELECT 1969 as COHORT_DEFINITION_ID, PERSON_ID as SUBJECT_ID,
+#'                  BIRTH_DATETIME as COHORT_START_DATE, BIRTH_DATETIME as COHORT_END_DATE
+#'                  FROM main.person WHERE YEAR_OF_BIRTH = 1969")
+#' covariateData <- getCohortCovariateData(connection = con,
+#'                                         cdmDatabaseSchema = "main",
+#'                                         aggregated = FALSE,
+#'                                         rowIdField = "SUBJECT_ID",
+#'                                        cohortTable = "cohort",
+#'                                         covariateSettings = createCohortCovariateSettings(
+#'                                                                cohortName="summerOfLove",
+#'                                                                cohortId=1969, 
+#'                                                                settingId=1,
+#'                                                                cohortDatabaseSchema="main",
+#'                                                                cohortTable="cohort"))
+#' covariateData$covariateRef
+#' covariateData$covariates
+#' }
 #' @export
 getCohortCovariateData <- function(
-  connection,
-  oracleTempSchema = NULL,
-  cdmDatabaseSchema,
-  cdmVersion = "5",
-  cohortTable = "#cohort_person",
-  rowIdField = "row_id",
-  aggregated,
-  cohortIds,
-  covariateSettings,
-  ...
-  ){
-  
+    connection,
+    tempEmulationSchema = NULL,
+    oracleTempSchema = NULL,
+    cdmDatabaseSchema,
+    cdmVersion = "5",
+    cohortTable = "#cohort_person",
+    rowIdField = "row_id",
+    aggregated,
+    cohortIds,
+    covariateSettings,
+    ...) {
+  if (!is.null(oracleTempSchema) && oracleTempSchema != "") {
+    rlang::warn("The 'oracleTempSchema' argument is deprecated. Use 'tempEmulationSchema' instead.",
+      .frequency = "regularly",
+      .frequency_id = "oracleTempSchema"
+    )
+    tempEmulationSchema <- oracleTempSchema
+  }
+
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
@@ -66,11 +98,31 @@ getCohortCovariateData <- function(
     "where b.cohort_definition_id = @covariate_cohort_id
     group by a.@row_id_field; "
   )
-  
+
+  if (is.null(covariateSettings$cohortTable) &&
+    (is.null(covariateSettings$cohortDatabaseSchema))) {
+    ParallelLogger::logInfo("cohortTable and cohortDatabaseSchema not specified in
+      cohort covariateSettings. Attempting to fetch from databaseDetails")
+    # use settings from databaseDetails which is two frames up
+    # in the call stack
+    tryCatch(databaseDetails <- get("databaseDetails", parent.frame(n = 2)),
+      error = function(e) {
+        stop("cohortTable and cohortDatabaseSchema not specified in
+          cohort covariateSettings. Attempt to fetch databaseDetails from parent
+          frame failed with error: ", e$message)
+      }
+    )
+    cohortCovariateTable <- databaseDetails$cohortTable
+    cohortCovariateDatabaseSchema <- databaseDetails$cohortDatabaseSchema
+  } else {
+    cohortCovariateTable <- covariateSettings$cohortTable
+    cohortCovariateDatabaseSchema <- covariateSettings$cohortDatabaseSchema
+  }
+
   sql <- SqlRender::render(
     sql,
-    covariate_cohort_schema = covariateSettings$cohortDatabaseSchema,
-    covariate_cohort_table = covariateSettings$cohortTable,
+    covariate_cohort_schema = cohortCovariateDatabaseSchema,
+    covariate_cohort_table = cohortCovariateTable,
     covariate_cohort_id = covariateSettings$cohortIds,
     cohort_temp_table = cohortTable,
     row_id_field = rowIdField,
@@ -81,48 +133,49 @@ getCohortCovariateData <- function(
     ageInteraction = covariateSettings$ageInteraction,
     lnAgeInteraction = covariateSettings$lnAgeInteraction,
     cdm_database_schema = cdmDatabaseSchema
-    )
-  
+  )
+
   sql <- SqlRender::translate(
-    sql = sql, 
+    sql = sql,
     targetDialect = attr(connection, "dbms"),
-    tempEmulationSchema = oracleTempSchema
-    )
-  
+    tempEmulationSchema = tempEmulationSchema
+  )
+
   # Retrieve the covariate:
   covariates <- DatabaseConnector::querySql(connection, sql)
-  
+
   # Convert colum names to camelCase:
   colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
   @analysis_id as analysis_id, -1 as concept_id;"
   sql <- SqlRender::render(
-    sql = sql, 
+    sql = sql,
     covariate_id = covariateSettings$covariateId,
     analysis_id = covariateSettings$analysisId,
-    concept_set = paste('Cohort_covariate during day',
+    concept_set = paste(
+      "Cohort_covariate during day",
       covariateSettings$startDay,
-      'through',
+      "through",
       covariateSettings$endDays,
-      'days relative to index:',
-      ifelse(covariateSettings$count, 'Number of', ''),
+      "days relative to index:",
+      ifelse(covariateSettings$count, "Number of", ""),
       covariateSettings$covariateName,
-      ifelse(covariateSettings$ageInteraction, ' X Age', ''),
-      ifelse(covariateSettings$lnAgeInteraction, ' X ln(Age)', '')
+      ifelse(covariateSettings$ageInteraction, " X Age", ""),
+      ifelse(covariateSettings$lnAgeInteraction, " X ln(Age)", "")
     )
   )
-  
+
   sql <- SqlRender::translate(
-    sql = sql, 
-    targetDialect = attr(connection, "dbms"), 
-    tempEmulationSchema =  oracleTempSchema
-    )
-  
+    sql = sql,
+    targetDialect = attr(connection, "dbms"),
+    tempEmulationSchema = tempEmulationSchema
+  )
+
   # Retrieve the covariateRef:
-  covariateRef  <- DatabaseConnector::querySql(connection, sql)
+  covariateRef <- DatabaseConnector::querySql(connection, sql)
   colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
-  
+
   analysisRef <- data.frame(
     analysisId = covariateSettings$analysisId,
     analysisName = "cohort covariate",
@@ -131,17 +184,17 @@ getCohortCovariateData <- function(
     endDay = 0,
     isBinary = "Y",
     missingMeansZero = "Y"
-    )
-  
+  )
+
   metaData <- list(sql = sql, call = match.call())
   result <- Andromeda::andromeda(
     covariates = covariates,
     covariateRef = covariateRef,
     analysisRef = analysisRef
-    )
-  
+  )
+
   attr(result, "metaData") <- metaData
-  class(result) <- "CovariateData"	
+  class(result) <- "CovariateData"
   return(result)
 }
 
@@ -153,44 +206,49 @@ getCohortCovariateData <- function(
 #' cohort during the time periods relative to target population cohort index
 #'
 #' @param cohortName  Name for the cohort
-#' @param settingId   A unique id for the covariate time and 
-#' @param cohortDatabaseSchema  The schema of the database with the cohort
-#' @param cohortTable  the table name that contains the covariate cohort
+#' @param settingId   A unique id for the covariate time and
+#' @param cohortDatabaseSchema  The schema of the database with the cohort. If
+#' nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.
+#' @param cohortTable  the table name that contains the covariate cohort. If
+#' nothing is specified then the cohortTable from databaseDetails at runtime is used.
 #' @param cohortId  cohort id for the covariate cohort
 #' @param startDay  The number of days prior to index to start observing the cohort
 #' @param endDay  The number of days prior to index to stop observing the cohort
 #' @param count   If FALSE the covariate value is binary (1 means cohort occurred between index+startDay and index+endDay, 0 means it did not)
-#'                If TRUE then the covariate value is the number of unique cohort_start_dates between index+startDay and index+endDay 
-#' @param ageInteraction  If TRUE multiple covariate value by the patient's age in years      
-#' @param lnAgeInteraction  If TRUE multiple covariate value by the log of the patient's age in years 
-#' @param analysisId  The analysisId for the covariate          
+#'                If TRUE then the covariate value is the number of unique cohort_start_dates between index+startDay and index+endDay
+#' @param ageInteraction  If TRUE multiple covariate value by the patient's age in years
+#' @param lnAgeInteraction  If TRUE multiple covariate value by the log of the patient's age in years
+#' @param analysisId  The analysisId for the covariate
 #'
 #' @return
-#' An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
+#' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId
 #'  cohortId x 100000 + settingId x 1000 + analysisId
-#'
+#' @examples
+#' createCohortCovariateSettings(cohortName="testCohort",
+#'                               settingId=1,
+#'                               cohortId=1,
+#'                               cohortDatabaseSchema="cohorts",
+#'                               cohortTable="cohort_table")
 #' @export
 createCohortCovariateSettings <- function(
-  cohortName, 
-  settingId,
-  cohortDatabaseSchema, 
-  cohortTable, 
-  cohortId,
-  startDay = -30, 
-  endDay = 0, 
-  count = F, 
-  ageInteraction = F, 
-  lnAgeInteraction = F,
-  analysisId = 456
-  ){
-  
-  if( settingId > 100 || settingId < 0){
-    stop('settingId must be between 1 and 100')
+    cohortName,
+    settingId,
+    cohortDatabaseSchema = NULL,
+    cohortTable = NULL,
+    cohortId,
+    startDay = -30,
+    endDay = 0,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
+    analysisId = 456) {
+  if (settingId > 100 || settingId < 0) {
+    stop("settingId must be between 1 and 100")
   }
-  
+
   covariateSettings <- list(
-    covariateName = cohortName, 
-    covariateId = cohortId*100000+settingId*1000+analysisId,
+    covariateName = cohortName,
+    covariateId = cohortId * 100000 + settingId * 1000 + analysisId,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
     cohortIds = cohortId,
@@ -200,8 +258,8 @@ createCohortCovariateSettings <- function(
     ageInteraction = ageInteraction,
     lnAgeInteraction = lnAgeInteraction,
     analysisId = analysisId
-    )
-  
+  )
+
   attr(covariateSettings, "fun") <- "PatientLevelPrediction::getCohortCovariateData"
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)

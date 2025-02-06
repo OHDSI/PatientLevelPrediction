@@ -9,9 +9,28 @@ loadPlpModel(dirPath)
 \arguments{
 \item{dirPath}{The location of the model}
 }
+\value{
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                    The plpModel object
+}\if{html}{\out{</div>}}
+}
 \description{
 loads the plp model
 }
 \details{
 Loads a plp model that was saved using \code{savePlpModel()}
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "loadPlpModel")
+plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
+loadedModel <- loadPlpModel(file.path(saveLoc, "savedModel"))
+# show design of loaded model
+str(loadedModel$modelDesign)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

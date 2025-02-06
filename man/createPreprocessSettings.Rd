@@ -11,11 +11,16 @@ createPreprocessSettings(
 )
 }
 \arguments{
-\item{minFraction}{The minimum fraction of target population who must have a covariate for it to be included in the model training}
+\item{minFraction}{The minimum fraction of target population who must have a
+covariate for it to be included in the model training}
 
-\item{normalize}{Whether to normalise the covariates before training (Default: TRUE)}
+\item{normalize}{Whether to normalise the covariates before training
+(Default: TRUE)}
 
-\item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)}
+\item{removeRedundancy}{Whether to remove redundant features (Default: TRUE)
+Redundant features are features that within an analysisId together cover all
+observations. For example with ageGroups, if you have ageGroup 0-18 and 18-100
+and all patients are in one of these groups, then one of these groups is redundant.}
 }
 \value{
 An object of class \code{preprocessingSettings}
@@ -24,5 +29,10 @@ An object of class \code{preprocessingSettings}
 Create the settings for preprocessing the trainData.
 }
 \details{
-Returns an object of class \code{preprocessingSettings} that specifies how to preprocess the training data
+Returns an object of class \code{preprocessingSettings} that specifies how to
+preprocess the training data
+}
+\examples{
+# Create the settings for preprocessing, remove no features, normalise the data
+createPreprocessSettings(minFraction = 0.0, normalize = TRUE, removeRedundancy = FALSE)
 }

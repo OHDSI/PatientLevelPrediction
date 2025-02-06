@@ -2,36 +2,14 @@
 title: "Creating Learning Curves"
 author: "Luis H. John, Jenna M. Reps, Peter R. Rijnbeek"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[CO,CE]{Generating Learning Curves}
-    - \fancyfoot[LE,RO]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-output:   
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
-  html_notebook: 
-    toc: yes
-  word_document:
-    toc: yes
+output:
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Creating Learning Curves}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{=html}
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Creating Learning Curves}
--->
-```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -40,35 +18,35 @@ knitr::opts_chunk$set(echo = TRUE)
 library(PatientLevelPrediction)
 vignetteDataFolder <- "s:/temp/plpVignette"
 # Load all needed data if it exists on this computer:
-if (file.exists(vignetteDataFolder)){
-  plpModel <- loadPlpModel(vignetteDataFolder,'model')
-  lrResults <- loadPlpModel(file.path(vignetteDataFolder,'results'))
+if (file.exists(vignetteDataFolder)) {
+  plpModel <- loadPlpModel(vignetteDataFolder, "model")
+  lrResults <- loadPlpModel(file.path(vignetteDataFolder, "results"))
 }
 ```
 
 # Introduction
 
-This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can use the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package to create learning curves. This vignette assumes you have read and are comfortable with building patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
 Prediction models will show overly-optimistic performance when predicting on the same data as used for training. Therefore, best-practice is to partition our data into a training set and testing set. We then train our prediction model on the training set portion and asses its ability to generalize to unseen data by measuring its performance on the testing set.
 
 Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below.
 
-![Learning curve example.](learningCurve.png)
+![Learning curve example.](images/learningCurve.avif)
 
 Figure 1, shows an example of learning curve plot in which the vertical axis represents the model performance and the horizontal axis the training set size. If training set size is small, the performance on the training set is high, because a model can often be fitted well to a limited number of training examples. At the same time, the performance on the testing set will be poor, because the model trained on such a limited number of training examples will not generalize well to unseen data in the testing set. As the training set size increases, the performance of the model on the training set will decrease. It becomes more difficult for the model to find a good fit through all the training examples. Also, the model will be trained on a more representative portion of training examples, making it generalize better to unseen data. This can be observed by the increasin testing set performance.
 
 The learning curve can help us in diagnosing bias and variance problems with our classifier which will provide guidance on how to further improve our model. We can observe high variance (overfitting) in a prediction model if it performs well on the training set, but poorly on the testing set (Figure 2). Adding additional data is a common approach to counteract high variance. From the learning curve it becomes apparent, that adding additional data may improve performance on the testing set a little further, as the learning curve has not yet plateaued and, thus, the model is not saturated yet. Therefore, adding more data will decrease the gap between training set and testing set, which is the main indicator for a high variance problem.
 
-![Prediction model suffering from high variance.](learningCurveVariance.png)
+![Prediction model suffering from high variance.](images/learningCurveVariance.avif)
 
 Furthermore, we can observe high bias (underfitting) if a prediction model performs poorly on the training set as well as on the testing set (Figure 3). The learning curves of training set and testing set have flattened on a low performance with only a small gap in between them. Adding additional data will in this case have little to no impact on the model performance. Choosing another prediction algorithm that can find more complex (for example non-linear) relationships in the data may be an alternative approach to consider in this high bias situation.
 
-![Prediction model suffering from high bias.](learningCurveBias.png)
+![Prediction model suffering from high bias.](images/learningCurveBias.avif)
 
 # Creating the learning curve
 
-Use the [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package to create a `plpData` object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.
+Use the [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package to create a `plpData` object . Alternatively, you can make use of the data simulator. The following code snippet creates data for 12000 patients.
 
 ```{r eval=FALSE}
 set.seed(1234)
@@ -78,7 +56,6 @@ plpData <- simulatePlpData(
   plpDataSimulationProfile,
   n = sampleSize
 )
-
 ```
 
 Specify the population settings (this does additional exclusions such as requiring minimum prior observation or no prior outcome as well as specifying the time-at-risk period to enable labels to be created):
@@ -103,23 +80,18 @@ Specify the prediction algorithm to be used.
 ```{r eval=FALSE}
 # Use LASSO logistic regression
 modelSettings <- setLassoLogisticRegression()
-
 ```
 
 Specify the split settings and a sequence of training set fractions (these over ride the splitSetting trainFraction). Alternatively, instead of `trainFractions`, you can provide a sequence of training events (`trainEvents`) instead of the training set fractions. This is recommended, because our research has shown that number of events is the important determinant of model performance. Make sure that your training set contains the number of events specified.
 
 ```{r eval = FALSE}
-
-splitSettings = createDefaultSplitSetting(
-  testFraction = 0.2,  
-  type = 'stratified',
+splitSettings <- createDefaultSplitSetting(
+  testFraction = 0.2,
+  type = "stratified",
   splitSeed = 1000
-  )
+)
 
 trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
-
-# alternatively use a sequence of training events by uncommenting the line below.
-# trainEvents <- seq(100, 5000, 100)
 ```
 
 Create the learning curve object.
@@ -127,31 +99,29 @@ Create the learning curve object.
 ```{r eval=FALSE}
 learningCurve <- createLearningCurve(
   plpData = plpData,
-  outcomeId = 2,  
-  parallel = T,
+  outcomeId = 2,
+  parallel = TRUE,
   cores = 4,
   modelSettings = modelSettings,
   saveDirectory = getwd(),
-  analysisId = 'learningCurve',
+  analysisId = "learningCurve",
   populationSettings = populationSettings,
   splitSettings = splitSettings,
   trainFractions = trainFractions,
   trainEvents = NULL,
   preprocessSettings = createPreprocessSettings(
     minFraction = 0.001,
-    normalize = T
+    normalize = TRUE
   ),
   executeSettings = createExecuteSettings(
-    runSplitData = T, 
-    runSampleData = F,
-    runfeatureEngineering = F,
-    runPreprocessData = T,
-    runModelDevelopment = T,
-    runCovariateSummary = F
-    )
+    runSplitData = TRUE,
+    runSampleData = FALSE,
+    runFeatureEngineering = FALSE,
+    runPreprocessData = TRUE,
+    runModelDevelopment = TRUE,
+    runCovariateSummary = FALSE
+  )
 )
-  
-                                  
 ```
 
 Plot the learning curve object (Figure 4). Specify one of the available metrics: `AUROC`, `AUPRC`, `sBrier`. Moreover, you can specify what metric to put on the abscissa, number of `observations` or number of `events`. We recommend the latter, because `events` are determinant of model performance and allow you to better compare learning curves across different prediction problems and databases.
@@ -159,14 +129,14 @@ Plot the learning curve object (Figure 4). Specify one of the available metrics:
 ```{r eval=FALSE}
 plotLearningCurve(
   learningCurve,
-  metric = 'AUROC',
-  abscissa = 'events',
-  plotTitle = 'Learning Curve',
-  plotSubtitle = 'AUROC performance'
+  metric = "AUROC",
+  abscissa = "events",
+  plotTitle = "Learning Curve",
+  plotSubtitle = "AUROC performance"
 )
 ```
 
-![Learning curve plot.](learningCurvePlot.png)
+![Learning curve plot.](images/learningCurvePlot.avif)
 
 # Parallel processing
 
@@ -179,11 +149,11 @@ When running in parrallel, R will find the number of available processing cores 
 We have added a demo of the learningcurve:
 
 ```{r eval=FALSE}
-# Show all demos in our package: 
- demo(package = "PatientLevelPrediction")
+# Show all demos in our package:
+demo(package = "PatientLevelPrediction")
 
 # Run the learning curve
- demo("LearningCurveDemo", package = "PatientLevelPrediction")
+demo("LearningCurveDemo", package = "PatientLevelPrediction")
 ```
 
 Do note that running this demo can take a considerable amount of time (15 min on Quad core running in parallel)!
@@ -202,4 +172,4 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)

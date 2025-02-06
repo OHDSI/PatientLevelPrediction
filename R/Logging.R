@@ -1,14 +1,14 @@
 # @file Logging.R
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,77 +32,62 @@
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param logName                          A string reference for the logger
 #' @return
-#' An object of class \code{logSettings}
+#' An object of class \code{logSettings} containing the settings for the logger
+#' @examples
+#' # create a log settings object with DENUG verbosity, timestamp and log name 
+#' # "runPlp Log". This needs to be passed to `runPlp`.
+#' createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
 #' @export
 createLogSettings <- function(
-  verbosity = 'DEBUG',
-  timeStamp = T,
-  logName = 'runPlp Log'
-  )
-  {
-  
-  checkIsClass(verbosity, 'character')
-  if(!verbosity%in%c("DEBUG","TRACE","INFO","WARN","FATAL","ERROR", "NONE")){
-    ParallelLogger::logWarn('Incorrect verbosity string - using INFO')
+    verbosity = "DEBUG",
+    timeStamp = TRUE,
+    logName = "runPlp Log") {
+  checkIsClass(verbosity, "character")
+  if (!verbosity %in% c("DEBUG", "TRACE", "INFO", "WARN", "FATAL", "ERROR", "NONE")) {
+    ParallelLogger::logWarn("Incorrect verbosity string - using INFO")
     verbosity <- "INFO"
   }
   checkBoolean(timeStamp)
-  ParallelLogger::logInfo(paste0('Use timeStamp: ', timeStamp))
-  
+  ParallelLogger::logInfo(paste0("Use timeStamp: ", timeStamp))
+
   result <- list(
     verbosity = verbosity,
     timeStamp = timeStamp,
     logName = logName
-    )
-  
-  class(result) <- 'logSettings'
+  )
+
+  class(result) <- "logSettings"
   return(result)
 }
 
 createLog <- function(
-  verbosity = "INFO",
-  timeStamp = FALSE, 
-  logName = "PLP Log",
-  saveDirectory = getwd(),
-  logFileName = paste0('plpLog',as.Date(Sys.Date(), "%Y%m%d"), '.txt')
-)
-{
-  
-  checkFileExists(saveDirectory, createIfNot = T)
-  
-  logFileName <- gsub("[[:punct:]]", "", logFileName) 
-  
-  if(verbosity!="NONE"){
+    verbosity = "INFO",
+    timeStamp = FALSE,
+    logName = "PLP Log",
+    saveDirectory = getwd(),
+    logFileName = paste0("plpLog", as.Date(Sys.Date(), "%Y%m%d"), ".txt")) {
+  createDir(saveDirectory)
+
+  logFileName <- gsub("[[:punct:]]", "", logFileName)
+
+  if (verbosity != "NONE") {
     logger <- ParallelLogger::createLogger(
       name = logName,
       threshold = verbosity,
       appenders = list(
         ParallelLogger::createFileAppender(
           layout = ParallelLogger::layoutParallel,
-          fileName = file.path(saveDirectory,paste0(logFileName, '.txt')),
-          expirationTime = 60*60*48
+          fileName = file.path(saveDirectory, paste0(logFileName, ".txt")),
+          expirationTime = 60 * 60 * 48
         )
       )
     )
-
   }
-  
+
   return(logger)
 }
 
-checkFileExists <- function(
-  saveDirectory, 
-  createIfNot = T)
-{
-  dirExists <- dir.exists(saveDirectory)
-  if(!dirExists & createIfNot ){
-    ParallelLogger::logInfo(paste0('Creating save directory at: ', saveDirectory))
-    dir.create(saveDirectory, recursive = T)
-  }
-  return(invisible(dirExists))
-}
-
-closeLog <- function(logger){
+closeLog <- function(logger) {
   # stop logger
   ParallelLogger::unregisterLogger(logger)
 }

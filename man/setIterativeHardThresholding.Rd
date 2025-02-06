@@ -2,16 +2,16 @@
 % Please edit documentation in R/CyclopsSettings.R
 \name{setIterativeHardThresholding}
 \alias{setIterativeHardThresholding}
-\title{Create setting for lasso logistic regression}
+\title{Create setting for Iterative Hard Thresholding model}
 \usage{
 setIterativeHardThresholding(
   K = 10,
   penalty = "bic",
   seed = sample(1e+05, 1),
   exclude = c(),
-  forceIntercept = F,
+  forceIntercept = FALSE,
   fitBestSubset = FALSE,
-  initialRidgeVariance = 10000,
+  initialRidgeVariance = 0.1,
   tolerance = 1e-08,
   maxIterations = 10000,
   threshold = 1e-06,
@@ -21,7 +21,7 @@ setIterativeHardThresholding(
 \arguments{
 \item{K}{The maximum number of non-zero predictors}
 
-\item{penalty}{Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value}
+\item{penalty}{Specifies the IHT penalty; possible values are \code{BIC} or \code{AIC} or a numeric value}
 
 \item{seed}{An option to add a seed when training the model}
 
@@ -41,9 +41,14 @@ setIterativeHardThresholding(
 
 \item{delta}{numeric}
 }
+\value{
+\code{modelSettings} object
+}
 \description{
-Create setting for lasso logistic regression
+Create setting for Iterative Hard Thresholding model
 }
 \examples{
-model.lr <- setLassoLogisticRegression()
+\dontshow{if (rlang::is_installed("IterativeHardThresholding")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
+\dontshow{\}) # examplesIf}
 }

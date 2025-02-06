@@ -5,19 +5,19 @@
 \title{create the study population settings}
 \usage{
 createStudyPopulationSettings(
-  binary = T,
-  includeAllOutcomes = T,
+  binary = TRUE,
+  includeAllOutcomes = TRUE,
   firstExposureOnly = FALSE,
   washoutPeriod = 0,
   removeSubjectsWithPriorOutcome = TRUE,
   priorOutcomeLookback = 99999,
-  requireTimeAtRisk = T,
+  requireTimeAtRisk = TRUE,
   minTimeAtRisk = 364,
   riskWindowStart = 1,
   startAnchor = "cohort start",
   riskWindowEnd = 365,
   endAnchor = "cohort start",
-  restrictTarToCohortEnd = F
+  restrictTarToCohortEnd = FALSE
 )
 }
 \arguments{
@@ -54,11 +54,16 @@ specified).}
 \item{restrictTarToCohortEnd}{If using a survival model and you want the time-at-risk to end at the cohort end date set this to T}
 }
 \value{
-A list containing all the settings required for creating the study population
+An object of type populationSettings containing all the settings required
+for creating the study population
 }
 \description{
 create the study population settings
 }
-\details{
-Takes as input the inputs to create study population
+\examples{
+# Create study population settings with a washout period of 30 days and a 
+# risk window of 1 to 90 days
+populationSettings <- createStudyPopulationSettings(washoutPeriod = 30, 
+                                                    riskWindowStart = 1,
+                                                    riskWindowEnd = 90)
 }

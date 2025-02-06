@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,22 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-context("AndromedaHelperFunctions")
-
-# add limitCovariatesToPopulation(covariateData, rowIds) test 
-
-
-# batcheRestrict test 
+# add limitCovariatesToPopulation(covariateData, rowIds) test
 test_that("batchRestrict", {
-  
-  metaData <- attr(plpData$covariateData, 'metaData')
-  covariateData <- PatientLevelPrediction:::batchRestrict(plpData$covariateData, population, sizeN = 1000000)
-  testthat::expect_is(covariateData, 'CovariateData')
-  
-  expect_equal(names(metaData), names(attr(covariateData, 'metaData')))
-  
+  skip_if_offline()
+  metaData <- attr(plpData$covariateData, "metaData")
+  covariateData <-
+    PatientLevelPrediction:::batchRestrict(
+      plpData$covariateData,
+      population,
+      sizeN = 1000000
+    )
+  expect_s4_class(covariateData, "CovariateData")
+
+  expect_equal(
+    names(metaData),
+    names(attr(covariateData, "metaData"))
+  )
 })
-
-
-# can't test clearffTempDir or checkffFolder?

@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,61 +14,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-
-context("Fitting")
-
 modelSettings <- setLassoLogisticRegression()
 
 test_that("fitPlp", {
-  
-plpModel <- fitPlp(
-  trainData = trainData,   
-  modelSettings = modelSettings,
-  search = "grid", 
-  analysisId = 'fitting',
-  analysisPath = tempdir()
+  skip_if_offline()
+  plpModel <- fitPlp(
+    trainData = trainData,
+    modelSettings = modelSettings,
+    search = "grid",
+    analysisId = "fitting",
+    analysisPath = tempdir()
   )
 
-expect_is(plpModel, 'plpModel')
-
+  expect_s3_class(plpModel, "plpModel")
 })
 
 test_that("fitPlp input errors", {
-  
+  skip_if_offline()
   expect_error(
     fitPlp(
-      trainData = trainData,   
+      trainData = trainData,
       modelSettings = modelSettings,
       analysisPath = tempDir()
     )
   )
-  
-  expect_error(
-    fitPlp(
-      trainData = list(covariateData = NULL),   
-      modelSettings = modelSettings,
-      analysisId = 'fitting',
-      analysisPath = tempDir()
-    )
-  )
-  
-  expect_error(
-    fitPlp(
-      trainData = trainData,   
-      modelSettings = NULL,
-      analysisId = 'fitting',
-      analysisPath = tempDir()
-    )
-  )
-  
-  expect_error(
-    fitPlp(
-      trainData = trainData,   
-      modelSettings = modelSettings,
-      analysisId = 'fitting'
-    )
-  )
-  
-})
 
+  expect_error(
+    fitPlp(
+      trainData = list(covariateData = NULL),
+      modelSettings = modelSettings,
+      analysisId = "fitting",
+      analysisPath = tempDir()
+    )
+  )
+
+  expect_error(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = NULL,
+      analysisId = "fitting",
+      analysisPath = tempDir()
+    )
+  )
+
+  expect_error(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = modelSettings,
+      analysisId = "fitting"
+    )
+  )
+})

@@ -24,7 +24,6 @@ OhdsiRTools::fixHadesLogo()
 OhdsiRTools::formatRFolder()
 OhdsiRTools::checkUsagePackage("PatientLevelPrediction")
 OhdsiRTools::updateCopyrightYearFolder()
-devtools::spell_check()
 
 # Create manual and vignettes
 unlink("extras/PatientLevelPrediction.pdf")

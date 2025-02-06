@@ -2,7 +2,7 @@
 % Please edit documentation in R/SklearnClassifierSettings.R
 \name{setDecisionTree}
 \alias{setDecisionTree}
-\title{Create setting for the scikit-learn 1.0.1 DecisionTree with python}
+\title{Create setting for the scikit-learn DecisionTree with python}
 \usage{
 setDecisionTree(
   criterion = list("gini"),
@@ -41,11 +41,18 @@ setDecisionTree(
 
 \item{seed}{The random state seed}
 }
+\value{
+a modelSettings object
+}
 \description{
-Create setting for the scikit-learn 1.0.1 DecisionTree with python
+Create setting for the scikit-learn DecisionTree with python
 }
 \examples{
-\dontrun{
-model.decisionTree <- setDecisionTree(maxDepth=10,minSamplesLeaf=10, seed=NULL )
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+model <- setDecisionTree(criterion = list("gini"),
+                         maxDepth = list(4),
+                         minSamplesSplit = list(2),
+                         minSamplesLeaf = list(10),
+                         seed = 42)
 }
 }

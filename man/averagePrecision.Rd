@@ -10,11 +10,18 @@ averagePrecision(prediction)
 \item{prediction}{A prediction object}
 }
 \value{
-The average precision
+The average precision value
 }
 \description{
 Calculate the average precision
 }
 \details{
 Calculates the average precision from a predition object
+}
+\examples{
+prediction <- data.frame(
+  value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  outcomeCount = c(0, 1, 0, 1, 1)
+)
+averagePrecision(prediction)
 }

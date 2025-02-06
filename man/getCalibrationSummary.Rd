@@ -8,7 +8,7 @@ getCalibrationSummary(
   prediction,
   predictionType,
   typeColumn = "evaluation",
-  numberOfStrata = 100,
+  numberOfStrata = 10,
   truncateFraction = 0.05
 )
 }
@@ -33,5 +33,25 @@ Get a sparse summary of the calibration
 }
 \details{
 Generates a sparse summary showing the predicted probabilities and the observed fractions. Predictions are
-stratefied into equally sized bins of predicted probabilities.
+stratified into equally sized bins of predicted probabilities.
+}
+\examples{
+# simulate data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=500)
+# create study population, split into train/test and preprocess with default settings
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population, createDefaultSplitSetting())
+data$Train$covariateData <- preprocessData(data$Train$covariateData)
+saveLoc <- file.path(tempdir(), "calibrationSummary")
+# fit a lasso logistic regression model using the training data
+plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                   analysisId=1, analysisPath=saveLoc)
+calibrationSummary <- getCalibrationSummary(plpModel$prediction, 
+                                            "binary", 
+                                            numberOfStrata = 10,
+                                            typeColumn = "evaluationType")
+calibrationSummary
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }

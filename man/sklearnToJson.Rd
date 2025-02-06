@@ -11,6 +11,20 @@ sklearnToJson(model, path)
 
 \item{path}{path to the saved model file}
 }
+\value{
+nothing, saves the model to the path as json
+}
 \description{
 Saves sklearn python model object to json in path
+}
+\examples{
+\dontrun{ \dontshow{ # requires python environment with sklearn }
+sklearn <- reticulate::import("sklearn", convert = FALSE)
+model <- sklearn$tree$DecisionTreeClassifier()
+model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
+saveLoc <- file.path(tempdir() "model.json")
+sklearnToJson(model, saveLoc)
+dir(tempdir())
+unlink(saveLoc)
+}
 }

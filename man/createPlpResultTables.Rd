@@ -8,8 +8,8 @@ createPlpResultTables(
   connectionDetails,
   targetDialect = "postgresql",
   resultSchema,
-  deleteTables = T,
-  createTables = T,
+  deleteTables = TRUE,
+  createTables = TRUE,
   tablePrefix = "",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
   testFile = NULL
@@ -33,11 +33,32 @@ createPlpResultTables(
 \item{testFile}{(used for testing) The location of an sql file with the table creation code}
 }
 \value{
-Returns NULL but creates the required tables into the specified database schema(s).
+Returns NULL but creates or deletes the required tables in the specified database schema(s).
 }
 \description{
 This function executes a large set of SQL statements to create tables that can store models and results
 }
 \details{
 This function can be used to create (or delete) PatientLevelPrediction result tables
+}
+\examples{
+\dontshow{if (rlang::is_installed("RSQLite")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+# create a sqlite database with the PatientLevelPrediction result tables
+connectionDetails <- DatabaseConnector::createConnectionDetails(
+  dbms = "sqlite",
+  server = file.path(tempdir(), "test.sqlite"))
+createPlpResultTables(connectionDetails = connectionDetails,
+                      targetDialect = "sqlite",
+                      resultSchema = "main",
+                      tablePrefix = "plp_")
+# delete the tables
+createPlpResultTables(connectionDetails = connectionDetails,
+                      targetDialect = "sqlite",
+                      resultSchema = "main",
+                      deleteTables = TRUE,
+                      createTables = FALSE,
+                      tablePrefix = "plp_")
+# clean up the database file
+unlink(file.path(tempdir(), "test.sqlite"))
+\dontshow{\}) # examplesIf}
 }

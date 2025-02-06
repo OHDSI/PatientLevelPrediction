@@ -7,7 +7,7 @@
 createRestrictPlpDataSettings(
   studyStartDate = "",
   studyEndDate = "",
-  firstExposureOnly = F,
+  firstExposureOnly = FALSE,
   washoutPeriod = 0,
   sampleSize = NULL
 )
@@ -33,11 +33,24 @@ but can already be done here for efficiency reasons.}
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }
 \value{
-A setting object of class \code{restrictPlpDataSettings} containing a list getPlpData extra settings
+A setting object of class \code{restrictPlpDataSettings} containing a list of
+the settings: \itemize{
+\item{\code{studyStartDate}: A calendar date specifying the minimum date that a cohort index date can appear}
+\item{\code{studyEndDate}: A calendar date specifying the maximum date that a cohort index date can appear}
+\item{\code{firstExposureOnly}: Should only the first exposure per subject be included}
+\item{\code{washoutPeriod}: The mininum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+\item{\code{sampleSize}: If not NULL, the number of people to sample from the target cohort}
+}
 }
 \description{
 This function creates the settings used to restrict the target cohort when calling getPlpData
 }
 \details{
 Users need to specify the extra restrictions to apply when downloading the target cohort
+}
+\examples{
+# restrict to 2010, first exposure only, require washout period of 365 day
+# and sample 1000 people
+createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
+firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)
 }

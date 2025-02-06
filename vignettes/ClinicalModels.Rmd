@@ -1,0 +1,24 @@
+---
+title: "Clinical Models"
+author: "Jenna Reps, Peter R. Rijnbeek"
+date: '`r Sys.Date()`'
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Clinical Models}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Clinical models developed using the OHDSI PatientLevelPrediction framework
+
+| Title                | Link  |
+|----------------------|-------|
+| Using Machine Learning Applied to Real-World Healthcare Data for Predictive Analytics: An Applied Example in Bariatric Surgery |  [Value in Health](https://www.sciencedirect.com/science/article/pii/S1098301519300737) |   
+| Development and validation of a prognostic model predicting symptomatic hemorrhagic transformation in acute ischemic stroke at scale in the OHDSI network |  [PLoS One](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0226718) |  
+| Wisdom of the CROUD: development and validation of a patient-level prediction model for opioid use disorder using population-level claims data |  [PLoS One](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0228632) | 
+| Developing predictive models to determine Patients in End-of-life Care in Administrative datasets |  [Drug Safety](https://link.springer.com/article/10.1007/s40264-020-00906-7) |   
+| Predictors of diagnostic transition from major depressive disorder to bipolar disorder: a retrospective observational network study |  [Translational psychiatry](https://www.nature.com/articles/s41398-021-01760-6) |   
+| Seek COVER: using a disease proxy to rapidly develop and validate a personalized risk calculator for COVID-19 outcomes in an international network |  [BMC Medical Research Methodology](https://link.springer.com/article/10.1186/s12874-022-01505-z) |   
+| 90-Day all-cause mortality can be predicted following a total knee replacement: an international, network study to develop and validate a prediction model |  [Knee Surgery, Sports Traumatology, Arthroscopy](https://link.springer.com/article/10.1007/s00167-021-06799-y) |   
+| Machine learning and real-world data to predict lung cancer risk in routine care |  [Cancer Epidemiology, Biomarkers & Prevention](https://aacrjournals.org/cebp/article-abstract/32/3/337/718495) |   
+| Development and validation of a patient-level model to predict dementia across a network of observational databases |  [BMC medicine](https://link.springer.com/article/10.1186/s12916-024-03530-9) |   

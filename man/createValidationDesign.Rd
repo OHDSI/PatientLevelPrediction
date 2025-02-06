@@ -7,8 +7,8 @@
 createValidationDesign(
   targetId,
   outcomeId,
-  populationSettings,
-  restrictPlpDataSettings,
+  populationSettings = NULL,
+  restrictPlpDataSettings = NULL,
   plpModelList,
   recalibrate = NULL,
   runCovariateSummary = TRUE
@@ -19,9 +19,13 @@ createValidationDesign(
 
 \item{outcomeId}{The outcomeId of the outcome cohort to validate on}
 
-\item{populationSettings}{A list of population restriction settings created by \code{createPopulationSettings}}
+\item{populationSettings}{A list of population restriction settings created
+by \code{createPopulationSettings}. Default is NULL and then this is taken
+from the model}
 
-\item{restrictPlpDataSettings}{A list of plpData restriction settings created by \code{createRestrictPlpDataSettings}}
+\item{restrictPlpDataSettings}{A list of plpData restriction settings
+created by \code{createRestrictPlpDataSettings}. Default is NULL and then
+this is taken from the model.}
 
 \item{plpModelList}{A list of plpModels objects created by \code{runPlp} or a path to such objects}
 
@@ -29,6 +33,15 @@ createValidationDesign(
 
 \item{runCovariateSummary}{whether to run the covariate summary for the validation data}
 }
+\value{
+A validation design object of class \code{validationDesign} or a list of such objects
+}
 \description{
 createValidationDesign - Define the validation design for external validation
+}
+\examples{
+# create a validation design for targetId 1 and outcomeId 2 one l1 model and 
+# one gradient boosting model
+createValidationDesign(1, 2, plpModelList = list(
+"pathToL1model", "PathToGBMModel"))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/SklearnClassifierSettings.R
 \name{setRandomForest}
 \alias{setRandomForest}
-\title{Create setting for random forest model with python (very fast)}
+\title{Create setting for random forest model using sklearn}
 \usage{
 setRandomForest(
   ntrees = list(100, 500),
@@ -60,12 +60,24 @@ setRandomForest(
 
 \item{seed}{A seed when training the final model}
 }
+\value{
+a modelSettings object
+}
 \description{
-Create setting for random forest model with python (very fast)
+Create setting for random forest model using sklearn
 }
 \examples{
-\dontrun{
-model.rf <- setRandomForest(mtries=list('auto',5,20),  ntrees=c(10,100),
-                           maxDepth=c(5,20))
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+plpData <- getEunomiaPlpData()
+model <- setRandomForest(ntrees = list(100),
+                          maxDepth = list(4),
+                          minSamplesSplit = list(2),
+                          minSamplesLeaf = list(10),
+                          maxSamples = list(0.9),
+                          seed = 42)
+saveLoc <- file.path(tempdir(), "randomForest")
+results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }
 }

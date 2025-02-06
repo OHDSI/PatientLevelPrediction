@@ -7,16 +7,11 @@
 fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
 }
 \arguments{
-\item{trainData}{An object of type \code{TrainData} created using \code{splitData}
+\item{trainData}{An object of type \code{trainData} created using \code{splitData}
 data extracted from the CDM.}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
-\itemize{
-\item setLassoLogisticRegression() A lasso logistic regression model
-\item setGradientBoostingMachine() A gradient boosting machine
-\item setRandomForest() A random forest model
-\item setKNN() A KNN model
-}}
+\item{modelSettings}{An object of class \code{modelSettings} created using
+one of the \code{createModelSettings} functions}
 
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 
@@ -35,9 +30,28 @@ An object of class \code{plpModel} containing:
 \item{covariateImportance}{The covariate importance for the model}
 }
 \description{
-Train various models using a default parameter gird search or user specified parameters
+Train various models using a default parameter grid search or user specified
+parameters
 }
 \details{
-The user can define the machine learning model to train (regularised logistic regression, random forest,
-gradient boosting machine, neural network and )
+The user can define the machine learning model to train
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# simulate data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# create study population, split into train/test and preprocess with default settings
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population, createDefaultSplitSetting())
+data$Train$covariateData <- preprocessData(data$Train$covariateData)
+saveLoc <- file.path(tempdir(), "fitPlp")
+# fit a lasso logistic regression model using the training data
+plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                   analysisId=1, analysisPath=saveLoc)
+# show evaluationSummary for model
+evaluatePlp(plpModel$prediction)$evaluationSummary
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

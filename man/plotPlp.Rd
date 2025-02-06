@@ -11,15 +11,28 @@ plotPlp(plpResult, saveLocation = NULL, typeColumn = "evaluation")
 
 \item{saveLocation}{Name of the directory where the plots should be saved (NULL means no saving)}
 
-\item{typeColumn}{The name of the column specifying the evaluation type 
+\item{typeColumn}{The name of the column specifying the evaluation type
 (to stratify the plots)}
 }
 \value{
-TRUE if it ran
+TRUE if it ran, plots are saved in the specified directory
 }
 \description{
 Plot all the PatientLevelPrediction plots
 }
 \details{
 Create a directory with all the plots
+}
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotPlp")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotPlp(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

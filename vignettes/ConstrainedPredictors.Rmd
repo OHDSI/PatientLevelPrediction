@@ -1,35 +1,14 @@
 ---
-title: "Constrained predictors"
+title: "Constrained Predictors"
 author: "Jenna Reps"
 date: '`r Sys.Date()`'
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[CO,CE]{Installation Guide}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    includes:
-      in_header: preamble.tex
-    number_sections: yes
-    toc: yes
-  word_document:
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Constrained Predictors}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{=html}
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Constrainted Predictors}
--->
-```
 ## Constrained Predictors
 
 ### How to use the PhenotypeLibrary R package
@@ -39,7 +18,7 @@ Here we provide a set of phenotypes that can be used as predictors in prediction
 These phenotypes can be extracted from the PhenotypeLibrary R package. To install the R package run:
 
 ```{r, echo = TRUE, message = FALSE, warning = FALSE, tidy = FALSE, eval=FALSE}
-remotes::install_github('ohdsi/PhenotypeLibrary')
+remotes::install_github("ohdsi/PhenotypeLibrary")
 ```
 
 To extract the cohort definition for Alcoholism with an id of 1165, just run:
@@ -122,4 +101,3 @@ phenotypeDefinitions <- PhenotypeLibrary::getPlCohortDefinitionSet(1152:1215)
 | Aspirin                                         | Vascular                    | 1158                       |
 | Deep vein thrombosis (DVT)                      | Vascular                    | 1152                       |
 | Edema                                           | Vascular                    | 1196                       |
-| Inpatient visit                                 | NA                          | NA                         |

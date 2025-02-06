@@ -1,4 +1,4 @@
-# Copyright 2022 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -14,110 +14,100 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-library("testthat")
-
-context("CovariateExtras")
-
 test_that("settings creation", {
-  
-covSet <- createCohortCovariateSettings(
-  cohortName = 'covariateName', 
-  settingId = 4,
-  cohortDatabaseSchema = 'main', 
-  cohortTable = 'cohort', 
-  cohortId = 2,
-  startDay = -350, 
-  endDay = -2, 
-  count = F, 
-  ageInteraction = F, 
-  lnAgeInteraction = F,
-  analysisId = 456
-)
+  covSet <- createCohortCovariateSettings(
+    cohortName = "covariateName",
+    settingId = 4,
+    cohortDatabaseSchema = "main",
+    cohortTable = "cohort",
+    cohortId = 2,
+    startDay = -350,
+    endDay = -2,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
+    analysisId = 456
+  )
 
-expect_equal(class(covSet), "covariateSettings")
+  expect_equal(class(covSet), "covariateSettings")
 
-expect_equal(attr(covSet, 'fun'), "PatientLevelPrediction::getCohortCovariateData")
-
+  expect_equal(attr(covSet, "fun"), "PatientLevelPrediction::getCohortCovariateData")
 })
 
 test_that("settings creation errors", {
-  
-expect_error(createCohortCovariateSettings(
-  cohortName = 'covariateName', 
-  settingId = -1,
-  cohortDatabaseSchema = 'test_cdm', 
-  cohortTable = 'table', 
-  cohortId = 2,
-  startDay = -350, 
-  endDay = -2, 
-  count = F, 
-  ageInteraction = F, 
-  lnAgeInteraction = F,
-  analysisId = 456
-))
+  expect_error(createCohortCovariateSettings(
+    cohortName = "covariateName",
+    settingId = -1,
+    cohortDatabaseSchema = "test_cdm",
+    cohortTable = "table",
+    cohortId = 2,
+    startDay = -350,
+    endDay = -2,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
+    analysisId = 456
+  ))
 
-expect_error(createCohortCovariateSettings(
-  cohortName = 'covariateName', 
-  settingId = 101,
-  cohortDatabaseSchema = 'test_cdm', 
-  cohortTable = 'table', 
-  cohortId = 2,
-  startDay = -350, 
-  endDay = -2, 
-  count = F, 
-  ageInteraction = F, 
-  lnAgeInteraction = F,
-  analysisId = 456
-))
+  expect_error(createCohortCovariateSettings(
+    cohortName = "covariateName",
+    settingId = 101,
+    cohortDatabaseSchema = "test_cdm",
+    cohortTable = "table",
+    cohortId = 2,
+    startDay = -350,
+    endDay = -2,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
+    analysisId = 456
+  ))
 
-expect_error(createCohortCovariateSettings(
-  cohortName = 'covariateName', 
-  settingId = '101',
-  cohortDatabaseSchema = 'test_cdm', 
-  cohortTable = 'table', 
-  cohortId = 2,
-  startDay = -350, 
-  endDay = -2, 
-  count = F, 
-  ageInteraction = F, 
-  lnAgeInteraction = F,
-  analysisId = 456
-))
-
+  expect_error(createCohortCovariateSettings(
+    cohortName = "covariateName",
+    settingId = "101",
+    cohortDatabaseSchema = "test_cdm",
+    cohortTable = "table",
+    cohortId = 2,
+    startDay = -350,
+    endDay = -2,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
+    analysisId = 456
+  ))
 })
 
 test_that("extraction works", {
-  
+  skip_if_offline()
   covSet <- createCohortCovariateSettings(
-    cohortName = 'covariateName', 
+    cohortName = "covariateName",
     settingId = 4,
-    cohortDatabaseSchema = 'main', 
-    cohortTable = 'cohort', 
+    cohortDatabaseSchema = "main",
+    cohortTable = "cohort",
     cohortId = 2,
-    startDay = -350, 
-    endDay = -2, 
-    count = F, 
-    ageInteraction = F, 
-    lnAgeInteraction = F,
+    startDay = -350,
+    endDay = -2,
+    count = FALSE,
+    ageInteraction = FALSE,
+    lnAgeInteraction = FALSE,
     analysisId = 456
   )
-  
-covs <- FeatureExtraction::getDbCovariateData(
-  connectionDetails = connectionDetails, 
-  cdmDatabaseSchema = "main", 
-  cdmVersion = 5, 
-  cohortTable = "cohort", 
-  cohortDatabaseSchema = "main", 
-  cohortTableIsTemp = F, 
-  cohortIds = c(1), 
-  rowIdField = 'rowId', 
-  covariateSettings = covSet, 
-  aggregated = F
+
+  covs <- FeatureExtraction::getDbCovariateData(
+    connectionDetails = connectionDetails,
+    cdmDatabaseSchema = "main",
+    cdmVersion = 5,
+    cohortTable = "cohort",
+    cohortDatabaseSchema = "main",
+    cohortTableIsTemp = FALSE,
+    cohortIds = c(1),
+    rowIdField = "rowId",
+    covariateSettings = covSet,
+    aggregated = FALSE
   )
 
-expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::pull())
-expect_equal(as.double(covs$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect()), covSet$covariateId)
-expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::pull() > 0)
-
+  expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  expect_equal(as.double(covs$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect()), covSet$covariateId)
+  expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::pull() > 0)
 })
-

@@ -5,12 +5,12 @@
 \title{Creates list of settings specifying what parts of runPlp to execute}
 \usage{
 createExecuteSettings(
-  runSplitData = F,
-  runSampleData = F,
-  runfeatureEngineering = F,
-  runPreprocessData = F,
-  runModelDevelopment = F,
-  runCovariateSummary = F
+  runSplitData = FALSE,
+  runSampleData = FALSE,
+  runFeatureEngineering = FALSE,
+  runPreprocessData = FALSE,
+  runModelDevelopment = FALSE,
+  runCovariateSummary = FALSE
 )
 }
 \arguments{
@@ -18,7 +18,7 @@ createExecuteSettings(
 
 \item{runSampleData}{TRUE or FALSE whether to over or under sample}
 
-\item{runfeatureEngineering}{TRUE or FALSE whether to do feature engineering}
+\item{runFeatureEngineering}{TRUE or FALSE whether to do feature engineering}
 
 \item{runPreprocessData}{TRUE or FALSE whether to do preprocessing}
 
@@ -34,4 +34,8 @@ Creates list of settings specifying what parts of runPlp to execute
 }
 \details{
 define what parts of runPlp to execute
+}
+\examples{
+# create settings with only split and model development
+createExecuteSettings(runSplitData = TRUE, runModelDevelopment = TRUE) 
 }

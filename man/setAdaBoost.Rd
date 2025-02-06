@@ -7,7 +7,7 @@
 setAdaBoost(
   nEstimators = list(10, 50, 200),
   learningRate = list(1, 0.5, 0.1),
-  algorithm = list("SAMME.R"),
+  algorithm = list("SAMME"),
   seed = sample(1e+06, 1)
 )
 }
@@ -17,17 +17,20 @@ setAdaBoost(
 \item{learningRate}{(list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 There is a trade-off between learningRate and nEstimators.}
 
-\item{algorithm}{(list) If ‘SAMME.R’ then use the SAMME.R real boosting algorithm. base_estimator must support calculation of class probabilities. If ‘SAMME’ then use the SAMME discrete boosting algorithm. The SAMME.R algorithm typically converges faster than SAMME, achieving a lower test error with fewer boosting iterations.}
+\item{algorithm}{Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.}
 
 \item{seed}{A seed for the model}
+}
+\value{
+a modelSettings object
 }
 \description{
 Create setting for AdaBoost with python DecisionTreeClassifier base estimator
 }
 \examples{
-\dontrun{
-model.adaBoost <- setAdaBoost(nEstimators = list(10,50,200), learningRate = list(1, 0.5, 0.1),
-                              algorithm = list('SAMME.R'), seed = sample(1000000,1)
-                              )
+\dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+model <- setAdaBoost(nEstimators = list(10),
+                     learningRate = list(0.1),
+                     seed = 42)
 }
 }

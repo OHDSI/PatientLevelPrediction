@@ -2,39 +2,22 @@
 title: "Adding Custom Feature Engineering Functions"
 author: "Jenna Reps, Egill Fridgeirsson"
 date: "`r Sys.Date()`"
-header-includes:
-    - \usepackage{fancyhdr}
-    - \pagestyle{fancy}
-    - \fancyhead{}
-    - \fancyhead[CO,CE]{Custom Patient-Level Prediction Algorithms}
-    - \fancyfoot[CO,CE]{PatientLevelPrediction Package Version `r    utils::packageVersion("PatientLevelPrediction")`}
-    - \fancyfoot[LE,RO]{\thepage}
-    - \renewcommand{\headrulewidth}{0.4pt}
-    - \renewcommand{\footrulewidth}{0.4pt}
-output:
-  pdf_document:
-    number_sections: yes
-    toc: yes
-  html_document:
-    number_sections: yes
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Adding Custom Feature Engineering Functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{=html}
-<!--
-%\VignetteEngine{knitr::knitr}
-%\VignetteIndexEntry{Adding Custom Feature Engineering}
--->
-```
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 library(PatientLevelPrediction)
 ```
 
 # Introduction
 
-This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](http://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the [`BuildingPredictiveModels` vignette](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/doc/BuildingPredictiveModels.pdf).
+This vignette describes how you can add your own custom function for feature engineering in the Observational Health Data Sciences and Informatics (OHDSI) [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction) package. This vignette assumes you have read and are comfortable with building single patient level prediction models as described in the `vignette('BuildingPredictiveModels')`.
 
-**We invite you to share your new feature engineering functions with the OHDSI community through our [GitHub repository](http://github.com/OHDSI/PatientLevelPrediction).**
+**We invite you to share your new feature engineering functions with the OHDSI community through our [GitHub repository](https://github.com/OHDSI/PatientLevelPrediction).**
 
 # Feature Engineering Function Code Structure
 
@@ -65,22 +48,18 @@ Let's consider the situation where we wish to create an age spline feature. To m
 Our age spline feature function will create a new feature using the `plpData$cohorts$ageYear` column. We will implement a restricted cubic spline that requires specifying the number of knots. Therefore, the inputs for this are: `knots` - an integer/double specifying the number of knots.
 
 ```{r, echo = TRUE, eval=FALSE}
-createAgeSpline <- function(
-                     knots = 5
-                     ){
-  
+createAgeSpline <- function(knots = 5) {
   # create list of inputs to implement function
   featureEngineeringSettings <- list(
     knots = knots
-    )
-  
+  )
+
   # specify the function that will implement the sampling
   attr(featureEngineeringSettings, "fun") <- "implementAgeSplines"
 
   # make sure the object returned is of class "sampleSettings"
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   return(featureEngineeringSettings)
-  
 }
 ```
 
@@ -93,7 +72,7 @@ All 'implement' functions must take as input the `trainData` and the `featureEng
 In our example, the `createAgeSpline()` will return a list with 'knots'. The `featureEngineeringSettings` therefore contains this.
 
 ```{r tidy=FALSE,eval=FALSE}
-implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NULL) {
+implementAgeSplines <- function(trainData, featureEngineeringSettings, model = NULL) {
   # if there is a model, it means this function is called through applyFeatureengineering, meaning it   # should apply the model fitten on training data to the test data
   if (is.null(model)) {
     knots <- featureEngineeringSettings$knots
@@ -101,19 +80,18 @@ implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NUL
     y <- ageData$outcomeCount
     X <- ageData$ageYear
     model <- mgcv::gam(
-      y ~ s(X, bs='cr', k=knots, m=2)
+      y ~ s(X, bs = "cr", k = knots, m = 2)
     )
     newData <- data.frame(
       rowId = ageData$rowId,
       covariateId = 2002,
       covariateValue = model$fitted.values
     )
-  }
-  else {
+  } else {
     ageData <- trainData$labels
     X <- trainData$labels$ageYear
     y <- ageData$outcomeCount
-    newData <- data.frame(y=y, X=X)
+    newData <- data.frame(y = y, X = X)
     yHat <- predict(model, newData)
     newData <- data.frame(
       rowId = trainData$labels$rowId,
@@ -121,37 +99,40 @@ implementAgeSplines <- function(trainData, featureEngineeringSettings, model=NUL
       covariateValue = yHat
     )
   }
-  
-  # remove existing age if in covariates 
-  trainData$covariateData$covariates <- trainData$covariateData$covariates |> 
-    dplyr::filter(!covariateId %in% c(1002))
-  
+
+  # remove existing age if in covariates
+  trainData$covariateData$covariates <- trainData$covariateData$covariates |>
+    dplyr::filter(!.data$covariateId %in% c(1002))
+
   # update covRef
-  Andromeda::appendToTable(trainData$covariateData$covariateRef, 
-                           data.frame(covariateId=2002,
-                                      covariateName='Cubic restricted age splines',
-                                      analysisId=2,
-                                      conceptId=2002))
-  
+  Andromeda::appendToTable(
+    trainData$covariateData$covariateRef,
+    data.frame(
+      covariateId = 2002,
+      covariateName = "Cubic restricted age splines",
+      analysisId = 2,
+      conceptId = 2002
+    )
+  )
+
   # update covariates
   Andromeda::appendToTable(trainData$covariateData$covariates, newData)
-  
+
   featureEngineering <- list(
-    funct = 'implementAgeSplines',
+    funct = "implementAgeSplines",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       model = model
     )
   )
-  
-  attr(trainData$covariateData, 'metaData')$featureEngineering = listAppend(
-    attr(trainData$covariateData, 'metaData')$featureEngineering,
+
+  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+    attr(trainData$covariateData, "metaData")$featureEngineering,
     featureEngineering
   )
-  
+
   return(trainData)
 }
-
 ```
 
 # Acknowledgments
@@ -164,6 +145,6 @@ citation("PatientLevelPrediction")
 
 **Please reference this paper if you use the PLP Package in your work:**
 
-[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](http://dx.doi.org/10.1093/jamia/ocy032)
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data. J Am Med Inform Assoc. 2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
 
 This work is supported in part through the National Science Foundation grant IIS 1251151.

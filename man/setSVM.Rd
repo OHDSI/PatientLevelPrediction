@@ -38,11 +38,19 @@ setSVM(
 
 \item{seed}{A seed for the model}
 }
+\value{
+a modelSettings object
+}
 \description{
 Create setting for the python sklearn SVM (SVC function)
 }
 \examples{
-\dontrun{
-model.svm <- setSVM(kernel='rbf', seed = NULL)
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+plpData <- getEunomiaPlpData()
+model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
+saveLoc <- file.path(tempdir(), "svm")
+results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }
 }

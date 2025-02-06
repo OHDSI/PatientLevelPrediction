@@ -1,6 +1,6 @@
 # @file PatientLevelPrediction.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 # 
@@ -26,10 +26,10 @@
 #' @importFrom rlang .data
 "_PACKAGE"
 
-#' A simulation profile
+#' A simulation profile for generating synthetic patient level prediction data
 #' @docType data
 #' @keywords datasets
-#' @name plpDataSimulationProfile
+#' @name simulationProfile
 #' @format A data frame containing the following elements:
 #' \describe{
 #'   \item{covariatePrevalence}{prevalence of all covariates}
@@ -40,6 +40,5 @@
 #'   \item{exclusionPrevalence}{prevalence of exclusion of covariates}
 #' }
 #' @usage
-#' data(plpDataSimulationProfile)
+#' data(simulationProfile)
 NULL
-

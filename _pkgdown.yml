@@ -1,6 +1,8 @@
 template:
+  bootstrap: 5
   params:
     bootswatch: cosmo
+  light-switch: true
 
 development:
   mode: auto
@@ -16,10 +18,8 @@ navbar:
     left:
     - home
     - intro
-    - videos
     - reference
     - articles
-    - tutorial
     - benchmarks
     - predictors
     - bestpractice
@@ -72,15 +72,20 @@ reference:
       - createDatabaseDetails
       - createRestrictPlpDataSettings
       - getPlpData
+      - getEunomiaPlpData
       - savePlpData
       - loadPlpData
       - getCohortCovariateData
+      - print.plpData
+      - print.summary.plpData
+      - summary.plpData
   - title: "Settings for designing a prediction models"
     desc: >
       Design settings required when developing a model.
     contents:
       - createStudyPopulationSettings
       - createDefaultSplitSetting
+      - createExistingSplitSettings
       - createSampleSettings
       - createFeatureEngineeringSettings
       - createPreprocessSettings
@@ -93,6 +98,10 @@ reference:
       - createUnivariateFeatureSelection
       - createSplineSettings
       - createStratifiedImputationSettings
+      - createNormalizer
+      - createSimpleImputer
+      - createIterativeImputer
+      - createRareFeatureRemover
   - title: "External validation"
     contents:
       - createValidationDesign
@@ -109,12 +118,11 @@ reference:
       - createDefaultExecuteSettings
   - title: "Binary Classification Models"
     desc: >
-      Functions for setting binary classifiers and their hyper-parameter search.
+      Functions for creating binary models
     contents:
       - setAdaBoost
       - setDecisionTree
       - setGradientBoostingMachine
-      - setKNN
       - setLassoLogisticRegression
       - setMLP
       - setNaiveBayes
@@ -124,7 +132,7 @@ reference:
       - setLightGBM
   - title: "Survival Models"
     desc: >
-      Functions for setting survival models and their hyper-parameter search.
+      Functions for creating survival models
     contents:
       - setCoxModel
   - title: "Single Patient-Level Prediction Model"
@@ -140,7 +148,7 @@ reference:
       - diagnosePlp
   - title: "Multiple Patient-Level Prediction Models"
     desc: >
-      Functions for training mutliple patient-level-prediction model in an efficient way.
+      Functions for training multiple patient-level-prediction model in an efficient way.
     contents:
       - createModelDesign
       - runMultiplePlp  
@@ -165,15 +173,9 @@ reference:
     contents:
       - insertResultsToSqlite
       - createPlpResultTables
-      - addMultipleRunPlpToDatabase
-      - addRunPlpToDatabase
       - createDatabaseSchemaSettings 
-      - createDatabaseList
-      - addDiagnosePlpToDatabase
-      - addMultipleDiagnosePlpToDatabase
       - extractDatabaseToCsv
       - insertCsvToDatabase
-      - insertModelDesignInDatabase
       - migrateDataModel
   - title: "Shiny Viewers"
     desc: >
@@ -191,6 +193,7 @@ reference:
       - plotSmoothCalibration
       - plotSparseCalibration
       - plotSparseCalibration2
+      - plotNetBenefit
       - plotDemographicSummary
       - plotF1Measure
       - plotGeneralizability
@@ -208,10 +211,10 @@ reference:
       - plotLearningCurve
   - title: "Simulation"
     desc: >
-      Functions for simulating cohort method data objects.
+      Functions for simulating PLP data objects.
     contents:
       - simulatePlpData
-      - plpDataSimulationProfile
+      - simulationProfile
   - title: "Data manipulation functions"
     desc: >
       Functions for manipulating data
@@ -227,32 +230,17 @@ reference:
       - setPythonEnvironment
   - title: "Evaluation measures"
     contents:
-      - accuracy
       - averagePrecision
       - brierScore
       - calibrationLine
       - computeAuc
-      - f1Score
-      - falseDiscoveryRate
-      - falseNegativeRate
-      - falseOmissionRate
-      - falsePositiveRate
       - ici
       - modelBasedConcordance
-      - negativeLikelihoodRatio
-      - negativePredictiveValue
-      - positiveLikelihoodRatio
-      - positivePredictiveValue
-      - sensitivity
-      - specificity
       - computeGridPerformance
-      - diagnosticOddsRatio
       - getCalibrationSummary
       - getDemographicSummary
       - getThresholdSummary
-      - getThresholdSummary_binary
       - getPredictionDistribution
-      - getPredictionDistribution_binary
   - title: "Saving/loading models as json"
     desc: >
       Functions for saving or loading models as json
@@ -273,5 +261,8 @@ reference:
   - title: "Other functions"
     contents:
       - predictCyclops
+      - predictGlm
+      - createGlmModel
+      - createSklearnModel
     
 

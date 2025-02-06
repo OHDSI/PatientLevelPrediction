@@ -1,6 +1,6 @@
 # @file RunPlp.R
 #
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -63,7 +63,7 @@
 #'                                                                                 
 #' @param saveDirectory         The path to the directory where the results will be saved (if NULL uses working directory)
 #' @return
-#' An object containing the following:
+#' An plpResults object containing the following:
 #'
 #'  \itemize{
 #'           \item model The developed model of class \code{plpModel}
@@ -73,152 +73,55 @@
 #'           \item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
 #'           \item analysisRef A list with details about the analysis
 #'           } 
-#'
-#'
-#' @export
 #' @examples
-#' \dontrun{
-#' #******** EXAMPLE 1 ********* 
-#' #load plpData:
-#' plpData <- loadPlpData(file.path('C:','User','home','data'))
-#' 
-#' # specify the outcome to predict (the plpData can have multiple outcomes)
-#' outcomeId <- 2042
-#' 
-#' # specify a unique identifier for the analysis
-#' analysisId <- 'lrModel'
-#' 
-#' # create population settings (this defines the labels in the data)
-#' #create study population to develop model on
-#' #require minimum of 365 days observation prior to at risk start
-#' #no prior outcome and person must be observed for 365 after index (minTimeAtRisk)
-#' #with risk window from 0 to 365 days after index
-#' populationSettings <- createStudyPopulationSettings(plpData,
-#'                                     firstExposureOnly = FALSE,
-#'                                     washoutPeriod = 365,
-#'                                     removeSubjectsWithPriorOutcome = TRUE,
-#'                                     priorOutcomeLookback = 99999,
-#'                                     requireTimeAtRisk = TRUE,
-#'                                     minTimeAtRisk=365,
-#'                                     riskWindowStart = 0,
-#'                                     addExposureDaysToStart = FALSE,
-#'                                     riskWindowEnd = 365,
-#'                                     addExposureDaysToEnd = FALSE)
-#'                                     
-#' # create the split setting by specifying how you want to
-#' # partition the data into development (train/validation) and evaluation (test or CV)
-#' splitSettings <- createDefaultSplitSetting(testFraction = 0.25, 
-#'                                            trainFraction = 0.75, 
-#'                                            splitSeed = sample(100000,1), 
-#'                                            nfold=3,
-#'                                            type = 'stratified')                                   
-#'                                     
-#'                                     
-#' # create the settings specifying any under/over sampling 
-#' # in this example we do not do any
-#' sampleSettings <- createSampleSettings(type = 'none')  
-#' 
-#' # specify any feature engineering that will be applied to the train data
-#' # in this example we do not do any
-#' featureEngineeringSettings <- createFeatureEngineeringSettings(type = 'none')   
-#' 
-#' # specify whether to use normalization and removal of rare features
-#' # preprocessSettings <- ... 
-#' 
-#' 
-#' #lasso logistic regression predicting outcome 200 in cohorts 10 
-#' #using no feature selection with a time split evaluation with 30% in test set
-#' #70% in train set where the model hyper-parameters are selected using 3-fold cross validation:
-#' #and results are saved to file.path('C:','User','home')
-#' modelSettingsLR <- setLassoLogisticRegression()
-#' 
-#' # specify how you want the logging for the analysis
-#' # generally this is saved in a file with the results 
-#' # but you can define the level of logging 
-#' logSettings <- createLogSettings(verbosity = 'DEBUG',
-#'                                  timeStamp = T,
-#'                                  logName = 'runPlp LR Log')
-#'                                  
-#' # specify what parts of the analysis to run:
-#' # in this example we run everything
-#' executeSettings <- createExecuteSettings(runSplitData = T,
-#'                                          runSampleData = T,
-#'                                          runfeatureEngineering = T,
-#'                                          runProcessData = T,
-#'                                          runModelDevelopment = T,
-#'                                          runCovariateSummary = T)                                        
-#' 
-#' lrModel <- runPlp(plpData = plpData,
-#'                   outcomeId = outcomeId, 
-#'                   analysisId = analysisId,
-#'                   populationSettings = populationSettings,
-#'                   splitSettings = splitSettings,
-#'                   sampleSettings = sampleSettings,
-#'                   featureEngineeringSettings = featureEngineeringSettings,
-#'                   preprocessSettings = preprocessSettings,
-#'                   modelSettings = modelSettingsLR,
-#'                   logSettings = logSettings
-#'                   executeSettings = executeSettings,
-#'                   saveDirectory = saveDirectory
-#'                   )
-#'  
-#' #******** EXAMPLE 2 *********                                               
-#' # Gradient boosting machine with a grid search to select hyper parameters  
-#' # using the test/train/folds created for the lasso logistic regression above                       
-#' modelSettingsGBM <- gradientBoostingMachine.set(rsampRate=c(0.5,0.9,1),csampRate=1, 
-#'                            ntrees=c(10,100), bal=c(F,T),
-#'                            max_depth=c(4,5), learn_rate=c(0.1,0.01))
-#'                            
-#' analysisId <- 'gbmModel'
-#' 
-#' gbmModel <- runPlp(plpData = plpData,
-#'                   outcomeId = outcomeId, 
-#'                   analysisId = analysisId,
-#'                   populationSettings = populationSettings,
-#'                   splitSettings = splitSettings,
-#'                   sampleSettings = sampleSettings,
-#'                   featureEngineeringSettings = featureEngineeringSettings,
-#'                   preprocessSettings = preprocessSettings,
-#'                   modelSettings = modelSettingsGBM,
-#'                   logSettings = logSettings
-#'                   executeSettings = executeSettings,
-#'                   saveDirectory = saveDirectory
-#'                   )
-#' } 
+#' \donttest{ \dontshow{ # takes too long }
+#' # simulate some data
+#' data('simulationProfile')
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' # develop a model with the default settings
+#' saveLoc <- file.path(tempdir(), "runPlp")
+#' results <- runPlp(plpData = plpData, outcomeId = 3, analysisId = 1,
+#'                   saveDirectory = saveLoc) 
+#' # to check the results you can view the log file at saveLoc/1/plpLog.txt
+#' # or view with shiny app using viewPlp(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
+#' @export
 runPlp <- function(
   plpData,
-  outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = '-'),
-  analysisName = 'Study details',
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
+  analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
+  analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(
-    type = 'stratified', 
-    testFraction=0.25, 
+    type = "stratified", 
+    testFraction = 0.25, 
     trainFraction = 0.75, 
-    splitSeed=123, 
-    nfold=3
-    ),
-  sampleSettings = createSampleSettings(type = 'none'),
-  featureEngineeringSettings = createFeatureEngineeringSettings(type = 'none'),
+    splitSeed = 123, 
+    nfold = 3), 
+  sampleSettings = createSampleSettings(type = "none"),
+  featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
   preprocessSettings = createPreprocessSettings(
     minFraction = 0.001,
-    normalize = T
+    normalize = TRUE
     ),
   modelSettings = setLassoLogisticRegression(),
   logSettings = createLogSettings(
-    verbosity = 'DEBUG',
-    timeStamp = T,
-    logName = 'runPlp Log'
+    verbosity = "DEBUG",
+    timeStamp = TRUE,
+    logName = "runPlp Log"
     ),
   executeSettings = createDefaultExecuteSettings(),
   saveDirectory = getwd()
-){
+) {
+  start <- Sys.time()
   
   # start log 
   analysisPath <- file.path(saveDirectory, analysisId)
   logSettings$saveDirectory <- analysisPath
-  logSettings$logFileName <- 'plpLog'
-  logger <- do.call(createLog,logSettings)
+  logSettings$logFileName <- "plpLog"
+  logger <- do.call(createLog, logSettings)
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
@@ -239,15 +142,17 @@ runPlp <- function(
         )
       )
     },
-    error = function(e){ParallelLogger::logError(e); return(NULL)}
-    )
+    error = function(e) {
+      ParallelLogger::logError(e)
+      return(NULL)
+    })
   
-  if(is.null(settingsValid)){
-    stop('Settings are invalid - check log for error message')
+  if (is.null(settingsValid)) {
+    stop("Settings are invalid - check log for error message")
   }
   
   # log the start time:
-  ExecutionDateTime <- Sys.time()
+  executionDateTime <- Sys.time()
   
   # print the header in the log
   tryCatch({
@@ -257,16 +162,16 @@ runPlp <- function(
       outcomeId, 
       analysisId, 
       analysisName,
-      ExecutionDateTime
+      executionDateTime
     )
   })
   
   # create the population
-  if(!is.null(plpData$population)) {
-    ParallelLogger::logInfo('Using existing population')
+  if (!is.null(plpData$population)) {
+    ParallelLogger::logInfo("Using existing population")
     population <- plpData$population
   } else {
-    ParallelLogger::logInfo('Creating population')
+    ParallelLogger::logInfo("Creating population")
     population <- tryCatch({
       do.call(createStudyPopulation,
               list(plpData = plpData,
@@ -275,15 +180,18 @@ runPlp <- function(
                    population = plpData$population
                    )
       )},
-    error = function(e){ParallelLogger::logError(e); return(NULL)}
+    error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
   }
     
-  if(is.null(population)){
-    stop('population NULL')
+  if (is.null(population)) {
+    stop("population NULL")
   }
   
-  if(executeSettings$runSplitData){
+  if (executeSettings$runSplitData) {
     # split the data (test/train/cv) + summarise at the end
     data <- tryCatch(
       {
@@ -293,16 +201,19 @@ runPlp <- function(
           splitSettings = splitSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data)){
-      stop('data NULL after splitting')
+    if (is.null(data)) {
+      stop("data NULL after splitting")
     }
     
     dataSummary(data)
   } 
   
-  if(executeSettings$runSampleData){
+  if (executeSettings$runSampleData) {
     # sampling
     data$Train <- tryCatch(
       {
@@ -311,15 +222,18 @@ runPlp <- function(
           sampleSettings = sampleSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train)){
-      stop('train data NULL after sample')
+    if (is.null(data$Train)) {
+      stop("train data NULL after sample")
     }
     dataSummary(data)
   }
   
-  if(executeSettings$runfeatureEngineering){
+  if (executeSettings$runFeatureEngineering) {
     
     data$Train <- tryCatch(
       {
@@ -328,15 +242,18 @@ runPlp <- function(
           featureEngineeringSettings = featureEngineeringSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train)){
-      stop('train data NULL after feature engineering')
+    if (is.null(data$Train)) {
+      stop("train data NULL after feature engineering")
     }
     dataSummary(data)
   }
   
-  if(executeSettings$runPreprocessData){
+  if (executeSettings$runPreprocessData) {
     
     data$Train$covariateData <- tryCatch(
       {
@@ -345,10 +262,13 @@ runPlp <- function(
           preprocessSettings = preprocessSettings
         )
       },
-      error = function(e){ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
-    if(is.null(data$Train$covariateData)){
-      stop('train data NULL after preprocessing')
+    if (is.null(data$Train$covariateData)) {
+      stop("train data NULL after preprocessing")
     }
     dataSummary(data)
   }
@@ -357,7 +277,7 @@ runPlp <- function(
   model <- NULL
   prediction <- NULL
   performance <- NULL
-  if(executeSettings$runModelDevelopment){
+  if (executeSettings$runModelDevelopment) {
     # fit model
     settings <- list(
       trainData = data$Train, 
@@ -366,21 +286,26 @@ runPlp <- function(
       analysisPath = analysisPath
     )
     
-    ParallelLogger::logInfo(sprintf('Training %s model',settings$modelSettings$name))  
+    ParallelLogger::logInfo(sprintf("Training %s model",
+      settings$modelSettings$name))  
+
     model <- tryCatch(
       {
         do.call(fitPlp, settings)
       },
-      error = function(e) { ParallelLogger::logError(e); return(NULL)}
+      error = function(e) {
+        ParallelLogger::logError(e)
+        return(NULL)
+      }
     )
     
-    if(!is.null(model)){
+    if (!is.null(model)) {
       prediction <- model$prediction
       # remove prediction from model
       model$prediction <- NULL
       
       #apply to test data if exists:
-      if('Test' %in% names(data)){
+      if ("Test" %in% names(data)) {
         predictionTest <- tryCatch(
           {
             predictPlp(
@@ -389,13 +314,16 @@ runPlp <- function(
               population = data$Test$labels
             )
           },
-          error = function(e) { ParallelLogger::logError(e); return(NULL)}
+          error = function(e) {
+            ParallelLogger::logError(e)
+            return(NULL)
+          }
         )
         
-        predictionTest$evaluationType <- 'Test'
+        predictionTest$evaluationType <- "Test"
         
-        if(!is.null(predictionTest)){
-          prediction <- rbind(predictionTest, prediction[, colnames(prediction)!='index'])
+        if (!is.null(predictionTest)) {
+          prediction <- rbind(predictionTest, prediction[, colnames(prediction) != "index"])
         } 
         
         
@@ -404,9 +332,12 @@ runPlp <- function(
       # evaluate model
       performance <- tryCatch(
         {
-          evaluatePlp(prediction, typeColumn = 'evaluationType')
+          evaluatePlp(prediction, typeColumn = "evaluationType")
         },
-        error = function(e) { ParallelLogger::logError(e); return(NULL)}
+        error = function(e) {
+          ParallelLogger::logError(e)
+          return(NULL)
+        }
       )
     }
     
@@ -415,23 +346,23 @@ runPlp <- function(
   
   # covariateSummary
   covariateSummaryResult <- NULL
-  if(executeSettings$runCovariateSummary){
+  if (executeSettings$runCovariateSummary) {
     
-    if(!is.null(data$Test)){
+    if (!is.null(data$Test)) {
       strata <- data.frame(
         rowId = c(
           data$Train$labels$rowId, 
           data$Test$labels$rowId 
         ),
         strataName = c(
-          rep('Train', nrow(data$Train$labels)), 
-          rep('Test', nrow(data$Test$labels))
+          rep("Train", nrow(data$Train$labels)), 
+          rep("Test", nrow(data$Test$labels))
         )
       )
-    } else{
+    } else {
       strata <- data.frame(
-        rowId = c( data$Train$labels$rowId ),
-        strataName = c( rep('Train', nrow(data$Train$labels)) )
+        rowId = c(data$Train$labels$rowId),
+        strataName = c(rep("Train", nrow(data$Train$labels)))
       )
     }
     
@@ -439,8 +370,8 @@ runPlp <- function(
       dplyr::mutate(covariateValue = 0) %>% 
       dplyr::select("covariateId", "covariateValue") %>% 
       dplyr::collect()
-    if(!is.null(model)){
-      if(!is.null(model$covariateImportance)){
+    if (!is.null(model)) {
+      if (!is.null(model$covariateImportance)) {
         variableImportance <- model$covariateImportance %>% 
           dplyr::select("covariateId", "covariateValue")
       }
@@ -448,7 +379,7 @@ runPlp <- function(
     
     # apply FE if it is used
     featureEngineering <- NULL
-    if(!is.null(model)){
+    if (!is.null(model)) {
       featureEngineering <- model$preprocessing$featureEngineering
     }
     
@@ -468,34 +399,33 @@ runPlp <- function(
   #  ExecutionSummary details:
   # log the end time:
   endTime <- Sys.time()
-  TotalExecutionElapsedTime <- difftime(endTime, ExecutionDateTime, units='mins')
+  TotalExecutionElapsedTime <- difftime(endTime, executionDateTime, units = "mins")
   
   executionSummary <- list(
     PackageVersion = list(
-      rVersion= R.Version()$version.string,
+      rVersion = R.Version()$version.string,
       packageVersion = utils::packageVersion("PatientLevelPrediction")
     ),
-    PlatformDetails= list(
+    PlatformDetails = list(
       platform = R.Version()$platform,
-      cores = Sys.getenv('NUMBER_OF_PROCESSORS'),
+      cores = Sys.getenv("NUMBER_OF_PROCESSORS"),
       RAM = memuse::Sys.meminfo()[1]
       ),
     TotalExecutionElapsedTime = TotalExecutionElapsedTime,
-    ExecutionDateTime = ExecutionDateTime,
+    ExecutionDateTime = executionDateTime,
     Log = logSettings$logFileName # location for now
     #Not available at the moment: CDM_SOURCE -  meta-data containing CDM version, release date, vocabulary version
   )
   
   # if model is NULL convert it to list for saving 
-  if(is.null(model)){
-    model <- list(noModel = T)
-    attr(model, "predictionFunction") <- 'noModel'
-    attr(model, "saveType") <- 'RtoJson'
-    class(model) <- 'plpModel'
+  if (is.null(model)) {
+    model <- list(noModel = TRUE)
+    attr(model, "predictionFunction") <- "noModel"
+    attr(model, "saveType") <- "RtoJson"
+    class(model) <- "plpModel"
   }
   
   results <- list(
-    #inputSetting = inputSetting, 
     executionSummary = executionSummary, 
     model = model,
     prediction = prediction,
@@ -506,18 +436,16 @@ runPlp <- function(
       analysisName = analysisName
       )
     )
-  class(results) <- c('runPlp')
+  class(results) <- c("runPlp")
   
   ParallelLogger::logInfo("Run finished successfully.")
-  
   # save the results
-  ParallelLogger::logInfo(paste0('Saving PlpResult'))
-  tryCatch(savePlpResult(results, file.path(analysisPath,'plpResult')),
-    finally= ParallelLogger::logTrace('Done.'))
-  ParallelLogger::logInfo(paste0('plpResult saved to ..\\', analysisPath ,'\\plpResult'))
-  
+  ParallelLogger::logInfo(paste0("Saving PlpResult"))
+  tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
+    finally = ParallelLogger::logTrace("Done."))
+  ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo(paste0("runPlp time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)
   
 }
-
-

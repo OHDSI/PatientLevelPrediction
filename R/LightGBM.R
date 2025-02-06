@@ -1,5 +1,5 @@
 # @file LightGBM.R
-# Copyright 2023 Observational Health Data Sciences and Informatics
+# Copyright 2025 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -15,11 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create setting for gradient boosting machine model using lightGBM (https://github.com/microsoft/LightGBM/tree/master/R-package).
+#' Create setting for gradient boosting machine model using lightGBM 
+#' (https://github.com/microsoft/LightGBM/tree/master/R-package).
 #'
-#' @param nthread           The number of computer threads to use (how many cores do you have?) 
+#' @param nthread           The number of computer threads to use (how many cores do you have?)
 #' @param earlyStopRound    If the performance does not increase over earlyStopRound number of trees then training stops (this prevents overfitting)
-#' @param numIterations     Number of boosting iterations. 
+#' @param numIterations     Number of boosting iterations.
 #' @param numLeaves         This hyperparameter sets the maximum number of leaves. Increasing this parameter can lead to higher model complexity and potential overfitting.
 #' @param maxDepth          This hyperparameter sets the maximum depth . Increasing this parameter can also lead to higher model complexity and potential overfitting.
 #' @param minDataInLeaf     This hyperparameter sets the minimum number of data points that must be present in a leaf node. Increasing this parameter can help to reduce overfitting
@@ -27,18 +28,17 @@
 #' @param lambdaL1          This hyperparameter controls L1 regularization, which can help to reduce overfitting by encouraging sparse models.
 #' @param lambdaL2          This hyperparameter controls L2 regularization, which can also help to reduce overfitting by discouraging large weights in the model.
 #' @param scalePosWeight    Controls weight of positive class in loss - useful for imbalanced classes
-#' @param isUnbalance       This parameter cannot be used at the same time with scalePosWeight, choose only one of them. While enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities. 
+#' @param isUnbalance       This parameter cannot be used at the same time with scalePosWeight, choose only one of them. While enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities.
 #' @param seed              An option to add a seed when training the final model
 #'
-#' @examples
-#' model.lightgbm <- setLightGBM(
-#'     numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
-#'     minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
+#' @examplesIf rlang::is_installed("lightgbm")
+#' modelLightGbm <- setLightGBM(
+#'   numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
+#'   minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
 #' )
-#'
 #' @export
-setLightGBM <- function(nthread = 20, 
-                        earlyStopRound = 25, 
+setLightGBM <- function(nthread = 20,
+                        earlyStopRound = 25,
                         numIterations = c(100),
                         numLeaves = c(31),
                         maxDepth = c(5, 10),
@@ -49,40 +49,40 @@ setLightGBM <- function(nthread = 20,
                         scalePosWeight = 1,
                         isUnbalance = FALSE,
                         seed = sample(10000000, 1)) {
-  ensure_installed("lightgbm")
+  rlang::check_installed("lightgbm")
   checkIsClass(seed, c("numeric", "integer"))
-  
+
   if (length(nthread) > 1) {
     stop("nthread must be length 1")
   }
   if (!inherits(x = seed, what = c("numeric", "integer"))) {
     stop("Invalid seed")
   }
-  if(sum(numIterations < 1) > 0){
-    stop('numIterations must be greater that 0')
+  if (sum(numIterations < 1) > 0) {
+    stop("numIterations must be greater that 0")
   }
-  if(sum(numLeaves < 2) > 0){
-    stop('numLeaves must be greater that 1')
+  if (sum(numLeaves < 2) > 0) {
+    stop("numLeaves must be greater that 1")
   }
-  if(sum(numLeaves > 131072) > 0){
-    stop('numLeaves must be less that or equal 131072')
+  if (sum(numLeaves > 131072) > 0) {
+    stop("numLeaves must be less that or equal 131072")
   }
-  if(sum(learningRate <= 0) > 0){
-    stop('learningRate must be greater that 0')
+  if (sum(learningRate <= 0) > 0) {
+    stop("learningRate must be greater that 0")
   }
-  if (sum(lambdaL1 < 0) > 0){
-    stop('lambdaL1 must be 0 or greater')
+  if (sum(lambdaL1 < 0) > 0) {
+    stop("lambdaL1 must be 0 or greater")
   }
-  if (sum(lambdaL2 < 0) > 0){
-    stop('lambdaL2 must be 0 or greater')
+  if (sum(lambdaL2 < 0) > 0) {
+    stop("lambdaL2 must be 0 or greater")
   }
-  if (sum(scalePosWeight < 0) > 0){
-    stop('scalePosWeight must be 0 or greater')
+  if (sum(scalePosWeight < 0) > 0) {
+    stop("scalePosWeight must be 0 or greater")
   }
-  if (isUnbalance == TRUE & sum(scalePosWeight != 1) > 0){
-    stop('isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them')
+  if (isUnbalance == TRUE && sum(scalePosWeight != 1) > 0) {
+    stop("isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them")
   }
-  
+
   paramGrid <- list(
     earlyStopRound = earlyStopRound,
     numIterations = numIterations,
@@ -95,9 +95,9 @@ setLightGBM <- function(nthread = 20,
     isUnbalance = isUnbalance,
     scalePosWeight = scalePosWeight
   )
-  
+
   param <- listCartesian(paramGrid)
-  
+
   attr(param, "settings") <- list(
     modelType = "LightGBM",
     seed = seed[[1]],
@@ -107,16 +107,16 @@ setLightGBM <- function(nthread = 20,
     trainRFunction = "fitLightGBM",
     predictRFunction = "predictLightGBM"
   )
-  
+
   attr(param, "saveType") <- "lightgbm"
-  
+
   result <- list(
     fitFunction = "fitRclassifier",
     param = param
   )
-  
+
   class(result) <- "modelSettings"
-  
+
   return(result)
 }
 
@@ -124,18 +124,18 @@ setLightGBM <- function(nthread = 20,
 
 varImpLightGBM <- function(model,
                            covariateMap) {
-  varImp <- lightgbm::lgb.importance(model, percentage = T) %>% dplyr::select("Feature", "Gain")
-  
+  varImp <- lightgbm::lgb.importance(model, percentage = TRUE) %>% dplyr::select("Feature", "Gain")
+
   varImp <- data.frame(
-    covariateId = gsub(".*_","",varImp$Feature),
+    covariateId = gsub(".*_", "", varImp$Feature),
     covariateValue = varImp$Gain,
     included = 1
   )
-  
+
   varImp <- merge(covariateMap, varImp, by.x = "columnId", by.y = "covariateId")
   varImp <- varImp %>%
     dplyr::select("covariateId", "covariateValue", "included")
-  
+
   return(varImp)
 }
 
@@ -150,31 +150,31 @@ predictLightGBM <- function(plpModel,
       map = plpModel$covariateImportance %>%
         dplyr::select("columnId", "covariateId")
     )
-    
+
     # use the include??
-    
+
     newData <- matrixObjects$dataMatrix
     cohort <- matrixObjects$labels
   } else {
     newData <- data
   }
-  
+
   if (inherits(plpModel, "plpModel")) {
     model <- plpModel$model
   } else {
     model <- plpModel
   }
-  
+
   pred <- data.frame(value = stats::predict(model, newData))
   prediction <- cohort
   prediction$value <- pred$value
-  
+
   prediction <- prediction %>%
     dplyr::select(-"rowId") %>%
     dplyr::rename(rowId = "originalRowId")
-  
+
   attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
-  
+
   return(prediction)
 }
 
@@ -185,11 +185,11 @@ fitLightGBM <- function(dataMatrix,
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
     train <- lightgbm::lgb.Dataset(
-      data = dataMatrix[trainInd, , drop = F],
+      data = dataMatrix[trainInd, , drop = FALSE],
       label = labels$outcomeCount[trainInd]
     )
     test <- lightgbm::lgb.Dataset(
-      data = dataMatrix[-trainInd, , drop = F],
+      data = dataMatrix[-trainInd, , drop = FALSE],
       label = labels$outcomeCount[-trainInd]
     )
     watchlist <- list(train = train, test = test)
@@ -201,10 +201,7 @@ fitLightGBM <- function(dataMatrix,
     )
     watchlist <- list()
   }
-  
-  outcomes <- sum(labels$outcomeCount > 0)
-  N <- nrow(labels)
-  outcomeProportion <- outcomes / N
+
   set.seed(settings$seed)
   model <- lightgbm::lgb.train(
     data = train,
@@ -216,7 +213,7 @@ fitLightGBM <- function(dataMatrix,
       num_leaves = hyperParameters$numLeaves,
       max_depth = hyperParameters$maxDepth,
       learning_rate = hyperParameters$learningRate,
-      feature_pre_filter=FALSE,
+      feature_pre_filter = FALSE,
       min_data_in_leaf = hyperParameters$minDataInLeaf,
       scale_pos_weight = hyperParameters$scalePosWeight,
       lambda_l1 = hyperParameters$lambdaL1,
@@ -229,8 +226,7 @@ fitLightGBM <- function(dataMatrix,
     verbose = 1,
     early_stopping_rounds = hyperParameters$earlyStopRound,
     valids = watchlist
-    # categorical_feature = 'auto' # future work
   )
-  
+
   return(model)
 }

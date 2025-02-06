@@ -1,3 +1,48 @@
+PatientLevelPrediction 6.4
+======================
+- Official maintainer updated to Egill Fridgeirsson
+- Feature: Added experimental imputation methods
+    * Simple imputation using median or mean
+    * Iterative imputation by chained equations using predictive mean matchin
+- Feature: Added more feature engineering methods to deal with rare features and
+ normalization of numerical features
+    * Min/Max normalization
+    * Robust normalization which normalizes by the interquartile range and
+optionally squashes the features to a range -3 to 3
+- Feature: Added existingSplit settings where users can split data bases on an 
+existing split
+- Feature: Added a net benefit plot `plotNetBenefit`
+- Feature: Added timings that are printed to the log to most functions in the pipeline
+- Feature: Now a model trained with `scikit-learn` in python can be converted wit 
+- Feature: Added a convenience function `getEunomiaPlpData` to get some data
+in one line.
+`createSklearnModel` and used to predict on new data with the package
+- Docs: Added a new GIS example to the docs (thanks @jshoughtaling)
+- Docs: All exported functions (about 120) now have runnable examples. All examples
+are now conditinally executed if required. Shiny examples only executed in 
+interactive sessions, examples using packages in suggests only executed if 
+they are installed and so on.
+- Docs: Fixed linting errors and R codestyle in docs to conform to HADES style
+- Docs: Remove links to pdf's, point to website instead.
+- Docs: Fix broken links in Readme and BuildingPredictiveModels vignette
+- Internal: Added support for coming `duckdb` backed `Andromeda`
+    * Only create indexes for `sqlite` backed `Andromeda`
+- Internal: Removed the old simulationProfile and added a new one based on Eunomia
+    * This will allow us to quickly simulate small datasets for examples
+    * Manually specified an outcome model tailored to `Eunomia`
+- Internal: Went through all tests and put `skip_if_offline` or `skip_if_not_installed`
+where appropriate. Tests using `Eunomia` need internet and tests using any 
+suggest packages need `skip_if_not_installed`. Put `skip_on_cran` for all 
+tests requiring python
+- Internal: Cleaned up dependencies. Moved what could be moved to suggest and put behind
+a `rlang::check_installed` flag. This means the installation is much lighter if 
+only using the basic functionality of the package, e.g. develop a model using 
+Cyclops.
+- CI: Use UV for python management on github actions and upgrade ubuntu version to 
+24.04
+- CI: Added an action to detect broken links in repo
+
+
 PatientLevelPrediction 6.3.9
 ======================
 - Hotfix adding schema to DatabaseConnector::getTableNames when creating results tables

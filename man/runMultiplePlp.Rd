@@ -9,9 +9,9 @@ runMultiplePlp(
   modelDesignList = list(createModelDesign(targetId = 1, outcomeId = 2, modelSettings =
     setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
-  onlyFetchData = F,
+  onlyFetchData = FALSE,
   cohortDefinitions = NULL,
-  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = T, logName =
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
   saveDirectory = getwd(),
   sqliteLocation = file.path(saveDirectory, "sqlite")
@@ -35,12 +35,63 @@ runMultiplePlp(
 \value{
 A data frame with the following columns: \tabular{ll}{ \verb{analysisId} \tab The unique identifier
 for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
-\verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved 
- \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
+\verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
+\cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 }
 \description{
 Run a list of predictions analyses
 }
 \details{
 This function will run all specified predictions as defined using .
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+                                         cdmDatabaseSchema = "main",
+                                         cohortDatabaseSchema = "main",
+                                         cohortTable = "cohort",
+                                         outcomeDatabaseSchema = "main",
+                                         outcomeTable = "cohort",
+                                         targetId = 1,
+                                         outcomeIds = 2)
+Eunomia::createCohorts(connectionDetails = connectionDetails)
+covariateSettings <- 
+ FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE,
+                                            useDemographicsAge = TRUE,
+                                            useConditionOccurrenceLongTerm = TRUE)
+# GI Bleed in users of celecoxib
+modelDesign <- createModelDesign(targetId = 1, 
+                                 outcomeId = 3, 
+                                 modelSettings = setLassoLogisticRegression(seed = 42),
+                                 populationSettings = createStudyPopulationSettings(),
+                                 restrictPlpDataSettings = createRestrictPlpDataSettings(),
+                                 covariateSettings = covariateSettings,
+                                 splitSettings = createDefaultSplitSetting(splitSeed = 42),
+                                 preprocessSettings = createPreprocessSettings())
+# GI Bleed in users of NSAIDs
+modelDesign2 <- createModelDesign(targetId = 4,
+                                  outcomeId = 3,
+                                  modelSettings = setLassoLogisticRegression(seed = 42),
+                                  populationSettings = createStudyPopulationSettings(),
+                                  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+                                  covariateSettings = covariateSettings,
+                                  splitSettings = createDefaultSplitSetting(splitSeed = 42),
+                                  preprocessSettings = createPreprocessSettings())
+saveLoc <- file.path(tempdir(), "runMultiplePlp")
+multipleResults <- runMultiplePlp(databaseDetails = databaseDetails,
+                                  modelDesignList = list(modelDesign, modelDesign2),
+                                  saveDirectory = saveLoc)
+# You should see results for two developed models in the ouutput. The output is as well
+# uploaded to a sqlite database in the saveLoc/sqlite folder, 
+dir(saveLoc)
+# The dir output should show two Analysis_ folders with the results, 
+# two targetId_ folders with th extracted data, and a sqlite folder with the database
+# The results can be explored in the shiny app by calling viewMultiplePlp(saveLoc)
+
+# clean up (viewing the results in the shiny app is won't work after this)
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

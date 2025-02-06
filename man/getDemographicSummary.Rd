@@ -2,7 +2,7 @@
 % Please edit documentation in R/DemographicSummary.R
 \name{getDemographicSummary}
 \alias{getDemographicSummary}
-\title{Get a calibration per age/gender groups}
+\title{Get a demographic summary}
 \usage{
 getDemographicSummary(prediction, predictionType, typeColumn = "evaluation")
 }
@@ -14,11 +14,34 @@ getDemographicSummary(prediction, predictionType, typeColumn = "evaluation")
 \item{typeColumn}{A column that is used to stratify the results}
 }
 \value{
-A dataframe with the calibration summary
+A dataframe with the demographic summary
 }
 \description{
-Get a calibration per age/gender groups
+Get a demographic summary
 }
 \details{
-Generates a data.frame with the calibration per each 5 year age group and gender group
+Generates a data.frame with a prediction summary per each 5 year age group
+and gender group
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# simulate data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=500)
+# create study population, split into train/test and preprocess with default settings
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population, createDefaultSplitSetting())
+data$Train$covariateData <- preprocessData(data$Train$covariateData)
+saveLoc <- file.path(tempdir(), "demographicSummary")
+# fit a lasso logistic regression model using the training data
+plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+                   analysisId=1, analysisPath=saveLoc)
+demographicSummary <- getDemographicSummary(plpModel$prediction, 
+                                            "binary", 
+                                            typeColumn = "evaluationType")
+# show the demographic summary dataframe
+str(demographicSummary)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

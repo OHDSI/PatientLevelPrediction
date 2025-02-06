@@ -2,7 +2,7 @@
 % Please edit documentation in R/Sampling.R
 \name{createSampleSettings}
 \alias{createSampleSettings}
-\title{Create the settings for defining how the trainData from \code{splitData} are sampled using 
+\title{Create the settings for defining how the trainData from \code{splitData} are sampled using
 default sample functions.}
 \usage{
 createSampleSettings(
@@ -14,11 +14,11 @@ createSampleSettings(
 \arguments{
 \item{type}{(character) Choice of:  \itemize{
 \item 'none' No sampling is applied - this is the default
-\item 'underSample' Undersample the non-outcome class to make the data more ballanced
+\item 'underSample' Undersample the non-outcome class to make the data more balanced
 \item 'overSample' Oversample the outcome class by adding in each outcome multiple times
 }}
 
-\item{numberOutcomestoNonOutcomes}{(numeric) An numeric specifying the require number of non-outcomes per outcome}
+\item{numberOutcomestoNonOutcomes}{(numeric) A numeric specifying the required number of outcomes per non-outcomes}
 
 \item{sampleSeed}{(numeric) A seed to use when splitting the data for reproducibility (if not set a random number will be generated)}
 }
@@ -26,9 +26,19 @@ createSampleSettings(
 An object of class \code{sampleSettings}
 }
 \description{
-Create the settings for defining how the trainData from \code{splitData} are sampled using 
+Create the settings for defining how the trainData from \code{splitData} are sampled using
 default sample functions.
 }
 \details{
 Returns an object of class \code{sampleSettings} that specifies the sampling function that will be called and the settings
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
+# sample even rate of outcomes to non-outcomes
+sampleSetting <- createSampleSettings(type = "underSample", 
+                                      numberOutcomestoNonOutcomes = 1, 
+                                      sampleSeed = 42)
+}
+\dontshow{\}) # examplesIf}
 }

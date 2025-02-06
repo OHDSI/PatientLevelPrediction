@@ -2,7 +2,7 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{configurePython}
 \alias{configurePython}
-\title{Sets up a virtual environment to use for PLP (can be conda or python)}
+\title{Sets up a python environment to use for PLP (can be conda or venv)}
 \usage{
 configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 }
@@ -13,10 +13,18 @@ configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 
 \item{condaPythonVersion}{String, Python version to use when creating a conda environment}
 }
+\value{
+location of the created conda or virtual python environment
+}
 \description{
-Sets up a virtual environment to use for PLP (can be conda or python)
+Sets up a python environment to use for PLP (can be conda or venv)
 }
 \details{
-This function creates a virtual environment that can be used by PatientLevelPrediction
-and installs all the required package dependancies.  If using python, pip must be set up.
+This function creates a python environment that can be used by PatientLevelPrediction
+and installs all the required package dependancies.
+}
+\examples{
+\dontrun{ \dontshow{ # don't modify environment in examples }
+ configurePython(envname="PLP", envtype="conda")
+}
 }
