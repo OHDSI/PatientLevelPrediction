@@ -1,9 +1,9 @@
-PatientLevelPredicti
+PatientLevelPrediction
 ======================
 
 [![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check)
 
-[![codecov.io](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
+[![codecov.io](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)]
 
 
 PatientLevelPrediction is part of [HADES](https://ohdsi.github.io/Hades/).
