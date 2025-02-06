@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Saves the prediction dataframe to a json file</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.4.0/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
       <div class="d-none name"><code>savePrediction.Rd</code></div>
     </div>
 
@@ -100,30 +100,30 @@ returns the fileLocation where the prediction is saved</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">savePrediction</span><span class="op">(</span><span class="va">prediction</span>, <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpwZ5nHb/prediction.json"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp3YnH1y/prediction.json"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "bslib-c7d4768fab3337917a08cb2ed353c0e3"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [2] "downlit"                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "file2594120b1268.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "file2594126dca0e.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "file25942a736da0.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "file2594382a36d1"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "file259448ff5def.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "file259452a544e3.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "file25945a305c50.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "file25945b58e0af.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "file259460622d0a.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "file259460682d61.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "file259466521371.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "file2594668e16f0"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "file25946f92733a.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "file2594707718b3"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "file259472b97d3b"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "file259474bef241.sqlite"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "file2594dba18e.sqlite"                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "file2594fa1fc83.sqlite"                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "file232210a7afb9.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "file232215ba314f.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "file232217cb69bb.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "file23221bf14fb2.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "file23221cf572e1.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "file23221eb383d3.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "file23221f7494d7.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "file23222ce41aef"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "file23222dbee56b.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "file232242a2fed0.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "file23224728f30"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "file232247aee732"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "file23225b4e51b1"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "file232260393ab1.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "file232270dbc698.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "file23227826f235.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "file23227847df09.sqlite"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "file23227884b093.sqlite"               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [21] "prediction.json"                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "temp_libpath259419fd0417"              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "temp_libpath2322673d6ccb"              </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">saveLoc</span>, <span class="st">"prediction.json"</span><span class="op">)</span><span class="op">)</span></span></span>
