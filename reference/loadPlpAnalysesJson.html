@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Load the multiple prediction json settings from a file</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.4.0/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
       <div class="d-none name"><code>loadPlpAnalysesJson.Rd</code></div>
     </div>
 
@@ -89,7 +89,7 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-in"><span>                                 modelSettings <span class="op">=</span> <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"loadPlpAnalysesJson"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="savePlpAnalysesJson.html">savePlpAnalysesJson</a></span><span class="op">(</span>modelDesignList <span class="op">=</span> <span class="va">modelDesign</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp3YnH1y/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpCPi4PE/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
 <span class="r-in"><span><span class="fu">loadPlpAnalysesJson</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">saveLoc</span>, <span class="st">"predictionAnalysisList.json"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $plpVersion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "6.4.0"</span>
