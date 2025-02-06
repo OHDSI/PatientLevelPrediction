@@ -9,12 +9,11 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# Integration of GIS Data into OHDSI Model Building 
+# Integration of GIS Data into OHDSI Model Building
 
 ## Motivation
 
-Although the proposed GIS extension tables have been approved by the broader OHDSI community, they are not yet integrated natively into the OHDSI tooling. These tables and the data they capture, however, can still be referenced in standard model building and analytics workflows. The purpose of this analytics demonstration is to show how data in the EXPOSURE_OCCURRENCE table can be utilized in the training and evaluation of an OMOP-specific patient-level-prediction (PLP) model. The analytic process we executed and describe below relies on a GIS-version of the Tufts Synthetic Dataset that has both EHR and geospatial data integrated; see the description of that dataset for more details about contents or access. Much of the work is based on the detailed vignette that describes custom feature engineering in PLP
-`vignette('AddingCustomFeatureEngineering')`
+Although the proposed GIS extension tables have been approved by the broader OHDSI community, they are not yet integrated natively into the OHDSI tooling. These tables and the data they capture, however, can still be referenced in standard model building and analytics workflows. The purpose of this analytics demonstration is to show how data in the EXPOSURE_OCCURRENCE table can be utilized in the training and evaluation of an OMOP-specific patient-level-prediction (PLP) model. The analytic process we executed and describe below relies on a GIS-version of the Tufts Synthetic Dataset that has both EHR and geospatial data integrated; see the [description](https://github.com/OHDSI/GIS/issues/345#issuecomment-2417261931) of that dataset for more details about contents or access. Much of the work is based on the detailed vignette that describes custom feature engineering in PLP `vignette('AddingCustomFeatureEngineering')`
 
 ## Step-by-Step Process
 
@@ -212,9 +211,9 @@ testDataPol <- implementPollutants(testData, featureEngineeringSettings, trainDa
 
 Note that if we plot the output model of the `GAM` fitting in the `implementPollutants` function, we end up with a plot that aligns well with our underlying relationship between Odds Ratio and PM2.5 concentration that we used to distribute our synthetic data by location:
 
-![Covariate Fit]()
+![Covariate Fit](images/gis1.png)
 
-![OR Estimation]()
+![OR Estimation](images/gis2.png)
 
 ### Step 5: Apply new train and test datasets to `runPlp` and evaluate output
 
@@ -259,12 +258,9 @@ predictionTest$evaluationType <- 'Test'
 
 if(!is.null(predictionTest)){
   prediction <- rbind(predictionTest, prediction[, colnames(prediction)!='index'])
-} 
+}
 
 
 }
 
 ```
-   
-
-
