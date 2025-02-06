@@ -72,6 +72,7 @@ reference:
       - createDatabaseDetails
       - createRestrictPlpDataSettings
       - getPlpData
+      - getEunomiaPlpData
       - savePlpData
       - loadPlpData
       - getCohortCovariateData
@@ -173,10 +174,8 @@ reference:
       - insertResultsToSqlite
       - createPlpResultTables
       - createDatabaseSchemaSettings 
-      - createDatabaseList
       - extractDatabaseToCsv
       - insertCsvToDatabase
-      - insertModelDesignInDatabase
       - migrateDataModel
   - title: "Shiny Viewers"
     desc: >
@@ -215,6 +214,7 @@ reference:
       Functions for simulating PLP data objects.
     contents:
       - simulatePlpData
+      - simulationProfile
   - title: "Data manipulation functions"
     desc: >
       Functions for manipulating data
