@@ -1,7 +1,7 @@
-# @file AndromedaHelperFunctions.R 
-# 
-# Copyright 2025 Observational Health Data Sciences and Informatics 
-# 
+# @file AndromedaHelperFunctions.R
+#
+# Copyright 2025 Observational Health Data Sciences and Informatics
+#
 # This file is part of PatientLevelPrediction
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,19 +26,23 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   )
 
   covariateData$pop <- data.frame(rowId = rowIds)
-  Andromeda::createIndex(
-    tbl = covariateData$pop, columnNames = "rowId",
-    indexName = "pop_rowIds"
-  )
+  if (inherits(covariateData, "RSQLiteConnection")) {
+    Andromeda::createIndex(
+      tbl = covariateData$pop, columnNames = "rowId",
+      indexName = "pop_rowIds"
+    )
+  }
 
   on.exit(covariateData$pop <- NULL, add = TRUE)
 
   newCovariateData$covariates <- covariateData$covariates %>%
     dplyr::inner_join(covariateData$pop, by = "rowId")
-  Andromeda::createIndex(
-    tbl = newCovariateData$covariates, columnNames = "covariateId",
-    indexName = "covariates_ncovariateIds"
-  )
+  if (inherits(newCovariateData, "RSQLiteConnection")) {
+    Andromeda::createIndex(
+      tbl = newCovariateData$covariates, columnNames = "covariateId",
+      indexName = "covariates_ncovariateIds"
+    )
+  }
 
   metaData$populationSize <- length(rowIds)
   attr(newCovariateData, "metaData") <- metaData
@@ -74,21 +78,23 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000) {
   batchSize = sizeN
   )
 
-  Andromeda::createIndex(
-    tbl = newCovariateData$covariates,
-    columnNames = "covariateId",
-    indexName = "covariates_ncovariateIds"
-  )
-  Andromeda::createIndex(
-    tbl = newCovariateData$covariates,
-    columnNames = "rowId",
-    indexName = "covariates_rowId"
-  )
-  Andromeda::createIndex(
-    tbl = newCovariateData$covariates,
-    columnNames = c("covariateId", "covariateValue"),
-    indexName = "covariates_covariateId_value"
-  )
+  if (inherits(newCovariateData, "RSQLiteConnection")) {
+    Andromeda::createIndex(
+      tbl = newCovariateData$covariates,
+      columnNames = "covariateId",
+      indexName = "covariates_ncovariateIds"
+    )
+    Andromeda::createIndex(
+      tbl = newCovariateData$covariates,
+      columnNames = "rowId",
+      indexName = "covariates_rowId"
+    )
+    Andromeda::createIndex(
+      tbl = newCovariateData$covariates,
+      columnNames = c("covariateId", "covariateValue"),
+      indexName = "covariates_covariateId_value"
+    )
+  }
 
   metaData$populationSize <- nrow(population)
   attr(newCovariateData, "metaData") <- metaData

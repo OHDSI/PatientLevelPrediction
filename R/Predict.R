@@ -31,10 +31,11 @@
 #' @examples
 #' coefficients <- data.frame(
 #'   covariateId = c(1002),
-#'   coefficient = c(0.05))
+#'   coefficient = c(0.05)
+#' )
 #' model <- createGlmModel(coefficients, intercept = -2.5)
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=50)
+#' plpData <- simulatePlpData(simulationProfile, n = 50)
 #' prediction <- predictPlp(model, plpData, plpData$cohorts)
 #' # see the predicted risk values
 #' head(prediction)
@@ -119,8 +120,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
   attr(prediction, "metaData") <- metaData
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Prediction done in: ", 
-    signif(delta, 3), " ", attr(delta, "units"))
+  ParallelLogger::logInfo(
+    "Prediction done in: ",
+    signif(delta, 3), " ", attr(delta, "units")
+  )
   return(prediction)
 }
 
@@ -168,9 +171,11 @@ applyTidyCovariateData <- function(
   temp <- covariateData$covariateRef %>% dplyr::collect()
   allCovariateIds <- temp$covariateId
   covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds %in% deleteCovariateIds])
-  Andromeda::createIndex(covariateData$includeCovariates, c("covariateId"),
-    indexName = "includeCovariates_covariateId"
-  )
+  if (inherits(covariateData, "RSQLiteConnection")) {
+    Andromeda::createIndex(covariateData$includeCovariates, c("covariateId"),
+      indexName = "includeCovariates_covariateId"
+    )
+  }
   on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
   # ---
 
@@ -187,11 +192,12 @@ applyTidyCovariateData <- function(
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
 
-    # --- added for speed
-    Andromeda::createIndex(covariateData$maxes, c("covariateId"),
-      indexName = "maxes_covariateId"
-    )
-    # ---
+    if (inherits(covariateData, "RSQLiteConnection")) {
+      # --- added for speed
+      Andromeda::createIndex(covariateData$maxes, c("covariateId"),
+        indexName = "maxes_covariateId"
+      )
+    } # ---
 
     newCovariateData$covariates <- covariateData$covariates %>%
       dplyr::inner_join(covariateData$includeCovariates, by = "covariateId") %>% # added as join
@@ -208,14 +214,15 @@ applyTidyCovariateData <- function(
   newCovariateData$covariateRef <- covariateData$covariateRef %>%
     dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
 
-  # adding index for restrict to pop
-  Andromeda::createIndex(
-    newCovariateData$covariates,
-    c("rowId"),
-    indexName = "ncovariates_rowId"
-  )
 
-
+  if (inherits(newCovariateData, "RSQLiteConnection")) {
+    # adding index for restrict to pop
+    Andromeda::createIndex(
+      newCovariateData$covariates,
+      c("rowId"),
+      indexName = "ncovariates_rowId"
+    )
+  }
   class(newCovariateData) <- "CovariateData"
 
   delta <- Sys.time() - start
