@@ -211,9 +211,9 @@ testDataPol <- implementPollutants(testData, featureEngineeringSettings, trainDa
 
 Note that if we plot the output model of the `GAM` fitting in the `implementPollutants` function, we end up with a plot that aligns well with our underlying relationship between Odds Ratio and PM2.5 concentration that we used to distribute our synthetic data by location:
 
-![Covariate Fit](images/gis1.png)
+![Covariate Fit](images/gis1.avif)
 
-![OR Estimation](images/gis2.png)
+![OR Estimation](images/gis2.avif)
 
 ### Step 5: Apply new train and test datasets to `runPlp` and evaluate output
 
