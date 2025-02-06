@@ -38,3 +38,26 @@ Exports all the results from a database into csv files
 \details{
 Extracts the results from a database into a set of csv files
 }
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# develop a simple model on simulated data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+# now upload the results to a sqlite database
+databasePath <- insertResultsToSqlite(saveLoc)
+# now extract the results to csv
+connectionDetails <- 
+  DatabaseConnector::createConnectionDetails(dbms = "sqlite", 
+                                             server = databasePath)
+extractDatabaseToCsv(
+  connectionDetails = connectionDetails,
+  csvFolder = file.path(saveLoc, "csv")
+)
+# show csv file
+list.files(file.path(saveLoc, "csv"))
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

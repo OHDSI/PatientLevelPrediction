@@ -32,3 +32,27 @@ average predicted risks to match the average observed risks.
 'weakRecalibration' fits a glm model to the logit of the predicted risks,
 also known as Platt scaling/logistic recalibration.
 }
+\examples{
+prediction <- data.frame(rowId = 1:100,
+                         value = runif(100),
+                         outcomeCount = stats::rbinom(100, 1, 0.1),
+                         evaluationType = rep("validation", 100))
+attr(prediction, "metaData") <- list(modelType = "binary")
+# since value is unformally distributed but outcomeCount is not (prob <- 0.1)
+# the predictions are mis-calibrated
+outcomeRate <- mean(prediction$outcomeCount)
+observedRisk <- mean(prediction$value)
+message("outcome rate is: ", outcomeRate)
+message("observed risk is: ", observedRisk)
+# lets recalibrate the predictions
+prediction <- recalibratePlp(prediction, 
+                             analysisId = "recalibration", 
+                             method = "recalibrationInTheLarge")
+recalibratedRisk <- mean(prediction$value)
+message("recalibrated risk with recalibration in the large is: ", recalibratedRisk)
+prediction <- recalibratePlp(prediction, 
+                             analysisId = "recalibration", 
+                             method = "weakRecalibration")
+recalibratedRisk <- mean(prediction$value)
+message("recalibrated risk with weak recalibration is: ", recalibratedRisk)
+}

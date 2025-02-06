@@ -13,7 +13,7 @@ createDatabaseDetails(
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
   outcomeDatabaseSchema = cdmDatabaseSchema,
-  outcomeTable = "cohort",
+  outcomeTable = cohortTable,
   targetId = NULL,
   outcomeIds = NULL,
   cdmVersion = 5,
@@ -63,7 +63,20 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 \item{cohortId}{(depreciated: use targetId) old input for the target cohort id}
 }
 \value{
-A list with the the database specific settings
+A list with the the database specific settings: \itemize{
+\item{\code{connectionDetails}: An R object of type \code{connectionDetails} created using the function \code{createConnectionDetails} in the \code{DatabaseConnector} package.}
+\item{\code{cdmDatabaseSchema}: The name of the database schema that contains the OMOP CDM instance.}
+\item{\code{cdmDatabaseName}: A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified).}
+\item{\code{cdmDatabaseId}: A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified).}
+\item{\code{tempEmulationSchema}: The name of a databae schema where you want all temporary tables to be managed. Requires create/insert permissions to this database.}
+\item{\code{cohortDatabaseSchema}: The name of the database schema that is the location where the target cohorts are available. Requires read permissions to this schema.}
+\item{\code{cohortTable}: The tablename that contains the target cohorts. Expectation is cohortTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+\item{\code{outcomeDatabaseSchema}: The name of the database schema that is the location where the data used to define the outcome cohorts is available. Requires read permissions to this database.}
+\item{\code{outcomeTable}: The tablename that contains the outcome cohorts. Expectation is outcomeTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+\item{\code{targetId}: An integer specifying the cohort id for the target cohort}
+\item{\code{outcomeIds}: A single integer or vector of integers specifying the cohort ids for the outcome cohorts}
+\item{\code{cdmVersion}: Define the OMOP CDM version used: currently support "4" and "5".}
+}
 }
 \description{
 Create a setting that holds the details about the cdmDatabase connection for data extraction
@@ -71,4 +84,23 @@ Create a setting that holds the details about the cdmDatabase connection for dat
 \details{
 This function simply stores the settings for communicating with the cdmDatabase when extracting
 the target cohort and outcomes
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+# create the database details for Eunomia example database
+createDatabaseDetails(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = "main",
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main",
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = "main",
+  outcomeTable = "cohort",
+  targetId = 1, # users of celecoxib
+  outcomeIds = 3, # GIbleed
+  cdmVersion = 5)
+}
+\dontshow{\}) # examplesIf}
 }

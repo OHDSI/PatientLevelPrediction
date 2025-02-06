@@ -12,11 +12,26 @@ savePlpModel(plpModel, dirPath)
 \item{dirPath}{A location to save the model to}
 }
 \value{
-The directory path where the model was saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                    The directory path where the model was saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Saves the plp model
 }
 \details{
 Saves the plp model to a user specificed folder
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "savePlpModel")
+plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+path <- savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
+# show the saved model
+dir(path, full.names = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

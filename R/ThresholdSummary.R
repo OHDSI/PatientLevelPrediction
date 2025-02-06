@@ -27,10 +27,17 @@
 #'
 #' @return
 #' A data.frame with TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
+#' @examples
+#' prediction <- data.frame(rowId = 1:100, 
+#'                          outcomeCount = stats::rbinom(1:100, 1, prob=0.5),
+#'                          value = runif(100), 
+#'                          evaluation = rep("Train", 100))
+#' summary <- getThresholdSummary(prediction)
+#' str(summary)
 #' @export
 getThresholdSummary <- function(
     prediction,
-    predictionType,
+    predictionType = "binary",
     typeColumn = "evaluation") {
   evaluation <- do.call(
     what = paste0("getThresholdSummary_", predictionType),

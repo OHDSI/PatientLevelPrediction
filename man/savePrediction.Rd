@@ -2,23 +2,38 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{savePrediction}
 \alias{savePrediction}
-\title{Saves the prediction dataframe to RDS}
+\title{Saves the prediction dataframe to a json file}
 \usage{
-savePrediction(prediction, dirPath, fileName = "prediction.rds")
+savePrediction(prediction, dirPath, fileName = "prediction.json")
 }
 \arguments{
 \item{prediction}{The prediciton data.frame}
 
-\item{dirPath}{The directory to save the prediction RDS}
+\item{dirPath}{The directory to save the prediction json}
 
-\item{fileName}{The name of the RDS file that will be saved in dirPath}
+\item{fileName}{The name of the json file that will be saved}
 }
 \value{
-The file location where the prediction was saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The file location where the prediction was saved
+}\if{html}{\out{</div>}}
 }
 \description{
-Saves the prediction dataframe to RDS
+Saves the prediction dataframe to a json file
 }
 \details{
-Saves the prediction data frame returned by predict.R to an RDS file and returns the fileLocation where the prediction is saved
+Saves the prediction data frame returned by predict.R to an json file and
+returns the fileLocation where the prediction is saved
+}
+\examples{
+prediction <- data.frame(
+  rowIds = c(1, 2, 3),
+  outcomeCount = c(0, 1, 0),
+  value = c(0.1, 0.9, 0.2)
+)
+saveLoc <- file.path(tempdir())
+savePrediction(prediction, saveLoc)
+dir(saveLoc)
+
+# clean up
+unlink(file.path(saveLoc, "prediction.json"))
 }

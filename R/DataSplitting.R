@@ -46,6 +46,9 @@
 #'
 #' @return
 #' An object of class \code{splitSettings}
+#' @examples
+#' createDefaultSplitSetting(testFraction=0.25, trainFraction=0.75, nfold=3,
+#'                           splitSeed=42)
 #' @export
 createDefaultSplitSetting <- function(testFraction = 0.25,
                                       trainFraction = 0.75,
@@ -101,6 +104,11 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
 #' type integer/numeric. Index is -1 for test set, positive integer for train 
 #' set folds
 #' @return An object of class \code{splitSettings}
+#' @examples
+#' # rowId 1 is in fold 1, rowId 2 is in fold 2, rowId 3 is in the test set
+#' # rowId 4 is in fold 1, rowId 5 is in fold 2
+#' createExistingSplitSettings(splitIds = data.frame(rowId = c(1, 2, 3, 4, 5),
+#'                                                   index = c(1, 2, -1, 1, 2)))
 #' @export
 createExistingSplitSettings <- function(splitIds) {
   checkIsClass(splitIds, "data.frame")
@@ -144,10 +152,23 @@ createExistingSplitSettings <- function(splitIds) {
 #'          \item labels: a table (rowId, outcomeCount, ...) for each data
 #' point in the test data (outcomeCount is the class label)
 #'          }
+#' @examples 
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' population <- createStudyPopulation(plpData)
+#' splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
+#'                                            trainFraction = 0.50, nfold = 5)
+#' data = splitData(plpData, population, splitSettings)
+#' # test data should be ~500 rows (changes because of study population)
+#' nrow(data$Test$labels)
+#' # train data should be ~500 rows
+#' nrow(data$Train$labels)
+#' # should be five fold in the train data
+#' length(unique(data$Train$folds$index))
 #' @export
 splitData <- function(plpData = plpData,
                       population = population,
-                      splitSettings = splitSettings) {
+                      splitSettings = createDefaultSplitSetting(splitSeed = 42)) {
   start <- Sys.time()
   fun <- attr(splitSettings, "fun")
   args <- list(
@@ -607,3 +628,4 @@ checkOutcomes <- function(population, train, nfold) {
   }
   return(invisible(TRUE))
 }
+

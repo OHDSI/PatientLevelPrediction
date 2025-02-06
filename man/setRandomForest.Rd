@@ -66,3 +66,18 @@ a modelSettings object
 \description{
 Create setting for random forest model using sklearn
 }
+\examples{
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+plpData <- getEunomiaPlpData()
+model <- setRandomForest(ntrees = list(100),
+                          maxDepth = list(4),
+                          minSamplesSplit = list(2),
+                          minSamplesLeaf = list(10),
+                          maxSamples = list(0.9),
+                          seed = 42)
+saveLoc <- file.path(tempdir(), "randomForest")
+results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+}

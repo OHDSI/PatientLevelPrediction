@@ -12,9 +12,15 @@ calibrationLine(prediction, numberOfStrata = 10)
 \item{numberOfStrata}{The number of groups to split the prediction into}
 }
 \value{
-A list containing the calibrationLine coefficients, the aggregate data used 
+A list containing the calibrationLine coefficients, the aggregate data used
 to fit the line and the Hosmer-Lemeshow goodness of fit test
 }
 \description{
 calibrationLine
+}
+\examples{
+prediction <- data.frame(
+  value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  outcomeCount = c(0, 1, 0, 1, 1))
+calibrationLine(prediction, numberOfStrata = 1)
 }

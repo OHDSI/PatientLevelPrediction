@@ -7,7 +7,7 @@
 brierScore(prediction)
 }
 \arguments{
-\item{prediction}{A prediction object}
+\item{prediction}{A prediction dataframe}
 }
 \value{
 A list containing the brier score and the scaled brier score
@@ -17,4 +17,10 @@ brierScore
 }
 \details{
 Calculates the brierScore from prediction object
+}
+\examples{
+prediction <- data.frame(
+  value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+  outcomeCount = c(0, 1, 0, 1, 1))
+brierScore(prediction)
 }

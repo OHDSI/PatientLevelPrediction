@@ -38,7 +38,30 @@
 #'
 #' @return
 #' CovariateData object with covariates, covariateRef, and analysisRef tables
-#'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long to run }
+#' library(DatabaseConnector)
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' # create some cohort of people born in 1969, index date is their date of birth
+#' con <- connect(connectionDetails)
+#' executeSql(con, "INSERT INTO main.cohort 
+#'                  SELECT 1969 as COHORT_DEFINITION_ID, PERSON_ID as SUBJECT_ID,
+#'                  BIRTH_DATETIME as COHORT_START_DATE, BIRTH_DATETIME as COHORT_END_DATE
+#'                  FROM main.person WHERE YEAR_OF_BIRTH = 1969")
+#' covariateData <- getCohortCovariateData(connection = con,
+#'                                         cdmDatabaseSchema = "main",
+#'                                         aggregated = FALSE,
+#'                                         rowIdField = "SUBJECT_ID",
+#'                                        cohortTable = "cohort",
+#'                                         covariateSettings = createCohortCovariateSettings(
+#'                                                                cohortName="summerOfLove",
+#'                                                                cohortId=1969, 
+#'                                                                settingId=1,
+#'                                                                cohortDatabaseSchema="main",
+#'                                                                cohortTable="cohort"))
+#' covariateData$covariateRef
+#' covariateData$covariates
+#' }
 #' @export
 getCohortCovariateData <- function(
     connection,
@@ -198,9 +221,14 @@ getCohortCovariateData <- function(
 #' @param analysisId  The analysisId for the covariate
 #'
 #' @return
-#' An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
+#' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId
 #'  cohortId x 100000 + settingId x 1000 + analysisId
-#'
+#' @examples
+#' createCohortCovariateSettings(cohortName="testCohort",
+#'                               settingId=1,
+#'                               cohortId=1,
+#'                               cohortDatabaseSchema="cohorts",
+#'                               cohortTable="cohort_table")
 #' @export
 createCohortCovariateSettings <- function(
     cohortName,

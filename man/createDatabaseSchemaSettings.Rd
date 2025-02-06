@@ -41,3 +41,8 @@ This function specifies where the results schema is and lets you pick a differen
 \details{
 This function can be used to specify the database settings used to upload PatientLevelPrediction results into a database
 }
+\examples{
+createDatabaseSchemaSettings(resultSchema = "cdm",
+                             tablePrefix = "plp_")
+
+}

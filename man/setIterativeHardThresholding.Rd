@@ -21,7 +21,7 @@ setIterativeHardThresholding(
 \arguments{
 \item{K}{The maximum number of non-zero predictors}
 
-\item{penalty}{Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value}
+\item{penalty}{Specifies the IHT penalty; possible values are \code{BIC} or \code{AIC} or a numeric value}
 
 \item{seed}{An option to add a seed when training the model}
 
@@ -42,11 +42,13 @@ setIterativeHardThresholding(
 \item{delta}{numeric}
 }
 \value{
-`modelSettings` object
+\code{modelSettings} object
 }
 \description{
 Create setting for Iterative Hard Thresholding model
 }
 \examples{
-modelIht <- setIterativeHardThresholding()
+\dontshow{if (rlang::is_installed("IterativeHardThresholding")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
+\dontshow{\}) # examplesIf}
 }

@@ -39,3 +39,9 @@ A validation design object of class \code{validationDesign} or a list of such ob
 \description{
 createValidationDesign - Define the validation design for external validation
 }
+\examples{
+# create a validation design for targetId 1 and outcomeId 2 one l1 model and 
+# one gradient boosting model
+createValidationDesign(1, 2, plpModelList = list(
+"pathToL1model", "PathToGBMModel"))
+}

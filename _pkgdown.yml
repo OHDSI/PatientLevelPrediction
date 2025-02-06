@@ -172,12 +172,8 @@ reference:
     contents:
       - insertResultsToSqlite
       - createPlpResultTables
-      - addMultipleRunPlpToDatabase
-      - addRunPlpToDatabase
       - createDatabaseSchemaSettings 
       - createDatabaseList
-      - addDiagnosePlpToDatabase
-      - addMultipleDiagnosePlpToDatabase
       - extractDatabaseToCsv
       - insertCsvToDatabase
       - insertModelDesignInDatabase
@@ -219,7 +215,6 @@ reference:
       Functions for simulating PLP data objects.
     contents:
       - simulatePlpData
-      - plpDataSimulationProfile
   - title: "Data manipulation functions"
     desc: >
       Functions for manipulating data

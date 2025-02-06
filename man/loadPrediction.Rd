@@ -2,7 +2,7 @@
 % Please edit documentation in R/SaveLoadPlp.R
 \name{loadPrediction}
 \alias{loadPrediction}
-\title{Loads the prediciton dataframe to csv}
+\title{Loads the prediction dataframe to json}
 \usage{
 loadPrediction(fileLocation)
 }
@@ -10,11 +10,23 @@ loadPrediction(fileLocation)
 \item{fileLocation}{The location with the saved prediction}
 }
 \value{
-The prediction data.frame
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                            The prediction data.frame
+}\if{html}{\out{</div>}}
 }
 \description{
-Loads the prediciton dataframe to csv
+Loads the prediction dataframe to json
 }
 \details{
-Loads the prediciton  RDS file
+Loads the prediciton json file
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "loadPrediction")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+savePrediction(results$prediction, saveLoc)
+dir(saveLoc)
+loadedPrediction <- loadPrediction(file.path(saveLoc, "prediction.json"))
+}
 }

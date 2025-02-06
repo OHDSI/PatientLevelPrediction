@@ -21,3 +21,12 @@ system.
 \details{
 The data will be written to a set of files in the folder specified by the user.
 }
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "loadPlpData")
+savePlpData(plpData, saveLoc)
+dir(saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}

@@ -22,3 +22,19 @@ This is a shiny app for viewing interactive plots of the performance and the set
 \details{
 Either the result of runPlp and view the plots
 }
+\examples{
+\dontshow{if (rlang::is_interactive() && rlang::is_installed("OhdsiShinyAppBuilder") ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n= 1000)
+saveLoc <- file.path(tempdir(), "viewPlp", "development")
+results <- runPlp(plpData, saveDirectory = saveLoc)
+# view result files
+dir(saveLoc, recursive = TRUE)
+# open shiny app
+viewPlp(results)
+# clean up, shiny app can't be opened after the following has been run
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

@@ -1,4 +1,4 @@
-PatientLevelPrediction
+PatientLevelPredicti
 ======================
 
 [![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check)
@@ -111,7 +111,7 @@ Documentation can be found on the [package website](https://ohdsi.github.io/Pati
 
 Support
 =======
-* Developer questions/comments/feedback: <a href="https://forums.ohdsi.org/c/developers">OHDSI Forum</a>
+* Developer questions/comments/feedback: <a href="https://forums.ohdsi.org/c/developers/7">OHDSI Forum</a>
 * We use the <a href="https://github.com/OHDSI/PatientLevelPrediction/issues">GitHub issue tracker</a> for all bugs/issues/enhancements
 
 Contributing

@@ -28,3 +28,12 @@ Save the modelDesignList to a json file
 \details{
 This function creates a json file with the modelDesignList saved
 }
+\examples{
+modelDesign <- createModelDesign(targetId = 1, 
+                                 outcomeId = 2,
+                                 modelSettings = setLassoLogisticRegression())
+saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
+jsonFile <- savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}

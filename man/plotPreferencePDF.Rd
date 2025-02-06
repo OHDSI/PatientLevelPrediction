@@ -35,3 +35,16 @@ Plot the preference score probability density function, showing prediction overl
 Create a plot showing the preference score probability density function, showing prediction overlap between true and false cases
 #'
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotPreferencePDF")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotPreferencePDF(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

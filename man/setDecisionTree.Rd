@@ -47,3 +47,12 @@ a modelSettings object
 \description{
 Create setting for the scikit-learn DecisionTree with python
 }
+\examples{
+\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+model <- setDecisionTree(criterion = list("gini"),
+                         maxDepth = list(4),
+                         minSamplesSplit = list(2),
+                         minSamplesLeaf = list(10),
+                         seed = 42)
+}
+}

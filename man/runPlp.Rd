@@ -6,8 +6,8 @@
 \usage{
 runPlp(
   plpData,
-  outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
+  analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
   analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
@@ -24,7 +24,7 @@ runPlp(
 }
 \arguments{
 \item{plpData}{An object of type \code{plpData} - the patient level prediction
-data extracted from the CDM.  Can also include an initial population as 
+data extracted from the CDM.  Can also include an initial population as
 plpData$popualtion.}
 
 \item{outcomeId}{(integer) The ID of the outcome.}
@@ -34,7 +34,7 @@ plpData$popualtion.}
 \item{analysisName}{(character) Name for the analysis}
 
 \item{populationSettings}{An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
-specifies how the data class labels are defined and addition any exclusions to apply to the 
+specifies how the data class labels are defined and addition any exclusions to apply to the
 plpData cohort}
 
 \item{splitSettings}{An object of type \code{splitSettings} that specifies how to split the data into train/validation/test.
@@ -45,8 +45,8 @@ The default is none.}
 
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
-\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of 
-target population who must have a covariate for it to be included in the model training                            
+\item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
+target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
@@ -59,7 +59,7 @@ and whether to normalise the covariates before training}
 \item setKNN() A KNN model
 }}
 
-\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings} 
+\item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 
 \item{executeSettings}{An object of \code{executeSettings} specifying which parts of the analysis to run}
@@ -69,17 +69,17 @@ specifying how the logging is done}
 \value{
 An plpResults object containing the following:
 
- \itemize{
-          \item model The developed model of class \code{plpModel}
-          \item executionSummary A list containing the hardward details, R package details and execution time
-          \item performanceEvaluation Various internal performance metrics in sparse format
-          \item prediction The plpData cohort table with the predicted risks added as a column (named value)
-          \item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
-          \item analysisRef A list with details about the analysis
-          }
+\itemize{
+\item model The developed model of class \code{plpModel}
+\item executionSummary A list containing the hardward details, R package details and execution time
+\item performanceEvaluation Various internal performance metrics in sparse format
+\item prediction The plpData cohort table with the predicted risks added as a column (named value)
+\item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
+\item analysisRef A list with details about the analysis
+}
 }
 \description{
-This provides a general framework for training patient level prediction models.  The user can select 
+This provides a general framework for training patient level prediction models.  The user can select
 various default feature selection methods or incorporate their own,  The user can also select from
 a range of default classifiers or incorporate their own.  There are three types of evaluations for the model
 patient (randomly splits people into train/validation sets) or year (randomly splits data into train/validation sets
@@ -89,4 +89,19 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 \details{
 This function takes as input the plpData extracted from an OMOP CDM database and follows the specified settings to
 develop and internally validate a model for the specified outcomeId.
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# simulate some data
+data('simulationProfile')
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+# develop a model with the default settings
+saveLoc <- file.path(tempdir(), "runPlp")
+results <- runPlp(plpData = plpData, outcomeId = 3, analysisId = 1,
+                  saveDirectory = saveLoc) 
+# to check the results you can view the log file at saveLoc/1/plpLog.txt
+# or view with shiny app using viewPlp(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

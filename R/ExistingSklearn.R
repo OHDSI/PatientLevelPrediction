@@ -52,7 +52,6 @@
 #' 
 #' You can use the output as an input in PatientLevelPrediction::predictPlp to 
 #' apply the model and calculate the risk for patients.
-#'
 #' @export
 createSklearnModel <- function(
     modelLocation = "/model", # model needs to be saved here as "model.pkl"

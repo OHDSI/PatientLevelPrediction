@@ -18,9 +18,19 @@ not yet exist.}
 \item{overwrite}{Whether to force overwrite an existing file}
 }
 \value{
-Called for its side effect, the data will be written to a set of files in the 
+Called for its side effect, the data will be written to a set of files in the
 folder specified by the user.
 }
 \description{
 \code{savePlpData} saves an object of type plpData to folder.
+}
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 500)
+saveLoc <- file.path(tempdir(), "savePlpData")
+savePlpData(plpData, saveLoc)
+dir(saveLoc, full.names = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
 }

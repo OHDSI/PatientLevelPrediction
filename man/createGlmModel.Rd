@@ -4,7 +4,7 @@
 \alias{createGlmModel}
 \title{createGlmModel}
 \usage{
-createGlmModel(coefficients, intercept = 0, finalMapping = "logistic")
+createGlmModel(coefficients, intercept = 0, mapping = "logistic")
 }
 \arguments{
 \item{coefficients}{A dataframe containing two columns, coefficients and
@@ -14,7 +14,7 @@ package.}
 
 \item{intercept}{A numeric value representing the intercept of the model.}
 
-\item{finalMapping}{A string representing the final mapping from the 
+\item{mapping}{A string representing the mapping from the
 linear predictors to outcome probabilities. For generalized linear models
 this is the inverse of the link function. Supported values is only
 "logistic" for logistic regression model at the moment.}
@@ -24,6 +24,17 @@ A model object containing the model (Coefficients and intercept)
 and the prediction function.
 }
 \description{
-Create a generalized linear model that can be used in the 
+Create a generalized linear model that can be used in the
 PatientLevelPrediction package.
+}
+\examples{
+coefficients <- data.frame(
+  covariateId = c(1002),
+  coefficient = c(0.05))
+model <- createGlmModel(coefficients, intercept = -2.5)
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=50)
+prediction <- predictPlp(model, plpData, plpData$cohorts)
+# see the predicted risk values
+prediction$value
 }

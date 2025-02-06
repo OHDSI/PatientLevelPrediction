@@ -437,6 +437,13 @@ fitPythonModel <-
 #' @param performanceFunct a string specifying which performance function to use
 #' . Default ``'compute_AUC'``
 #' @return A list with overview of the performance
+#' @examples
+#' prediction <- data.frame(rowId = c(1, 2, 3, 4, 5),
+#'                          outcomeCount = c(0, 1, 0, 1, 0),
+#'                          value = c(0.1, 0.9, 0.2, 0.8, 0.3),
+#'                          index = c(1, 1, 1, 1, 1))
+#' param <- list(hyperParam1 = 5, hyperParam2 = 100)
+#' computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
 #' @export
 computeGridPerformance <-
   function(prediction, param, performanceFunct = "computeAuc") {

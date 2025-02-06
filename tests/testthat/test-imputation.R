@@ -88,6 +88,7 @@ test_that("createIterativeImputer works", {
 })
 
 test_that("simpleImpute works", {
+  skip_if_offline()
   missingData <- createMissingData(tinyTrainData, 0.2)
 
   imputer <- createSimpleImputer(method = "mean", missingThreshold = 0.3)
@@ -116,7 +117,7 @@ test_that("simpleImpute works", {
   expect_equal(length(newFeature), nrow(imputedData$labels))
   expect_equal(mean(originalFeature), unique(imputedFeature))
 
-  missingTestData <- createMissingData(testData, 0.2)
+  missingTestData <- createMissingData(testData, 0.4)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
@@ -177,6 +178,8 @@ test_that("simpleImpute works", {
 })
 
 test_that("IterativeImputer works", {
+  skip_if_offline()
+  skip_if_not_installed("glmnet")
   missingData <- createMissingData(tinyTrainData, 0.2)
   imputer <- createIterativeImputer(
     method = "pmm", missingThreshold = 0.3,
@@ -208,7 +211,7 @@ test_that("IterativeImputer works", {
   expect_true(length(newFeature) > length(originalFeature))
   expect_equal(length(newFeature), nrow(imputedData$labels))
 
-  missingTestData <- createMissingData(testData, 0.2)
+  missingTestData <- createMissingData(testData, 0.4)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings

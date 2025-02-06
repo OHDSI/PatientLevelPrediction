@@ -14,11 +14,28 @@ savePlpShareable(result, saveDirectory, minCellCount = 10)
 \item{minCellCount}{Minimum cell count for the covariateSummary and certain evaluation results}
 }
 \value{
-The directory path where the results were saved
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The directory path where the results were saved
+}\if{html}{\out{</div>}}
 }
 \description{
 Save the plp result as json files and csv files for transparent sharing
 }
 \details{
 Saves the main results json/csv files (these files can be read by the shiny app)
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "savePlpShareable")
+results <- runPlp(plpData, saveDirectory = saveLoc)
+newSaveLoc <- file.path(tempdir(), "savePlpShareable", "saved")
+path <- savePlpShareable(results, newSaveLoc)
+# show the saved result
+dir(newSaveLoc, full.names = TRUE, recursive = TRUE)
+
+# clean up
+unlink(saveLoc, recursive = TRUE)
+unlink(newSaveLoc, recursive = TRUE)
+}
 }

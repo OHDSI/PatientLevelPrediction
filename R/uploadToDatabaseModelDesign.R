@@ -32,8 +32,8 @@
 #'
 #' @return
 #' Returns NULL but uploads the model design into the database schema specified in databaseSchemaSettings
-#'
-#' @export
+#' @keywords internal
+#' @noRd
 insertModelDesignInDatabase <- function(
     object,
     conn,

@@ -53,6 +53,8 @@ featureEngineer <- function(data, featureEngineeringSettings) {
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' createFeatureEngineeringSettings(type = "none")
 #' @export
 createFeatureEngineeringSettings <- function(type = "none") {
   featureEngineeringSettings <- list()
@@ -68,12 +70,20 @@ createFeatureEngineeringSettings <- function(type = "none") {
 #' Create the settings for defining any feature selection that will be done
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies 
+#' the function that will be called and the settings. Uses the scikit-learn
+#' SelectKBest function with chi2 for univariate feature selection.
 #'
-#' @param k              This function returns the K features most associated (univariately) to the outcome
+#' @param k              This function returns the K features most associated 
+#' (univariately) to the outcome
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' \dontrun{ \dontshow{ # requires python and scikit-learn }
+#' # create a feature selection that selects the 100 most associated features
+#' featureSelector <- createUnivariateFeatureSelection(k = 100) 
+#' }
 #' @export
 createUnivariateFeatureSelection <- function(k = 100) {
   if (inherits(k, "numeric")) {
@@ -106,13 +116,17 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' Create the settings for random foreat based feature selection
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class `featureEngineeringSettings` that specifies the sampling function that will be called and the settings
 #'
 #' @param ntrees              number of tree in forest
 #' @param maxDepth            MAx depth of each tree
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' \dontrun{ \dontshow{ # requires python and scikit-learn }
+#' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+#' }
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
   rlang::check_installed(
@@ -154,6 +168,9 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' # create splines for age (1002) with 5 knots
+#' createSplineSettings(continousCovariateId = 1002, knots = 5, analysisId = 683)
 #' @export
 createSplineSettings <- function(
     continousCovariateId,
@@ -299,16 +316,24 @@ splineMap <- function(
 
 
 
-#' Create the settings for adding a spline for continuous variables
+#' Create the settings for using stratified imputation.
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies how to do stratified imputation
+#' Returns an object of class \code{featureEngineeringSettings} that specifies 
+#' how to do stratified imputation. This function splits the covariate into
+#' age groups and fits splines to the covariate within each age group. The spline
+#' values are then used to impute missing values.
 #'
 #' @param covariateId     The covariateId that needs imputed values
 #' @param ageSplits       A vector of age splits in years to create age groups
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
+#' @examples
+#' # create a stratified imputation settings for covariate 1050 with age splits 
+#' # at 50 and 70
+#' stratifiedImputationSettings <- 
+#'   createStratifiedImputationSettings(covariateId = 1050, ageSplits = c(50, 70))
 #' @export
 createStratifiedImputationSettings <- function(
     covariateId,
@@ -540,6 +565,12 @@ randomForestFeatureSelection <- function(
 #' clip, which clips the values to be between -3 and 3 after normalization. See 
 #' https://arxiv.org/abs/2407.04491 
 #' @return An object of class \code{featureEngineeringSettings}'
+#' @examples
+#' # create a minmax normalizer that normalizes the data between 0 and 1
+#' normalizer <- createNormalizer(type = "minmax")
+#' # create a robust normalizer that normalizes the data by the interquartile range
+#' # and squeezes the values to be between -3 and 3
+#' normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
 #' @export
 createNormalizer <- function(type = "minmax",
                              settings = list()) {
@@ -575,6 +606,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     # fit the normalization
     # find continuous features from trainData$covariateData$analysisRef
@@ -618,6 +650,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
@@ -669,6 +702,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -677,21 +711,32 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::pull(.data$covariateId)
 
     # get (25, 75)% quantiles of each feature
-    # sqlite (used by Andromeda) doesn't have quantile function, so we need to load the extension
-    # to get upper_quartile and lower_quartile_functions
-    RSQLite::initExtension(outData$covariateData, "math")
-
-    outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(
-        q25 = dplyr::sql("lower_quartile(covariateValue)"),
-        q75 = dplyr::sql("upper_quartile(covariateValue)"),
-        median = stats::median(.data$covariateValue, na.rm = TRUE)
-      ) %>%
-      dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-      dplyr::select(-c("q75", "q25")) %>%
-      dplyr::collect()
+    if (inherits(outData$covariateData, "SQLiteConnection")) {
+      RSQLite::initExtension(outData$covariateData, "math")
+      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(
+          q25 = dplyr::sql("lower_quartile(covariateValue)"), 
+          q75 = dplyr::sql("upper_quartile(covariateValue)"),
+          median = stats::median(.data$covariateValue, na.rm = TRUE)
+        ) %>%
+        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::select(-c("q75", "q25")) %>%
+        dplyr::collect()
+    } else {
+      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(
+          q25 = stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE), 
+          q75 = stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE),
+          median = stats::median(.data$covariateValue, na.rm = TRUE)
+        ) %>%
+        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::select(-c("q75", "q25")) %>%
+        dplyr::collect()
+    }
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
 
     # save the normalization
@@ -724,6 +769,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
@@ -763,6 +809,27 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @param threshold The minimum fraction of the training data that must have a
 #' feature for it to be included
 #' @return An object of class \code{featureEngineeringSettings}
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
+#' # create a rare feature remover that removes features that are present in less
+#' # than 1% of the population
+#' rareFeatureRemover <- createRareFeatureRemover(threshold = 0.01)
+#' plpData <- getEunomiaPlpData()
+#' analysisId <- "rareFeatureRemover"
+#' saveLocation <- file.path(tempdir(), analysisId)
+#' results <- runPlp(
+#'   plpData = plpData,
+#'   featureEngineeringSettings = rareFeatureRemover,
+#'   outcomeId = 3,
+#'  executeSettings = createExecuteSettings(
+#'    runModelDevelopment = TRUE,
+#'    runSplitData = TRUE,
+#'    runFeatureEngineering = TRUE),
+#'  saveDirectory = saveLocation,
+#'  analysisId = analysisId)
+#' # clean up 
+#' unlink(saveLocation, recursive = TRUE)
+#' } 
 #' @export
 createRareFeatureRemover <- function(threshold = 0.001) {
   checkIsClass(threshold, c("numeric"))
@@ -796,6 +863,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(count = dplyr::n()) %>%
@@ -827,6 +895,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData$covariateData) <- "CovariateData"
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")

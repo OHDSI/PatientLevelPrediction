@@ -36,6 +36,54 @@
 #' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
 #'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                          cdmDatabaseSchema = "main",
+#'                                          cohortDatabaseSchema = "main",
+#'                                          cohortTable = "cohort",
+#'                                          outcomeDatabaseSchema = "main",
+#'                                          outcomeTable = "cohort",
+#'                                          targetId = 1,
+#'                                          outcomeIds = 2)
+#' Eunomia::createCohorts(connectionDetails = connectionDetails)
+#' covariateSettings <- 
+#'  FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE,
+#'                                             useDemographicsAge = TRUE,
+#'                                             useConditionOccurrenceLongTerm = TRUE)
+#' # GI Bleed in users of celecoxib
+#' modelDesign <- createModelDesign(targetId = 1, 
+#'                                  outcomeId = 3, 
+#'                                  modelSettings = setLassoLogisticRegression(seed = 42),
+#'                                  populationSettings = createStudyPopulationSettings(),
+#'                                  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'                                  covariateSettings = covariateSettings,
+#'                                  splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'                                  preprocessSettings = createPreprocessSettings())
+#' # GI Bleed in users of NSAIDs
+#' modelDesign2 <- createModelDesign(targetId = 4,
+#'                                   outcomeId = 3,
+#'                                   modelSettings = setLassoLogisticRegression(seed = 42),
+#'                                   populationSettings = createStudyPopulationSettings(),
+#'                                   restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'                                   covariateSettings = covariateSettings,
+#'                                   splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'                                   preprocessSettings = createPreprocessSettings())
+#' saveLoc <- file.path(tempdir(), "runMultiplePlp")
+#' multipleResults <- runMultiplePlp(databaseDetails = databaseDetails,
+#'                                   modelDesignList = list(modelDesign, modelDesign2),
+#'                                   saveDirectory = saveLoc)
+#' # You should see results for two developed models in the ouutput. The output is as well
+#' # uploaded to a sqlite database in the saveLoc/sqlite folder, 
+#' dir(saveLoc)
+#' # The dir output should show two Analysis_ folders with the results, 
+#' # two targetId_ folders with th extracted data, and a sqlite folder with the database
+#' # The results can be explored in the shiny app by calling viewMultiplePlp(saveLoc)
+#'
+#' # clean up (viewing the results in the shiny app is won't work after this)
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 runMultiplePlp <- function(
     databaseDetails = createDatabaseDetails(),
@@ -251,11 +299,24 @@ runMultiplePlp <- function(
 #'
 #' @return
 #' A list with analysis settings used to develop a single prediction model
-#'
+#' 
+#' @examples
+#' # L1 logistic regression model to predict the outcomeId 2 using the targetId 2
+#' # with with default population, restrictPlp, split, and covariate settings
+#' createModelDesign(
+#'   targetId = 1,
+#'   outcomeId = 2,
+#'   modelSettings = setLassoLogisticRegression(seed=42),
+#'   populationSettings = createStudyPopulationSettings(),
+#'   restrictPlpDataSettings = createRestrictPlpDataSettings(),
+#'   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+#'   splitSettings = createDefaultSplitSetting(splitSeed = 42),
+#'   runCovariateSummary = TRUE
+#' )
 #' @export
 createModelDesign <- function(
-    targetId,
-    outcomeId,
+    targetId = NULL,
+    outcomeId = NULL,
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
     populationSettings = createStudyPopulationSettings(),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
@@ -263,21 +324,15 @@ createModelDesign <- function(
     sampleSettings = NULL,
     preprocessSettings = NULL,
     modelSettings = NULL,
-    splitSettings = createDefaultSplitSetting(
-      type = "stratified",
-      testFraction = 0.25,
-      trainFraction = 0.75,
-      splitSeed = 123,
-      nfold = 3
-    ),
+    splitSettings = createDefaultSplitSetting(),
     runCovariateSummary = TRUE) {
-  checkIsClass(targetId, c("numeric", "integer"))
-  checkIsClass(outcomeId, c("numeric", "integer"))
+  checkIsClass(targetId, c("numeric", "integer", "NULL"))
+  checkIsClass(outcomeId, c("numeric", "integer", "NULL"))
 
-  checkIsClass(populationSettings, c("populationSettings"))
-  checkIsClass(restrictPlpDataSettings, "restrictPlpDataSettings")
-  checkIsClass(covariateSettings, c("covariateSettings", "list"))
-  checkIsClass(splitSettings, "splitSettings")
+  checkIsClass(populationSettings, c("populationSettings", "NULL"))
+  checkIsClass(restrictPlpDataSettings, c("restrictPlpDataSettings", "NULL"))
+  checkIsClass(covariateSettings, c("covariateSettings", "list", "NULL"))
+  checkIsClass(splitSettings, c("splitSettings", "NULL"))
 
   useFE <- FALSE
   if (!is.null(featureEngineeringSettings)) {
@@ -329,7 +384,7 @@ createModelDesign <- function(
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = useSample,
-      runfeatureEngineering = useFE,
+      runFeatureEngineering = useFE,
       runPreprocessData = usePreprocess,
       runModelDevelopment = !is.null(modelSettings),
       runCovariateSummary = runCovariateSummary
@@ -352,6 +407,14 @@ createModelDesign <- function(
 #'
 #' @return The json string of the ModelDesignList
 #'
+#' @examples
+#' modelDesign <- createModelDesign(targetId = 1, 
+#'                                  outcomeId = 2,
+#'                                  modelSettings = setLassoLogisticRegression())
+#' saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
+#' jsonFile <- savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
 #' @export
 savePlpAnalysesJson <- function(
     modelDesignList = list(
@@ -408,6 +471,14 @@ savePlpAnalysesJson <- function(
 #'
 #' @param jsonFileLocation    The location of the file 'predictionAnalysisList.json' with the modelDesignList
 #' @return A list with the modelDesignList and cohortDefinitions
+#' @examples
+#' modelDesign <- createModelDesign(targetId = 1, outcomeId = 2, 
+#'                                  modelSettings = setLassoLogisticRegression())
+#' saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
+#' savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
+#' loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
+#' # clean use
+#' unlink(saveLoc, recursive = TRUE)
 #' @export
 loadPlpAnalysesJson <- function(
     jsonFileLocation) {
@@ -441,6 +512,42 @@ loadPlpAnalysesJson <- function(
 #' @param saveDirectory               The location to save to validation results
 #' @return Nothing. The results are saved to the saveDirectory
 #'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long to run }
+#' # first develop a model using runMultiplePlp
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails = connectionDetails)
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                          cdmDatabaseId = "1",
+#'                                          cdmDatabaseName = "Eunomia",
+#'                                          cdmDatabaseSchema = "main",
+#'                                          targetId = 1,
+#'                                          outcomeIds = 3)
+#' covariateSettings <- 
+#'  FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE,
+#'    useDemographicsAge = TRUE, useConditionOccurrenceLongTerm = TRUE)
+#' modelDesign <- createModelDesign(targetId = 1, 
+#'                                  outcomeId = 3,
+#'                                  modelSettings = setLassoLogisticRegression(seed = 42),
+#'                                  covariateSettings = covariateSettings)
+#' saveLoc <- file.path(tempdir(), "valiateMultiplePlp", "development")
+#' results <- runMultiplePlp(databaseDetails = databaseDetails,
+#'                modelDesignList = list(modelDesign),
+#'                saveDirectory = saveLoc)
+#' # now validate the model on a Eunomia but with a different target
+#' analysesLocation <- saveLoc
+#' validationDatabaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                                    cdmDatabaseId = "2",
+#'                                                    cdmDatabaseName = "EunomiaNew",
+#'                                                    cdmDatabaseSchema = "main",
+#'                                                    targetId = 4,
+#'                                                    outcomeIds = 3)
+#' newSaveLoc <- file.path(tempdir(), "valiateMultiplePlp", "validation")
+#' validateMultiplePlp(analysesLocation = analysesLocation,
+#'                     validationDatabaseDetails = validationDatabaseDetails,
+#'                     saveDirectory = newSaveLoc)
+#' # the results could now be viewed in the shiny app with viewMultiplePlp(newSaveLoc)
+#' }
 #' @export
 validateMultiplePlp <- function(
     analysesLocation,

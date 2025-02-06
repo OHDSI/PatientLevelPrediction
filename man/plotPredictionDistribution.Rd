@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plotPredictionDistribution}
 \alias{plotPredictionDistribution}
-\title{Plot the side-by-side boxplots of prediction distribution, by class#'}
+\title{Plot the side-by-side boxplots of prediction distribution, by class}
 \usage{
 plotPredictionDistribution(
   plpResult,
@@ -27,9 +27,22 @@ A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file 
 format.
 }
 \description{
-Plot the side-by-side boxplots of prediction distribution, by class#'
+Plot the side-by-side boxplots of prediction distribution, by class
 }
 \details{
 Create a plot showing the side-by-side boxplots of prediction distribution, by class
 #'
+}
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotPredictionDistribution")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotPredictionDistribution(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

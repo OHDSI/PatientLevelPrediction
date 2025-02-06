@@ -24,6 +24,29 @@
 #' @param analysesLocation  The directory containing the results (with the analysis_x folders)
 #' @return Opens a shiny app for interactively viewing the results
 #'
+#' @examplesIf rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  
+#' \donttest{ \dontshow{ # takes too long }
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails)
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                           cdmDatabaseSchema = "main",
+#'                                           cdmDatabaseName = "Eunomia",
+#'                                           cdmDatabaseId = "1",
+#'                                           targetId = 1,
+#'                                           outcomeIds = 3)
+#' modelDesign <- createModelDesign(targetId = 1, 
+#'                                  outcomeId = 3, 
+#'                                  modelSettings = setLassoLogisticRegression())
+#' saveLoc <- file.path(tempdir(), "viewMultiplePlp", "development")
+#' runMultiplePlp(databaseDetails = databaseDetails, modelDesignList = list(modelDesign),
+#'                saveDirectory = saveLoc)
+#' # view result files
+#' dir(saveLoc, recursive = TRUE)
+#' # open shiny app
+#' viewMultiplePlp(analysesLocation = saveLoc)
+#' # clean up, shiny app can't be opened after the following has been run
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 viewMultiplePlp <- function(analysesLocation) {
   if (!file.exists(file.path(analysesLocation, "sqlite", "databaseFile.sqlite"))) {
@@ -61,6 +84,19 @@ viewMultiplePlp <- function(analysesLocation) {
 #' @return
 #' Opens a shiny app for interactively viewing the results
 #'
+#' @examplesIf rlang::is_interactive() && rlang::is_installed("OhdsiShinyAppBuilder") 
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n= 1000)
+#' saveLoc <- file.path(tempdir(), "viewPlp", "development")
+#' results <- runPlp(plpData, saveDirectory = saveLoc)
+#' # view result files
+#' dir(saveLoc, recursive = TRUE)
+#' # open shiny app
+#' viewPlp(results)
+#' # clean up, shiny app can't be opened after the following has been run
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
   server <- insertRunPlpToSqlite(
@@ -103,6 +139,33 @@ viewPlp <- function(runPlp, validatePlp = NULL, diagnosePlp = NULL) {
 #' @param myTableAppend A string appended to the results tables (optional)
 #' @return Opens a shiny app for interactively viewing the results
 #'
+#' @examplesIf rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  
+#' \donttest{  \dontshow{ # takes too long }
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails)
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#'                                           cdmDatabaseSchema = "main",
+#'                                           cdmDatabaseName = "Eunomia",
+#'                                           cdmDatabaseId = "1",
+#'                                           targetId = 1,
+#'                                           outcomeIds = 3)
+#' modelDesign <- createModelDesign(targetId = 1,
+#'                                  outcomeId = 3,
+#'                                  modelSettings = setLassoLogisticRegression())
+#' saveLoc <- file.path(tempdir(), "viewDatabaseResultPlp", "developement")
+#' runMultiplePlp(databaseDetails = databaseDetails, modelDesignList = list(modelDesign),
+#'                saveDirectory = saveLoc)
+#' # view result files
+#' dir(saveLoc, recursive = TRUE)
+#' viewDatabaseResultPlp(myDbms = "sqlite", 
+#'                       mySchema = "main", 
+#'                       myServer = file.path(saveLoc, "sqlite", "databaseFile.sqlite"),
+#'                       myUser = NULL,
+#'                       myPassword = NULL,
+#'                       myTableAppend = "")
+#' # clean up, shiny app can't be opened after the following has been run
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 viewDatabaseResultPlp <- function(
     mySchema,

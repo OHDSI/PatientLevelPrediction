@@ -73,11 +73,25 @@
 #'           \item covariateSummary A characterization of the features for patients with and without the outcome during the time at risk
 #'           \item analysisRef A list with details about the analysis
 #'           } 
+#' @examples
+#' \donttest{ \dontshow{ # takes too long }
+#' # simulate some data
+#' data('simulationProfile')
+#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' # develop a model with the default settings
+#' saveLoc <- file.path(tempdir(), "runPlp")
+#' results <- runPlp(plpData = plpData, outcomeId = 3, analysisId = 1,
+#'                   saveDirectory = saveLoc) 
+#' # to check the results you can view the log file at saveLoc/1/plpLog.txt
+#' # or view with shiny app using viewPlp(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 runPlp <- function(
   plpData,
-  outcomeId = plpData$metaData$call$outcomeIds[1],
-  analysisId = paste(Sys.Date(), plpData$metaData$call$outcomeIds[1], sep = "-"),
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
+  analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
   analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(
@@ -85,8 +99,7 @@ runPlp <- function(
     testFraction = 0.25, 
     trainFraction = 0.75, 
     splitSeed = 123, 
-    nfold = 3
-    ),
+    nfold = 3), 
   sampleSettings = createSampleSettings(type = "none"),
   featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
   preprocessSettings = createPreprocessSettings(
@@ -220,7 +233,7 @@ runPlp <- function(
     dataSummary(data)
   }
   
-  if (executeSettings$runfeatureEngineering) {
+  if (executeSettings$runFeatureEngineering) {
     
     data$Train <- tryCatch(
       {

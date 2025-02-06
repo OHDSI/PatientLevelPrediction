@@ -31,15 +31,21 @@ A function or list of functions specifying any feature engineering
 to create covariates before summarising}
 }
 \value{
-A data.frame containing: CovariateCount, CovariateMean and CovariateStDev 
+A data.frame containing: CovariateCount, CovariateMean and CovariateStDev
 for any specified stratification
 }
 \description{
-Summarises the covariateData to calculate the mean and standard deviation per covaraite
-if the labels are input it also stratifies this by class label and if the trainRowIds and testRowIds
+Summarises the covariateData to calculate the mean and standard deviation per covariate
+if the labels are given it also stratifies this by class label and if the trainRowIds and testRowIds
 specifying the patients in the train/test sets respectively are input, these values are also stratified
 by train and test set
 }
 \details{
 The function calculates various metrics to measure the performance of the model
+}
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=100)
+covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
+head(covariateSummary)
 }

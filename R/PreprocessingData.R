@@ -18,7 +18,7 @@
 #' Create the settings for preprocessing the trainData.
 #'
 #' @details
-#' Returns an object of class \code{preprocessingSettings} that specifies how to
+#' Returns an object of class `preprocessingSettings` that specifies how to
 #' preprocess the training data
 #'
 #' @param minFraction The minimum fraction of target population who must have a 
@@ -26,8 +26,14 @@
 #' @param normalize Whether to normalise the covariates before training 
 #' (Default: TRUE)
 #' @param removeRedundancy Whether to remove redundant features (Default: TRUE)
+#' Redundant features are features that within an analysisId together cover all
+#' observations. For example with ageGroups, if you have ageGroup 0-18 and 18-100
+#' and all patients are in one of these groups, then one of these groups is redundant.
 #' @return
-#' An object of class \code{preprocessingSettings}
+#' An object of class `preprocessingSettings`
+#' @examples
+#' # Create the settings for preprocessing, remove no features, normalise the data
+#' createPreprocessSettings(minFraction = 0.0, normalize = TRUE, removeRedundancy = FALSE)
 #' @export
 createPreprocessSettings <- function(
     minFraction = 0.001,
@@ -62,11 +68,18 @@ createPreprocessSettings <- function(
 #' @param covariateData         The covariate part of the training data created by \code{splitData} after being sampled and having
 #'                              any required feature engineering
 #' @param preprocessSettings    The settings for the preprocessing created by \code{createPreprocessSettings}
-#' @keywords internal
 #' The data processed
 #' @return The covariateData object with the processed covariates
+#' @examples
+#' library(dplyr)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettings())
+#' # check age is normalized by max value
+#' preProcessedData$covariates %>% dplyr::filter(.data$covariateId == 1002)
+#' @export
 preprocessData <- function(covariateData,
-                           preprocessSettings) {
+                           preprocessSettings = createPreprocessSettings()) {
   metaData <- attr(covariateData, "metaData")
   preprocessSettingsInput <- preprocessSettings # saving this before adding covariateData
 

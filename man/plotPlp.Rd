@@ -23,3 +23,16 @@ Plot all the PatientLevelPrediction plots
 \details{
 Create a directory with all the plots
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotPlp")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotPlp(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

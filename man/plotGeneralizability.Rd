@@ -31,3 +31,21 @@ Plot the train/test generalizability diagnostic
 Create a plot showing the train/test generalizability diagnostic
 #'
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+population <- createStudyPopulation(plpData, outcomeId = 3)
+data <- splitData(plpData, population = population)
+strata <- data.frame(
+ rowId = c(data$Train$labels$rowId, data$Test$labels$rowId),
+ strataName = c(rep("Train", nrow(data$Train$labels)),
+                rep("Test", nrow(data$Test$labels))))
+covariateSummary <- covariateSummary(plpData$covariateData, 
+                                     cohort = dplyr::select(population, "rowId"),
+ strata = strata, labels = population)
+plotGeneralizability(covariateSummary)
+}
+\dontshow{\}) # examplesIf}
+}

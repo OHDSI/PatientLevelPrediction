@@ -45,8 +45,8 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 \item{analysisId}{The analysisId for the covariate}
 }
 \value{
-An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
- cohortId x 100000 + settingId x 1000 + analysisId
+An object of class \code{covariateSettings} specifying how to create the cohort covariate with the covariateId
+cohortId x 100000 + settingId x 1000 + analysisId
 }
 \description{
 Extracts covariates based on cohorts
@@ -54,4 +54,11 @@ Extracts covariates based on cohorts
 \details{
 The user specifies a cohort and time period and then a covariate is constructed whether they are in the
 cohort during the time periods relative to target population cohort index
+}
+\examples{
+createCohortCovariateSettings(cohortName="testCohort",
+                              settingId=1,
+                              cohortId=1,
+                              cohortDatabaseSchema="cohorts",
+                              cohortTable="cohort_table")
 }

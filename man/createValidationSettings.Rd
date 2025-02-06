@@ -20,3 +20,9 @@ This function creates the settings required by externalValidatePlp
 \details{
 Users need to specify whether they want to sample or recalibate when performing external validation
 }
+\examples{
+# do weak recalibration and don't run covariate summary
+createValidationSettings(recalibrate = "weakRecalibration", 
+                         runCovariateSummary = FALSE)
+
+}

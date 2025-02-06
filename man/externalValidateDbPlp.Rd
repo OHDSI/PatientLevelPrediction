@@ -29,11 +29,13 @@ specifying how the logging is done}
 }
 \value{
 An externalValidatePlp object containing the following components
-- model: The model object
-- executionSummary: A list of execution details
-- prediction: A dataframe containing the predictions
-- performanceEvaluation: A dataframe containing the performance metrics
-- covariateSummary: A dataframe containing the covariate summary
+\itemize{
+\item model: The model object
+\item executionSummary: A list of execution details
+\item prediction: A dataframe containing the predictions
+\item performanceEvaluation: A dataframe containing the performance metrics
+\item covariateSummary: A dataframe containing the covariate summary
+}
 }
 \description{
 This function extracts data using a user specified connection and cdm_schema, applied the model and then calcualtes the performance
@@ -41,4 +43,39 @@ This function extracts data using a user specified connection and cdm_schema, ap
 \details{
 Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the
 number of cdm_schemas input with the performance on the new data
+}
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+# first fit a model on some data, default is a L1 logistic regression
+saveLoc <- file.path(tempdir(), "development")
+results <- runPlp(plpData, 
+                  outcomeId = 3,
+                  saveDirectory = saveLoc,
+                  populationSettings = 
+                   createStudyPopulationSettings(requireTimeAtRisk=FALSE)
+                  )
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+# now validate the model on Eunomia
+validationDatabaseDetails <- createDatabaseDetails(
+  connectionDetails = connectionDetails,
+  cdmDatabaseSchema = "main",
+  cdmDatabaseName = "main",
+  cohortDatabaseSchema = "main",
+  cohortTable = "cohort",
+  outcomeDatabaseSchema = "main",
+  outcomeTable = "cohort",
+  targetId = 1, # users of celecoxib
+  outcomeIds = 3, # GIbleed
+  cdmVersion = 5)
+path <- file.path(tempdir(), "validation")
+externalValidateDbPlp(results$model, validationDatabaseDetails, outputFolder = path)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+unlink(path, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

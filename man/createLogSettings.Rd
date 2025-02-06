@@ -26,7 +26,7 @@ createLogSettings(
 \item{logName}{A string reference for the logger}
 }
 \value{
-An object of class \code{logSettings}
+An object of class \code{logSettings} containing the settings for the logger
 }
 \description{
 Create the settings for logging the progression of the analysis
@@ -35,5 +35,7 @@ Create the settings for logging the progression of the analysis
 Returns an object of class \code{logSettings} that specifies the logger settings
 }
 \examples{
+# create a log settings object with DENUG verbosity, timestamp and log name 
+# "runPlp Log". This needs to be passed to `runPlp`.
 createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
 }

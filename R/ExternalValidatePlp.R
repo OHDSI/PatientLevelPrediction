@@ -170,7 +170,38 @@ externalValidatePlp <- function(plpModel,
 #' - prediction: A dataframe containing the predictions
 #' - performanceEvaluation: A dataframe containing the performance metrics
 #' - covariateSummary: A dataframe containing the covariate summary
-#'
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' # first fit a model on some data, default is a L1 logistic regression
+#' saveLoc <- file.path(tempdir(), "development")
+#' results <- runPlp(plpData, 
+#'                   outcomeId = 3,
+#'                   saveDirectory = saveLoc,
+#'                   populationSettings = 
+#'                    createStudyPopulationSettings(requireTimeAtRisk=FALSE)
+#'                   )
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails)
+#' # now validate the model on Eunomia
+#' validationDatabaseDetails <- createDatabaseDetails(
+#'   connectionDetails = connectionDetails,
+#'   cdmDatabaseSchema = "main",
+#'   cdmDatabaseName = "main",
+#'   cohortDatabaseSchema = "main",
+#'   cohortTable = "cohort",
+#'   outcomeDatabaseSchema = "main",
+#'   outcomeTable = "cohort",
+#'   targetId = 1, # users of celecoxib
+#'   outcomeIds = 3, # GIbleed
+#'   cdmVersion = 5)
+#' path <- file.path(tempdir(), "validation")
+#' externalValidateDbPlp(results$model, validationDatabaseDetails, outputFolder = path)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' unlink(path, recursive = TRUE)
+#' }
 #' @export
 externalValidateDbPlp <- function(plpModel,
                                   validationDatabaseDetails = createDatabaseDetails(),
@@ -356,6 +387,10 @@ externalValidateDbPlp <- function(plpModel,
 #' @param runCovariateSummary              Whether to run the covariate summary for the validation data
 #' @return
 #' A setting object of class \code{validationSettings} containing a list of settings for externalValidatePlp
+#' @examples
+#' # do weak recalibration and don't run covariate summary
+#' createValidationSettings(recalibrate = "weakRecalibration", 
+#'                          runCovariateSummary = FALSE)
 #'
 #' @export
 createValidationSettings <- function(recalibrate = NULL,
@@ -392,6 +427,11 @@ createValidationSettings <- function(recalibrate = NULL,
 #' @param recalibrate A vector of characters specifying the recalibration method to apply,
 #' @param runCovariateSummary whether to run the covariate summary for the validation data
 #' @return A validation design object of class \code{validationDesign} or a list of such objects
+#' @examples
+#' # create a validation design for targetId 1 and outcomeId 2 one l1 model and 
+#' # one gradient boosting model
+#' createValidationDesign(1, 2, plpModelList = list(
+#' "pathToL1model", "PathToGBMModel"))
 #' @export
 createValidationDesign <-
   function(targetId,
@@ -464,7 +504,7 @@ createValidationDesign <-
   }
 
 
-#' externalValidatePlp - Validate model performance on new data
+#' validateExternal - Validate model performance on new data
 #'
 #' @param validationDesignList A list of objects created with \code{createValidationDesign}
 #' @param databaseDetails A list of objects of class
@@ -474,10 +514,33 @@ createValidationDesign <-
 #' @param outputFolder        The directory to save the validation results to
 #' (subfolders are created per database in validationDatabaseDetails)
 #' @return A list of results
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' # first fit a model on some data, default is a L1 logistic regression
+#' saveLoc <- file.path(tempdir(), "development")
+#' results <- runPlp(plpData, saveDirectory = saveLoc)
+#' # then create my validation design
+#' validationDesign <- createValidationDesign(1, 3, plpModelList = list(results$model))
+#' # I will validate on Eunomia example database
+#' connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+#' Eunomia::createCohorts(connectionDetails)
+#' databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+#' cdmDatabaseSchema = "main", cdmDatabaseName = "Eunomia", cdmDatabaseId = 1,
+#' targetId = 1, outcomeIds = 3)
+#' path <- file.path(tempdir(), "validation")
+#' validateExternal(validationDesign, databaseDetails, outputFolder = path)
+#' # see generated result files
+#' dir(path, recursive = TRUE)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' unlink(path, recursive = TRUE)
+#' }
 #' @export
 validateExternal <- function(validationDesignList,
                              databaseDetails,
-                             logSettings,
+                             logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
                              outputFolder) {
   # Input checks
   changedInputs <- checkValidateExternalInputs(

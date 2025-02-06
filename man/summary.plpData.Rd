@@ -17,3 +17,8 @@ A summary of the object containing the number of people, outcomes and covariates
 \description{
 Summarize a plpData object
 }
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=10)
+summary(plpData)
+}

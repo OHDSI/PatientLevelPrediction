@@ -27,10 +27,40 @@ insertCsvToDatabase(
 Returns a data.frame indicating whether the results were inported into the database
 }
 \description{
-This function converts a folder with csv results into plp objects and loads 
+This function converts a folder with csv results into plp objects and loads
 them into a plp result database
 }
 \details{
-The user needs to have plp csv results in a single folder and an existing plp 
+The user needs to have plp csv results in a single folder and an existing plp
 result database
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+# develop a simple model on simulated data
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
+results <- runPlp(plpData, outcomeId=3, saveDirectory=saveLoc)
+# now upload the results to a sqlite database
+databasePath <- insertResultsToSqlite(saveLoc)
+# now extract the results to csv
+connectionDetails <- 
+ DatabaseConnector::createConnectionDetails(dbms = "sqlite", 
+                                            server = databasePath)
+extractDatabaseToCsv(connectionDetails = connectionDetails,
+                     csvFolder = file.path(saveLoc, "csv"))
+# show csv file
+list.files(file.path(saveLoc, "csv"))
+# now insert the csv results into a database
+newDatabasePath <- file.path(tempdir(), "newDatabase.sqlite")
+connectionDetails <- 
+ DatabaseConnector::createConnectionDetails(dbms = "sqlite", 
+                                            server = newDatabasePath)
+insertCsvToDatabase(csvFolder = file.path(saveLoc, "csv"),
+                     connectionDetails = connectionDetails,
+                     databaseSchemaSettings = createDatabaseSchemaSettings(),
+                     modelSaveLocation = file.path(saveLoc, "models"))
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

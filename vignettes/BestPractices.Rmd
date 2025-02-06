@@ -133,7 +133,7 @@ Model development
 What is the impact of the classifier 
 </td>
 <td>
-<a href='https://academic.oup.com/jamia/article/25/8/969/4989437?login=true'>JAMIA</a>
+<a href='https://academic.oup.com/jamia/article/25/8/969/4989437'>JAMIA</a>
 </td>
 </tr>
 
@@ -230,7 +230,7 @@ Evaluation
 How should we present model performance? (e.g., new visualizations)
 </td>
 <td>
-<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493?searchresult=1'>JAMIA Open</a>
+<a href='https://academic.oup.com/jamiaopen/article/4/1/ooab017/6168493'>JAMIA Open</a>
 </td>
 </tr>
 

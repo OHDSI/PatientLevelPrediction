@@ -7,7 +7,7 @@
 predictGlm(plpModel, data, cohort)
 }
 \arguments{
-\item{plpModel}{An object of type \code{plpModel} - a patient level 
+\item{plpModel}{An object of type \code{plpModel} - a patient level
 prediction model}
 
 \item{data}{An object of type \code{plpData} - the patient level prediction
@@ -18,9 +18,20 @@ data extracted from the CDM.}
 without the outcome known}
 }
 \value{
-A dataframe containing the prediction for each person in the 
+A dataframe containing the prediction for each person in the
 population
 }
 \description{
 Predict risk with a given plpModel containing a generalized linear model.
+}
+\examples{
+coefficients <- data.frame(
+  covariateId = c(1002),
+  coefficient = c(0.05))
+model <- createGlmModel(coefficients, intercept = -2.5)
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=50)
+prediction <- predictGlm(model, plpData, plpData$cohorts)
+# see the predicted risk values
+head(prediction)
 }

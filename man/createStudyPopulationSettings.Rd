@@ -54,9 +54,16 @@ specified).}
 \item{restrictTarToCohortEnd}{If using a survival model and you want the time-at-risk to end at the cohort end date set this to T}
 }
 \value{
-An object of type populationSettings containing all the settings required 
+An object of type populationSettings containing all the settings required
 for creating the study population
 }
 \description{
 create the study population settings
+}
+\examples{
+# Create study population settings with a washout period of 30 days and a 
+# risk window of 1 to 90 days
+populationSettings <- createStudyPopulationSettings(washoutPeriod = 30, 
+                                                    riskWindowStart = 1,
+                                                    riskWindowEnd = 90)
 }

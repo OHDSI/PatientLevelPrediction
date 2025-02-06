@@ -32,3 +32,16 @@ Plot the ROC curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the Receiver Operator Characteristics (ROC) curve.
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotSparseRoc")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotSparseRoc(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

@@ -32,7 +32,20 @@
 #' - demographicSummary: A data frame containing the demographic summary'
 #' - calibrationSummary: A data frame containing the calibration summary'
 #' - predictionDistribution: A data frame containing the prediction distribution'
-#' 
+#' @examples
+#' \donttest{ \dontshow{ # takes too long to run }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n= 1500)
+#' population <- createStudyPopulation(plpData, outcomeId = 3, 
+#'                                     populationSettings = createStudyPopulationSettings())
+#' data <- splitData(plpData, population, splitSettings=createDefaultSplitSetting(splitSeed=42))
+#' data$Train$covariateData <- preprocessData(data$Train$covariateData, 
+#'                                            createPreprocessSettings())
+#' path <- file.path(tempdir(), "plp")
+#' model <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
+#'                 analysisId=1, analysisPath = path)
+#' evaluatePlp(model$prediction) # Train and CV metrics
+#' }
 #' @export
 evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   start <- Sys.time()
@@ -152,8 +165,10 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
 
 
 
-#' Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome
-#' as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+#' Calculate the model-based concordance, which is a calculation of the expected 
+#' discrimination performance of a model under the assumption the model predicts 
+#' the "TRUE" outcome as detailed in van Klaveren et al. 
+#' https://pubmed.ncbi.nlm.nih.gov/27251001/
 #'
 #' @details
 #' Calculate the model-based concordance
@@ -162,7 +177,9 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
 #'
 #' @return
 #' The model-based concordance value
-#'
+#' @examples
+#' prediction <- data.frame(value = runif(100))
+#' modelBasedConcordance(prediction)
 #' @export
 modelBasedConcordance <- function(prediction) {
   if (!length(prediction$value > 0)) {
@@ -172,9 +189,10 @@ modelBasedConcordance <- function(prediction) {
   n <- length(prediction)
   ord <- order(prediction)
   prediction <- prediction[ord]
-  q.hat <- 1 - prediction
-  V1 <- (prediction * (cumsum(q.hat) - q.hat) + q.hat * (sum(prediction) - cumsum(prediction))) / (n - 1)
-  V2 <- (prediction * (sum(q.hat) - q.hat) + q.hat * (sum(prediction) - prediction)) / (n - 1)
-  mb.c <- sum(V1) / sum(V2)
-  return(mb.c)
+  qHat <- 1 - prediction
+  v1 <- (prediction * (cumsum(qHat) - qHat) + 
+    qHat * (sum(prediction) - cumsum(prediction))) / (n - 1)
+  v2 <- (prediction * (sum(qHat) - qHat) + qHat * (sum(prediction) - prediction)) / (n - 1)
+  mbC <- sum(v1) / sum(v2)
+  return(mbC)
 }

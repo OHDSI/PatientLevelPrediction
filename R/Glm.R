@@ -16,6 +16,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' createGlmModel
+#'
+#' @description
+#' Create a generalized linear model that can be used in the 
+#' PatientLevelPrediction package.
+#' @param coefficients A dataframe containing two columns, coefficients and
+#' covariateId, both of type numeric. The covariateId column must contain
+#' valid covariateIds that match those used in the \code{FeatureExtraction}
+#' package.
+#' @param intercept A numeric value representing the intercept of the model.
+#' @param mapping A string representing the mapping from the 
+#' linear predictors to outcome probabilities. For generalized linear models
+#' this is the inverse of the link function. Supported values is only
+#' "logistic" for logistic regression model at the moment. 
+#' @return A model object containing the model (Coefficients and intercept)
+#' and the prediction function.
+#' @examples
+#' coefficients <- data.frame(
+#'   covariateId = c(1002),
+#'   coefficient = c(0.05))
+#' model <- createGlmModel(coefficients, intercept = -2.5)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=50)
+#' prediction <- predictPlp(model, plpData, plpData$cohorts)
+#' # see the predicted risk values
+#' prediction$value
+#' @export
+createGlmModel <- function(coefficients,
+                           intercept = 0,
+                           mapping = "logistic") {
+
+  checkDataframe(coefficients, 
+    c("covariateId", "coefficient"), 
+    c("numeric", "numeric"))
+  checkHigherEqual(coefficients$covariateId, 0)
+  checkIsClass(intercept, c("numeric"))
+  checkIsClass(mapping, c("character"))
+  checkIsEqual(mapping, "logistic")
+
+  model <- list(
+    intercept = intercept,
+    coefficients = coefficients,
+    mapping = mapping,
+    predictionFunction = "PatientLevelPrediction::predictGlm"
+  )
+  existingModel <- list(model = "existingGlm")
+  class(existingModel) <- "modelSettings"
+
+  plpModel <- list(
+    preprocessing = list(
+      tidyCovariates = NULL,
+      requireDenseMatrix = FALSE
+    ),
+    covariateImportance = NULL,
+    modelDesign = PatientLevelPrediction::createModelDesign(
+      targetId = NULL,
+      outcomeId = NULL,
+      modelSettings = existingModel
+    ),
+    model = model,
+    trainDetails = NULL
+  )
+  attr(plpModel, "modelType") <- "binary"
+  attr(plpModel, "saveType") <- "RToJson"
+  attr(plpModel, "predictionFunction") <- "PatientLevelPrediction::predictGlm"
+  class(plpModel) <- "plpModel"
+  return(plpModel)
+}
+
 #' predict using a logistic regression model
 #' 
 #' @description
@@ -28,6 +97,17 @@
 #' @param cohort The population dataframe created using
 #' \code{createStudyPopulation} who will have their risks predicted or a cohort
 #' without the outcome known
+#' @export
+#' @examples
+#' coefficients <- data.frame(
+#'   covariateId = c(1002),
+#'   coefficient = c(0.05))
+#' model <- createGlmModel(coefficients, intercept = -2.5)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=50)
+#' prediction <- predictGlm(model, plpData, plpData$cohorts)
+#' # see the predicted risk values
+#' head(prediction)
 #' @export
 #' @return A dataframe containing the prediction for each person in the 
 #' population
@@ -51,13 +131,13 @@ predictGlm <- function(plpModel, data, cohort) {
   prediction$value[is.na(prediction$value)] <- 0
   prediction$value <- prediction$value + plpModel$model$intercept
   
-  if (plpModel$model$finalMapping == "linear") {
+  if (plpModel$model$mapping == "linear") {
     prediction$value <- prediction$value
-  } else if (plpModel$model$finalMapping == "logistic") {
+  } else if (plpModel$model$mapping == "logistic") {
     prediction$value <- 1 / (1 + exp(-prediction$value))
-  } else if (plpModel$model$finalMapping == "square") {
+  } else if (plpModel$model$mapping == "square") {
     prediction$value <- prediction$value^2
-  } else if (plpModel$model$finalMapping == "exponential") {
+  } else if (plpModel$model$mapping == "exponential") {
     prediction$value <- exp(prediction$value)
   }
   
@@ -66,48 +146,4 @@ predictGlm <- function(plpModel, data, cohort) {
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Prediction took ", signif(delta, 3), " ", attr(delta, "units"))
   return(prediction)
-}
-
-#' createGlmModel
-#'
-#' @description
-#' Create a generalized linear model that can be used in the 
-#' PatientLevelPrediction package.
-#' @param coefficients A dataframe containing two columns, coefficients and
-#' covariateId, both of type numeric. The covariateId column must contain
-#' valid covariateIds that match those used in the \code{FeatureExtraction}
-#' package.
-#' @param intercept A numeric value representing the intercept of the model.
-#' @param finalMapping A string representing the final mapping from the 
-#' linear predictors to outcome probabilities. For generalized linear models
-#' this is the inverse of the link function. Supported values is only
-#' "logistic" for logistic regression model at the moment. 
-#' @return A model object containing the model (Coefficients and intercept)
-#' and the prediction function.
-#' @export
-createGlmModel <- function(coefficients,
-                           intercept = 0,
-                           finalMapping = "logistic") {
-  checkIsClass(coefficients, c("data.frame"))
-  if (!all(c("covariateId", "coefficient") %in% colnames(coefficients))) {
-    stop("coefficients must contain columns covariateId and coefficient")
-  }
-  checkIsClass(coefficients$covariateId, c("numeric"))
-  checkIsClass(coefficients$coefficient, c("numeric"))
-  checkHigherEqual(coefficients$covariateId, 0)
-  checkIsClass(intercept, c("numeric"))
-
-  checkIsClass(finalMapping, c("character"))
-  if (finalMapping != "logistic") {
-    stop("finalMapping must be 'logistic'")
-  }
-
-  plpModel <- list(
-    intercept = intercept,
-    coefficients = coefficients,
-    finalMapping = finalMapping,
-    predictionFunction = "PatientLevelPrediction::predictGlm"
-  )
-  plpModel$modelType <- "GLM"
-  return(plpModel)
 }

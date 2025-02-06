@@ -20,3 +20,10 @@ https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281
 \details{
 Calculate the Integrated Calibration Index
 }
+\examples{
+prediction <- data.frame(rowId = 1:100, 
+                        outcomeCount = stats::rbinom(1:100, 1, prob=0.5),
+                        value = runif(100), 
+                        evaluation = rep("Train", 100))
+ici(prediction)
+}

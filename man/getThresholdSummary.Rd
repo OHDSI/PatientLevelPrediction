@@ -4,7 +4,11 @@
 \alias{getThresholdSummary}
 \title{Calculate all measures for sparse ROC}
 \usage{
-getThresholdSummary(prediction, predictionType, typeColumn = "evaluation")
+getThresholdSummary(
+  prediction,
+  predictionType = "binary",
+  typeColumn = "evaluation"
+)
 }
 \arguments{
 \item{prediction}{A prediction object}
@@ -22,4 +26,12 @@ Calculate all measures for sparse ROC
 \details{
 Calculates the TP, FP, TN, FN, TPR, FPR, accuracy, PPF, FOR and Fmeasure
 from a prediction object
+}
+\examples{
+prediction <- data.frame(rowId = 1:100, 
+                         outcomeCount = stats::rbinom(1:100, 1, prob=0.5),
+                         value = runif(100), 
+                         evaluation = rep("Train", 100))
+summary <- getThresholdSummary(prediction)
+str(summary)
 }

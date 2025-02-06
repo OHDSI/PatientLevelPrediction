@@ -14,9 +14,22 @@ MapIds(covariateData, cohort = NULL, mapping = NULL)
 \item{mapping}{A pre defined mapping to use}
 }
 \value{
-a new covariateData object with remapped covariate and row ids
+a new \code{covariateData} object with remapped covariate and row ids
 }
 \description{
 this functions takes covariate data and a cohort/population and remaps
 the covariate and row ids, restricts to pop and saves/creates mapping
+}
+\examples{
+covariateData <- Andromeda::andromeda(
+  covariates = data.frame(rowId = c(1, 3, 5, 7, 9), 
+                          covariateId = c(10, 20, 10, 10, 20),
+                          covariateValue = c(1, 1, 1, 1, 1)),
+  covariateRef = data.frame(covariateId = c(10, 20), 
+                              covariateNames = c("covariateA", 
+                                                 "covariateB"),
+                              analysisId = c(1, 1)))
+mappedData <- MapIds(covariateData)
+# columnId and rowId are now starting from 1 and are consecutive
+mappedData$covariates
 }

@@ -1,8 +1,8 @@
 Package: PatientLevelPrediction
 Type: Package
 Title: Developing Patient Level Prediction Models Using the Observational Medical Outcomes Partnership Common Data Model
-Version: 6.3.9.9999
-Date: 2024-10-10
+Version: 6.4.0
+Date: 2025-02-05
 Authors@R: c(
     person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),
@@ -15,7 +15,7 @@ Description: A user friendly way to create patient level prediction models using
     cohort of interest and an outcome of interest, the package can use data in the
     OMOP Common Data Model to build a large set of features. These features can then
     be used to fit a predictive model with a number of machine learning algorithms.
-    Several performance measures are implemented for model evaluation.
+    This is further described in J. Reps et al <doi:10.1093/jamia/ocy032>. 
 License: Apache License 2.0
 URL: https://ohdsi.github.io/PatientLevelPrediction/, https://github.com/OHDSI/PatientLevelPrediction
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues
@@ -67,3 +67,4 @@ Suggests:
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)

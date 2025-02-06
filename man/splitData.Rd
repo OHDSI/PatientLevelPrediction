@@ -2,23 +2,23 @@
 % Please edit documentation in R/DataSplitting.R
 \name{splitData}
 \alias{splitData}
-\title{Split the plpData into test/train sets using a splitting settings of class 
+\title{Split the plpData into test/train sets using a splitting settings of class
 \code{splitSettings}}
 \usage{
 splitData(
   plpData = plpData,
   population = population,
-  splitSettings = splitSettings
+  splitSettings = createDefaultSplitSetting(splitSeed = 42)
 )
 }
 \arguments{
-\item{plpData}{An object of type \code{plpData} - the patient level 
+\item{plpData}{An object of type \code{plpData} - the patient level
 prediction data extracted from the CDM.}
 
-\item{population}{The population created using \code{createStudyPopulation} 
+\item{population}{The population created using \code{createStudyPopulation}
 that define who will be used to develop the model}
 
-\item{splitSettings}{An object of type \code{splitSettings} specifying the 
+\item{splitSettings}{An object of type \code{splitSettings} specifying the
 split - the default can be created using \code{createDefaultSplitSetting}}
 }
 \value{
@@ -26,21 +26,35 @@ Returns a list containing the training data (Train) and optionally the test
 data (Test). Train is an Andromeda object containing
 \itemize{\item covariates: a table (rowId, covariateId, covariateValue)
 containing the covariates for each data point in the train data
-         \item covariateRef: a table with the covariate information
-         \item labels: a table (rowId, outcomeCount, ...) for each data point
+\item covariateRef: a table with the covariate information
+\item labels: a table (rowId, outcomeCount, ...) for each data point
 in the train data (outcomeCount is the class label)
-         \item folds: a table (rowId, index) specifying which training 
+\item folds: a table (rowId, index) specifying which training
 fold each data point is in.
-         }
+}
 Test is an Andromeda object containing
 \itemize{\item covariates: a table (rowId, covariateId, covariateValue)
 containing the covariates for each data point in the test data
-         \item covariateRef: a table with the covariate information
-         \item labels: a table (rowId, outcomeCount, ...) for each data
+\item covariateRef: a table with the covariate information
+\item labels: a table (rowId, outcomeCount, ...) for each data
 point in the test data (outcomeCount is the class label)
-         }
+}
 }
 \description{
-Split the plpData into test/train sets using a splitting settings of class 
+Split the plpData into test/train sets using a splitting settings of class
 \code{splitSettings}
+}
+\examples{
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+population <- createStudyPopulation(plpData)
+splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
+                                           trainFraction = 0.50, nfold = 5)
+data = splitData(plpData, population, splitSettings)
+# test data should be ~500 rows (changes because of study population)
+nrow(data$Test$labels)
+# train data should be ~500 rows
+nrow(data$Train$labels)
+# should be five fold in the train data
+length(unique(data$Train$folds$index))
 }

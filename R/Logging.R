@@ -32,8 +32,10 @@
 #' @param timeStamp                        If TRUE a timestamp will be added to each logging statement. Automatically switched on for TRACE level.
 #' @param logName                          A string reference for the logger
 #' @return
-#' An object of class \code{logSettings}
+#' An object of class \code{logSettings} containing the settings for the logger
 #' @examples
+#' # create a log settings object with DENUG verbosity, timestamp and log name 
+#' # "runPlp Log". This needs to be passed to `runPlp`.
 #' createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName = "runPlp Log")
 #' @export
 createLogSettings <- function(

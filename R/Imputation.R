@@ -25,7 +25,12 @@
 #' Currently only "pmm" is supported with the following settings:
 #' - k: The number of donors to use for matching
 #' - iterations: The number of iterations to use for imputation
-#' @return The settings for the single imputer of class `featureEngineeringSettings`
+#' @return The settings for the iterative imputer of class `featureEngineeringSettings`
+#' @examples
+#' # create imputer to impute values with missingness less than 30% using 
+#' # predictive mean matching in 5 iterations with 5 donors
+#' createIterativeImputer(missingThreshold = 0.3, method = "pmm",
+#'                        methodSettings = list(pmm = list(k = 5, iterations = 5)))
 #' @export
 createIterativeImputer <- function(missingThreshold = 0.3,
                                    method = "pmm",
@@ -69,6 +74,10 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' @param method The method to use for imputation, either "mean" or "median"
 #' @param missingThreshold The threshold for missing values to be imputed vs removed
 #' @return The settings for the single imputer of class `featureEngineeringSettings`
+#' @examples
+#' # create imputer to impute values with missingness less than 10% using the median
+#' # of observed values
+#' createSimpleImputer(method = "median", missingThreshold = 0.10)
 #' @export
 createSimpleImputer <- function(method = "mean",
                                 missingThreshold = 0.3) {
@@ -107,6 +116,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       folds = trainData$foldsa,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -184,6 +194,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       folds = trainData$foldsa,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData$covariateData) <- "CovariateData"
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
@@ -268,6 +279,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -322,6 +334,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData$covariateData) <- "CovariateData"
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -600,10 +613,13 @@ pmmFit <- function(data, k = 5) {
 pmmPredict <- function(data, k = 5, imputer) {
   data$coefficients <- imputer$coefficients
   predictionMissing <- data$xMiss %>%
-    dplyr::inner_join(data$coefficients, by = "covariateId") %>%
+    dplyr::left_join(data$coefficients, by = "covariateId") %>%
     dplyr::mutate(values = .data$covariateValue * .data$values) %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise(value = sum(.data$values, na.rm = TRUE)) %>%
+    # rowId without any of nonzero coefficient will have NA
+    # and should use only intercept for prediction
+    dplyr::mutate(value = ifelse(is.na(.data$value), 0, .data$value)) %>%
     dplyr::select("rowId", "value")
   predictionMissing <- as.data.frame(predictionMissing)
   if (length(predictionMissing$value) == 0) {

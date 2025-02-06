@@ -23,12 +23,12 @@ setLassoLogisticRegression(
 
 \item{seed}{An option to add a seed when training the model}
 
-\item{includeCovariateIds}{a set of covariate IDS to limit the analysis to}
+\item{includeCovariateIds}{a set of covariateIds to limit the analysis to}
 
-\item{noShrinkage}{a set of covariates whcih are to be forced to be includedin
-in the final model. default is the intercept}
+\item{noShrinkage}{a set of covariates whcih are to be forced to be included in
+in the final model. Default is the intercept}
 
-\item{threads}{An option to set number of threads when training model}
+\item{threads}{An option to set number of threads when training model.}
 
 \item{forceIntercept}{Logical: Force intercept coefficient into prior}
 
@@ -36,21 +36,21 @@ in the final model. default is the intercept}
 
 \item{lowerLimit}{Numeric: Lower prior variance limit for grid-search}
 
-\item{tolerance}{Numeric: maximum relative change in convergence criterionfrom
+\item{tolerance}{Numeric: maximum relative change in convergence criterion from
 from successive iterations to achieve convergence}
 
-\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt 
+\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt
 before returning a failed-to-converge error}
 
-\item{priorCoefs}{Use coefficients from a previous model as starting 
-points for model fit (transfer learning}
+\item{priorCoefs}{Use coefficients from a previous model as starting
+points for model fit (transfer learning)}
 }
 \value{
-`modelSettings` object
+\code{modelSettings} object
 }
 \description{
 Create modelSettings for lasso logistic regression
 }
 \examples{
-modelLasso <- setLassoLogisticRegression()
+modelLasso <- setLassoLogisticRegression(seed=42)
 }

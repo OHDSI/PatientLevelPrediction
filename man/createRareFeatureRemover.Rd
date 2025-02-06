@@ -16,3 +16,27 @@ An object of class \code{featureEngineeringSettings}
 \description{
 Create the settings for removing rare features
 }
+\examples{
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+# create a rare feature remover that removes features that are present in less
+# than 1\% of the population
+rareFeatureRemover <- createRareFeatureRemover(threshold = 0.01)
+plpData <- getEunomiaPlpData()
+analysisId <- "rareFeatureRemover"
+saveLocation <- file.path(tempdir(), analysisId)
+results <- runPlp(
+  plpData = plpData,
+  featureEngineeringSettings = rareFeatureRemover,
+  outcomeId = 3,
+ executeSettings = createExecuteSettings(
+   runModelDevelopment = TRUE,
+   runSplitData = TRUE,
+   runFeatureEngineering = TRUE),
+ saveDirectory = saveLocation,
+ analysisId = analysisId)
+# clean up 
+unlink(saveLocation, recursive = TRUE)
+} 
+\dontshow{\}) # examplesIf}
+}

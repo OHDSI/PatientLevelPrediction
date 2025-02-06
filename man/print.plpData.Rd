@@ -17,3 +17,9 @@ A message describing the object
 \description{
 Print a plpData object
 }
+\examples{
+ 
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=10)
+print(plpData)
+}

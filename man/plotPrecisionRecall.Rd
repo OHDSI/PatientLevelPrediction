@@ -32,3 +32,16 @@ Plot the precision-recall curve using the sparse thresholdSummary data frame
 \details{
 Create a plot showing the precision-recall curve using the sparse thresholdSummary data frame
 }
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotPrecisionRecall")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotPrecisionRecall(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

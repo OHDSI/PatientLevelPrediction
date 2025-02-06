@@ -82,7 +82,7 @@ test_that("createExecuteSettings", {
   }
   runSplitData <- getTF()
   runSampleData <- getTF()
-  runfeatureEngineering <- getTF()
+  runFeatureEngineering <- getTF()
   runPreprocessData <- getTF()
   runModelDevelopment <- getTF()
   runCovariateSummary <- getTF()
@@ -90,7 +90,7 @@ test_that("createExecuteSettings", {
   executeSettings <- createExecuteSettings(
     runSplitData = runSplitData,
     runSampleData = runSampleData,
-    runfeatureEngineering = runfeatureEngineering,
+    runFeatureEngineering = runFeatureEngineering,
     runPreprocessData = runPreprocessData,
     runModelDevelopment = runModelDevelopment,
     runCovariateSummary = runCovariateSummary
@@ -99,7 +99,7 @@ test_that("createExecuteSettings", {
   expect_s3_class(executeSettings, "executeSettings")
   expect_equal(executeSettings$runSplitData, runSplitData)
   expect_equal(executeSettings$runSampleData, runSampleData)
-  expect_equal(executeSettings$runfeatureEngineering, runfeatureEngineering)
+  expect_equal(executeSettings$runFeatureEngineering, runFeatureEngineering)
   expect_equal(executeSettings$runPreprocessData, runPreprocessData)
   expect_equal(executeSettings$runModelDevelopment, runModelDevelopment)
   expect_equal(executeSettings$runCovariateSummary, runCovariateSummary)
@@ -108,7 +108,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = 12,
       runSampleData = runSampleData,
-      runfeatureEngineering = runfeatureEngineering,
+      runFeatureEngineering = runFeatureEngineering,
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
@@ -119,7 +119,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
       runSampleData = 12,
-      runfeatureEngineering = runfeatureEngineering,
+      runFeatureEngineering = runFeatureEngineering,
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
@@ -130,7 +130,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
       runSampleData = runSampleData,
-      runfeatureEngineering = 12,
+      runFeatureEngineering = 12,
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
@@ -141,7 +141,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
       runSampleData = runSampleData,
-      runfeatureEngineering = runfeatureEngineering,
+      runFeatureEngineering = runFeatureEngineering,
       runPreprocessData = 12,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
@@ -152,7 +152,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
       runSampleData = runSampleData,
-      runfeatureEngineering = runfeatureEngineering,
+      runFeatureEngineering = runFeatureEngineering,
       runPreprocessData = runPreprocessData,
       runModelDevelopment = 12,
       runCovariateSummary = runCovariateSummary
@@ -163,7 +163,7 @@ test_that("createExecuteSettings", {
     executeSettings <- createExecuteSettings(
       runSplitData = runSplitData,
       runSampleData = runSampleData,
-      runfeatureEngineering = runfeatureEngineering,
+      runFeatureEngineering = runFeatureEngineering,
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = 12
@@ -178,7 +178,7 @@ test_that("createDefaultExecuteSettings", {
   expect_s3_class(executeSettings, "executeSettings")
   expect_equal(executeSettings$runSplitData, TRUE)
   expect_equal(executeSettings$runSampleData, FALSE)
-  expect_equal(executeSettings$runfeatureEngineering, FALSE)
+  expect_equal(executeSettings$runFeatureEngineering, FALSE)
   expect_equal(executeSettings$runPreprocessData, TRUE)
   expect_equal(executeSettings$runModelDevelopment, TRUE)
   expect_equal(executeSettings$runCovariateSummary, TRUE)

@@ -27,8 +27,17 @@
 #'                                         data extracted from the CDM.
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted or a cohort without the outcome known
 #' @param timepoint                        The timepoint to predict risk (survival models only)
-#' @return
-#' A dataframe containing the prediction for each person in the population with an attribute metaData containing prediction details.
+#' @return A data frame containing the predicted risk values
+#' @examples
+#' coefficients <- data.frame(
+#'   covariateId = c(1002),
+#'   coefficient = c(0.05))
+#' model <- createGlmModel(coefficients, intercept = -2.5)
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=50)
+#' prediction <- predictPlp(model, plpData, plpData$cohorts)
+#' # see the predicted risk values
+#' head(prediction)
 #' @export
 predictPlp <- function(plpModel, plpData, population, timepoint) {
   start <- Sys.time()

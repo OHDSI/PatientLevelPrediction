@@ -31,12 +31,11 @@
 #' @param isUnbalance       This parameter cannot be used at the same time with scalePosWeight, choose only one of them. While enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities.
 #' @param seed              An option to add a seed when training the final model
 #'
-#' @examples
-#' model.lightgbm <- setLightGBM(
+#' @examplesIf rlang::is_installed("lightgbm")
+#' modelLightGbm <- setLightGBM(
 #'   numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
 #'   minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
 #' )
-#'
 #' @export
 setLightGBM <- function(nthread = 20,
                         earlyStopRound = 25,

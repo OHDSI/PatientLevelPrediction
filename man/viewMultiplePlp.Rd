@@ -19,3 +19,29 @@ open a local shiny app for viewing the result of a multiple PLP analyses
 Opens a shiny app for viewing the results of the models from various T,O, Tar and settings
 settings.
 }
+\examples{
+\dontshow{if (rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+connectionDetails <- Eunomia::getEunomiaConnectionDetails()
+Eunomia::createCohorts(connectionDetails)
+databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,
+                                          cdmDatabaseSchema = "main",
+                                          cdmDatabaseName = "Eunomia",
+                                          cdmDatabaseId = "1",
+                                          targetId = 1,
+                                          outcomeIds = 3)
+modelDesign <- createModelDesign(targetId = 1, 
+                                 outcomeId = 3, 
+                                 modelSettings = setLassoLogisticRegression())
+saveLoc <- file.path(tempdir(), "viewMultiplePlp", "development")
+runMultiplePlp(databaseDetails = databaseDetails, modelDesignList = list(modelDesign),
+               saveDirectory = saveLoc)
+# view result files
+dir(saveLoc, recursive = TRUE)
+# open shiny app
+viewMultiplePlp(analysesLocation = saveLoc)
+# clean up, shiny app can't be opened after the following has been run
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
+}

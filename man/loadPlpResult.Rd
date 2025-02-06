@@ -10,11 +10,24 @@ loadPlpResult(dirPath)
 \item{dirPath}{The directory where the evaluation was saved}
 }
 \value{
-The runPlp object
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       The runPlp object
+}\if{html}{\out{</div>}}
 }
 \description{
 Loads the evalaution dataframe
 }
 \details{
 Loads the evaluation
+}
+\examples{
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n = 1000)
+saveLoc <- file.path(tempdir(), "loadPlpResult")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+savePlpResult(results, saveLoc)
+loadedResults <- loadPlpResult(saveLoc)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
 }

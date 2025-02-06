@@ -46,6 +46,11 @@ checkSklearn <- function() {
 
 #' Create a temporary model location
 #' @return A string for the location of the temporary model location
+#' @examples
+#' modelLoc <- createTempModelLoc()
+#' dir.exists(modelLoc)
+#' # clean up
+#' unlink(modelLoc, recursive = TRUE)
 #' @export
 createTempModelLoc <- function() {
   repeat {
@@ -94,7 +99,11 @@ listAppend <- function(a, b) {
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
 #' @param condaPythonVersion String, Python version to use when creating a conda environment
-#' @return hidden location of the created conda or virtual python environment
+#' @return location of the created conda or virtual python environment
+#' @examples
+#' \dontrun{ \dontshow{ # don't modify environment in examples }
+#'  configurePython(envname="PLP", envtype="conda")
+#' }
 #' @export
 configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11") {
   if (is.null(envtype)) {
@@ -149,6 +158,11 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
 #' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
 #'
 #' @return A string indicating the which python environment will be used
+#' @examples
+#' \dontrun{ \dontshow{ # don't modify environment in examples }
+#' # create a conda environment named PLP
+#' configurePython(envname="PLP", envtype="conda")
+#' }
 #' @export
 setPythonEnvironment <- function(envname = "PLP", envtype = NULL) {
   if (is.null(envtype)) {

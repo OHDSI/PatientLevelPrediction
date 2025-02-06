@@ -20,3 +20,6 @@ Create the settings for defining any feature engineering that will be done
 \details{
 Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
 }
+\examples{
+createFeatureEngineeringSettings(type = "none")
+}

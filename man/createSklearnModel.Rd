@@ -17,31 +17,31 @@ createSklearnModel(
 \item{modelLocation}{The location of the folder that contains the model as
 model.pkl}
 
-\item{covariateMap}{A data.frame with the columns: columnId and covariateId. 
-`covariateId` from FeatureExtraction is the standard OHDSI covariateId.
-`columnId` is the column location the model expects that covariate to be in.
-For example, if you had a column called 'age' in your model and this was the 
-3rd column when fitting the model, then the values for columnId would be 3, 
+\item{covariateMap}{A data.frame with the columns: columnId and covariateId.
+\code{covariateId} from FeatureExtraction is the standard OHDSI covariateId.
+\code{columnId} is the column location the model expects that covariate to be in.
+For example, if you had a column called 'age' in your model and this was the
+3rd column when fitting the model, then the values for columnId would be 3,
 covariateId would be 1002 (the covariateId for age in years) and}
 
 \item{covariateSettings}{The settings for the standardized covariates}
 
-\item{populationSettings}{The settings for the population, this includes the 
+\item{populationSettings}{The settings for the population, this includes the
 time-at-risk settings and inclusion criteria.}
 
 \item{isPickle}{If the model should be saved as a pickle set this to TRUE if
 it should be saved as json set this to FALSE.}
 }
 \value{
-An object of class plpModel, this is a list that contains: 
-       model (the location of the model.pkl),
-       preprocessing (settings for mapping the covariateIds to the model 
-                      column mames), 
-       modelDesign (specification of the model design), 
-       trainDetails (information about the model fitting) and 
-       covariateImportance.  
+An object of class plpModel, this is a list that contains:
+model (the location of the model.pkl),
+preprocessing (settings for mapping the covariateIds to the model
+column mames),
+modelDesign (specification of the model design),
+trainDetails (information about the model fitting) and
+covariateImportance.
 
-You can use the output as an input in PatientLevelPrediction::predictPlp to 
+You can use the output as an input in PatientLevelPrediction::predictPlp to
 apply the model and calculate the risk for patients.
 }
 \description{
@@ -49,9 +49,9 @@ Plug an existing scikit learn python model into the
 PLP framework
 }
 \details{
-This function lets users add an existing scikit learn model that is saved as 
-model.pkl into PLP format.  covariateMap is a mapping between standard 
-covariateIds and the model columns. The user also needs to specify the 
-covariate settings and population settings as these are used to determine 
+This function lets users add an existing scikit learn model that is saved as
+model.pkl into PLP format.  covariateMap is a mapping between standard
+covariateIds and the model columns. The user also needs to specify the
+covariate settings and population settings as these are used to determine
 the standard PLP model design.
 }

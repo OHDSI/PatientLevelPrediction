@@ -23,7 +23,7 @@ plotNetBenefit(
 
 \item{fileName}{Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.}
 
-\item{evalType}{Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted}
+\item{evalType}{Which evaluation type to plot for. For example \code{Test}, \code{Train}. If NULL everything is plotted}
 
 \item{ylim}{The y limits for the plot, if NULL the limits are calculated from the data}
 
@@ -34,4 +34,17 @@ A list of ggplot objects or a single ggplot object if only one evaluation type i
 }
 \description{
 Plot the net benefit
+}
+\examples{
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ \dontshow{ # takes too long }
+data("simulationProfile")
+plpData <- simulatePlpData(simulationProfile, n=1000)
+saveLoc <- file.path(tempdir(), "plotNetBenefit")
+results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+plotNetBenefit(results)
+# clean up
+unlink(saveLoc, recursive = TRUE)
+}
+\dontshow{\}) # examplesIf}
 }

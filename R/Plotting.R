@@ -30,8 +30,12 @@
 #' @param yLabel              (string) The label for the y-axis
 #'
 #' @return
-#' TRUE if it ran, produces a plot
-#'
+#' A `ggsurvplot` object
+#' @examplesIf rlang::is_installed("survminer")
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
+#' print(plotObject)
 #' @export
 outcomeSurvivalPlot <- function(
     plpData,
@@ -123,6 +127,16 @@ outcomeSurvivalPlot <- function(
 #' @return
 #' TRUE if it ran, plots are saved in the specified directory
 #'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotPlp")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotPlp(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotPlp <- function(
     plpResult,
@@ -330,7 +344,16 @@ plotPlp <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotSparseRoc")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotSparseRoc(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotSparseRoc <- function(
     plpResult,
@@ -398,7 +421,16 @@ plotSparseRoc <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotPredictedPDF")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotPredictedPDF(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotPredictedPDF <- function(
     plpResult,
@@ -501,7 +533,16 @@ plotPredictedPDF <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotPreferencePDF")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotPreferencePDF(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotPreferencePDF <- function(
     plpResult,
@@ -604,7 +645,16 @@ plotPreferencePDF <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotPrecisionRecall")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotPrecisionRecall(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotPrecisionRecall <- function(
     plpResult,
@@ -675,7 +725,16 @@ plotPrecisionRecall <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotF1Measure")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotF1Measure(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotF1Measure <- function(
     plpResult,
@@ -736,7 +795,16 @@ plotF1Measure <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotDemographicSummary")
+#' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotDemographicSummary(plpResult)
+#' # clean up 
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotDemographicSummary <- function(
     plpResult,
@@ -873,7 +941,16 @@ plotDemographicSummary <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotSparseCalibration")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotSparseCalibration(results)
+#' # clean up 
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotSparseCalibration <- function(
     plpResult,
@@ -960,7 +1037,16 @@ plotSparseCalibration <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotSparseCalibration2")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotSparseCalibration2(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotSparseCalibration2 <- function(
     plpResult,
@@ -1038,6 +1124,25 @@ plotSparseCalibration2 <- function(
 #' @return
 #' A ggplot object.
 #'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' # generate prediction dataaframe with 1000 patients
+#' predictedRisk <- stats::runif(1000)
+#' # overconfident for high risk patients
+#' actualRisk <- ifelse(predictedRisk < 0.5, predictedRisk, 0.5 + 0.5 * (predictedRisk - 0.5))
+#' outcomeCount <- stats::rbinom(1000, 1, actualRisk)
+#' # mock data frame
+#' prediction <- data.frame(rowId = 1:1000,
+#'                          value = predictedRisk, 
+#'                          outcomeCount = outcomeCount,
+#'                          evaluationType = "Test")
+#' attr(prediction, "modelType") <- "binary"
+#' calibrationSummary <- getCalibrationSummary(prediction, "binary",
+#'                                             numberOfStrata = 10,
+#'                                             typeColumn = "evaluationType")
+#' plpResults <- list()
+#' plpResults$performanceEvaluation$calibrationSummary <- calibrationSummary
+#' plpResults$prediction <- prediction
+#' plotSmoothCalibration(plpResults)
 #' @export
 plotSmoothCalibration <- function(plpResult,
                                   smooth = "loess",
@@ -1318,6 +1423,16 @@ plotSmoothCalibration <- function(plpResult,
 #' @param ylim The y limits for the plot, if NULL the limits are calculated from the data
 #' @param xlim The x limits for the plot, if NULL the limits are calculated from the data
 #' @return A list of ggplot objects or a single ggplot object if only one evaluation type is plotted
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotNetBenefit")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotNetBenefit(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotNetBenefit <- function(plpResult,
                            typeColumn = "evaluation",
@@ -1627,7 +1742,7 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
   return(plot)
 }
 
-#' Plot the side-by-side boxplots of prediction distribution, by class#'
+#' Plot the side-by-side boxplots of prediction distribution, by class
 #' @details
 #' Create a plot showing the side-by-side boxplots of prediction distribution, by class
 #' #'
@@ -1641,7 +1756,16 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotPredictionDistribution")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotPredictionDistribution(results)
+#' # clean up
+#' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 plotPredictionDistribution <- function(
     plpResult,
@@ -1725,7 +1849,15 @@ plotPredictionDistribution <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' saveLoc <- file.path(tempdir(), "plotVariableScatterplot")
+#' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
+#' plotVariableScatterplot(results$covariateSummary)
+#' # clean up
+#' }
 #' @export
 plotVariableScatterplot <- function(
     covariateSummary,
@@ -1772,7 +1904,21 @@ plotVariableScatterplot <- function(
 #' @return
 #' A ggplot object. Use the \code{\link[ggplot2]{ggsave}} function to save to file in a different
 #' format.
-#'
+#' @examplesIf rlang::is_installed("ggplot2")
+#' \donttest{ \dontshow{ # takes too long }
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' population <- createStudyPopulation(plpData, outcomeId = 3)
+#' data <- splitData(plpData, population = population)
+#' strata <- data.frame(
+#'  rowId = c(data$Train$labels$rowId, data$Test$labels$rowId),
+#'  strataName = c(rep("Train", nrow(data$Train$labels)),
+#'                 rep("Test", nrow(data$Test$labels))))
+#' covariateSummary <- covariateSummary(plpData$covariateData, 
+#'                                      cohort = dplyr::select(population, "rowId"),
+#'  strata = strata, labels = population)
+#' plotGeneralizability(covariateSummary)
+#' }
 #' @export
 plotGeneralizability <- function(
     covariateSummary,
