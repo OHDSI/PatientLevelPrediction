@@ -15,3 +15,5 @@ _pkgdown.yml
 ^vignettes/Videos.Rmd
 ^doc$
 ^Meta$
+^CRAN-RELEASE$
+^cran-comments\.md$
