@@ -1,6 +1,6 @@
 Package: PatientLevelPrediction
 Type: Package
-Title: Developing Patient Level Prediction Models Using the Observational Medical Outcomes Partnership Common Data Model
+Title: Develop Clinical Prediction Models Using the Common Data Model
 Version: 6.4.0
 Date: 2025-02-05
 Authors@R: c(
