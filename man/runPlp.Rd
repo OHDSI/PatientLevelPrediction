@@ -19,7 +19,7 @@ runPlp(
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
   executeSettings = createDefaultExecuteSettings(),
-  saveDirectory = getwd()
+  saveDirectory = NULL
 )
 }
 \arguments{

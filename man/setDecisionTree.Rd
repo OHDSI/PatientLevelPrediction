@@ -48,7 +48,8 @@ a modelSettings object
 Create setting for the scikit-learn DecisionTree with python
 }
 \examples{
-\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 model <- setDecisionTree(criterion = list("gini"),
                          maxDepth = list(4),
                          minSamplesSplit = list(2),

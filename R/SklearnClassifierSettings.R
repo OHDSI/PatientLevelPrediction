@@ -24,7 +24,8 @@
 #' @param seed           A seed for the model
 #' @return a modelSettings object
 #' @examples
-#' \dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontrun{ 
 #' model <- setAdaBoost(nEstimators = list(10),
 #'                      learningRate = list(0.1),
 #'                      seed = 42)
@@ -123,7 +124,8 @@ AdaBoostClassifierInputs <- function(classifier, param) {
 #' @param seed                The random state seed
 #' @return a modelSettings object
 #' @examples
-#' \dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontrun{ 
 #' model <- setDecisionTree(criterion = list("gini"),
 #'                          maxDepth = list(4),
 #'                          minSamplesSplit = list(2),
@@ -383,7 +385,8 @@ DecisionTreeClassifierInputs <- function(classifier, param) {
 #' @return a modelSettings object
 #'
 #' @examples
-#' \dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it } 
+#' \dontrun{ 
 #' model <- setMLP(hiddenLayerSizes = list(c(20)), alpha=list(3e-4), seed = 42)
 #' }
 #' @export
@@ -542,7 +545,8 @@ MLPClassifierInputs <- function(classifier, param) {
 #'
 #' @return a modelSettings object
 #' @examples
-#' \dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it}
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontrun{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setNaiveBayes()
 #' analysisId <- "naiveBayes"
@@ -612,7 +616,8 @@ GaussianNBInputs <- function(classifier, param) {
 #' @param seed  A seed when training the final model
 #' @return a modelSettings object
 #' @examples
-#' \dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontrun{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setRandomForest(ntrees = list(100),
 #'                           maxDepth = list(4),
@@ -785,7 +790,8 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #' @param seed           A seed for the model
 #' @return a modelSettings object
 #' @examples
-#' \dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+#' \dontrun{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
 #' saveLoc <- file.path(tempdir(), "svm")

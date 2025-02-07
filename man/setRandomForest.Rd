@@ -67,7 +67,8 @@ a modelSettings object
 Create setting for random forest model using sklearn
 }
 \examples{
-\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 model <- setRandomForest(ntrees = list(100),
                           maxDepth = list(4),

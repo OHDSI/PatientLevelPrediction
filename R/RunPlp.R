@@ -113,10 +113,14 @@ runPlp <- function(
     logName = "runPlp Log"
     ),
   executeSettings = createDefaultExecuteSettings(),
-  saveDirectory = getwd()
+  saveDirectory =  NULL
 ) {
   start <- Sys.time()
   
+  if (is.null(saveDirectory)) {
+    stop("Please provide a saveDirectory")
+  }
+
   # start log 
   analysisPath <- file.path(saveDirectory, analysisId)
   logSettings$saveDirectory <- analysisPath

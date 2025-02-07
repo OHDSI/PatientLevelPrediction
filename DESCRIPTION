@@ -11,12 +11,12 @@ Authors@R: c(
     person("Patrick", "Ryan", role = c("aut")),
     person("Peter", "Rijnbeek", role = c("aut")),
     person("Observational Health Data Science and Informatics", role = c("cph")))
-Description: A user friendly way to create patient level prediction models using the Observational 
-    Medical Outcomes Partnership Common Data Model. Given a
-    cohort of interest and an outcome of interest, the package can use data in the
-    Common Data Model to build a large set of features. These features can then
-    be used to fit a predictive model with a number of machine learning algorithms.
-    This is further described in <doi:9.1093/jamia/ocy032>. 
+Description: A user friendly way to create patient level prediction models using
+  the Observational Medical Outcomes Partnership Common Data Model. Given a cohort
+  of interest and an outcome of interest, the package can use data in the Common
+  Data Model to build a large set of features. These features can then be used to
+  fit a predictive model with a number of machine learning algorithms. This is
+  further described in Reps (2017) <doi:10.1093/jamia/ocy032>.
 License: Apache License 2.0
 URL: https://ohdsi.github.io/PatientLevelPrediction/, https://github.com/OHDSI/PatientLevelPrediction
 BugReports: https://github.com/OHDSI/PatientLevelPrediction/issues

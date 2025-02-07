@@ -45,6 +45,9 @@ setLightGBM(
 
 \item{seed}{An option to add a seed when training the final model}
 }
+\value{
+A list of settings that can be used to train a model with \code{runPlp}
+}
 \description{
 Create setting for gradient boosting machine model using lightGBM
 (https://github.com/microsoft/LightGBM/tree/master/R-package).

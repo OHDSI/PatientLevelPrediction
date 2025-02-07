@@ -101,7 +101,8 @@ listAppend <- function(a, b) {
 #' @param condaPythonVersion String, Python version to use when creating a conda environment
 #' @return location of the created conda or virtual python environment
 #' @examples
-#' \dontrun{ \dontshow{ # don't modify environment in examples }
+#' \dontshow{ # dontrun reason: don't modify environment in examples }
+#' \dontrun{ 
 #'  configurePython(envname="PLP", envtype="conda")
 #' }
 #' @export
@@ -159,8 +160,8 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
 #'
 #' @return A string indicating the which python environment will be used
 #' @examples
-#' \dontrun{ \dontshow{ # don't modify environment in examples }
-#' # create a conda environment named PLP
+#' \dontshow{ # dontrun reason: don't modify environment in examples }
+#' \dontrun{ #' # create a conda environment named PLP
 #' configurePython(envname="PLP", envtype="conda")
 #' }
 #' @export

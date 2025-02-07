@@ -514,7 +514,7 @@ lrResults <- runPlp(
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE
   ),
-  saveDirectory = file.path(getwd(), "singlePlp")
+  saveDirectory = file.path(tempdir(), "singlePlp")
 )
 ```
 
@@ -523,25 +523,25 @@ Under the hood the package will now use the [`Cyclops`](https://github.com/OHDSI
 You can save the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpModel(lrResults$model, dirPath = file.path(getwd(), "model"))
+savePlpModel(lrResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-plpModel <- loadPlpModel(file.path(getwd(), "model"))
+plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpResult(lrResults, location = file.path(getwd(), "lr"))
+savePlpResult(lrResults, location = file.path(tempdir(), "lr"))
 ```
 
 To load the full results structure use:
 
 ```{r tidy=TRUE,eval=FALSE}
-lrResults <- loadPlpResult(file.path(getwd(), "lr"))
+lrResults <- loadPlpResult(file.path(tempdir(), "lr"))
 ```
 
 \newpage
@@ -913,7 +913,7 @@ gbmResults <- runPlp(
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE
   ),
-  saveDirectory = file.path(getwd(), "singlePlpExample2")
+  saveDirectory = file.path(tempdir(), "singlePlpExample2")
 )
 ```
 
@@ -922,25 +922,25 @@ Under the hood the package will now use the R xgboost package to fit a a gradien
 You can save the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpModel(gbmResults$model, dirPath = file.path(getwd(), "model"))
+savePlpModel(gbmResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-plpModel <- loadPlpModel(file.path(getwd(), "model"))
+plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpResult(gbmResults, location = file.path(getwd(), "gbm"))
+savePlpResult(gbmResults, location = file.path(tempdir(), "gbm"))
 ```
 
 To load the full results structure use:
 
 ```{r tidy=TRUE,eval=FALSE}
-gbmResults <- loadPlpResult(file.path(getwd(), "gbm"))
+gbmResults <- loadPlpResult(file.path(file.path(tempdir(), "gbm"))
 ```
 
 \newpage
@@ -1038,7 +1038,7 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 To generate and save all the evaluation plots to a folder run the following code:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotPlp(lrResults, dirPath = getwd())
+plotPlp(lrResults, dirPath = file.path(tempdir(), "plots"))
 ```
 
 The plots are described in more detail in the next sections.
@@ -1197,7 +1197,7 @@ We recommend to always perform external validation, i.e. apply the final model o
 
 ```{r tidy=FALSE,eval=FALSE}
 # load the trained model
-plpModel <- loadPlpModel(getwd(), "model")
+plpModel <- loadPlpModel(file.path(tempdir(), "model"), "model")
 
 # add details of new database
 validationDatabaseDetails <- createDatabaseDetails()
@@ -1210,7 +1210,7 @@ externalValidateDbPlp(
   settings = createValidationSettings(
     recalibrate = "weakRecalibration"
   ),
-  outputFolder = getwd()
+  outputFolder = file.path(tempdir(), "validation")
 )
 ```
 
