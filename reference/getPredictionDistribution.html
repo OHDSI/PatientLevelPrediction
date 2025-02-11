@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculates the prediction distribution</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
       <div class="d-none name"><code>getPredictionDistribution.Rd</code></div>
     </div>
 
@@ -103,17 +103,17 @@ the mean and standard deviation per class</p>
 <span class="r-in"><span>                         evaluation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Train"</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">getPredictionDistribution</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   class PersonCount averagePredictedProbability StDevPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          48                   0.5471241                 0.3068856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          52                   0.4971234                 0.2977646</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          48                   0.4252816                 0.2997716</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          52                   0.5264230                 0.3040586</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MinPredictedProbability P05PredictedProbability P25PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0066707600              0.02998843               0.2367639</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.0004546265              0.03746040               0.2364466</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             0.003963875             0.006501341               0.2024474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             0.010248506             0.082913429               0.2658186</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MedianPredictedProbability P75PredictedProbability P95PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.6408440               0.8202945               0.9098819</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.5059827               0.7649538               0.9523072</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.3841630               0.6302162               0.8890166</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.4654906               0.8292939               0.9844527</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MaxPredictedProbability evaluation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9710433      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9879653      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9918727      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9905317      Train</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

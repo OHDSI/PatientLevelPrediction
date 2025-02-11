@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>predict using a logistic regression model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Glm.R" class="external-link"><code>R/Glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Glm.R" class="external-link"><code>R/Glm.R</code></a></small>
       <div class="d-none name"><code>predictGlm.Rd</code></div>
     </div>
 
@@ -104,23 +104,23 @@ population</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">predictGlm</span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0929 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.082 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2012-07-18              586             710</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2008-01-06               10             791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2012-08-15              833             981</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2011-06-20              505             129</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2010-06-22              942             726</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2007-09-17              733             580</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2008-04-14              831             275</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2007-11-13              356             934</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2008-11-25              212             512</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2011-04-27              746             149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2011-10-04              980             164</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2009-07-18              808             200</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1588      39   8507 0.3658644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          930      39   8532 0.3658644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1429      42   8507 0.4013123</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          370      33   8532 0.2994329</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1296      42   8507 0.4013123</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         1294      39   8507 0.3658644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          861      37   8507 0.3429895</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          944      41   8507 0.3893608</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1345      44   8532 0.4255575</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          654      39   8507 0.3658644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1106      40   8532 0.3775407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          933      38   8507 0.3543437</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
