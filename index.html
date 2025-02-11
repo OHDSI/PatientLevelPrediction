@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Developing Patient Level Prediction Models Using the Observational Medical Outcomes Partnership Common Data Model • PatientLevelPrediction</title>
+<title>Develop Clinical Prediction Models Using the Common Data Model • PatientLevelPrediction</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Developing Patient Level Prediction Models Using the Observational Medical Outcomes Partnership Common Data Model">
-<meta name="description" content="A user friendly way to create patient level prediction models using the OMOP (ObservationalMedical Outcomes Partnership) common data model. Given a cohort of interest and an outcome of interest, the package can use data in the OMOP Common Data Model to build a large set of features. These features can then be used to fit a predictive model with a number of machine learning algorithms. This is further described in J. Reps et al &lt;doi:10.1093/jamia/ocy032&gt;.">
-<meta property="og:description" content="A user friendly way to create patient level prediction models using the OMOP (ObservationalMedical Outcomes Partnership) common data model. Given a cohort of interest and an outcome of interest, the package can use data in the OMOP Common Data Model to build a large set of features. These features can then be used to fit a predictive model with a number of machine learning algorithms. This is further described in J. Reps et al &lt;doi:10.1093/jamia/ocy032&gt;.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Develop Clinical Prediction Models Using the Common Data Model">
+<meta name="description" content="A user friendly way to create patient level prediction models using the Observational Medical Outcomes Partnership Common Data Model. Given a cohort of interest and an outcome of interest, the package can use data in the Common Data Model to build a large set of features. These features can then be used to fit a predictive model with a number of machine learning algorithms. This is further described in Reps (2017) &lt;doi:10.1093/jamia/ocy032&gt;.">
+<meta property="og:description" content="A user friendly way to create patient level prediction models using the Observational Medical Outcomes Partnership Common Data Model. Given a cohort of interest and an outcome of interest, the package can use data in the Common Data Model to build a large set of features. These features can then be used to fit a predictive model with a number of machine learning algorithms. This is further described in Reps (2017) &lt;doi:10.1093/jamia/ocy032&gt;.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -71,17 +71,17 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="patientlevelpredicti">PatientLevelPredicti<a class="anchor" aria-label="anchor" href="#patientlevelpredicti"></a>
+<div class="page-header"><h1 id="patientlevelprediction">PatientLevelPrediction<a class="anchor" aria-label="anchor" href="#patientlevelprediction"></a>
 </h1></div>
 <p><a href="https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check+branch%3Amain" class="external-link"><img src="https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg" alt="Build Status"></a></p>
-<p>[<img src="https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main" alt="codecov.io"></p>
+<p><a href="https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main" class="external-link"><img src="https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=main" alt="codecov.io"></a></p>
 <p>PatientLevelPrediction is part of <a href="https://ohdsi.github.io/Hades/" class="external-link">HADES</a>.</p>
 </div>
 <div class="section level1">
 <h1 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h1>
 <p>PatientLevelPrediction is an R package for building and validating patient-level predictive models using data in the OMOP Common Data Model format.</p>
-<p>Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. <a href="https://academic.oup.com/jamia/article/25/8/969/4989437" class="external-link">Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data.</a> J Am Med Inform Assoc. 2018;25(8):969-975.</p>
+<p>Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. <a href="https://doi.org/10.1093/jamia/ocy032" class="external-link">Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data.</a> J Am Med Inform Assoc. 2018;25(8):969-975.</p>
 <p>The figure below illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.</p>
 <p><img src="articles/images/Figure1.avif"></p>
 <p>To define a prediction problem we have to define t=0 by a Target Cohort (T), the outcome we like to predict by an outcome cohort (O), and the time-at-risk (TAR). Furthermore, we have to make design choices for the model we like to develop, and determine the observational datasets to perform internal and external validation. This conceptual framework works for all type of prediction problems, for example those presented below (T=green, O=red).</p>
