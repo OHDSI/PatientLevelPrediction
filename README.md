@@ -1,7 +1,7 @@
 PatientLevelPredicti
 ======================
 
-[![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check)
+[![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check+branch%3Amain)
 
 [![codecov.io](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
 

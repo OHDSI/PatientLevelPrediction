@@ -241,7 +241,7 @@ overSampleData <- function(trainData, sampleSettings) {
 
       addTrainData$labels <- trainData$labels %>%
         dplyr::filter(.data$rowId %in% pplOfInterest) %>%
-        dplyr::mutate(newRowId = seq_len(nrow(.))) %>%
+        dplyr::mutate(newRowId = dplyr::row_number()) %>%
         dplyr::mutate(rowId = .data$newRowId + max(sampleTrainData$labels$rowId))
 
       addTrainData$folds <- addTrainData$folds %>%
@@ -256,14 +256,16 @@ overSampleData <- function(trainData, sampleSettings) {
         ) %>%
         dplyr::mutate(rowId = .data$newRowId) %>%
         dplyr::select(-"newRowId")
+      labels <- addTrainData$labels %>% dplyr::collect()
 
-      addTrainData$labels <- addTrainData$labels %>%
+      labels <- labels %>%
+        dplyr::collect() %>%
         dplyr::mutate(rowId = .data$newRowId) %>%
         dplyr::select(-"newRowId")
 
       sampleTrainData$labels <- dplyr::bind_rows(
         sampleTrainData$labels,
-        addTrainData$labels %>% dplyr::collect()
+        labels
       )
       sampleTrainData$folds <- dplyr::bind_rows(
         sampleTrainData$folds,
