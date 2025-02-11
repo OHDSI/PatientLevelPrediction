@@ -13,10 +13,10 @@ optionally squashes the features to a range -3 to 3
 existing split
 - Feature: Added a net benefit plot `plotNetBenefit`
 - Feature: Added timings that are printed to the log to most functions in the pipeline
-- Feature: Now a model trained with `scikit-learn` in python can be converted wit 
+- Feature: Now a model trained with `scikit-learn` in python can be converted with 
+`createSklearnModel` and used to predict on new data with the package
 - Feature: Added a convenience function `getEunomiaPlpData` to get some data
 in one line.
-`createSklearnModel` and used to predict on new data with the package
 - Docs: Added a new GIS example to the docs (thanks @jshoughtaling)
 - Docs: All exported functions (about 120) now have runnable examples. All examples
 are now conditinally executed if required. Shiny examples only executed in 
