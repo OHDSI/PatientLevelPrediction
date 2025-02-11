@@ -16,7 +16,8 @@ a sklearn python model object
 Loads sklearn python model from json
 }
 \examples{
-\dontrun{ \dontshow{ # requires python environment with sklearn }
+\dontshow{ # dontrun reason: requires python environment with sklearn }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
                                   minSamplesLeaf = list(1), maxFeatures = list(100))

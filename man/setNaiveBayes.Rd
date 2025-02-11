@@ -13,7 +13,8 @@ a modelSettings object
 Create setting for naive bayes model with python
 }
 \examples{
-\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it}
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 model <- setNaiveBayes()
 analysisId <- "naiveBayes"

@@ -21,8 +21,8 @@ Use the python environment created using configurePython()
 This function sets PatientLevelPrediction to use a python environment
 }
 \examples{
-\dontrun{ \dontshow{ # don't modify environment in examples }
-# create a conda environment named PLP
+\dontshow{ # dontrun reason: don't modify environment in examples }
+\dontrun{ #' # create a conda environment named PLP
 configurePython(envname="PLP", envtype="conda")
 }
 }

@@ -64,8 +64,11 @@ createLog <- function(
     verbosity = "INFO",
     timeStamp = FALSE,
     logName = "PLP Log",
-    saveDirectory = getwd(),
+    saveDirectory = NULL,
     logFileName = paste0("plpLog", as.Date(Sys.Date(), "%Y%m%d"), ".txt")) {
+  if (is.null(saveDirectory)) {
+    stop("saveDirectory for logging must be specified")
+  }
   createDir(saveDirectory)
 
   logFileName <- gsub("[[:punct:]]", "", logFileName)

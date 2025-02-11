@@ -85,7 +85,7 @@ createLearningCurve <- function(
     parallel = TRUE,
     cores = 4,
     modelSettings,
-    saveDirectory = getwd(),
+    saveDirectory = NULL,
     analysisId = "learningCurve",
     populationSettings = createStudyPopulationSettings(),
     splitSettings = createDefaultSplitSetting(),
@@ -106,6 +106,10 @@ createLearningCurve <- function(
       runModelDevelopment = TRUE,
       runCovariateSummary = FALSE
     )) {
+  if (is.null(saveDirectory)) {
+    stop("saveDirectory must be specified")
+  }
+
   if (is.null(analysisId)) {
     analysisId <- gsub(":", "", gsub("-", "", gsub(" ", "", Sys.time())))
   }

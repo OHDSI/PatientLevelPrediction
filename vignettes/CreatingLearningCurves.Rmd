@@ -50,7 +50,7 @@ Use the [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPredicti
 
 ```{r eval=FALSE}
 set.seed(1234)
-data(plpDataSimulationProfile)
+data(simulationProfile)
 sampleSize <- 12000
 plpData <- simulatePlpData(
   plpDataSimulationProfile,
@@ -103,7 +103,7 @@ learningCurve <- createLearningCurve(
   parallel = TRUE,
   cores = 4,
   modelSettings = modelSettings,
-  saveDirectory = getwd(),
+  saveDirectory = file.path(tempdir(), "learningCurve"),
   analysisId = "learningCurve",
   populationSettings = populationSettings,
   splitSettings = splitSettings,
@@ -160,7 +160,8 @@ Do note that running this demo can take a considerable amount of time (15 min on
 
 # Publication
 
-A publication titled 'How little data do we need for patient-level prediction?' uses the learning curve functionality in this package and can be accessed as preprint in the arXiv archives at <https://arxiv.org/abs/2008.07361>.
+A publication titled 'How little data do we need for patient-level prediction?' uses the learning curve functionality in this package and can be accessed at 
+<https://doi.org/10.1016/j.ijmedinf.2022.104762>.
 
 # Acknowledgments
 

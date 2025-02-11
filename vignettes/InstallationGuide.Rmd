@@ -21,7 +21,7 @@ Under Windows the OHDSI Patient Level Prediction (PLP) package requires installi
 
 -   R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is recommended)
 -   Rstudio (<https://posit.co/> )
--   Java (<https://www.java.com> )
+-   Java 
 -   RTools (<https://cran.r-project.org/bin/windows/Rtools/>)
 
 ## Mac/Linux Users
@@ -30,7 +30,7 @@ Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package requires in
 
 -   R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is recommended)
 -   Rstudio (<https://posit.co/> )
--   Java (<https://www.java.com> )
+-   Java 
 -   Xcode command line tools(run in terminal: xcode-select --install) [MAC USERS ONLY]
 
 # Installing the Package

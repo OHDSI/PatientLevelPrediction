@@ -80,8 +80,8 @@ createFeatureEngineeringSettings <- function(type = "none") {
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
-#' \dontrun{ \dontshow{ # requires python and scikit-learn }
-#' # create a feature selection that selects the 100 most associated features
+#' \dontshow{ # dontrun reason: requires python and scikit-learn }
+#' \dontrun{ #' # create a feature selection that selects the 100 most associated features
 #' featureSelector <- createUnivariateFeatureSelection(k = 100) 
 #' }
 #' @export
@@ -124,8 +124,8 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examples
-#' \dontrun{ \dontshow{ # requires python and scikit-learn }
-#' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+#' \dontshow{ # dontrun reason: requires python and scikit-learn }
+#' \dontrun{ #' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 #' }
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {

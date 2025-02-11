@@ -86,7 +86,8 @@ Create setting for neural network model with python's scikit-learn. For
 bigger models, consider using \code{DeepPatientLevelPrediction} package.
 }
 \examples{
-\dontrun{ \dontshow { # requires python's scikit-learn, checkSklearn() will error without it }
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it } 
+\dontrun{ 
 model <- setMLP(hiddenLayerSizes = list(c(20)), alpha=list(3e-4), seed = 42)
 }
 }

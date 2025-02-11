@@ -98,9 +98,13 @@ runMultiplePlp <- function(
       timeStamp = TRUE,
       logName = "runPlp Log"
     ),
-    saveDirectory = getwd(),
+    saveDirectory = NULL,
     sqliteLocation = file.path(saveDirectory, "sqlite")) {
   # input checks
+  if (is.null(saveDirectory)) {
+    stop("saveDirectory must be specified")
+  }
+
   checkIsClass(databaseDetails, c("databaseDetails"))
   checkIsClass(modelDesignList, c("list", "modelDesign"))
   checkIsClass(onlyFetchData, "logical")

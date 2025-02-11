@@ -10,7 +10,7 @@ externalValidateDbPlp(
   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
   settings = createValidationSettings(recalibrate = "weakRecalibration"),
   logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-  outputFolder = getwd()
+  outputFolder = NULL
 )
 }
 \arguments{
