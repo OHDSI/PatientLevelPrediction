@@ -80,7 +80,7 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
             <h4 data-toc-skip class="date">2025-02-11</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="d-none name"><code>BuildingPredictiveModels.Rmd</code></div>
     </div>
 
@@ -120,8 +120,8 @@ transparency. However, data structure heterogeneity and inconsistent
 terminologies still make collaboration and model sharing difficult as
 different researchers are often required to write new code to extract
 the data from their databases and may define variables differently.</p>
-<p>In our <a href="https://doi.org/10.1093/jamia/ocy032" class="external-link"><code>paper</code></a>, we
-propose a standardised framework for patient-level prediction that
+<p>In our <a href="https://academic.oup.com/jamia/article/25/8/969/4989437" class="external-link"><code>paper</code></a>,
+we propose a standardised framework for patient-level prediction that
 utilizes the OMOP Common Data Model (CDM) and standardized vocabularies,
 and describe the open-source software that we developed implementing the
 framework’s pipeline. The framework is the first to support existing
@@ -595,7 +595,7 @@ cohort.</li>
 <p>How do we fill this table according to our cohort definitions? There
 are two options for this:</p>
 <ol style="list-style-type: decimal">
-<li><p>use the interactive cohort builder tool in <a href="https://github.com/OHDSI/ATLAS" class="external-link">ATLAS</a> which can be used to
+<li><p>use the interactive cohort builder tool in <a href="https://www.github.com/OHDSI/ATLAS" class="external-link">ATLAS</a> which can be used to
 create cohorts based on inclusion criteria and will automatically
 populate this cohort table.</p></li>
 <li><p>write your own custom SQL statements to fill the cohort
@@ -1060,25 +1060,25 @@ and <code>modelSettings</code> to train and evaluate the model.</p>
 <span>    runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlp"</span><span class="op">)</span></span>
+<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlp"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Under the hood the package will now use the <a href="https://github.com/OHDSI/Cyclops" class="external-link"><code>Cyclops</code></a> package
-to fit a large-scale regularized regression using 74% of the data and
-will evaluate the model on the remaining 25%. A results data structure
-is returned containing information about the model, its performance
-etc.</p>
+<p>Under the hood the package will now use the <a href="https://www.github.com/OHDSI/Cyclops" class="external-link"><code>Cyclops</code></a>
+package to fit a large-scale regularized regression using 74% of the
+data and will evaluate the model on the remaining 25%. A results data
+structure is returned containing information about the model, its
+performance etc.</p>
 <p>You can save the model using:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpModel.html">savePlpModel</a></span><span class="op">(</span><span class="va">lrResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpModel.html">savePlpModel</a></span><span class="op">(</span><span class="va">lrResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>You can load the model using:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>You can also save the full results structure using:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpResult.html">savePlpResult</a></span><span class="op">(</span><span class="va">lrResults</span>, location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"lr"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpResult.html">savePlpResult</a></span><span class="op">(</span><span class="va">lrResults</span>, location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"lr"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>To load the full results structure use:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lrResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"lr"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">lrResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"lr"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1218,9 +1218,9 @@ cohort.</li>
 <p>How do we fill this table according to our cohort definitions? There
 are two options for this:</p>
 <ol style="list-style-type: decimal">
-<li><p>use the interactive cohort builder tool in <a href="https://github.com/OHDSI/ATLAS" class="external-link">ATLAS</a> which can be used to
-create cohorts based on inclusion criteria and will automatically
-populate this cohort table.</p></li>
+<li><p>use the interactive cohort builder tool in <a href="www.github.com/OHDSI/ATLAS">ATLAS</a> which can be used to create
+cohorts based on inclusion criteria and will automatically populate this
+cohort table.</p></li>
 <li><p>write your own custom SQL statements to fill the cohort
 table.</p></li>
 </ol>
@@ -1652,7 +1652,7 @@ and <code>modelSettings</code> to train and evaluate the model.</p>
 <span>    runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    runCovariateSummary <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlpExample2"</span><span class="op">)</span></span>
+<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"singlePlpExample2"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Under the hood the package will now use the R xgboost package to fit
 a a gradient boosting machine model using 75% of the data and will
@@ -1661,15 +1661,16 @@ returned containing information about the model, its performance
 etc.</p>
 <p>You can save the model using:</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpModel.html">savePlpModel</a></span><span class="op">(</span><span class="va">gbmResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpModel.html">savePlpModel</a></span><span class="op">(</span><span class="va">gbmResults</span><span class="op">$</span><span class="va">model</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>You can load the model using:</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>You can also save the full results structure using:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpResult.html">savePlpResult</a></span><span class="op">(</span><span class="va">gbmResults</span>, location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"gbm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/savePlpResult.html">savePlpResult</a></span><span class="op">(</span><span class="va">gbmResults</span>, location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"gbm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>To load the full results structure use:</p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a>gbmResults <span class="ot">&lt;-</span> <span class="fu">loadPlpResult</span>(<span class="fu">file.path</span>(<span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"gbm"</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">gbmResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpResult.html">loadPlpResult</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"gbm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -1785,7 +1786,7 @@ threshold and the corresponding sensitivity and specificity values.</p>
 <p>To generate and save all the evaluation plots to a folder run the
 following code:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotPlp.html">plotPlp</a></span><span class="op">(</span><span class="va">lrResults</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"plots"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotPlp.html">plotPlp</a></span><span class="op">(</span><span class="va">lrResults</span>, dirPath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The plots are described in more detail in the next sections.</p>
 <div style="page-break-after: always;"></div>
 <div class="section level3">
@@ -1952,7 +1953,7 @@ final model on as much new datasets as feasible and evaluate its
 performance.</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># load the trained model</span></span>
-<span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></span>
+<span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/loadPlpModel.html">loadPlpModel</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># add details of new database</span></span>
 <span><span class="va">validationDatabaseDetails</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDatabaseDetails.html">createDatabaseDetails</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -1965,7 +1966,7 @@ performance.</p>
 <span>  settings <span class="op">=</span> <span class="fu"><a href="../reference/createValidationSettings.html">createValidationSettings</a></span><span class="op">(</span></span>
 <span>    recalibrate <span class="op">=</span> <span class="st">"weakRecalibration"</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  outputFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"validation"</span><span class="op">)</span></span>
+<span>  outputFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>This will extract the new plpData from the specified schemas and
 cohort tables. It will then apply the same population settings and the
