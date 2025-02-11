@@ -10,7 +10,7 @@ createLearningCurve(
   parallel = TRUE,
   cores = 4,
   modelSettings,
-  saveDirectory = getwd(),
+  saveDirectory = NULL,
   analysisId = "learningCurve",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(),

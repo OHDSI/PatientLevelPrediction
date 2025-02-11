@@ -30,6 +30,7 @@
 #' @param scalePosWeight    Controls weight of positive class in loss - useful for imbalanced classes
 #' @param isUnbalance       This parameter cannot be used at the same time with scalePosWeight, choose only one of them. While enabling this should increase the overall performance metric of your model, it will also result in poor estimates of the individual class probabilities.
 #' @param seed              An option to add a seed when training the final model
+#' @return A list of settings that can be used to train a model with \code{runPlp}
 #'
 #' @examplesIf rlang::is_installed("lightgbm")
 #' modelLightGbm <- setLightGBM(

@@ -208,9 +208,12 @@ externalValidateDbPlp <- function(plpModel,
                                   validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
                                   settings = createValidationSettings(recalibrate = "weakRecalibration"),
                                   logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-                                  outputFolder = getwd()) {
+                                  outputFolder = NULL) {
   # Input checks
   # =======
+  if (is.null(outputFolder)) {
+    stop("outputFolder must be specified")
+  }
 
   checkIsClass(plpModel, "plpModel")
 

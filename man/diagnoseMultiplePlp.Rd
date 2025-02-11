@@ -12,7 +12,7 @@ diagnoseMultiplePlp(
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "diagnosePlp Log"),
-  saveDirectory = getwd()
+  saveDirectory = NULL
 )
 }
 \arguments{

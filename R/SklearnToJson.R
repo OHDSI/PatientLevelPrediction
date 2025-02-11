@@ -21,13 +21,16 @@
 #' @param     path  path to the saved model file
 #' @return    nothing, saves the model to the path as json
 #' @examples
-#' \dontrun{ \dontshow{ # requires python environment with sklearn }
+#' \dontshow{ # dontrun reason: requires python environment with sklearn }
+#' \dontrun{ 
 #' sklearn <- reticulate::import("sklearn", convert = FALSE)
 #' model <- sklearn$tree$DecisionTreeClassifier()
 #' model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
-#' saveLoc <- file.path(tempdir() "model.json")
+#' saveLoc <- file.path(tempdir(), "model.json")
 #' sklearnToJson(model, saveLoc)
+#' # the model.json is saved in the tempdir
 #' dir(tempdir())
+#' # clean up
 #' unlink(saveLoc)
 #' }
 #' @export
@@ -61,7 +64,8 @@ sklearnToJson <- function(model, path) {
 #' @return    a sklearn python model object
 #' @export
 #' @examples
-#' \dontrun{ \dontshow{ # requires python environment with sklearn }
+#' \dontshow{ # dontrun reason: requires python environment with sklearn }
+#' \dontrun{ 
 #' plpData <- getEunomiaPlpData()
 #' modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
 #'                                   minSamplesLeaf = list(1), maxFeatures = list(100))

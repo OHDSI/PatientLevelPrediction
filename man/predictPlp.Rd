@@ -28,10 +28,11 @@ The function applied the trained model on the plpData to make predictions
 \examples{
 coefficients <- data.frame(
   covariateId = c(1002),
-  coefficient = c(0.05))
+  coefficient = c(0.05)
+)
 model <- createGlmModel(coefficients, intercept = -2.5)
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=50)
+plpData <- simulatePlpData(simulationProfile, n = 50)
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 # see the predicted risk values
 head(prediction)

@@ -13,7 +13,7 @@ runMultiplePlp(
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
-  saveDirectory = getwd(),
+  saveDirectory = NULL,
   sqliteLocation = file.path(saveDirectory, "sqlite")
 )
 }

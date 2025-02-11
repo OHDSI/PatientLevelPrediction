@@ -35,7 +35,7 @@ Observational healthcare data, such as administrative claims and electronic heal
 
 The Transparent Reporting of a multivariable prediction model for [`Individual Prognosis Or Diagnosis (TRIPOD) statement`](https://www.equator-network.org/reporting-guidelines/tripod-statement/) provides clear recommendations for reporting prediction model development and validation and addresses some of the concerns related to transparency. However, data structure heterogeneity and inconsistent terminologies still make collaboration and model sharing difficult as different researchers are often required to write new code to extract the data from their databases and may define variables differently.
 
-In our [`paper`](https://academic.oup.com/jamia/article/25/8/969/4989437), we propose a standardised framework for patient-level prediction that utilizes the OMOP Common Data Model (CDM) and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
+In our [`paper`](https://doi.org/10.1093/jamia/ocy032), we propose a standardised framework for patient-level prediction that utilizes the OMOP Common Data Model (CDM) and standardized vocabularies, and describe the open-source software that we developed implementing the framework’s pipeline. The framework is the first to support existing best practice guidelines and will enable open dissemination of models that can be extensively validated across the network of OHDSI collaborators.
 
 Figure 1, illustrates the prediction problem we address. Among a population at risk, we aim to predict which patients at a defined moment in time (t = 0) will experience some outcome during a time-at-risk. Prediction is done using only information about the patients in an observation window prior to that moment in time.
 
@@ -165,7 +165,7 @@ For our study we need to know when a person enters the target and outcome cohort
 
 How do we fill this table according to our cohort definitions? There are two options for this:
 
-1)  use the interactive cohort builder tool in [ATLAS](https://www.github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
+1)  use the interactive cohort builder tool in [ATLAS](https://github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
 
 2)  write your own custom SQL statements to fill the cohort table.
 
@@ -514,34 +514,34 @@ lrResults <- runPlp(
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE
   ),
-  saveDirectory = file.path(getwd(), "singlePlp")
+  saveDirectory = file.path(tempdir(), "singlePlp")
 )
 ```
 
-Under the hood the package will now use the [`Cyclops`](https://www.github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 74% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
+Under the hood the package will now use the [`Cyclops`](https://github.com/OHDSI/Cyclops) package to fit a large-scale regularized regression using 74% of the data and will evaluate the model on the remaining 25%. A results data structure is returned containing information about the model, its performance etc.
 
 You can save the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpModel(lrResults$model, dirPath = file.path(getwd(), "model"))
+savePlpModel(lrResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-plpModel <- loadPlpModel(file.path(getwd(), "model"))
+plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpResult(lrResults, location = file.path(getwd(), "lr"))
+savePlpResult(lrResults, location = file.path(tempdir(), "lr"))
 ```
 
 To load the full results structure use:
 
 ```{r tidy=TRUE,eval=FALSE}
-lrResults <- loadPlpResult(file.path(getwd(), "lr"))
+lrResults <- loadPlpResult(file.path(tempdir(), "lr"))
 ```
 
 \newpage
@@ -588,7 +588,7 @@ For our study we need to know when a person enters the target and outcome cohort
 
 How do we fill this table according to our cohort definitions? There are two options for this:
 
-1)  use the interactive cohort builder tool in [ATLAS](www.github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
+1)  use the interactive cohort builder tool in [ATLAS](https://github.com/OHDSI/ATLAS) which can be used to create cohorts based on inclusion criteria and will automatically populate this cohort table.
 
 2)  write your own custom SQL statements to fill the cohort table.
 
@@ -913,7 +913,7 @@ gbmResults <- runPlp(
     runModelDevelopment = TRUE,
     runCovariateSummary = TRUE
   ),
-  saveDirectory = file.path(getwd(), "singlePlpExample2")
+  saveDirectory = file.path(tempdir(), "singlePlpExample2")
 )
 ```
 
@@ -922,25 +922,25 @@ Under the hood the package will now use the R xgboost package to fit a a gradien
 You can save the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpModel(gbmResults$model, dirPath = file.path(getwd(), "model"))
+savePlpModel(gbmResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ```{r tidy=TRUE,eval=FALSE}
-plpModel <- loadPlpModel(file.path(getwd(), "model"))
+plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ```{r tidy=TRUE,eval=FALSE}
-savePlpResult(gbmResults, location = file.path(getwd(), "gbm"))
+savePlpResult(gbmResults, location = file.path(tempdir(), "gbm"))
 ```
 
 To load the full results structure use:
 
 ```{r tidy=TRUE,eval=FALSE}
-gbmResults <- loadPlpResult(file.path(getwd(), "gbm"))
+gbmResults <- loadPlpResult(file.path(file.path(tempdir(), "gbm"))
 ```
 
 \newpage
@@ -1038,7 +1038,7 @@ Furthermore, many interactive plots are available in the Shiny App, for example 
 To generate and save all the evaluation plots to a folder run the following code:
 
 ```{r tidy=TRUE,eval=FALSE}
-plotPlp(lrResults, dirPath = getwd())
+plotPlp(lrResults, dirPath = file.path(tempdir(), "plots"))
 ```
 
 The plots are described in more detail in the next sections.
@@ -1197,7 +1197,7 @@ We recommend to always perform external validation, i.e. apply the final model o
 
 ```{r tidy=FALSE,eval=FALSE}
 # load the trained model
-plpModel <- loadPlpModel(getwd(), "model")
+plpModel <- loadPlpModel(file.path(tempdir(), "model"), "model")
 
 # add details of new database
 validationDatabaseDetails <- createDatabaseDetails()
@@ -1210,7 +1210,7 @@ externalValidateDbPlp(
   settings = createValidationSettings(
     recalibrate = "weakRecalibration"
   ),
-  outputFolder = getwd()
+  outputFolder = file.path(tempdir(), "validation")
 )
 ```
 

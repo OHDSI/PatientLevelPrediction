@@ -45,7 +45,8 @@ a modelSettings object
 Create setting for the python sklearn SVM (SVC function)
 }
 \examples{
-\dontrun{ \dontshow{ # requires python's scikit-learn, checkSklearn() will error without it }
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
 saveLoc <- file.path(tempdir(), "svm")

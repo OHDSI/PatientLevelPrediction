@@ -45,8 +45,11 @@ diagnoseMultiplePlp <- function(
       timeStamp = TRUE,
       logName = "diagnosePlp Log"
     ),
-    saveDirectory = getwd()) {
+    saveDirectory = NULL) {
   # input checks
+  if (is.null(saveDirectory)) {
+    stop("saveDirectory must be specified")
+  }
   checkIsClass(databaseDetails, c("databaseDetails"))
   checkIsClass(modelDesignList, c("list", "modelDesign"))
   checkIsClass(logSettings, "logSettings")
