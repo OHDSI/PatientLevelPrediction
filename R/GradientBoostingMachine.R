@@ -1,6 +1,6 @@
-# @file GradientBoostingMachine.R
+# @file gradientBoostingMachine.R
 #
-# Copyright 2025 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
 # This file is part of PatientLevelPrediction
 #
@@ -18,239 +18,255 @@
 
 #' Create setting for gradient boosting machine model using gbm_xgboost implementation
 #'
-#' @param ntrees     The number of trees to build
+#' @param ntrees     The number of trees to build 
 #' @param nthread   The number of computer threads to use (how many cores do you have?)
 #' @param earlyStopRound   If the performance does not increase over earlyStopRound number of trees then training stops (this prevents overfitting)
 #' @param maxDepth  Maximum depth of each tree - a large value will lead to slow model training
-#' @param minChildWeight  Minimum sum of of instance weight in a child node - larger values are more conservative
+#' @param minChildWeight  Minimum sum of of instance weight in a child node - larger values are more conservative 
 #' @param learnRate The boosting learn rate
 #' @param scalePosWeight Controls weight of positive class in loss - useful for imbalanced classes
 #' @param lambda    L2 regularization on weights - larger is more conservative
 #' @param alpha     L1 regularization on weights - larger is more conservative
 #' @param seed       An option to add a seed when training the final model
-#' @return A modelSettings object that can be used to fit the model
 #'
-#' @examplesIf rlang::is_installed("xgboost")
-#' modelGbm <- setGradientBoostingMachine(
-#'   ntrees = c(10, 100), nthread = 20,
-#'   maxDepth = c(4, 6), learnRate = c(0.1, 0.3)
-#' )
+#' @examples
+#' model.gbm <- setGradientBoostingMachine(ntrees=c(10,100), nthread=20,
+#'                            maxDepth=c(4,6), learnRate=c(0.1,0.3))
 #'
 #' @export
-setGradientBoostingMachine <- function(ntrees = c(100, 300),
-                                       nthread = 20,
-                                       earlyStopRound = 25,
-                                       maxDepth = c(4, 6, 8),
-                                       minChildWeight = 1,
-                                       learnRate = c(0.05, 0.1, 0.3),
-                                       scalePosWeight = 1,
-                                       lambda = 1, 
-                                       alpha = 0,
-                                       seed = sample(10000000, 1)) {
-  rlang::check_installed("xgboost")
-
-  checkIsClass(seed, c("numeric", "integer"))
-
-  if (length(nthread) > 1) {
-    stop(paste("nthreads must be length 1"))
+setGradientBoostingMachine <- function(ntrees=c(100, 300), nthread=20, earlyStopRound = 25,
+                                  maxDepth=c(4,6,8), minChildWeight=1, learnRate=c(0.05, 0.1,0.3),
+                                  scalePosWeight=1, lambda=1, alpha=0,
+                                  seed= sample(10000000,1)){
+  
+  ensure_installed("xgboost")
+  
+  checkIsClass(seed, c('numeric', 'integer'))
+  
+  if(length(nthread)>1){
+    stop(paste('nthreads must be length 1'))
   }
-  if (!inherits(x = seed, what = c("numeric", "NULL", "integer"))) {
-    stop("Invalid seed")
+  if(!inherits(x = seed, what = c('numeric','NULL', 'integer'))){
+    stop('Invalid seed')
   }
-  if (!inherits(x = ntrees, what = c("numeric", "integer"))) {
-    stop("ntrees must be a numeric value ")
+  if(!inherits(x = ntrees, what =  c("numeric", "integer"))){
+    stop('ntrees must be a numeric value ')
   }
-  if (sum(ntrees < 1) > 0) {
-    stop("ntrees must be greater than 0 or -1")
+  if(sum(ntrees < 1)  > 0 ){
+    stop('ntrees must be greater than 0 or -1')
   }
-  if (!inherits(x = maxDepth, what = c("numeric", "integer"))) {
-    stop("maxDepth must be a numeric value")
+  if(!inherits(x = maxDepth, what =  c("numeric", "integer"))){
+    stop('maxDepth must be a numeric value')
+    }
+  if(sum(maxDepth < 1) > 0){
+    stop('maxDepth must be greater that 0')
   }
-  if (sum(maxDepth < 1) > 0) {
-    stop("maxDepth must be greater that 0")
+  if(!inherits(x = minChildWeight, what =  c("numeric", "integer"))){
+    stop('minChildWeight must be a numeric value')
   }
-  if (!inherits(x = minChildWeight, what = c("numeric", "integer"))) {
-    stop("minChildWeight must be a numeric value")
+  if(sum(minChildWeight < 0) > 0){
+    stop('minChildWeight must be greater that 0')
   }
-  if (sum(minChildWeight < 0) > 0) {
-    stop("minChildWeight must be greater that 0")
+  if(!inherits(x = learnRate, what = 'numeric')){
+    stop('learnRate must be a numeric value')
   }
-  if (!inherits(x = learnRate, what = "numeric")) {
-    stop("learnRate must be a numeric value")
+  if(sum(learnRate <= 0) > 0){
+    stop('learnRate must be greater that 0')
   }
-  if (sum(learnRate <= 0) > 0) {
-    stop("learnRate must be greater that 0")
+  if(sum(learnRate > 1) > 0){
+    stop('learnRate must be less that or equal to 1')
   }
-  if (sum(learnRate > 1) > 0) {
-    stop("learnRate must be less that or equal to 1")
+  if(!inherits(x = earlyStopRound, what =  c("numeric", "integer", "NULL"))){
+    stop('incorrect class for earlyStopRound')
   }
-  if (!inherits(x = earlyStopRound, what = c("numeric", "integer", "NULL"))) {
-    stop("incorrect class for earlyStopRound")
+  if (!inherits(x = lambda, what =  c("numeric", "integer"))){
+    stop('lambda must be a numeric value')
   }
-  if (!inherits(x = lambda, what = c("numeric", "integer"))) {
-    stop("lambda must be a numeric value")
+  if (sum(lambda < 0) > 0){
+    stop('lambda must be 0 or greater')
   }
-  if (sum(lambda < 0) > 0) {
-    stop("lambda must be 0 or greater")
+  if(!inherits(x = alpha, what =  c("numeric", "integer"))){
+    stop('alpha must be a numeric value')
   }
-  if (!inherits(x = alpha, what = c("numeric", "integer"))) {
-    stop("alpha must be a numeric value")
+  if (sum(alpha < 0) > 0){
+    stop('alpha must be 0 or greater')
   }
-  if (sum(alpha < 0) > 0) {
-    stop("alpha must be 0 or greater")
+  if (!inherits(x = scalePosWeight, what =  c("numeric", "integer"))){
+    stop('scalePosWeight must be a numeric value >= 0')
   }
-  if (!inherits(x = scalePosWeight, what = c("numeric", "integer"))) {
-    stop("scalePosWeight must be a numeric value >= 0")
-  }
-  if (sum(scalePosWeight < 0) > 0) {
-    stop("scalePosWeight must be 0 or greater")
+  if (sum(scalePosWeight < 0) > 0){
+    stop('scalePosWeight must be 0 or greater')
   }
 
   paramGrid <- list(
-    ntrees = ntrees,
-    earlyStopRound = earlyStopRound,
-    maxDepth = maxDepth,
-    minChildWeight = minChildWeight,
-    learnRate = learnRate,
-    lambda = lambda,
-    alpha = alpha,
-    scalePosWeight = scalePosWeight
-  )
-
+      ntrees = ntrees, 
+      earlyStopRound = earlyStopRound,
+      maxDepth = maxDepth, 
+      minChildWeight = minChildWeight, 
+      learnRate = learnRate,
+      lambda = lambda,
+      alpha = alpha,
+      scalePosWeight = scalePosWeight
+      )
+  
   param <- listCartesian(paramGrid)
-
-  attr(param, "settings") <- list(
-    modelType = "Xgboost",
+  
+  attr(param, 'settings') <- list(
+    modelType = 'Xgboost',
     seed = seed[[1]],
     modelName = "Gradient Boosting Machine",
     threads = nthread[1],
-    varImpRFunction = "varImpXgboost",
-    trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost"
+    varImpRFunction = 'varImpXgboost',
+    trainRFunction = 'fitXgboost',
+    predictRFunction = 'predictXgboost'
   )
-
-  attr(param, "saveType") <- "xgboost"
-
+  
+  attr(param, 'saveType') <- 'xgboost'
+  
   result <- list(
     fitFunction = "fitRclassifier",
     param = param
   )
 
-  class(result) <- "modelSettings"
-
+  class(result) <- 'modelSettings' 
+  
   return(result)
 }
 
 
 
 varImpXgboost <- function(
-    model,
-    covariateMap) {
+  model,
+  covariateMap
+  ){
+  
   varImp <- xgboost::xgb.importance(model = model)
-
-  varImp$Feature <- as.numeric(substring(varImp$Feature, 2)) + 1 # adding +1 as xgboost index starts at 0
-  varImp <- merge(covariateMap, varImp, by.x = "columnId", by.y = "Feature")
-  varImp <- varImp %>%
+  
+  varImp$Feature <- as.numeric(substring(varImp$Feature,2))+1 # adding +1 as xgboost index starts at 0
+  varImp <- merge(covariateMap, varImp, by.x='columnId', by.y='Feature')
+  varImp <- varImp %>% 
     dplyr::mutate(included = 1) %>%
-    dplyr::rename(covariateValue = "Gain") %>%
+    dplyr::rename(covariateValue = "Gain") %>% 
     dplyr::select("covariateId", "covariateValue", "included")
-
+  
   return(varImp)
+  
 }
 
 predictXgboost <- function(
-    plpModel,
-    data,
-    cohort) {
-  if (inherits(data, "plpData")) {
+  plpModel, 
+  data, 
+  cohort
+  ){
+  
+  if(inherits(data , 'plpData')){
     # convert
     matrixObjects <- toSparseM(
-      plpData = data,
+      plpData = data, 
       cohort = cohort,
-      map = plpModel$covariateImportance %>%
+      map = plpModel$covariateImportance %>% 
         dplyr::select("columnId", "covariateId")
     )
-
+    
+    # use the include??
+    
     newData <- matrixObjects$dataMatrix
     cohort <- matrixObjects$labels
-  } else {
+    
+  }else{
     newData <- data
   }
-
-  if (inherits(plpModel, "plpModel")) {
+  
+  if(inherits(plpModel, 'plpModel')){
     model <- plpModel$model
-  } else {
+  } else{
     model <- plpModel
   }
-
+    
   pred <- data.frame(value = stats::predict(model, newData))
   prediction <- cohort
   prediction$value <- pred$value
-
+  
   # fix the rowIds to be the old ones?
   # now use the originalRowId and remove the matrix rowId
-  prediction <- prediction %>%
+  prediction <- prediction %>% 
     dplyr::select(-"rowId") %>%
     dplyr::rename(rowId = "originalRowId")
 
   attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
-
+  
   return(prediction)
 }
 
 fitXgboost <- function(
-    dataMatrix,
-    labels,
-    hyperParameters,
-    settings) {
+  dataMatrix,
+  labels, 
+  hyperParameters,
+  evalmetric, #new addition
+  settings
+  ){
   set.seed(settings$seed)
   if (!is.null(hyperParameters$earlyStopRound)) {
-    trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
+    trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix)*0.9)
     if (sum(labels$outcomeCount[-trainInd]) == 0) {
       stop("No outcomes in early stopping set, either increase size of training
             set or turn off early stopping")
     }
     train <- xgboost::xgb.DMatrix(
-      data = dataMatrix[trainInd, , drop = FALSE],
+      data = dataMatrix[trainInd,, drop = F], 
       label = labels$outcomeCount[trainInd]
-    )
+      )
     test <- xgboost::xgb.DMatrix(
-      data = dataMatrix[-trainInd, , drop = FALSE],
+      data = dataMatrix[-trainInd,, drop = F], 
       label = labels$outcomeCount[-trainInd]
-    )
+      )
     watchlist <- list(train = train, test = test)
+    
   } else {
     train <- xgboost::xgb.DMatrix(
-      data = dataMatrix,
+      data = dataMatrix, 
       label = labels$outcomeCount
     )
     watchlist <- list()
   }
-
+  
   outcomes <- sum(labels$outcomeCount > 0)
   N <- nrow(labels)
-  outcomeProportion <- outcomes / N
+  outcomeProportion <- outcomes/N
+  
+  if (evalmetric == 'rmseScore' |evalmetric == 'maeScore' |
+      evalmetric == 'brierScore'){
+    maximize = F
+  }  else{
+    maximize = T
+  }
+  
   model <- xgboost::xgb.train(
-    data = train,
+    data = train, 
     params = list(
-      booster = "gbtree",
+      booster =  'gbtree',
       max_depth = hyperParameters$maxDepth,
-      eta = hyperParameters$learnRate,
+      eta = hyperParameters$learnRate, 
       min_child_weight = hyperParameters$minChildWeight,
       scale_pos_weight = hyperParameters$scalePosWeight,
       lambda = hyperParameters$lambda,
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc"
+      eval_metric = eval(parse(text = evalmetric))
     ),
-    nthread = settings$threads, # ?
+    nthread = settings$threads, #?
     nrounds = hyperParameters$ntrees,
     watchlist = watchlist,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
-    maximize = TRUE
-  )
-
+    maximize = maximize
+    )
+  
   return(model)
 }
+
+
+
+
+

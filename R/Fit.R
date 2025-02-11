@@ -1,8 +1,8 @@
 # @file Fit.R
 #
-# Copyright 2025 Observational Health Data Sciences and Informatics
+# Copyright 2021 Observational Health Data Sciences and Informatics
 #
-# This file is part of PatientLevelPrediction
+# This file is part of CohortMethod
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,89 +19,81 @@
 #' fitPlp
 #'
 #' @description
-#' Train various models using a default parameter grid search or user specified 
-#' parameters
+#' Train various models using a default parameter gird search or user specified parameters
 #'
 #' @details
-#' The user can define the machine learning model to train 
-
-#' @param trainData An object of type \code{trainData} created using \code{splitData}
-#' data extracted from the CDM.
-#' @param modelSettings An object of class \code{modelSettings} created using 
-#' one of the \code{createModelSettings} functions
-#' @param search The search strategy for the hyper-parameter selection (currently not used)
+#' The user can define the machine learning model to train (regularised logistic regression, random forest,
+#' gradient boosting machine, neural network and )
+#' 
+#' @param trainData                        An object of type \code{TrainData} created using \code{splitData}
+#'                                         data extracted from the CDM.
+#' @param modelSettings                    An object of class \code{modelSettings} created using one of the function:
+#'                                         \itemize{
+#'                                         \item setLassoLogisticRegression() A lasso logistic regression model
+#'                                         \item setGradientBoostingMachine() A gradient boosting machine
+#'                                         \item setRandomForest() A random forest model
+#'                                         \item setKNN() A KNN model
+#'                                         }
+#' @param search                           The search strategy for the hyper-parameter selection (currently not used)                                        
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
+#' @param evalmetric                       The evaluation metric to use for hyperparameter optimization
 #' @return
 #' An object of class \code{plpModel} containing:
-#'
+#' 
 #' \item{model}{The trained prediction model}
 #' \item{preprocessing}{The preprocessing required when applying the model}
 #' \item{prediction}{The cohort data.frame with the predicted risk column added}
 #' \item{modelDesign}{A list specifiying the modelDesign settings used to fit the model}
 #' \item{trainDetails}{The model meta data}
 #' \item{covariateImportance}{The covariate importance for the model}
-#' @examples
-#' \donttest{ \dontshow{ # takes too long }
-#' # simulate data
-#' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
-#' # create study population, split into train/test and preprocess with default settings
-#' population <- createStudyPopulation(plpData, outcomeId = 3)
-#' data <- splitData(plpData, population, createDefaultSplitSetting())
-#' data$Train$covariateData <- preprocessData(data$Train$covariateData)
-#' saveLoc <- file.path(tempdir(), "fitPlp")
-#' # fit a lasso logistic regression model using the training data
-#' plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
-#'                    analysisId=1, analysisPath=saveLoc)
-#' # show evaluationSummary for model
-#' evaluatePlp(plpModel$prediction)$evaluationSummary
-#' # clean up
-#' unlink(saveLoc, recursive = TRUE)
-#' }
+#'
+#'
 #' @export
 fitPlp <- function(
-    trainData,
-    modelSettings,
-    search = "grid",
-    analysisId,
-    analysisPath) {
-  start <- Sys.time()
-  if (is.null(trainData)) {
-    stop("trainData is NULL")
-  }
-  if (is.null(trainData$covariateData)) {
-    stop("covariateData is NULL")
-  }
-  checkIsClass(trainData$covariateData, "CovariateData")
-  if (is.null(modelSettings$fitFunction)) {
-    stop("No model specified")
-  }
-  checkIsClass(modelSettings, "modelSettings")
-
-  # =========================================================
+  trainData,   
+  modelSettings,
+  evalmetric,  #new addition
+  search = "grid",
+  analysisId,
+  analysisPath
+  )
+  {
+  
+  if(is.null(trainData))
+    stop('trainData is NULL')
+  if(is.null(trainData$covariateData))
+    stop('covariateData is NULL')
+  checkIsClass(trainData$covariateData, 'CovariateData')
+  if(is.null(modelSettings$fitFunction))
+    stop('No model specified')
+  checkIsClass(modelSettings, 'modelSettings')
+  
+  #=========================================================
   # run through pipeline list and apply:
-  # =========================================================
+  #=========================================================
 
   # Now apply the classifier:
+  
   fun <- eval(parse(text = modelSettings$fitFunction))
+  print(modelSettings$fitFunction)
   args <- list(
     trainData = trainData,
     modelSettings, # old: param = modelSettings$param, # make this model settings?
     search = search,
+    evalmetric = evalmetric, #new addition
     analysisId = analysisId,
     analysisPath = analysisPath
-  )
+    )
   plpModel <- do.call(fun, args)
-  ParallelLogger::logTrace("Returned from classifier function")
-
+  ParallelLogger::logTrace('Returned from classifier function')
+  
   # adding trainDetails databaseId to all classifiers
   # TODO - move other details into fit
-  plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
-  class(plpModel) <- "plpModel"
-  delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to fit model: ", 
-    signif(delta, 3), " ", attr(delta, "units"))
-
+  plpModel$trainDetails$developmentDatabaseId = attr(trainData, "metaData")$cdmDatabaseId
+  
+  class(plpModel) <- 'plpModel'
+  
   return(plpModel)
+  
 }
