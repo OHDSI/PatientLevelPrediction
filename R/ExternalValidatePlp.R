@@ -250,6 +250,7 @@ externalValidateDbPlp <- function(plpModel,
     logSettings$logFileName <- "validationLog"
     logger <- do.call(createLog, logSettings)
     ParallelLogger::registerLogger(logger)
+    on.exit(closeLog(logger))
 
     ParallelLogger::logInfo(paste("Validating model on", databaseName))
 

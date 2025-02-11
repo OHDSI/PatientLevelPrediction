@@ -343,17 +343,17 @@ covariateSummarySubset <- function(
 
   if (restrictCovariateDataToSubsetIds) {
     ParallelLogger::logInfo("Restricting to subgroup")
-    covariates <- getCovariatesForGroup(
+    newCovariateData <- getCovariatesForGroup(
       covariateData,
       restrictIds = subset
     )
   } else {
-    covariates <- covariateData$covariates
+    newCovariateData <- Andromeda::copyAndromeda(covariateData)
   }
 
   ParallelLogger::logInfo(paste0("Calculating summary for subgroup ", subsetName))
 
-  result <- covariates %>%
+  result <- newCovariateData$covariates %>%
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarise(
       CovariateCount = dplyr::n(),
@@ -372,22 +372,20 @@ covariateSummarySubset <- function(
 }
 
 getCovariatesForGroup <- function(covariateData, restrictIds) {
-  # restrict covaraiteData to specified rowIds
-  if (length(restrictIds) < 200000) {
-    covariateData$restrictIds <- data.frame(rowId = restrictIds)
-    newCovariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$restrictIds, by = "rowId")
-  } else {
+  # restrict covariateData to specified rowIds
+  if (inherits(covariateData, "RSQLiteConnection") && 
+      length(restrictIds) > 200000) {
     newCovariateData <- batchRestrict(
       covariateData,
       data.frame(rowId = restrictIds),
       sizeN = 10000000
     )
-
-    newCovariates <- newCovariateData$covariates
+  } else {
+    newCovariateData <- Andromeda::copyAndromeda(covariateData)
+    covariateData$restrictIds <- data.frame(rowId = restrictIds)
+    on.exit(covariateData$restrictIds <- NULL)
+    newCovariateData$covariates <- covariateData$covariates %>%
+      dplyr::inner_join(covariateData$restrictIds, by = "rowId")
   }
-
-  # add index to rowId and covariateId?
-
-  return(newCovariates)
+  return(newCovariateData)
 }
