@@ -114,14 +114,14 @@ point in the test data (outcomeCount is the class label)</p></li>
 <span class="r-in"><span><span class="va">population</span> <span class="op">&lt;-</span> <span class="fu"><a href="createStudyPopulation.html">createStudyPopulation</a></span><span class="op">(</span><span class="va">plpData</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 969 observations, 969 unique subjects and 428 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0522 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0448 secs</span>
 <span class="r-in"><span><span class="va">splitSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span>testFraction <span class="op">=</span> <span class="fl">0.50</span>, </span></span>
 <span class="r-in"><span>                                           trainFraction <span class="op">=</span> <span class="fl">0.50</span>, nfold <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">data</span> <span class="op">=</span> <span class="fu">splitData</span><span class="op">(</span><span class="va">plpData</span>, <span class="va">population</span>, <span class="va">splitSettings</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> seed: 7588</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 50% test and 50% train (into 5 folds) random stratified split by class</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 484 test cases and 485 train cases (98, 97, 97, 97, 96)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.23 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.238 secs</span>
 <span class="r-in"><span><span class="co"># test data should be ~500 rows (changes because of study population)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Test</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 484</span>
