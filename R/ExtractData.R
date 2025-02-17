@@ -157,7 +157,7 @@ createDatabaseDetails <- function(
     tempEmulationSchema = cdmDatabaseSchema,
     cohortDatabaseSchema = cdmDatabaseSchema,
     cohortTable = "cohort",
-    outcomeDatabaseSchema = cdmDatabaseSchema,
+    outcomeDatabaseSchema = cohortDatabaseSchema,
     outcomeTable = cohortTable,
     targetId = NULL,
     outcomeIds = NULL,
