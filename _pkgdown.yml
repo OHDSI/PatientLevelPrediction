@@ -22,9 +22,9 @@ navbar:
     - articles
     - benchmarks
     - predictors
-    - bestpractice
-    - clinicalmodels
+    - publications
     - news
+    - more
     right: [hades, github]
   components:
     home:
@@ -36,15 +36,13 @@ navbar:
     intro:
       text: Get started
       href: articles/InstallationGuide.html
-    videos:
-      text: Videos
-      href: articles/Videos.html
-    bestpractice:
-      text: Best Practices
-      href: articles/BestPractices.html
-    clinicalmodels:
-      text: Clinical Models
-      href: articles/ClinicalModels.html
+    publications:
+      text: "Publications"
+      menu:
+        - text: Best Practices
+          href: articles/BestPractices.html
+        - text: Clinical Models
+          href: articles/ClinicalModels.html
     benchmarks:
       text: Benchmarks
       href: articles/BenchmarkTasks.html
@@ -56,7 +54,18 @@ navbar:
       href: news/index.html
     tutorial:
       text: Tutorial
-      href: https://www.ohdsi.org/past-events/patient-level-prediction/
+      menu:
+        - text: "Day Tutorial"
+          href: https://www.ohdsi.org/past-events/patient-level-prediction/
+        - text: Videos
+          href: articles/Videos.html
+    more: 
+      text: "More"
+      menu:
+        - text: "Workgroup"
+          href: articles/workgroup_meeting.html
+        - text: "Conferences"
+          href: articles/conferences.html
     github:
       icon: fa-github fa-lg
       href: https://github.com/OHDSI/PatientLevelPrediction
