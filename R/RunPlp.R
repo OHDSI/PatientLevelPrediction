@@ -36,6 +36,25 @@
 #' @param outcomeId                  (integer) The ID of the outcome.                                       
 #' @param analysisId                 (integer) Identifier for the analysis. It is used to create, e.g., the result folder. Default is a timestamp.
 #' @param analysisName               (character) Name for the analysis
+#' @param evalmetric                 evaluation metric used for hyperparameter optimization (only available for Decision Tree, Random forest, Adaboost, SVM, GBM and light GBM):
+#'                                         \itemize{
+#'                                         \item 'computeAuc' computes AUC
+#'                                         \item 'brierScore' computes brier score
+#'                                         \item 'averagePrecision' computes average precision
+#'                                         \item 'accuracyScore' computes accuracy
+#'                                         \item 'precisionScore' computes precision
+#'                                         \item 'recallScore' computes recall
+#'                                         \item 'f1Scores' computes f1 score
+#'                                         \item 'logLossScore' computes logarithmic loss
+#'                                         \item 'specificityScore' computes specificity
+#'                                         \item 'mccScore' computes MCC
+#'                                         \item 'balancedAccuracyScore' computes balanced accuracy
+#'                                         \item 'gMeanScore' computes geometric mean
+#'                                         \item 'kappaScore' computes cohen's kappa score
+#'                                         \item 'f2Score' computes F2 score
+#'                                         \item 'rmseScore' computes Root Mean Squared Error
+#'                                         \item 'maeScore' computes Mean Absolute Error
+#'                                         }
 #' @param populationSettings         An object of type \code{populationSettings} created using \code{createStudyPopulationSettings} that
 #'                                   specifies how the data class labels are defined and addition any exclusions to apply to the 
 #'                                   plpData cohort
@@ -92,6 +111,7 @@ runPlp <- function(
   plpData,
   outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
   analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
+  evalmetric = plpData$metaData$databaseDetails$evalmetric,
   analysisName = "Study details",
   populationSettings = createStudyPopulationSettings(),
   splitSettings = createDefaultSplitSetting(
@@ -129,7 +149,7 @@ runPlp <- function(
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
   
-  #check inputs + print 
+  #check inputs + print #add evalmetric here?
   settingsValid <- tryCatch(
     {
       checkInputs(
@@ -286,6 +306,7 @@ runPlp <- function(
     settings <- list(
       trainData = data$Train, 
       modelSettings = modelSettings,
+      evalmetric = evalmetric,
       analysisId = analysisId,
       analysisPath = analysisPath
     )

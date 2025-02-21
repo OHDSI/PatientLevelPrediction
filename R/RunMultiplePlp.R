@@ -128,7 +128,8 @@ runMultiplePlp <- function(
       "targetName",
       "outcomeId",
       "outcomeName",
-      "dataLocation"
+      "dataLocation",
+      "evalmetric"
     ),
     file.path(saveDirectory, "settings.csv"),
     row.names = FALSE
@@ -138,6 +139,7 @@ runMultiplePlp <- function(
   dataSettings <- settingstable %>%
     dplyr::group_by(
       .data$targetId,
+      .data$evalmetric,
       .data$covariateSettings,
       .data$restrictPlpDataSettings,
       .data$dataLocation
@@ -154,6 +156,7 @@ runMultiplePlp <- function(
 
       databaseDetails$targetId <- dataSettings$targetId[i]
       databaseDetails$outcomeIds <- strsplit(dataSettings$outcomeIds[i], ",")[[1]]
+      databaseDetails$evalmetric <- dataSettings$evalmetric[i]
 
       plpDataSettings <- list(
         databaseDetails = databaseDetails,
@@ -237,6 +240,7 @@ runMultiplePlp <- function(
           runPlpSettings <- list(
             plpData = quote(plpData),
             outcomeId = modelDesign$outcomeId,
+            evalmetric = modelDesign$evalmetric,
             analysisId = settings$analysisId,
             populationSettings = modelDesign$populationSettings,
             splitSettings = modelDesign$splitSettings,
@@ -291,6 +295,7 @@ runMultiplePlp <- function(
 #'
 #' @param targetId              The id of the target cohort that will be used for data extraction (e.g., the ATLAS id)
 #' @param outcomeId              The id of the outcome that will be used for data extraction (e.g., the ATLAS id)
+#' @param evalmetric             The evaluation metric for optimizing hyperparameter optimization (if not specified AUC is used)
 #' @param restrictPlpDataSettings       The settings specifying the extra restriction settings when extracting the data created using \code{createRestrictPlpDataSettings()}.
 #' @param populationSettings             The population settings specified by \code{createStudyPopulationSettings()}
 #' @param covariateSettings              The covariate settings, this can be a list or a single \code{'covariateSetting'} object.
@@ -321,6 +326,7 @@ runMultiplePlp <- function(
 createModelDesign <- function(
     targetId = NULL,
     outcomeId = NULL,
+    evalmetric = 'computeAuc'
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
     populationSettings = createStudyPopulationSettings(),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
@@ -377,6 +383,7 @@ createModelDesign <- function(
   settings <- list(
     targetId = targetId,
     outcomeId = outcomeId,
+    evalmetric = evalmetric,
     restrictPlpDataSettings = restrictPlpDataSettings,
     covariateSettings = covariateSettings,
     populationSettings = populationSettings,
@@ -686,6 +693,7 @@ convertToJson <- function(
     analysisId = paste0("Analysis_", 1:length(modelDesignList)),
     targetId = unlist(lapply(modelDesignList, function(x) ifelse(is.null(x$targetId), x$cohortId, x$targetId))),
     outcomeId = unlist(lapply(modelDesignList, function(x) x$outcomeId)),
+    evalmetric = unlist(lapply(modelDesignList, function(x) x$evalmetric)),
     covariateSettings = unlist(lapply(modelDesignList, function(x) convertToJsonString(x$covariateSettings))),
     restrictPlpDataSettings = unlist(lapply(modelDesignList, function(x) convertToJsonString(x$restrictPlpDataSettings))),
     populationSettings = unlist(lapply(modelDesignList, function(x) convertToJsonString(x$populationSettings))),

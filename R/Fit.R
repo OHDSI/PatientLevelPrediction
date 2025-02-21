@@ -32,6 +32,7 @@
 #' @param search The search strategy for the hyper-parameter selection (currently not used)
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
+#' @param evalmetric                       The evaluation metric to use for hyperparameter optimization
 #' @return
 #' An object of class \code{plpModel} containing:
 #'
@@ -63,6 +64,7 @@
 fitPlp <- function(
     trainData,
     modelSettings,
+    evalmetric, #new addition
     search = "grid",
     analysisId,
     analysisPath) {
@@ -89,6 +91,7 @@ fitPlp <- function(
     trainData = trainData,
     modelSettings, # old: param = modelSettings$param, # make this model settings?
     search = search,
+    evalmetric = evalmetric, #new addition
     analysisId = analysisId,
     analysisPath = analysisPath
   )
