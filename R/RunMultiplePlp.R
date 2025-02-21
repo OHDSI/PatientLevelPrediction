@@ -326,7 +326,7 @@ runMultiplePlp <- function(
 createModelDesign <- function(
     targetId = NULL,
     outcomeId = NULL,
-    evalmetric = 'computeAuc'
+    evalmetric = "computeAuc",
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
     populationSettings = createStudyPopulationSettings(),
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
