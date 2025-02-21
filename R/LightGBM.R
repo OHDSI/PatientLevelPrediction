@@ -182,6 +182,7 @@ predictLightGBM <- function(plpModel,
 fitLightGBM <- function(dataMatrix,
                         labels,
                         hyperParameters,
+                        evalmetric,
                         settings) {
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
@@ -209,7 +210,7 @@ fitLightGBM <- function(dataMatrix,
     params = list(
       objective = "binary",
       boost = "gbdt",
-      metric = "auc",
+      metric = 'None',
       num_iterations = hyperParameters$numIterations,
       num_leaves = hyperParameters$numLeaves,
       max_depth = hyperParameters$maxDepth,
@@ -225,6 +226,11 @@ fitLightGBM <- function(dataMatrix,
       num_threads = settings$threads
     ),
     verbose = 1,
+    eval = function(preds, dtrain) {
+      eval_metric_function <- eval(parse(text = evalmetric))
+      # Call the dynamic evaluation function
+      eval_metric_function(preds, dtrain, framework = "lightgbm")
+    },
     early_stopping_rounds = hyperParameters$earlyStopRound,
     valids = watchlist
   )
