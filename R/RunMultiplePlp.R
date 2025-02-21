@@ -88,8 +88,8 @@
 runMultiplePlp <- function(
     databaseDetails = createDatabaseDetails(),
     modelDesignList = list(
-      createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression()),
-      createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
+      createModelDesign(targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression(), evalmetric = 'computeAuc'),
+      createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression(), evalmetric = 'computeAuc')
     ),
     onlyFetchData = FALSE,
     cohortDefinitions = NULL,
