@@ -1,7 +1,7 @@
 PatientLevelPrediction
 ======================
 
-[![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check+branch%3Amain)
+[![Build Status](https://github.com/OHDSI/PatientLevelPrediction/workflows/R-CMD-check/badge.svg?branch=main)](https://github.com/OHDSI/PatientLevelPrediction/actions?query=workflow%3AR-CMD-check+branch%3Amain)
 [![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=main)](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/PatientLevelPrediction)](https://cran.r-project.org/package=PatientLevelPrediction)
 [![CRAN_Status_Badge](https://cranlogs.r-pkg.org/badges/PatientLevelPrediction)](https://cran.r-project.org/package=PatientLevelPrediction)
