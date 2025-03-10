@@ -19,6 +19,7 @@ fitRclassifier <- function(
     trainData,
     modelSettings,
     search = "grid",
+    evalmetric, #new addition
     analysisId,
     ...) {
   param <- modelSettings$param
@@ -53,11 +54,13 @@ fitRclassifier <- function(
 
   # use the new R CV wrapper
   cvResult <- applyCrossValidationInR(
-    dataMatrix,
-    labels,
-    hyperparamGrid = param,
+    dataMatrix, 
+    labels, 
+    evalmetric, #new addition
+    hyperparamGrid = param, 
     covariateMap = result$covariateMap
   )
+  
 
   hyperSummary <- do.call(rbind, lapply(cvResult$paramGridSearch, function(x) x$hyperSummary))
 
@@ -83,6 +86,7 @@ fitRclassifier <- function(
     modelDesign = PatientLevelPrediction::createModelDesign(
       targetId = attr(trainData, "metaData")$targetId,
       outcomeId = attr(trainData, "metaData")$outcomeId,
+      evalmetric = evalmetric,
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
@@ -117,7 +121,7 @@ fitRclassifier <- function(
 
 
 
-applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariateMap) {
+applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariateMap, evalmetric) {
   gridSearchPredictions <- list()
   length(gridSearchPredictions) <- length(hyperparamGrid)
 
@@ -134,6 +138,7 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
           dataMatrix = dataMatrix[ind, ],
           labels = labels[ind, ],
           hyperParameters = param,
+          evalmetric = evalmetric, #new addition
           settings = attr(hyperparamGrid, "settings")
         )
       )
@@ -161,9 +166,21 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
   }
 
   # computeGridPerformance function is currently in SklearnClassifier.R
-  paramGridSearch <- lapply(gridSearchPredictions, function(x) do.call(computeGridPerformance, x)) # cvAUCmean, cvAUC, param
-
-  optimalParamInd <- which.max(unlist(lapply(paramGridSearch, function(x) x$cvPerformance)))
+  paramGridSearch <- lapply(gridSearchPredictions, function(x){
+    computeGridPerformance(prediction = x$prediction,
+                           param = x$param,
+                           performanceFunct = evalmetric) #new addition
+  })
+  
+  if (evalmetric %in% c('logLossScore', 'hammingLossScore', 'rmseScore', 
+                        'mLogLossScore', 'errorScore', 'maeScore', 
+                        'mapeScore', 'brierScore')) {
+    optimalParamInd <- which.min(unlist(lapply(paramGridSearch, function(x) 
+      x$cvPerformance)))
+  } else { optimalParamInd <-
+    which.max(unlist(lapply(paramGridSearch, function(x)
+      x$cvPerformance)))
+  }
 
   finalParam <- paramGridSearch[[optimalParamInd]]$param
 
@@ -178,6 +195,7 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
       dataMatrix = dataMatrix,
       labels = labels,
       hyperParameters = finalParam,
+      evalmetric = evalmetric, #new addition
       settings = attr(hyperparamGrid, "settings")
     )
   )
