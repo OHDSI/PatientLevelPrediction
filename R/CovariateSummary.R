@@ -350,10 +350,23 @@ covariateSummarySubset <- function(
   } else {
     newCovariateData <- Andromeda::copyAndromeda(covariateData)
   }
-
+  
+  if ("timeId" %in% colnames(newCovariateData$covariates)) {
+    # For temporal data, aggregate so that each (rowId, covariateId) appears once.
+    covData <- newCovariateData$covariates %>%
+      dplyr::group_by(.data$rowId, .data$covariateId) %>%
+      dplyr::summarise(
+        covariateValue = mean(.data$covariateValue, na.rm = TRUE),  # or another summary like mean
+        .groups = "drop"  # ungroup after summarising
+      )
+  } else {
+    # For non-temporal data, use the data as is.
+    covData <- newCovariateData$covariates
+  }
+  
   ParallelLogger::logInfo(paste0("Calculating summary for subgroup ", subsetName))
 
-  result <- newCovariateData$covariates %>%
+  result <- covData %>%
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarise(
       CovariateCount = dplyr::n(),
