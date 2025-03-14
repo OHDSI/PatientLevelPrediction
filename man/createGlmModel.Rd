@@ -4,7 +4,19 @@
 \alias{createGlmModel}
 \title{createGlmModel}
 \usage{
-createGlmModel(coefficients, intercept = 0, mapping = "logistic")
+createGlmModel(
+  coefficients,
+  intercept = 0,
+  mapping = "logistic",
+  targetId = NULL,
+  outcomeId = NULL,
+  populationSettings = createStudyPopulationSettings(),
+  restrictPlpDataSettings = createRestrictPlpDataSettings(),
+  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+  FeatureEngineering = NULL,
+  tidyCovariates = NULL,
+  requireDenseMatrix = FALSE
+)
 }
 \arguments{
 \item{coefficients}{A dataframe containing two columns, coefficients and
@@ -18,6 +30,24 @@ package.}
 linear predictors to outcome probabilities. For generalized linear models
 this is the inverse of the link function. Supported values is only
 "logistic" for logistic regression model at the moment.}
+
+\item{targetId}{Add the development targetId here}
+
+\item{outcomeId}{Add the development outcomeId here}
+
+\item{populationSettings}{Add development population settings}
+
+\item{restrictPlpDataSettings}{Add development restriction settings}
+
+\item{covariateSettings}{Add the covariate settings here to specify how the model covariates are created from the OMOP CDM}
+
+\item{FeatureEngineering}{Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
+This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
+function. funct must take as input trainData (a plpData object) and settings (a list).}
+
+\item{tidyCovariates}{Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)}
+
+\item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
 }
 \value{
 A model object containing the model (Coefficients and intercept)
