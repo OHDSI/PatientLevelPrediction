@@ -35,7 +35,7 @@
 #' @param populationSettings Add development population settings
 #' @param restrictPlpDataSettings Add development restriction settings
 #' @param covariateSettings Add the covariate settings here to specify how the model covariates are created from the OMOP CDM
-#' @param FeatureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
+#' @param featureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
 #'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
