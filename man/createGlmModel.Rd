@@ -13,7 +13,7 @@ createGlmModel(
   populationSettings = createStudyPopulationSettings(),
   restrictPlpDataSettings = createRestrictPlpDataSettings(),
   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
-  FeatureEngineering = NULL,
+  featureEngineering = NULL,
   tidyCovariates = NULL,
   requireDenseMatrix = FALSE
 )
@@ -41,13 +41,13 @@ this is the inverse of the link function. Supported values is only
 
 \item{covariateSettings}{Add the covariate settings here to specify how the model covariates are created from the OMOP CDM}
 
-\item{FeatureEngineering}{Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
-This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
-function. funct must take as input trainData (a plpData object) and settings (a list).}
-
 \item{tidyCovariates}{Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)}
 
 \item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
+
+\item{FeatureEngineering}{Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
+This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
+function. funct must take as input trainData (a plpData object) and settings (a list).}
 }
 \value{
 A model object containing the model (Coefficients and intercept)
