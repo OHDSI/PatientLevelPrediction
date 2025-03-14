@@ -44,6 +44,7 @@ jobs:
       CDM5_SQL_SERVER_SERVER: ${{ secrets.CDM5_SQL_SERVER_SERVER }}
       CDM5_SQL_SERVER_USER: ${{ secrets.CDM5_SQL_SERVER_USER }}      
       UV_SYSTEM_PYTHON: 1
+      RETICULATE_USE_MANAGED_VENV: "no"
 
     steps:
       - uses: actions/checkout@v4
