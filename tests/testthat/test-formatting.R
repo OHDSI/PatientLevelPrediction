@@ -224,3 +224,37 @@ test_that("testCorrectLabels", {
     )
   )
 })
+
+test_that("MapIds with temporalData", {
+  formattingCovs <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(
+        rep(1, 5),
+        rep(2, 3),
+        rep(4, 2),
+        rep(50, 6)
+      ),
+      covariateId = c(
+        c(1001, 1213104, 1233105, 1, 99),
+        c(1001, 2, 99),
+        c(1001, 4),
+        c(1, 99, 98, 2, 4, 3)
+      ),
+      covariateValue = rep(1, 16),
+      timeId = sample(1:3, 16, replace = TRUE)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1001, 1213104, 25, 26, 1233105, 1, 99, 2, 4, 98, 3),
+      covariateName = c(paste0("Covariate_", 1:11))
+    ),
+    timeRef = data.frame(
+      timeId = c(1, 2, 3, 4, 5),
+      timeName = c("time1", "time2", "time3", "time4", "time5")
+    )
+  )
+  class(formattingCovs) <- "CovariateData"
+  mapped <- MapIds(formattingCovs)
+
+  expect_true(!is.null(mapped$timeRef))
+  expect_true(!is.null(mapped$covariates %>% dplyr::pull(.data$timeId)))
+})

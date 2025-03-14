@@ -211,7 +211,10 @@ MapIds <- function(
   }
 
   newCovariateData$mapping <- mapping
-
+  newCovariateData$analysisRef <- covariateData$analysisRef
+  if (!is.null(covariateData$timeRef)) {
+    newCovariateData$timeRef <- covariateData$timeRef
+  } 
   ParallelLogger::logInfo(paste0("finished MapCovariates"))
 
   return(newCovariateData)

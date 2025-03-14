@@ -37,11 +37,11 @@
 #'                                           to create covariates before summarising
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=100)
+#' plpData <- simulatePlpData(simulationProfile, n = 100)
 #' covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #' head(covariateSummary)
 #' @return
-#' A data.frame containing: CovariateCount, CovariateMean and CovariateStDev 
+#' A data.frame containing: CovariateCount, CovariateMean and CovariateStDev
 #' for any specified stratification
 #' @export
 covariateSummary <- function(
@@ -99,8 +99,7 @@ covariateSummary <- function(
         list(
           covariateData = covariateData,
           subset = x$subset$rowId,
-          subsetName = x$subsetName,
-          restrictCovariateDataToSubsetIds = TRUE
+          subsetName = x$subsetName
         )
       )
     }
@@ -125,8 +124,10 @@ covariateSummary <- function(
 
   ParallelLogger::logInfo(paste0("Finished covariate summary @ ", Sys.time()))
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to calculate covariate summary: ", 
-    signif(delta, 3), " ", attr(delta, "units"))
+  ParallelLogger::logInfo(
+    "Time to calculate covariate summary: ",
+    signif(delta, 3), " ", attr(delta, "units")
+  )
   return(covariateSummary)
 }
 
@@ -337,23 +338,31 @@ createCovariateSubsets <- function(
 covariateSummarySubset <- function(
     covariateData,
     subset,
-    subsetName = "",
-    restrictCovariateDataToSubsetIds = TRUE) {
+    subsetName = "") {
   N <- length(subset)
 
-  if (restrictCovariateDataToSubsetIds) {
-    ParallelLogger::logInfo("Restricting to subgroup")
-    newCovariateData <- getCovariatesForGroup(
-      covariateData,
-      restrictIds = subset
-    )
+  ParallelLogger::logInfo("Restricting to subgroup")
+  newCovariateData <- getCovariatesForGroup(
+    covariateData,
+    restrictIds = subset
+  )
+
+  if ("timeId" %in% colnames(newCovariateData$covariates)) {
+    # For temporal data, aggregate so that each (rowId, covariateId) appears once.
+    covData <- newCovariateData$covariates %>%
+      dplyr::group_by(.data$rowId, .data$covariateId) %>%
+      dplyr::summarise(
+        covariateValue = mean(.data$covariateValue, na.rm = TRUE), # or another summary like mean
+        .groups = "drop" # ungroup after summarising
+      )
   } else {
-    newCovariateData <- Andromeda::copyAndromeda(covariateData)
+    # For non-temporal data, use the data as is.
+    covData <- newCovariateData$covariates
   }
 
   ParallelLogger::logInfo(paste0("Calculating summary for subgroup ", subsetName))
 
-  result <- newCovariateData$covariates %>%
+  result <- covData %>%
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarise(
       CovariateCount = dplyr::n(),
@@ -373,8 +382,8 @@ covariateSummarySubset <- function(
 
 getCovariatesForGroup <- function(covariateData, restrictIds) {
   # restrict covariateData to specified rowIds
-  if (inherits(covariateData, "RSQLiteConnection") && 
-      length(restrictIds) > 200000) {
+  if (inherits(covariateData, "RSQLiteConnection") &&
+    length(restrictIds) > 200000) {
     newCovariateData <- batchRestrict(
       covariateData,
       data.frame(rowId = restrictIds),

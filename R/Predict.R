@@ -56,7 +56,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   # do feature engineering/selection
   if (!is.null(plpModel$preprocessing$featureEngineering)) {
     plpData <- do.call(
-      applyFeatureengineering,
+      applyFeatureEngineering,
       list(
         plpData = plpData,
         settings = plpModel$preprocessing$featureEngineering
@@ -129,7 +129,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
 
 
-applyFeatureengineering <- function(
+applyFeatureEngineering <- function(
     plpData,
     settings) {
   # if a single setting make it into a list
@@ -161,6 +161,9 @@ applyTidyCovariateData <- function(
     covariateRef = covariateData$covariateRef,
     analysisRef = covariateData$analysisRef
   )
+  if (!is.null(covariateData$timeRef)) {
+    newCovariateData$timeRef <- covariateData$timeRef
+  }
 
   maxs <- preprocessSettings$normFactors
   deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
