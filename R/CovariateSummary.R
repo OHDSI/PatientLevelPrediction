@@ -99,8 +99,7 @@ covariateSummary <- function(
         list(
           covariateData = covariateData,
           subset = x$subset$rowId,
-          subsetName = x$subsetName,
-          restrictCovariateDataToSubsetIds = TRUE
+          subsetName = x$subsetName
         )
       )
     }
@@ -337,19 +336,14 @@ createCovariateSubsets <- function(
 covariateSummarySubset <- function(
     covariateData,
     subset,
-    subsetName = "",
-    restrictCovariateDataToSubsetIds = TRUE) {
+    subsetName = "") {
   N <- length(subset)
 
-  if (restrictCovariateDataToSubsetIds) {
-    ParallelLogger::logInfo("Restricting to subgroup")
-    newCovariateData <- getCovariatesForGroup(
-      covariateData,
-      restrictIds = subset
-    )
-  } else {
-    newCovariateData <- Andromeda::copyAndromeda(covariateData)
-  }
+  ParallelLogger::logInfo("Restricting to subgroup")
+  newCovariateData <- getCovariatesForGroup(
+    covariateData,
+    restrictIds = subset
+  )
   
   if ("timeId" %in% colnames(newCovariateData$covariates)) {
     # For temporal data, aggregate so that each (rowId, covariateId) appears once.
