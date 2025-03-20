@@ -116,6 +116,8 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       folds = trainData$foldsa,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
@@ -191,9 +193,10 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$foldsa,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -279,6 +282,8 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
@@ -331,9 +336,10 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(

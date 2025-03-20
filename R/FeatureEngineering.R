@@ -606,6 +606,8 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     # fit the normalization
@@ -647,9 +649,10 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
@@ -702,6 +705,8 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
@@ -766,9 +771,10 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
@@ -863,6 +869,8 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
@@ -892,9 +900,10 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
     )
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
