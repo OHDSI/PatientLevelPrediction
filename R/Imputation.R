@@ -113,7 +113,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$foldsa,
+      folds = trainData$fold,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
     class(outputData) <- "plpData"
