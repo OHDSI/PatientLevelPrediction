@@ -660,7 +660,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     outData$covariateData$minMaxs <- attr(featureEngineeringSettings, "minMaxs")
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
+      dplyr::left_join(outData$covariateData$minMaxs,
         by = "covariateId") %>%
       dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
         (.data$covariateValue - min) / (max - min),
@@ -785,7 +785,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
+      dplyr::left_join(outData$covariateData$quantiles,
         by = "covariateId", copy = TRUE
       ) %>%
       dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && !is.na(.data$median),
