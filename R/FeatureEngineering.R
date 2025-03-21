@@ -608,6 +608,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     # fit the normalization
@@ -653,6 +654,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
@@ -707,6 +709,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
@@ -775,6 +778,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
@@ -871,6 +875,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
@@ -904,6 +909,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
     )
     class(outData) <- "plpData"
     attributes(outData) <- attributes(trainData)
+    attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
