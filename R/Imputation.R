@@ -580,7 +580,7 @@ pmmFit <- function(data, k = 5) {
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- data$rowMap %>%
-    dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId"), copy = TRUE) %>%
+    dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
     dplyr::pull(.data$y)
   # for each missing value, find the k closest observed values
   imputedValues <- numeric(nrow(xMiss))

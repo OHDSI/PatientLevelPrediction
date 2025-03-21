@@ -657,10 +657,11 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
+    outData$covariateData$minMaxs <- attr(featureEngineeringSettings, "minMaxs")
+    on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
-        by = "covariateId", copy = TRUE
-      ) %>%
+        by = "covariateId") %>%
       dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
         (.data$covariateValue - min) / (max - min),
         .data$covariateValue
@@ -781,6 +782,8 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     attributes(outData$covariateData) <- attributes(trainData$covariateData)
     class(outData$covariateData) <- "CovariateData"
     # apply the normalization to test data by using saved normalization values
+    outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
+    on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
         by = "covariateId", copy = TRUE
