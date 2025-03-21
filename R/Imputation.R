@@ -669,12 +669,13 @@ pmmPredict <- function(data, k = 5, imputer) {
 }
 
 extractMissingInfo <- function(trainData) {
-    ParallelLogger::logInfo("Calculating missingness in data")
+  ParallelLogger::logInfo("Calculating missingness in data")
   total <- trainData$covariateData$covariates %>%
     dplyr::summarise(total = dplyr::n_distinct(.data$rowId)) %>%
     dplyr::pull()
   continuousFeatures <- trainData$covariateData$analysisRef %>%
-    dplyr::filter(.data$isBinary == "N") %>%
+    dplyr::filter(.data$isBinary == "N",
+                  .data$missingMeansZero == "N") %>%
     dplyr::select("analysisId") %>%
     dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
     dplyr::pull(.data$covariateId)
