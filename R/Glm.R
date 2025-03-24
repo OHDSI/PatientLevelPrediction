@@ -32,7 +32,7 @@
 #' "logistic" for logistic regression model at the moment. 
 #' @param targetId Add the development targetId here
 #' @param outcomeId Add the development outcomeId here
-#' @param populationSettings Add development population settings
+#' @param populationSettings Add development population settings (this includes the time-at-risk settings).
 #' @param restrictPlpDataSettings Add development restriction settings
 #' @param covariateSettings Add the covariate settings here to specify how the model covariates are created from the OMOP CDM
 #' @param featureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
@@ -96,12 +96,16 @@ createGlmModel <- function(
   class(existingModel) <- "modelSettings"
 
   plpModel <- list(
-    preprocessing = preprocessing <- list(
+    preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
       requireDenseMatrix = requireDenseMatrix
     ),
-    covariateImportance = NULL,
+    covariateImportance = data.frame(
+      covariateId = coefficients$covariateId,
+      covariateValue = coefficients$coefficient,
+      included = TRUE
+    ),
     modelDesign = PatientLevelPrediction::createModelDesign(
       targetId = targetId,
       outcomeId = outcomeId,

@@ -35,7 +35,7 @@ this is the inverse of the link function. Supported values is only
 
 \item{outcomeId}{Add the development outcomeId here}
 
-\item{populationSettings}{Add development population settings}
+\item{populationSettings}{Add development population settings (this includes the time-at-risk settings).}
 
 \item{restrictPlpDataSettings}{Add development restriction settings}
 

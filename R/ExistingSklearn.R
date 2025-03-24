@@ -35,11 +35,18 @@
 #' For example, if you had a column called 'age' in your model and this was the 
 #' 3rd column when fitting the model, then the values for columnId would be 3, 
 #' covariateId would be 1002 (the covariateId for age in years) and
-#' @param covariateSettings  The settings for the standardized covariates
-#' @param populationSettings  The settings for the population, this includes the 
-#' time-at-risk settings and inclusion criteria.
 #' @param isPickle If the model should be saved as a pickle set this to TRUE if
 #' it should be saved as json set this to FALSE.
+#' @param targetId Add the development targetId here
+#' @param outcomeId Add the development outcomeId here
+#' @param populationSettings Add development population settings (this includes the time-at-risk settings).
+#' @param restrictPlpDataSettings Add development restriction settings
+#' @param covariateSettings Add the covariate settings here to specify how the model covariates are created from the OMOP CDM
+#' @param featureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
+#'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
+#'   function. funct must take as input trainData (a plpData object) and settings (a list).
+#' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
+#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
 #'
 #' @return
 #' An object of class plpModel, this is a list that contains: 
@@ -59,25 +66,43 @@ createSklearnModel <- function(
       columnId = 1:2,
       covariateId = c(1, 2),
     ),
-    covariateSettings, # specify the covariates
-    populationSettings, # specify time at risk used to develop model
-    isPickle = TRUE) {
+    isPickle = TRUE,
+    targetId = NULL,
+    outcomeId = NULL,
+    populationSettings = createStudyPopulationSettings(),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    featureEngineering = NULL,
+    tidyCovariates = NULL,
+    requireDenseMatrix = FALSE
+    ) {
   checkSklearn()
   checkFileExists(modelLocation)
   checkIsClass(covariateMap, "data.frame")
-  checkIsClass(covariateSettings, "covariateSettings")
-  checkIsClass(populationSettings, "populationSettings")
   checkBoolean(isPickle)
   checkDataframe(covariateMap, c("columnId", "covariateId"),
     columnTypes = list(c("numeric", "integer"), c("numeric", "integer"))
   )
+  
+  checkIsClass(targetId, c("numeric", "NULL"))
+  checkIsClass(outcomeId, c("numeric", "NULL"))
+  
+  checkIsClass(populationSettings, c("NULL", "populationSettings"))
+  checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
+  checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
+  
+  #checkIsClass(FeatureEngineering, c("list", "NULL"))
+  checkIsClass(requireDenseMatrix, c("logical"))
+  
+  # start to make the plpModel
   existingModel <- list(model = "existingSklearn")
   class(existingModel) <- "modelSettings"
 
   plpModel <- list(
     preprocessing = list(
-      tidyCovariates = NULL,
-      requireDenseMatrix = FALSE
+      featureEngineering = featureEngineering,
+      tidyCovariates = tidyCovariates,
+      requireDenseMatrix = requireDenseMatrix
     ),
     covariateImportance = data.frame(
       columnId = covariateMap$columnId,
@@ -85,12 +110,12 @@ createSklearnModel <- function(
       included = TRUE
     ),
     modelDesign = PatientLevelPrediction::createModelDesign(
-      targetId = 1,
-      outcomeId = 2,
-      restrictPlpDataSettings = PatientLevelPrediction::createRestrictPlpDataSettings(),
+      targetId = targetId,
+      outcomeId = outcomeId,
+      restrictPlpDataSettings = restrictPlpDataSettings,
       covariateSettings = covariateSettings,
       populationSettings = populationSettings,
-      sampleSettings = PatientLevelPrediction::createSampleSettings(),
+      sampleSettings = PatientLevelPrediction::createSampleSettings(), # need this?
       preprocessSettings = PatientLevelPrediction::createPreprocessSettings(
         minFraction = 0,
         normalize = FALSE,
