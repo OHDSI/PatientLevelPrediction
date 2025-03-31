@@ -30,6 +30,17 @@
 #' linear predictors to outcome probabilities. For generalized linear models
 #' this is the inverse of the link function. Supported values is only
 #' "logistic" for logistic regression model at the moment. 
+#' @param targetId Add the development targetId here
+#' @param outcomeId Add the development outcomeId here
+#' @param populationSettings Add development population settings (this includes the time-at-risk settings).
+#' @param restrictPlpDataSettings Add development restriction settings
+#' @param covariateSettings Add the covariate settings here to specify how the model covariates are created from the OMOP CDM
+#' @param featureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
+#'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
+#'   function. funct must take as input trainData (a plpData object) and settings (a list).
+#' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
+#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' 
 #' @return A model object containing the model (Coefficients and intercept)
 #' and the prediction function.
 #' @examples
@@ -43,17 +54,35 @@
 #' # see the predicted risk values
 #' prediction$value
 #' @export
-createGlmModel <- function(coefficients,
-                           intercept = 0,
-                           mapping = "logistic") {
-
+createGlmModel <- function(
+    coefficients,
+    intercept = 0,
+    mapping = "logistic",
+    targetId = NULL,
+    outcomeId = NULL,
+    populationSettings = createStudyPopulationSettings(),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    featureEngineering = NULL,
+    tidyCovariates = NULL,
+    requireDenseMatrix = FALSE
+) {
+  
   checkDataframe(coefficients, 
     c("covariateId", "coefficient"), 
     c("numeric", "numeric"))
   checkHigherEqual(coefficients$covariateId, 0)
   checkIsClass(intercept, c("numeric"))
-  checkIsClass(mapping, c("character"))
-  checkIsEqual(mapping, "logistic")
+  checkIsClass(mapping, c("character", "function"))
+  
+  checkIsClass(targetId, c("numeric", "NULL"))
+  checkIsClass(outcomeId, c("numeric", "NULL"))
+  
+  checkIsClass(populationSettings, c("NULL", "populationSettings"))
+  checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
+  checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
+  
+  checkIsClass(requireDenseMatrix, c("logical"))
 
   model <- list(
     intercept = intercept,
@@ -66,20 +95,40 @@ createGlmModel <- function(coefficients,
 
   plpModel <- list(
     preprocessing = list(
-      tidyCovariates = NULL,
-      requireDenseMatrix = FALSE
+      featureEngineering = featureEngineering,
+      tidyCovariates = tidyCovariates,
+      requireDenseMatrix = requireDenseMatrix
     ),
-    covariateImportance = NULL,
+    covariateImportance = data.frame(
+      covariateId = coefficients$covariateId,
+      covariateValue = coefficients$coefficient,
+      included = TRUE
+    ),
     modelDesign = PatientLevelPrediction::createModelDesign(
-      targetId = NULL,
-      outcomeId = NULL,
-      modelSettings = existingModel
+      targetId = targetId,
+      outcomeId = outcomeId,
+      modelSettings = existingModel,
+      covariateSettings = covariateSettings, 
+      populationSettings = populationSettings,
+      restrictPlpDataSettings = restrictPlpDataSettings,
+      preprocessSettings = PatientLevelPrediction::createPreprocessSettings(
+        minFraction = 0,
+        normalize = FALSE,
+        removeRedundancy = FALSE
+      ),
+      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 123)
     ),
     model = model,
-    trainDetails = NULL
+    trainDetails = list(
+      analysisId = "existingGLM",
+      developmentDatabase = "unknown",
+      developmentDatabaseId = "unknown",
+      trainingTime = -1,
+      modelName = "existingGLM"
+    )
   )
   attr(plpModel, "modelType") <- "binary"
-  attr(plpModel, "saveType") <- "RToJson"
+  attr(plpModel, "saveType") <- "RtoJson"
   attr(plpModel, "predictionFunction") <- "PatientLevelPrediction::predictGlm"
   class(plpModel) <- "plpModel"
   return(plpModel)
@@ -139,6 +188,17 @@ predictGlm <- function(plpModel, data, cohort) {
     prediction$value <- prediction$value^2
   } else if (plpModel$model$mapping == "exponential") {
     prediction$value <- exp(prediction$value)
+  } else if(inherits(plpModel$model$mapping, "character")){
+    # if some other character try and convert it to a function
+    ParallelLogger::logInfo('Creating mapping function from function name')
+    mapFun <- eval(parse(text = plpModel$model$mapping))
+    ParallelLogger::logInfo('Applying mapping function')
+    prediction$value <- mapFun(prediction$value)
+  } else if(inherits(plpModel$model$mapping, "function")){
+    ParallelLogger::logInfo('Applying mapping function')
+    prediction$value <- plpModel$model$mapping(prediction$value)
+  } else{
+    ParallelLogger::logInfo('No mapping applied due to invalid mapping')
   }
   
   attr(prediction, "metaData")$modelType <- "binary"
