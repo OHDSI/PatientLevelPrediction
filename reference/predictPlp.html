@@ -109,24 +109,24 @@ data extracted from the CDM.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">predictPlp</span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0964 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.0981 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.099 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.101 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2009-09-07              920              29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2011-10-10              608             881</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2008-02-09              627             856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2012-06-30              950             341</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2008-12-03              165             745</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2010-07-30              900             211</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2011-08-07              533             751</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2010-07-31              516             652</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2009-10-07              559             979</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2008-12-05              629             460</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2009-04-08              351             815</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2011-07-10              914             633</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          645      42   8507 0.4013123</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1455      37   8507 0.3429895</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1374      37   8532 0.3429895</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1108      39   8532 0.3658644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1313      35   8532 0.3208213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          231      37   8532 0.3429895</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1615      35   8507 0.3208213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1042      38   8532 0.3543437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1174      40   8507 0.3775407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4          462      39   8507 0.3658644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1719      39   8507 0.3658644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         1304      38   8532 0.3543437</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
