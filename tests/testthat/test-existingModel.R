@@ -192,27 +192,27 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', targetId = 'char'))
+  ), mapping = "logistic", targetId = "char"))
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', outcomeId = 'char'))
+  ), mapping = "logistic", outcomeId = "char"))
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', populationSettings = 'char'))
+  ), mapping = "logistic", populationSettings = "char"))
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', restrictPlpDataSettings = 'char'))
+  ), mapping = "logistic", restrictPlpDataSettings = "char"))
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', covariateSettings = 'char'))
+  ), mapping = "logistic", covariateSettings = "char"))
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 'logistic', requireDenseMatrix = 4))
+  ), mapping = "logistic", requireDenseMatrix = 4))
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -237,7 +237,7 @@ test_that("Create existing GLM model works", {
     mapping = "logistic", 
     targetId = 33, 
     outcomeId = 1, 
-    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = T), 
+    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE), 
     populationSettings = createStudyPopulationSettings(), 
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
     requireDenseMatrix = TRUE
@@ -247,7 +247,7 @@ test_that("Create existing GLM model works", {
   expect_equal(model$preprocessing$requireDenseMatrix, TRUE)
   expect_equal(model$modelDesign$populationSettings, createStudyPopulationSettings())
   expect_equal(model$modelDesign$restrictPlpDataSettings, createRestrictPlpDataSettings())
-  expect_equal(model$modelDesign$covariateSettings, FeatureExtraction::createCovariateSettings(useDemographicsAge = T))
+  expect_equal(model$modelDesign$covariateSettings, FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE))
   
   madeupFunc <- function(x){return(x)}
   model <- createGlmModel(

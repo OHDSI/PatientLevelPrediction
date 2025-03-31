@@ -74,7 +74,6 @@ createGlmModel <- function(
   checkHigherEqual(coefficients$covariateId, 0)
   checkIsClass(intercept, c("numeric"))
   checkIsClass(mapping, c("character", "function"))
-  #checkIsEqual(mapping, "logistic")
   
   checkIsClass(targetId, c("numeric", "NULL"))
   checkIsClass(outcomeId, c("numeric", "NULL"))
@@ -83,7 +82,6 @@ createGlmModel <- function(
   checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
   
-  #checkIsClass(FeatureEngineering, c("list", "NULL"))
   checkIsClass(requireDenseMatrix, c("logical"))
 
   model <- list(
@@ -112,10 +110,22 @@ createGlmModel <- function(
       modelSettings = existingModel,
       covariateSettings = covariateSettings, 
       populationSettings = populationSettings,
-      restrictPlpDataSettings = restrictPlpDataSettings
+      restrictPlpDataSettings = restrictPlpDataSettings,
+      preprocessSettings = PatientLevelPrediction::createPreprocessSettings(
+        minFraction = 0,
+        normalize = FALSE,
+        removeRedundancy = FALSE
+      ),
+      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 123)
     ),
     model = model,
-    trainDetails = NULL
+    trainDetails = list(
+      analysisId = "existingGLM",
+      developmentDatabase = "unknown",
+      developmentDatabaseId = "unknown",
+      trainingTime = -1,
+      modelName = "existingGLM"
+    )
   )
   attr(plpModel, "modelType") <- "binary"
   attr(plpModel, "saveType") <- "RtoJson"
@@ -180,15 +190,15 @@ predictGlm <- function(plpModel, data, cohort) {
     prediction$value <- exp(prediction$value)
   } else if(inherits(plpModel$model$mapping, "character")){
     # if some other character try and convert it to a function
-    message('Creating mapping function from function name')
+    ParallelLogger::logInfo('Creating mapping function from function name')
     mapFun <- eval(parse(text = plpModel$model$mapping))
-    message('Applying mapping function')
+    ParallelLogger::logInfo('Applying mapping function')
     prediction$value <- mapFun(prediction$value)
   } else if(inherits(plpModel$model$mapping, "function")){
-    message('Applying mapping function')
+    ParallelLogger::logInfo('Applying mapping function')
     prediction$value <- plpModel$model$mapping(prediction$value)
   } else{
-    message('No mapping applied due to invalid mapping')
+    ParallelLogger::logInfo('No mapping applied due to invalid mapping')
   }
   
   attr(prediction, "metaData")$modelType <- "binary"

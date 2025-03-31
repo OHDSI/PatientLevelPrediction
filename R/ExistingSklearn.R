@@ -91,7 +91,6 @@ createSklearnModel <- function(
   checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
   
-  #checkIsClass(FeatureEngineering, c("list", "NULL"))
   checkIsClass(requireDenseMatrix, c("logical"))
   
   # start to make the plpModel
@@ -112,17 +111,16 @@ createSklearnModel <- function(
     modelDesign = PatientLevelPrediction::createModelDesign(
       targetId = targetId,
       outcomeId = outcomeId,
-      restrictPlpDataSettings = restrictPlpDataSettings,
+      modelSettings = existingModel,
       covariateSettings = covariateSettings,
       populationSettings = populationSettings,
-      sampleSettings = PatientLevelPrediction::createSampleSettings(), # need this?
+      restrictPlpDataSettings = restrictPlpDataSettings,
       preprocessSettings = PatientLevelPrediction::createPreprocessSettings(
         minFraction = 0,
         normalize = FALSE,
         removeRedundancy = FALSE
       ),
-      modelSettings = existingModel,
-      splitSettings = PatientLevelPrediction::createDefaultSplitSetting()
+      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 123)
     ),
     model = modelLocation,
     trainDetails = list(
