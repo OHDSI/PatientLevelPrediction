@@ -1,3 +1,8 @@
+PatientLevelPrediction 6.4.0.9999
+======================
+- Fix bug when sampleSize is NULL but restricting by dates in getPlpData
+
+
 PatientLevelPrediction 6.4
 ======================
 - Official maintainer updated to Egill Fridgeirsson
