@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,13 +107,42 @@ but can already be done here for efficiency reasons.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A setting object of class <code>restrictPlpDataSettings</code> containing a list of
-getPlpData extra settings</p>
-    </div>
+the settings:</p><ul><li><p><code>studyStartDate</code>: A calendar date specifying the minimum date that a cohort index date can appear</p></li>
+<li><p><code>studyEndDate</code>: A calendar date specifying the maximum date that a cohort index date can appear</p></li>
+<li><p><code>firstExposureOnly</code>: Should only the first exposure per subject be included</p></li>
+<li><p><code>washoutPeriod</code>: The mininum required continuous observation time prior to index date for a person to be included in the at risk cohort</p></li>
+<li><p><code>sampleSize</code>: If not NULL, the number of people to sample from the target cohort</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Users need to specify the extra restrictions to apply when downloading the target cohort</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># restrict to 2010, first exposure only, require washout period of 365 day</span></span></span>
+<span class="r-in"><span><span class="co"># and sample 1000 people</span></span></span>
+<span class="r-in"><span><span class="fu">createRestrictPlpDataSettings</span><span class="op">(</span>studyStartDate <span class="op">=</span> <span class="st">"20100101"</span>, studyEndDate <span class="op">=</span> <span class="st">"20101231"</span>, </span></span>
+<span class="r-in"><span>firstExposureOnly <span class="op">=</span> <span class="cn">TRUE</span>, washoutPeriod <span class="op">=</span> <span class="fl">365</span>, sampleSize <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $studyStartDate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "20100101"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $studyEndDate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "20101231"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $firstExposureOnly</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $washoutPeriod</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 365</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $sampleSize</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "restrictPlpDataSettings"</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

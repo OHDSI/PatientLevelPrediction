@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -119,6 +119,39 @@
     <p>This function can be used to specify the database settings used to upload PatientLevelPrediction results into a database</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">createDatabaseSchemaSettings</span><span class="op">(</span>resultSchema <span class="op">=</span> <span class="st">"cdm"</span>,</span></span>
+<span class="r-in"><span>                             tablePrefix <span class="op">=</span> <span class="st">"plp_"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $resultSchema</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cdm"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tablePrefix</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "PLP_"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $targetDialect</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "sqlite"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tempEmulationSchema</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $cohortDefinitionSchema</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cdm"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tablePrefixCohortDefinitionTables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "PLP_"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $databaseDefinitionSchema</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cdm"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tablePrefixDatabaseDefinitionTables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "PLP_"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "plpDatabaseResultSchema"</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

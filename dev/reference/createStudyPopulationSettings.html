@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,6 +147,16 @@ specified).</p></dd>
 for creating the study population</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create study population settings with a washout period of 30 days and a </span></span></span>
+<span class="r-in"><span><span class="co"># risk window of 1 to 90 days</span></span></span>
+<span class="r-in"><span><span class="va">populationSettings</span> <span class="op">&lt;-</span> <span class="fu">createStudyPopulationSettings</span><span class="op">(</span>washoutPeriod <span class="op">=</span> <span class="fl">30</span>, </span></span>
+<span class="r-in"><span>                                                    riskWindowStart <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                                    riskWindowEnd <span class="op">=</span> <span class="fl">90</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>issue: minTimeAtRisk is greater than max possible time-at-risk</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

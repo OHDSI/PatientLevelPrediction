@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2025-02-03</h4>
+            <h4 data-toc-skip class="date">2025-04-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/AddingCustomModels.Rmd" class="external-link"><code>vignettes/AddingCustomModels.Rmd</code></a></small>
       <div class="d-none name"><code>AddingCustomModels.Rmd</code></div>
@@ -464,7 +464,7 @@ classifiers).</p>
 <span>  <span class="co"># get CV and train prediction</span></span>
 <span>  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">prediction</span>, <span class="va">finalResult</span><span class="op">$</span><span class="va">prediction</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="va">varImp</span> <span class="op">&lt;-</span> <span class="va">covariateRef</span> <span class="op">%&gt;%</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="va">varImp</span> <span class="op">&lt;-</span> <span class="va">covariateRef</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="co"># no feature importance available</span></span>
 <span>  <span class="va">vqrImp</span><span class="op">$</span><span class="va">covariateValue</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span></span>
@@ -586,7 +586,7 @@ prediction for.</p>
 <span>    <span class="va">matrixObjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/toSparseM.html">toSparseM</a></span><span class="op">(</span></span>
 <span>      plpData <span class="op">=</span> <span class="va">data</span>,</span>
 <span>      cohort <span class="op">=</span> <span class="va">cohort</span>,</span>
-<span>      map <span class="op">=</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">covariateImportance</span> <span class="op">%&gt;%</span></span>
+<span>      map <span class="op">=</span> <span class="va">plpModel</span><span class="op">$</span><span class="va">covariateImportance</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>        <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="st">"columnId"</span>, <span class="st">"covariateId"</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span></span>
@@ -606,8 +606,8 @@ prediction for.</p>
 <span></span>
 <span>  <span class="co"># fix the rowIds to be the old ones</span></span>
 <span>  <span class="co"># now use the originalRowId and remove the matrix rowId</span></span>
-<span>  <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">cohort</span> <span class="op">%&gt;%</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="st">"rowId"</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="va">cohort</span> <span class="op">&lt;-</span> <span class="va">cohort</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="st">"rowId"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/rename.html" class="external-link">rename</a></span><span class="op">(</span>rowId <span class="op">=</span> <span class="st">"originalRowId"</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">cohort</span>, <span class="st">"metaData"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>modelType <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plpModel</span>, <span class="st">"modelType"</span><span class="op">)</span><span class="op">)</span></span>

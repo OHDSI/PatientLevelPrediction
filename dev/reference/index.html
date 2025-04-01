@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +83,12 @@
 
         </dt>
         <dd>Extract the patient level prediction data from the server</dd>
+      </dl><dl><dt>
+
+          <code><a href="getEunomiaPlpData.html">getEunomiaPlpData()</a></code>
+
+        </dt>
+        <dd>Create a plpData object from the Eunomia database'</dd>
       </dl><dl><dt>
 
           <code><a href="savePlpData.html">savePlpData()</a></code>
@@ -206,7 +212,7 @@
           <code><a href="createStratifiedImputationSettings.html">createStratifiedImputationSettings()</a></code>
 
         </dt>
-        <dd>Create the settings for adding a spline for continuous variables</dd>
+        <dd>Create the settings for using stratified imputation.</dd>
       </dl><dl><dt>
 
           <code><a href="createNormalizer.html">createNormalizer()</a></code>
@@ -253,7 +259,7 @@
           <code><a href="validateExternal.html">validateExternal()</a></code>
 
         </dt>
-        <dd>externalValidatePlp - Validate model performance on new data</dd>
+        <dd>validateExternal - Validate model performance on new data</dd>
       </dl><dl><dt>
 
           <code><a href="createValidationSettings.html">createValidationSettings()</a></code>
@@ -341,7 +347,7 @@
           <code><a href="setMLP.html">setMLP()</a></code>
 
         </dt>
-        <dd>Create setting for neural network model with python</dd>
+        <dd>Create setting for neural network model with python's scikit-learn. For bigger models, consider using <code>DeepPatientLevelPrediction</code> package.</dd>
       </dl><dl><dt>
 
           <code><a href="setNaiveBayes.html">setNaiveBayes()</a></code>
@@ -567,40 +573,10 @@
         <dd>Create the results tables to store PatientLevelPrediction models and results into a database</dd>
       </dl><dl><dt>
 
-          <code><a href="addMultipleRunPlpToDatabase.html">addMultipleRunPlpToDatabase()</a></code>
-
-        </dt>
-        <dd>Populate the PatientLevelPrediction results tables</dd>
-      </dl><dl><dt>
-
-          <code><a href="addRunPlpToDatabase.html">addRunPlpToDatabase()</a></code>
-
-        </dt>
-        <dd>Function to add the run plp (development or validation) to database</dd>
-      </dl><dl><dt>
-
           <code><a href="createDatabaseSchemaSettings.html">createDatabaseSchemaSettings()</a></code>
 
         </dt>
         <dd>Create the PatientLevelPrediction database result schema settings</dd>
-      </dl><dl><dt>
-
-          <code><a href="createDatabaseList.html">createDatabaseList()</a></code>
-
-        </dt>
-        <dd>Create a list with the database details and database meta data entries</dd>
-      </dl><dl><dt>
-
-          <code><a href="addDiagnosePlpToDatabase.html">addDiagnosePlpToDatabase()</a></code>
-
-        </dt>
-        <dd>Insert a diagnostic result into a PLP result schema database</dd>
-      </dl><dl><dt>
-
-          <code><a href="addMultipleDiagnosePlpToDatabase.html">addMultipleDiagnosePlpToDatabase()</a></code>
-
-        </dt>
-        <dd>Insert multiple diagnosePlp results saved to a directory into a PLP result schema database</dd>
       </dl><dl><dt>
 
           <code><a href="extractDatabaseToCsv.html">extractDatabaseToCsv()</a></code>
@@ -613,12 +589,6 @@
 
         </dt>
         <dd>Function to insert results into a database from csvs</dd>
-      </dl><dl><dt>
-
-          <code><a href="insertModelDesignInDatabase.html">insertModelDesignInDatabase()</a></code>
-
-        </dt>
-        <dd>Insert a model design into a PLP result schema database</dd>
       </dl><dl><dt>
 
           <code><a href="migrateDataModel.html">migrateDataModel()</a></code>
@@ -742,7 +712,7 @@
           <code><a href="plotPredictionDistribution.html">plotPredictionDistribution()</a></code>
 
         </dt>
-        <dd>Plot the side-by-side boxplots of prediction distribution, by class#'</dd>
+        <dd>Plot the side-by-side boxplots of prediction distribution, by class</dd>
       </dl><dl><dt>
 
           <code><a href="plotVariableScatterplot.html">plotVariableScatterplot()</a></code>
@@ -797,10 +767,10 @@
         <dd>Generate simulated data</dd>
       </dl><dl><dt>
 
-          <code><a href="plpDataSimulationProfile.html">plpDataSimulationProfile</a></code>
+          <code><a href="simulationProfile.html">simulationProfile</a></code>
 
         </dt>
-        <dd>A simulation profile</dd>
+        <dd>A simulation profile for generating synthetic patient level prediction data</dd>
       </dl></div><div class="section level2">
       <h2 id="data-manipulation-functions">Data manipulation functions<a class="anchor" aria-label="anchor" href="#data-manipulation-functions"></a></h2>
 
@@ -993,13 +963,13 @@
           <code><a href="loadPrediction.html">loadPrediction()</a></code>
 
         </dt>
-        <dd>Loads the prediciton dataframe to csv</dd>
+        <dd>Loads the prediction dataframe to json</dd>
       </dl><dl><dt>
 
           <code><a href="savePrediction.html">savePrediction()</a></code>
 
         </dt>
-        <dd>Saves the prediction dataframe to RDS</dd>
+        <dd>Saves the prediction dataframe to a json file</dd>
       </dl></div><div class="section level2">
       <h2 id="feature-importance">Feature importance<a class="anchor" aria-label="anchor" href="#feature-importance"></a></h2>
 

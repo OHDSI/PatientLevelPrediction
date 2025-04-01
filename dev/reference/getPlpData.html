@@ -9,7 +9,7 @@ extract the data needed to perform the analysis."><meta name="robots" content="n
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,28 +89,8 @@ Created using <code><a href="createRestrictPlpDataSettings.html">createRestrictP
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Returns an object of type <code>plpData</code>, containing information on the cohorts, their
-outcomes, and baseline covariates. Information about multiple outcomes can be captured at once for
-efficiency reasons. This object is a list with the following components:</p><dl><dt>outcomes</dt>
-<dd><p>A data frame listing the outcomes per person, including the time to event, and
-the outcome id. Outcomes are not yet filtered based on risk window, since this is done at
-a later stage.</p></dd>
- <dt>cohorts</dt>
-<dd><p>A data frame listing the persons in each cohort, listing their
-exposure status as well as the time to the end of the observation period and time to the end of the
-cohort (usually the end of the exposure era).</p></dd>
- <dt>covariates</dt>
-<dd><p>An Andromeda object listing the
-baseline covariates per person in the two cohorts. This is done using a sparse representation:
-covariates with a value of 0 are omitted to save space. Usually has three columns,
-rowId, covariateId and covariateValue'.</p></dd>
- <dt>covariateRef</dt>
-<dd><p>An Andromeda object describing the covariates that have been extracted.</p></dd>
-
-<dt>AnalysisRef</dt>
-<dd><p>An Andromeda object with information about which analysisIds from 'FeatureExtraction' were used.</p></dd>
-
-</dl></div>
+    <p>'r plpDataObjectDoc()`</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Based on the arguments, the at risk cohort data is retrieved, as well as outcomes
@@ -124,6 +104,10 @@ manually add the concept_ids and descendants to the <code>excludedCovariateConce
 <code>covariateSettings</code> argument.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

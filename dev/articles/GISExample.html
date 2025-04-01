@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Jared
 Houghtaling</h4>
             
-            <h4 data-toc-skip class="date">2025-02-03</h4>
+            <h4 data-toc-skip class="date">2025-04-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/GISExample.Rmd" class="external-link"><code>vignettes/GISExample.Rmd</code></a></small>
       <div class="d-none name"><code>GISExample.Rmd</code></div>
@@ -102,9 +102,10 @@ EXPOSURE_OCCURRENCE table can be utilized in the training and evaluation
 of an OMOP-specific patient-level-prediction (PLP) model. The analytic
 process we executed and describe below relies on a GIS-version of the
 Tufts Synthetic Dataset that has both EHR and geospatial data
-integrated; see the description of that dataset for more details about
-contents or access. Much of the work is based on the detailed vignette
-that describes custom feature engineering in PLP
+integrated; see the <a href="https://github.com/OHDSI/GIS/issues/345#issuecomment-2417261931" class="external-link">description</a>
+of that dataset for more details about contents or access. Much of the
+work is based on the detailed vignette that describes custom feature
+engineering in PLP
 <code><a href="../articles/AddingCustomFeatureEngineering.html">vignette('AddingCustomFeatureEngineering')</a></code></p>
 </div>
 <div class="section level3">
@@ -323,10 +324,10 @@ that aligns well with our underlying relationship between Odds Ratio and
 PM2.5 concentration that we used to distribute our synthetic data by
 location:</p>
 <div class="float">
-<img src="" alt="Covariate Fit"><div class="figcaption">Covariate Fit</div>
+<img src="images%2Fgis1.avif" alt="Covariate Fit"><div class="figcaption">Covariate Fit</div>
 </div>
 <div class="float">
-<img src="" alt="OR Estimation"><div class="figcaption">OR Estimation</div>
+<img src="images%2Fgis2.avif" alt="OR Estimation"><div class="figcaption">OR Estimation</div>
 </div>
 </div>
 <div class="section level4">
@@ -374,7 +375,7 @@ evaluate output<a class="anchor" aria-label="anchor" href="#step-5-apply-new-tra
 <span></span>
 <span><span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">predictionTest</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">predictionTest</span>, <span class="va">prediction</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span><span class="op">!=</span><span class="st">'index'</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="op">}</span> </span>
+<span><span class="op">}</span></span>
 <span></span>
 <span></span>
 <span><span class="op">}</span></span></code></pre></div>

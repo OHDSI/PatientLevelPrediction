@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@
 <span>  validationRestrictPlpDataSettings <span class="op">=</span> <span class="fu"><a href="createRestrictPlpDataSettings.html">createRestrictPlpDataSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  settings <span class="op">=</span> <span class="fu"><a href="createValidationSettings.html">createValidationSettings</a></span><span class="op">(</span>recalibrate <span class="op">=</span> <span class="st">"weakRecalibration"</span><span class="op">)</span>,</span>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"INFO"</span>, logName <span class="op">=</span> <span class="st">"validatePLP"</span><span class="op">)</span>,</span>
-<span>  outputFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  outputFolder <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,19 +103,22 @@ specifying how the logging is done</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An externalValidatePlp object containing the following components
-- model: The model object
-- executionSummary: A list of execution details
-- prediction: A dataframe containing the predictions
-- performanceEvaluation: A dataframe containing the performance metrics
-- covariateSummary: A dataframe containing the covariate summary</p>
-    </div>
+    <p>An externalValidatePlp object containing the following components</p><ul><li><p>model: The model object</p></li>
+<li><p>executionSummary: A list of execution details</p></li>
+<li><p>prediction: A dataframe containing the predictions</p></li>
+<li><p>performanceEvaluation: A dataframe containing the performance metrics</p></li>
+<li><p>covariateSummary: A dataframe containing the covariate summary</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Users need to input a trained model (the output of runPlp()) and new database connections. The function will return a list of length equal to the
 number of cdm_schemas input with the performance on the new data</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

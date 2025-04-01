@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +84,10 @@ covariate for it to be included in the model training</p></dd>
 
 
 <dt id="arg-removeredundancy">removeRedundancy<a class="anchor" aria-label="anchor" href="#arg-removeredundancy"></a></dt>
-<dd><p>Whether to remove redundant features (Default: TRUE)</p></dd>
+<dd><p>Whether to remove redundant features (Default: TRUE)
+Redundant features are features that within an analysisId together cover all
+observations. For example with ageGroups, if you have ageGroup 0-18 and 18-100
+and all patients are in one of these groups, then one of these groups is redundant.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -97,6 +100,23 @@ covariate for it to be included in the model training</p></dd>
 preprocess the training data</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create the settings for preprocessing, remove no features, normalise the data</span></span></span>
+<span class="r-in"><span><span class="fu">createPreprocessSettings</span><span class="op">(</span>minFraction <span class="op">=</span> <span class="fl">0.0</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span>, removeRedundancy <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $minFraction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $normalize</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $removeRedundancy</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "preprocessSettings"</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

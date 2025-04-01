@@ -9,7 +9,7 @@ whether the prediction problem is worth executing."><meta name="robots" content=
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -129,7 +129,6 @@ The default is none.</p></dd>
 <li><p>setAdaBoost() An ada boost model</p></li>
 <li><p>setRandomForest() A random forest model</p></li>
 <li><p>setDecisionTree() A decision tree model</p></li>
-<li><p>setKNN() A KNN model</p></li>
 </ul></dd>
 
 
@@ -147,17 +146,10 @@ and whether to normalise the covariates before training</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object containing the model or location where the model is saved, the data selection settings, the preprocessing
-and training settings as well as various performance measures obtained by the model.</p>
-<dl><dt>distribution</dt>
-<dd><p>list for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index)</p></dd>
-
-<dt>incident</dt>
-<dd><p>list for each O of incidence of O in T during TAR</p></dd>
-
-<dt>characterization</dt>
-<dd><p>list for each O of Characterization of T, TnO, Tn~O</p></dd>
-
-</dl></div>
+and training settings as well as various performance measures obtained by the model.</p><ul><li><p><code>distribution</code>: List for each O of a data.frame containing: i) Time to observation end distribution, ii) Time from observation start distribution, iii) Time to event distribution and iv) Time from last prior event to index distribution (only for patients in T who have O before index)</p></li>
+<li><p><code>incident</code>: List for each O of incidence of O in T during TAR</p></li>
+<li><p><code>characterization</code>: List for each O of Characterization of T, TnO, Tn~O</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Users can define set of Ts, Os, databases and population settings.  A list of data.frames containing details such as
@@ -165,6 +157,10 @@ follow-up time distribution, time-to-event information, characteriszation detail
 observation time distribution.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

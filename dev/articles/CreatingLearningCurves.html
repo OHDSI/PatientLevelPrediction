@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Luis H. John,
 Jenna M. Reps, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2025-02-03</h4>
+            <h4 data-toc-skip class="date">2025-04-01</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/CreatingLearningCurves.Rmd" class="external-link"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
       <div class="d-none name"><code>CreatingLearningCurves.Rmd</code></div>
@@ -157,7 +157,7 @@ make use of the data simulator. The following code snippet creates data
 for 12000 patients.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">plpDataSimulationProfile</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">simulationProfile</span><span class="op">)</span></span>
 <span><span class="va">sampleSize</span> <span class="op">&lt;-</span> <span class="fl">12000</span></span>
 <span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span></span>
 <span>  <span class="va">plpDataSimulationProfile</span>,</span>
@@ -206,7 +206,7 @@ your training set contains the number of events specified.</p>
 <span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  cores <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  modelSettings <span class="op">=</span> <span class="va">modelSettings</span>,</span>
-<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"learningCurve"</span><span class="op">)</span>,</span>
 <span>  analysisId <span class="op">=</span> <span class="st">"learningCurve"</span>,</span>
 <span>  populationSettings <span class="op">=</span> <span class="va">populationSettings</span>,</span>
 <span>  splitSettings <span class="op">=</span> <span class="va">splitSettings</span>,</span>
@@ -219,7 +219,7 @@ your training set contains the number of events specified.</p>
 <span>  executeSettings <span class="op">=</span> <span class="fu"><a href="../reference/createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span></span>
 <span>    runSplitData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    runSampleData <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    runfeatureEngineering <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    runFeatureEngineering <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    runPreprocessData <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    runCovariateSummary <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -279,7 +279,7 @@ use via the <code>cores</code> input.</p>
 </h2>
 <p>A publication titled ‘How little data do we need for patient-level
 prediction?’ uses the learning curve functionality in this package and
-can be accessed as preprint in the arXiv archives at <a href="https://arxiv.org/abs/2008.07361" class="external-link uri">https://arxiv.org/abs/2008.07361</a>.</p>
+can be accessed at <a href="https://doi.org/10.1016/j.ijmedinf.2022.104762" class="external-link uri">https://doi.org/10.1016/j.ijmedinf.2022.104762</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>

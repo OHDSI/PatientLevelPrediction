@@ -20,10 +20,6 @@
 <url><loc>/dev/news/index.html</loc></url>
 <url><loc>/dev/reference/MapIds.html</loc></url>
 <url><loc>/dev/reference/PatientLevelPrediction.html</loc></url>
-<url><loc>/dev/reference/addDiagnosePlpToDatabase.html</loc></url>
-<url><loc>/dev/reference/addMultipleDiagnosePlpToDatabase.html</loc></url>
-<url><loc>/dev/reference/addMultipleRunPlpToDatabase.html</loc></url>
-<url><loc>/dev/reference/addRunPlpToDatabase.html</loc></url>
 <url><loc>/dev/reference/averagePrecision.html</loc></url>
 <url><loc>/dev/reference/brierScore.html</loc></url>
 <url><loc>/dev/reference/calibrationInLarge.html</loc></url>
@@ -34,7 +30,6 @@
 <url><loc>/dev/reference/covariateSummary.html</loc></url>
 <url><loc>/dev/reference/createCohortCovariateSettings.html</loc></url>
 <url><loc>/dev/reference/createDatabaseDetails.html</loc></url>
-<url><loc>/dev/reference/createDatabaseList.html</loc></url>
 <url><loc>/dev/reference/createDatabaseSchemaSettings.html</loc></url>
 <url><loc>/dev/reference/createDefaultExecuteSettings.html</loc></url>
 <url><loc>/dev/reference/createDefaultSplitSetting.html</loc></url>
@@ -72,6 +67,7 @@
 <url><loc>/dev/reference/getCalibrationSummary.html</loc></url>
 <url><loc>/dev/reference/getCohortCovariateData.html</loc></url>
 <url><loc>/dev/reference/getDemographicSummary.html</loc></url>
+<url><loc>/dev/reference/getEunomiaPlpData.html</loc></url>
 <url><loc>/dev/reference/getPlpData.html</loc></url>
 <url><loc>/dev/reference/getPredictionDistribution.html</loc></url>
 <url><loc>/dev/reference/getPredictionDistribution_binary.html</loc></url>
@@ -79,7 +75,6 @@
 <url><loc>/dev/reference/ici.html</loc></url>
 <url><loc>/dev/reference/index.html</loc></url>
 <url><loc>/dev/reference/insertCsvToDatabase.html</loc></url>
-<url><loc>/dev/reference/insertModelDesignInDatabase.html</loc></url>
 <url><loc>/dev/reference/insertResultsToSqlite.html</loc></url>
 <url><loc>/dev/reference/iterativeImpute.html</loc></url>
 <url><loc>/dev/reference/listAppend.html</loc></url>
@@ -110,7 +105,6 @@
 <url><loc>/dev/reference/plotSparseCalibration2.html</loc></url>
 <url><loc>/dev/reference/plotSparseRoc.html</loc></url>
 <url><loc>/dev/reference/plotVariableScatterplot.html</loc></url>
-<url><loc>/dev/reference/plpDataSimulationProfile.html</loc></url>
 <url><loc>/dev/reference/pmmFit.html</loc></url>
 <url><loc>/dev/reference/predictCyclops.html</loc></url>
 <url><loc>/dev/reference/predictGlm.html</loc></url>
@@ -144,6 +138,7 @@
 <url><loc>/dev/reference/setSVM.html</loc></url>
 <url><loc>/dev/reference/simpleImpute.html</loc></url>
 <url><loc>/dev/reference/simulatePlpData.html</loc></url>
+<url><loc>/dev/reference/simulationProfile.html</loc></url>
 <url><loc>/dev/reference/sklearnFromJson.html</loc></url>
 <url><loc>/dev/reference/sklearnToJson.html</loc></url>
 <url><loc>/dev/reference/splitData.html</loc></url>

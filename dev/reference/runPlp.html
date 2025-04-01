@@ -17,7 +17,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,8 +79,8 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">runPlp</span><span class="op">(</span></span>
 <span>  <span class="va">plpData</span>,</span>
-<span>  outcomeId <span class="op">=</span> <span class="va">plpData</span><span class="op">$</span><span class="va">metaData</span><span class="op">$</span><span class="va">call</span><span class="op">$</span><span class="va">outcomeIds</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
-<span>  analysisId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">metaData</span><span class="op">$</span><span class="va">call</span><span class="op">$</span><span class="va">outcomeIds</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, sep <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span>,</span>
+<span>  outcomeId <span class="op">=</span> <span class="va">plpData</span><span class="op">$</span><span class="va">metaData</span><span class="op">$</span><span class="va">databaseDetails</span><span class="op">$</span><span class="va">outcomeIds</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>  analysisId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">outcomeId</span>, sep <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span>,</span>
 <span>  analysisName <span class="op">=</span> <span class="st">"Study details"</span>,</span>
 <span>  populationSettings <span class="op">=</span> <span class="fu"><a href="createStudyPopulationSettings.html">createStudyPopulationSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  splitSettings <span class="op">=</span> <span class="fu"><a href="createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"stratified"</span>, testFraction <span class="op">=</span> <span class="fl">0.25</span>,</span>
@@ -92,7 +92,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"DEBUG"</span>, timeStamp <span class="op">=</span> <span class="cn">TRUE</span>, logName <span class="op">=</span></span>
 <span>    <span class="st">"runPlp Log"</span><span class="op">)</span>,</span>
 <span>  executeSettings <span class="op">=</span> <span class="fu"><a href="createDefaultExecuteSettings.html">createDefaultExecuteSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  saveDirectory <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  saveDirectory <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -170,7 +170,7 @@ specifying how the logging is done</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An plpResults object containing the following:</p>
-<p></p><ul><li><p>model The developed model of class <code>plpModel</code></p></li>
+<ul><li><p>model The developed model of class <code>plpModel</code></p></li>
 <li><p>executionSummary A list containing the hardward details, R package details and execution time</p></li>
 <li><p>performanceEvaluation Various internal performance metrics in sparse format</p></li>
 <li><p>prediction The plpData cohort table with the predicted risks added as a column (named value)</p></li>
@@ -183,6 +183,10 @@ specifying how the logging is done</p></dd>
 develop and internally validate a model for the specified outcomeId.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +55,46 @@
       <small>Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="6.4.0.9999" id="patientlevelprediction-6409999">PatientLevelPrediction 6.4.0.9999<a class="anchor" aria-label="anchor" href="#patientlevelprediction-6409999"></a></h2>
+<ul><li>Fix bug when sampleSize is NULL but restricting by dates in getPlpData</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="6.4" id="patientlevelprediction-64">PatientLevelPrediction 6.4<a class="anchor" aria-label="anchor" href="#patientlevelprediction-64"></a></h2>
+<ul><li>Official maintainer updated to Egill Fridgeirsson</li>
+<li>Feature: Added experimental imputation methods
+<ul><li>Simple imputation using median or mean</li>
+<li>Iterative imputation by chained equations using predictive mean matchin</li>
+</ul></li>
+<li>Feature: Added more feature engineering methods to deal with rare features and normalization of numerical features
+<ul><li>Min/Max normalization</li>
+<li>Robust normalization which normalizes by the interquartile range and optionally squashes the features to a range -3 to 3</li>
+</ul></li>
+<li>Feature: Added existingSplit settings where users can split data bases on an existing split</li>
+<li>Feature: Added a net benefit plot <code>plotNetBenefit</code>
+</li>
+<li>Feature: Added timings that are printed to the log to most functions in the pipeline</li>
+<li>Feature: Now a model trained with <code>scikit-learn</code> in python can be converted with <code>createSklearnModel</code> and used to predict on new data with the package</li>
+<li>Feature: Added a convenience function <code>getEunomiaPlpData</code> to get some data in one line.</li>
+<li>Docs: Added a new GIS example to the docs (thanks <a href="https://github.com/jshoughtaling" class="external-link">@jshoughtaling</a>)</li>
+<li>Docs: All exported functions (about 120) now have runnable examples. All examples are now conditinally executed if required. Shiny examples only executed in interactive sessions, examples using packages in suggests only executed if they are installed and so on.</li>
+<li>Docs: Fixed linting errors and R codestyle in docs to conform to HADES style</li>
+<li>Docs: Remove links to pdf’s, point to website instead.</li>
+<li>Docs: Fix broken links in Readme and BuildingPredictiveModels vignette</li>
+<li>Internal: Added support for coming <code>duckdb</code> backed <code>Andromeda</code>
+<ul><li>Only create indexes for <code>sqlite</code> backed <code>Andromeda</code>
+</li>
+</ul></li>
+<li>Internal: Removed the old simulationProfile and added a new one based on Eunomia
+<ul><li>This will allow us to quickly simulate small datasets for examples</li>
+<li>Manually specified an outcome model tailored to <code>Eunomia</code>
+</li>
+</ul></li>
+<li>Internal: Went through all tests and put <code>skip_if_offline</code> or <code>skip_if_not_installed</code> where appropriate. Tests using <code>Eunomia</code> need internet and tests using any suggest packages need <code>skip_if_not_installed</code>. Put <code>skip_on_cran</code> for all tests requiring python</li>
+<li>Internal: Cleaned up dependencies. Moved what could be moved to suggest and put behind a <code><a href="https://rlang.r-lib.org/reference/is_installed.html" class="external-link">rlang::check_installed</a></code> flag. This means the installation is much lighter if only using the basic functionality of the package, e.g. develop a model using Cyclops.</li>
+<li>CI: Use UV for python management on github actions and upgrade ubuntu version to 24.04</li>
+<li>CI: Added an action to detect broken links in repo</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="6.3.9" id="patientlevelprediction-639">PatientLevelPrediction 6.3.9<a class="anchor" aria-label="anchor" href="#patientlevelprediction-639"></a></h2>
 <ul><li>Hotfix adding schema to DatabaseConnector::getTableNames when creating results tables</li>

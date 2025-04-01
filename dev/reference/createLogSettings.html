@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,7 +93,7 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>logSettings</code></p>
+    <p>An object of class <code>logSettings</code> containing the settings for the logger</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -102,7 +102,9 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">createLogSettings</span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"DEBUG"</span>, timeStamp <span class="op">=</span> <span class="cn">TRUE</span>, logName <span class="op">=</span> <span class="st">"runPlp Log"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># create a log settings object with DENUG verbosity, timestamp and log name </span></span></span>
+<span class="r-in"><span><span class="co"># "runPlp Log". This needs to be passed to `runPlp`.</span></span></span>
+<span class="r-in"><span><span class="fu">createLogSettings</span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"DEBUG"</span>, timeStamp <span class="op">=</span> <span class="cn">TRUE</span>, logName <span class="op">=</span> <span class="st">"runPlp Log"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use timeStamp: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $verbosity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "DEBUG"</span>

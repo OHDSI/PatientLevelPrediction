@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,8 +70,8 @@
 <span>  tempEmulationSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
 <span>  cohortDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
 <span>  cohortTable <span class="op">=</span> <span class="st">"cohort"</span>,</span>
-<span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">cdmDatabaseSchema</span>,</span>
-<span>  outcomeTable <span class="op">=</span> <span class="st">"cohort"</span>,</span>
+<span>  outcomeDatabaseSchema <span class="op">=</span> <span class="va">cohortDatabaseSchema</span>,</span>
+<span>  outcomeTable <span class="op">=</span> <span class="va">cohortTable</span>,</span>
 <span>  targetId <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  outcomeIds <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cdmVersion <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -152,14 +152,29 @@ SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with the the database specific settings</p>
-    </div>
+    <p>A list with the the database specific settings:</p><ul><li><p><code>connectionDetails</code>: An R object of type <code>connectionDetails</code> created using the function <code>createConnectionDetails</code> in the <code>DatabaseConnector</code> package.</p></li>
+<li><p><code>cdmDatabaseSchema</code>: The name of the database schema that contains the OMOP CDM instance.</p></li>
+<li><p><code>cdmDatabaseName</code>: A string with the name of the database - this is used in the shiny app and when externally validating models to name the result list and to specify the folder name when saving validation results (defaults to cdmDatabaseSchema if not specified).</p></li>
+<li><p><code>cdmDatabaseId</code>: A string with a unique identifier for the database and version - this is stored in the plp object for future reference and used by the shiny app (defaults to cdmDatabaseSchema if not specified).</p></li>
+<li><p><code>tempEmulationSchema</code>: The name of a databae schema where you want all temporary tables to be managed. Requires create/insert permissions to this database.</p></li>
+<li><p><code>cohortDatabaseSchema</code>: The name of the database schema that is the location where the target cohorts are available. Requires read permissions to this schema.</p></li>
+<li><p><code>cohortTable</code>: The tablename that contains the target cohorts. Expectation is cohortTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.</p></li>
+<li><p><code>outcomeDatabaseSchema</code>: The name of the database schema that is the location where the data used to define the outcome cohorts is available. Requires read permissions to this database.</p></li>
+<li><p><code>outcomeTable</code>: The tablename that contains the outcome cohorts. Expectation is outcomeTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.</p></li>
+<li><p><code>targetId</code>: An integer specifying the cohort id for the target cohort</p></li>
+<li><p><code>outcomeIds</code>: A single integer or vector of integers specifying the cohort ids for the outcome cohorts</p></li>
+<li><p><code>cdmVersion</code>: Define the OMOP CDM version used: currently support "4" and "5".</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function simply stores the settings for communicating with the cdmDatabase when extracting
 the target cohort and outcomes</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

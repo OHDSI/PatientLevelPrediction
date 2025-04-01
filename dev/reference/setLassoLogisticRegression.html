@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,16 +90,16 @@
 
 
 <dt id="arg-includecovariateids">includeCovariateIds<a class="anchor" aria-label="anchor" href="#arg-includecovariateids"></a></dt>
-<dd><p>a set of covariate IDS to limit the analysis to</p></dd>
+<dd><p>a set of covariateIds to limit the analysis to</p></dd>
 
 
 <dt id="arg-noshrinkage">noShrinkage<a class="anchor" aria-label="anchor" href="#arg-noshrinkage"></a></dt>
-<dd><p>a set of covariates whcih are to be forced to be includedin
-in the final model. default is the intercept</p></dd>
+<dd><p>a set of covariates whcih are to be forced to be included in
+in the final model. Default is the intercept</p></dd>
 
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
-<dd><p>An option to set number of threads when training model</p></dd>
+<dd><p>An option to set number of threads when training model.</p></dd>
 
 
 <dt id="arg-forceintercept">forceIntercept<a class="anchor" aria-label="anchor" href="#arg-forceintercept"></a></dt>
@@ -115,7 +115,7 @@ in the final model. default is the intercept</p></dd>
 
 
 <dt id="arg-tolerance">tolerance<a class="anchor" aria-label="anchor" href="#arg-tolerance"></a></dt>
-<dd><p>Numeric: maximum relative change in convergence criterionfrom
+<dd><p>Numeric: maximum relative change in convergence criterion from
 from successive iterations to achieve convergence</p></dd>
 
 
@@ -126,17 +126,17 @@ before returning a failed-to-converge error</p></dd>
 
 <dt id="arg-priorcoefs">priorCoefs<a class="anchor" aria-label="anchor" href="#arg-priorcoefs"></a></dt>
 <dd><p>Use coefficients from a previous model as starting
-points for model fit (transfer learning</p></dd>
+points for model fit (transfer learning)</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>`modelSettings` object</p>
+    <p><code>modelSettings</code> object</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">modelLasso</span> <span class="op">&lt;-</span> <span class="fu">setLassoLogisticRegression</span><span class="op">(</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">modelLasso</span> <span class="op">&lt;-</span> <span class="fu">setLassoLogisticRegression</span><span class="op">(</span>seed<span class="op">=</span><span class="fl">42</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

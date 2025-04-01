@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">getPredictionDistribution</span><span class="op">(</span></span>
 <span>  <span class="va">prediction</span>,</span>
-<span>  <span class="va">predictionType</span>,</span>
+<span>  predictionType <span class="op">=</span> <span class="st">"binary"</span>,</span>
 <span>  typeColumn <span class="op">=</span> <span class="st">"evaluation"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -95,6 +95,27 @@ the mean and standard deviation per class</p>
     <p>Calculates the quantiles from a predition object</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>rowId <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, </span></span>
+<span class="r-in"><span>                         outcomeCount <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="fl">1</span>, prob<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                         value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                         evaluation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Train"</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">getPredictionDistribution</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   class PersonCount averagePredictedProbability StDevPredictedProbability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          59                   0.4573650                 0.3173900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          41                   0.4679611                 0.2767069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MinPredictedProbability P05PredictedProbability P25PredictedProbability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0038786188              0.05016270               0.1871836</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.0008937623              0.02819794               0.3078777</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MedianPredictedProbability P75PredictedProbability P95PredictedProbability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.4287375               0.7820303               0.9386516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.4382716               0.6981910               0.9258297</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MaxPredictedProbability evaluation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9891444      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9465100      Train</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

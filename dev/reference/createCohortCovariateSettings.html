@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.3.9.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -130,8 +130,8 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class covariateSettings specifying how to create the cohort covariate with the covariateId
- cohortId x 100000 + settingId x 1000 + analysisId</p>
+    <p>An object of class <code>covariateSettings</code> specifying how to create the cohort covariate with the covariateId
+cohortId x 100000 + settingId x 1000 + analysisId</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -139,6 +139,52 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 cohort during the time periods relative to target population cohort index</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">createCohortCovariateSettings</span><span class="op">(</span>cohortName<span class="op">=</span><span class="st">"testCohort"</span>,</span></span>
+<span class="r-in"><span>                              settingId<span class="op">=</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                              cohortId<span class="op">=</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                              cohortDatabaseSchema<span class="op">=</span><span class="st">"cohorts"</span>,</span></span>
+<span class="r-in"><span>                              cohortTable<span class="op">=</span><span class="st">"cohort_table"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $covariateName</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "testCohort"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $covariateId</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 101456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $cohortDatabaseSchema</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cohorts"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $cohortTable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cohort_table"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $cohortIds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $startDay</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -30</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $endDays</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $count</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $ageInteraction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lnAgeInteraction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $analysisId</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 456</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"fun")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "PatientLevelPrediction::getCohortCovariateData"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "covariateSettings"</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
