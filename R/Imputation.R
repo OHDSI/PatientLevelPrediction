@@ -118,7 +118,6 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     )
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
-    attributes(outputData$covariateData) <- attributes(trainData$covariateData)
     class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
@@ -198,7 +197,6 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     )
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
-    attributes(outputData$covariateData) <- attributes(trainData$covariateData)
     class(outputData$covariateData) <- "CovariateData"
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -286,7 +284,6 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
-    attributes(outputData$covariateData) <- attributes(trainData$covariateData)
     class(outputData$covariateData) <- "CovariateData"
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
@@ -343,7 +340,6 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     )
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
-    attributes(outputData$covariateData) <- attributes(trainData$covariateData)
     class(outputData$covariateData) <- "CovariateData"
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
