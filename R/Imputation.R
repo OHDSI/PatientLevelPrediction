@@ -119,6 +119,8 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -126,7 +128,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(is.na(.data$missing) ||
+      dplyr::filter(is.na(.data$missing) |
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
 
@@ -198,6 +200,8 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
@@ -285,6 +289,8 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -341,6 +347,8 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     class(outputData) <- "plpData"
     attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
