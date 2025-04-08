@@ -8,7 +8,8 @@ validateExternal(
   validationDesignList,
   databaseDetails,
   logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-  outputFolder
+  outputFolder,
+  cohortDefinitions = NULL
 )
 }
 \arguments{
