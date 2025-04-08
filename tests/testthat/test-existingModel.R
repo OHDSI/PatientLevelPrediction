@@ -127,7 +127,7 @@ test_that("Externally trained sklearn model works", {
     dplyr::pull(.data$covariateId) %>%
     unique()
   map <- data.frame(
-    columnId = sample(1:20, length(covariateIds)),
+    columnId = sample(seq_along(covariateIds), length(covariateIds)),
     covariateId = sample(covariateIds, length(covariateIds))
   )
   matrixData <- toSparseM(tinyTrainData, map = map)

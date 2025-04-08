@@ -606,7 +606,11 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     # fit the normalization
     # find continuous features from trainData$covariateData$analysisRef
@@ -647,15 +651,19 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     # apply the normalization to test data by using saved normalization values
+    outData$covariateData$minMaxs <- attr(featureEngineeringSettings, "minMaxs")
+    on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(attr(featureEngineeringSettings, "minMaxs"),
-        by = "covariateId", copy = TRUE
-      ) %>%
+      dplyr::left_join(outData$covariateData$minMaxs,
+        by = "covariateId") %>%
       dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
         (.data$covariateValue - min) / (max - min),
         .data$covariateValue
@@ -702,7 +710,11 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -766,13 +778,18 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     # apply the normalization to test data by using saved normalization values
+    outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
+    on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(attr(featureEngineeringSettings, "quantiles"),
+      dplyr::left_join(outData$covariateData$quantiles,
         by = "covariateId", copy = TRUE
       ) %>%
       dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && !is.na(.data$median),
@@ -863,7 +880,11 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(count = dplyr::n()) %>%
@@ -892,10 +913,13 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
     )
     outData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outData) <- "plpData"
+    attributes(outData) <- attributes(trainData)
     class(outData$covariateData) <- "CovariateData"
+    attr(outData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
