@@ -544,8 +544,10 @@ createValidationDesign <-
 #' @export
 validateExternal <- function(validationDesignList,
                              databaseDetails,
-                             logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-                             outputFolder) {
+                             logSettings = createLogSettings(verbosity = "INFO", 
+                                                             logName = "validatePLP"),
+                             outputFolder,
+                             cohortDefinitions = NULL) {
   # Input checks
   changedInputs <- checkValidateExternalInputs(
     validationDesignList,
@@ -658,7 +660,7 @@ validateExternal <- function(validationDesignList,
       {
         insertResultsToSqlite(
           resultLocation = file.path(outputFolder, databaseName),
-          cohortDefinitions = NULL,
+          cohortDefinitions = cohortDefinitions,
           databaseList = createDatabaseList(
             cdmDatabaseSchemas = database$cdmDatabaseSchema,
             cdmDatabaseNames = database$cdmDatabaseName,
