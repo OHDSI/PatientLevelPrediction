@@ -516,6 +516,8 @@ createValidationDesign <-
 #' @param logSettings               An object of \code{logSettings} created
 #' using \code{createLogSettings}
 #' @param outputFolder        The directory to save the validation results to
+#' @param cohortDefinitions A cohortDefinitionSet object created with 
+#' `CohortGenerator`
 #' (subfolders are created per database in validationDatabaseDetails)
 #' @return A list of results
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
@@ -544,8 +546,10 @@ createValidationDesign <-
 #' @export
 validateExternal <- function(validationDesignList,
                              databaseDetails,
-                             logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-                             outputFolder) {
+                             logSettings = createLogSettings(verbosity = "INFO", 
+                                                             logName = "validatePLP"),
+                             outputFolder,
+                             cohortDefinitions = NULL) {
   # Input checks
   changedInputs <- checkValidateExternalInputs(
     validationDesignList,
@@ -658,7 +662,7 @@ validateExternal <- function(validationDesignList,
       {
         insertResultsToSqlite(
           resultLocation = file.path(outputFolder, databaseName),
-          cohortDefinitions = NULL,
+          cohortDefinitions = cohortDefinitions,
           databaseList = createDatabaseList(
             cdmDatabaseSchemas = database$cdmDatabaseSchema,
             cdmDatabaseNames = database$cdmDatabaseName,
