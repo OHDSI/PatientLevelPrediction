@@ -70,7 +70,7 @@ jobs:
           labels: |
             ${{ steps.docker_meta.outputs.labels }}
             maintainer=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
-            org.opencontainers.image.authors=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>, Henrik John <l.john@erasmusmc.nl>
+            org.opencontainers.image.authors=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
             org.opencontainers.image.vendor=OHDSI
             org.opencontainers.image.licenses=Apache-2.0
 
