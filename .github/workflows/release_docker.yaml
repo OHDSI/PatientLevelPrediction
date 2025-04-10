@@ -35,7 +35,7 @@ jobs:
         with:
           images: ${{ env.DOCKER_IMAGE }}
           tags: |
-            type=semver,pattern={{version}}
+            type=schedule, pattern=nightly
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
