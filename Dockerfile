@@ -12,6 +12,10 @@ RUN apt-get -y update && apt-get install -y \
       python3-dev \
       curl \
       ca-certificates \
+      libpcre2-dev \
+      libdeflate-dev \
+      liblzma-dev \
+      libbz2-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
@@ -60,6 +64,10 @@ RUN apt-get -y update && apt-get install -y \
       default-jdk \
       libssl3 \
       python3-dev \
+      libpcre2-8-0 \
+      libdeflate0 \
+      liblzma5 \
+      libbz2-1.0 \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/* \
