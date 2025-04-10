@@ -341,6 +341,7 @@ test_that("Removing rare features works", {
 
 test_that("two step FE and RClassifier works", {
   skip_if_offline()
+  skip_if_not_installed("xgboost")
 
   remover <- createRareFeatureRemover(threshold = 0.1)
   normalizer <- createNormalizer(type = "minmax")

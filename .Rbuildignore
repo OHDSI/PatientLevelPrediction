@@ -17,3 +17,4 @@ _pkgdown.yml
 ^Meta$
 ^CRAN-RELEASE$
 ^cran-comments\.md$
+^Dockerfile$
