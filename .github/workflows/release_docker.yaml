@@ -10,8 +10,8 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
-    name: ${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.runner }}
+    name: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
       matrix: 
