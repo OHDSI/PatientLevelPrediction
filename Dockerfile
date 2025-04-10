@@ -17,7 +17,7 @@ RUN apt-get -y update && apt-get install -y \
       && rm -rf /var/lib/apt/lists/*
 RUN R CMD javareconf
 
-RUN echo 'options(repos = c(CRAN = "https://p3m.dev/cran/__linux__/jammy/latest"))' >>"${R_HOME}/etc/Rprofile.site"
+RUN echo 'options(repos = c(CRAN = "https://p3m.dev/cran/__linux__/noble/latest"))' >>"${R_HOME}/etc/Rprofile.site"
 
 RUN install2.r -n -1 \
         remotes \
