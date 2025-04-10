@@ -1,4 +1,4 @@
-FROM docker.io/rocker/r-ver:4.4.1 AS build
+FROM docker.io/rocker/r-ver:4.4 AS build
 
 RUN --mount=type=secret,id=build_github_pat export GITHUB_PAT=$(cat /run/secrets/build_github_pat)
 
@@ -46,7 +46,7 @@ RUN uv pip install --system --no-cache-dir \
 
 RUN Rscript -e "ref <- Sys.getenv('GIT_COMMIT_ID_ABBREV', unset = Sys.getenv('GIT_BRANCH')); remotes::install_github('ohdsi/PatientLevelPrediction', ref=ref, dependencies = TRUE)"
 
-FROM docker.io/rocker/rstudio:4.4.1
+FROM docker.io/rocker/rstudio:4.4
 #
 COPY --from=build /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
 COPY --from=build /database_drivers /database_drivers
