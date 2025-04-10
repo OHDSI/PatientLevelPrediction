@@ -16,6 +16,7 @@ RUN apt-get -y update && apt-get install -y \
       libdeflate-dev \
       liblzma-dev \
       libbz2-dev \
+      libicu-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
@@ -68,6 +69,7 @@ RUN apt-get -y update && apt-get install -y \
       libdeflate0 \
       liblzma5 \
       libbz2-1.0 \
+      libicu70 \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/* \
