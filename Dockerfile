@@ -38,7 +38,7 @@ RUN sh /uv-installer.sh \
 ENV PATH="/root/.local/bin/:$PATH"
 
 # install python dependancies
-RUN uv pip install --system --no-cache-dir \
+RUN uv pip install --system --no-cache-dir --break-system-packages \
     scikit-learn \
     numpy \
     scipy \
