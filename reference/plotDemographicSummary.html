@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Plot the Observed vs. expected incidence, by age and gender</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
       <div class="d-none name"><code>plotDemographicSummary.Rd</code></div>
     </div>
 
@@ -114,11 +114,11 @@ format.</p>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"plotDemographicSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">plpData</span>, outcomeId <span class="op">=</span> <span class="fl">3</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use timeStamp: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/RtmpiJFC0z/plotDemographicSummary/2025-03-31-3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/RtmpemY49S/plotDemographicSummary/2025-04-10-3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Patient-Level Prediction Package version 6.4.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-03-31 17:04:20.864307</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisID:         2025-03-31-3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-04-10 18:31:05.937722</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisID:         2025-04-10-3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisName:       Study details</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> TargetID:           1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> OutcomeID:          3</span>
@@ -126,78 +126,78 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Covariates:         98</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating population</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 970 observations, 970 unique subjects and 452 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0463 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 950 observations, 950 unique subjects and 443 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0462 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> seed: 123</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 25% test and 75% train (into 3 folds) random stratified split by class</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 242 test cases and 728 train cases (243, 243, 242)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.24 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 236 test cases and 714 train cases (238, 238, 238)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.237 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 243 patients with 113 outcomes - Fold 2 243 patients with 113 outcomes - Fold 3 242 patients with 113 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 63 covariates in train data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 238 patients with 111 outcomes - Fold 2 238 patients with 111 outcomes - Fold 3 238 patients with 111 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 64 covariates in train data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test Set:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 242 patients with 113 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 redundant covariates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 236 patients with 110 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Removing 1 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.645 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.607 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 243 patients with 113 outcomes - Fold 2 243 patients with 113 outcomes - Fold 3 242 patients with 113 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 238 patients with 111 outcomes - Fold 2 238 patients with 111 outcomes - Fold 3 238 patients with 111 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 63 covariates in train data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test Set:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 242 patients with 113 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 236 patients with 110 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Running Cyclops</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GLM fit status:  OK</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.101 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.213 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0897 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.214 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates and normalizing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.152 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0915 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.324 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.144 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0895 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.313 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for Test</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 54.85</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      47.51</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      62.19</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              54.72</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4737 : observed risk 0.4669</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept -0.0804</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: -0.0804 - gradient:0.5476</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 0.66 intercept:         0.17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 58.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      51.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      65.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              56.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4697 : observed risk 0.4661</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0592</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0592 - gradient:1.5914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 2.15 intercept:         -0.52</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.56</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for Train</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 62.86</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      58.85</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      66.88</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              63.57</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4657 : observed risk 0.4657</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0234 - gradient:1.1381</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.14 intercept:         -0.04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.64</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 57.20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      53.17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      61.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              54.89</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4664 : observed risk 0.4664</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0399</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0399 - gradient:1.2903</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.30 intercept:         -0.14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.55</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for CV</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 58.26</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      54.07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      62.46</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              58.54</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4657 : observed risk 0.4657</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0075</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0075 - gradient:1.0481</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.10 intercept:         -0.07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.59</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.209 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-03-31 17:04:22.7513</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 55.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      51.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      59.82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              53.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4669 : observed risk 0.4664</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.047</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.047 - gradient:1.3646</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.51 intercept:         -0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.53</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.207 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-04-10 18:31:07.755409</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> This can take a while...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating binary labels</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Joining with strata</span>
@@ -206,21 +206,21 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> calculating subset of strata 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> calculating subset of strata 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TestWithOutcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TrainWithOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TrainWithNoOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TrainWithOutcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TestWithOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TestWithNoOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Aggregating with labels and strata</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-03-31 17:04:23.611717</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.861 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-04-10 18:31:08.445769</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.691 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Run finished successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving PlpResult</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating directory to save model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/RtmpiJFC0z/plotDemographicSummary/2025-03-31-3\plpResult</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 2.82 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/RtmpemY49S/plotDemographicSummary/2025-04-10-3\plpResult</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 2.59 secs</span>
 <span class="r-in"><span><span class="fu">plotDemographicSummary</span><span class="op">(</span><span class="va">plpResult</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plotDemographicSummary-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># clean up </span></span></span>
