@@ -28,5 +28,6 @@ standalone/build/*
 /extras/
 /results/
 /.vscode/
+/sql/
 .project
 .cproject
