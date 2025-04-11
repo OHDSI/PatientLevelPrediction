@@ -15,7 +15,7 @@
 # limitations under the License.
 test_that("Create existing sklearn works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   expect_error(createSklearnModel("existing"))
   # create a file model.pkl for testing
   file.create("model.pkl")
@@ -72,8 +72,8 @@ test_that("Create existing sklearn works", {
 
 test_that("existing sklearn model works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
   skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   # fit a simple sklearn model with plp
   modelSettings <- setDecisionTree(
     criterion = list("gini"),
@@ -120,8 +120,8 @@ test_that("existing sklearn model works", {
 
 test_that("Externally trained sklearn model works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
   skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   # change map to be some random order
   covariateIds <- tinyTrainData$covariateData$covariates %>%
     dplyr::pull(.data$covariateId) %>%

@@ -16,7 +16,7 @@
 
 test_that("DecisionTree settings work checks", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   dtset <- setDecisionTree(
     criterion = list("gini"),
     splitter = list("best"),
@@ -48,7 +48,7 @@ test_that("DecisionTree settings work checks", {
 
 test_that("DecisionTree errors as expected", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   expect_error(setDecisionTree(criterion = list("madeup")))
 
   expect_error(setDecisionTree(maxDepth = list(-1)))
@@ -59,7 +59,8 @@ test_that("DecisionTree errors as expected", {
 
 test_that("check fit of DecisionTree", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setDecisionTree(
     criterion = list("gini"),
     splitter = list("best"),
@@ -92,7 +93,8 @@ test_that("check fit of DecisionTree", {
 
 test_that("fitSklearn errors with wrong covariateData", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   newTrainData <- copyTrainData(trainData)
   class(newTrainData$covariateData) <- "notCovariateData"
   modelSettings <- setAdaBoost()
@@ -108,7 +110,8 @@ test_that("fitSklearn errors with wrong covariateData", {
 
 test_that("AdaBoost fit works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setAdaBoost(
     nEstimators = list(10),
     learningRate = list(0.1),
@@ -128,7 +131,8 @@ test_that("AdaBoost fit works", {
 
 test_that("RandomForest fit works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setRandomForest(
     ntrees = list(10),
     maxDepth = list(4),
@@ -153,7 +157,8 @@ test_that("RandomForest fit works", {
 
 test_that("MLP fit works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setMLP(
     hiddenLayerSizes = list(c(20)),
     alpha = list(1e-6),
@@ -177,7 +182,8 @@ test_that("MLP fit works", {
 
 test_that("Naive bayes fit works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setNaiveBayes()
 
   plpModel <- fitPlp(
@@ -194,7 +200,8 @@ test_that("Naive bayes fit works", {
 
 test_that("Support vector machine fit works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   modelSettings <- setSVM(
     C = list(1),
     degree = list(1),
