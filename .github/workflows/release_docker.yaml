@@ -77,7 +77,7 @@ jobs:
           name: digest-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
           if-no-files-found: error
-          retention_days: 1
+          retention-days: 1
 
   test:
     name: "test-${{ matrix.config.arch }}-docker"
