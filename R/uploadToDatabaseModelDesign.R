@@ -100,7 +100,8 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDef(cohortDefinitions, object$targetId),
-    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    cgTablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    plpTablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0("tId: ", tId))
@@ -110,7 +111,8 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDef(cohortDefinitions, object$outcomeId),
-    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    cgTablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    plpTablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
   ParallelLogger::logInfo(paste0("oId: ", oId))

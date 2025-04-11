@@ -198,7 +198,8 @@ if (Sys.getenv("CI") == "true" && Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/Pati
 
 # code to test sqlite creation, result and diagnostic upload all in one
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
   skip_if_offline()
 
   resultsLoc <- file.path(saveLoc, "sqliteTest")
@@ -248,7 +249,8 @@ test_that("temporary sqlite with results works", {
 
 # SQL lite test
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
   skip_if_offline()
   externalVal <- plpResult
   externalVal$model$model <- "none"
@@ -303,7 +305,8 @@ test_that("temporary sqlite with results works", {
 # importFromCsv test here as can use previous csv saving
 test_that("import from csv", {
   # TODO remove dependancy on previous test
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
   skip_if_offline()
   cohortDef <- extractCohortDefinitionsCSV(
     csvFolder = file.path(saveLoc, "csvFolder")
@@ -411,7 +414,8 @@ test_that("import from csv", {
 
 # new - check null model just reports message
 test_that("message if model is null", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_not_installed("ResultModelManager") 
+  skip_if_not_installed("Eunomia")
   skip_if_offline()
   model2 <- list(noModel = TRUE)
   attr(model2, "predictionFunction") <- "noModel"

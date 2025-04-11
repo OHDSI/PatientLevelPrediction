@@ -118,3 +118,39 @@ test_that("Did tidy on test", {
   skip_if_offline()
   expect_true(attr(plpResult$prediction, "metaData")$tidyCovariates)
 })
+
+test_that("apply tidy with temporal data", { 
+  covs <- Andromeda::andromeda(
+    covariates = data.frame(
+      covariateId = c(1, 2, 1, 2, 2),
+      rowId = c(1, 1, 2, 2, 2),
+      covariateValue = c(1, 1, 1, 1, 1),
+      timeId = c(1, 1, 1, 1, 2)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1, 2),
+      covariateName = c("cov1", "cov2"),
+      analysisId = c(1, 2)
+    ),
+    analysisRef = data.frame(
+      analysisId = c(1, 2),
+      analysisName = c("analysis1", "analysis2")
+    ),
+    timeRef = data.frame(
+      timePart = "day",
+      timeInterval = 1,
+      sequenceStartDay = 0,
+      sequenceEndDay = 1
+    )
+  )
+  class(covs) <- "CovariateData"
+  preprocessSettings <- list(
+    populationSize = 2,
+    cohortIds = -1,
+    deletedRedundantCovariateIds = c(1))
+
+  tidied <- applyTidyCovariateData(covs, preprocessSettings)
+
+  expect_equal(tidied$covariates %>% dplyr::pull(.data$covariateId) %>% dplyr::n_distinct(), 1)
+  expect_true(!is.null(tidied$timeRef))
+}) 

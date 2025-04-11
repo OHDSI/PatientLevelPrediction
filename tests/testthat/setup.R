@@ -132,10 +132,14 @@ if (internet && rlang::is_installed("Eunomia")) {
 
 
   # reduced Data to only use n most important features (as decided by LR)
-  reduceData <- function(data, n = 20) {
+  reduceData <- function(data, n = 20, includeAge = FALSE) {
     covariates <- plpResult$model$covariateImportance %>%
       dplyr::slice_max(order_by = abs(.data$covariateValue), n = n, with_ties = FALSE) %>%
       dplyr::pull(.data$covariateId)
+    if (includeAge) {
+      covariates <- unique(c(covariates, 1002))
+    }
+
 
     reducedData <- list(
       labels = data$labels,
@@ -158,8 +162,8 @@ if (internet && rlang::is_installed("Eunomia")) {
     return(reducedData)
   }
 
-  tinyTrainData <- reduceData(trainData)
-  tinyTestData <- reduceData(testData)
+  tinyTrainData <- reduceData(trainData, includeAge = TRUE)  
+  tinyTestData <- reduceData(testData, includeAge = TRUE)
 
   tinyPlpData <- createTinyPlpData(plpData, plpResult)
 

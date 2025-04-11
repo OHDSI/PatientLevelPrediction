@@ -47,7 +47,6 @@ test_that("learningCurve output correct", {
 
 test_that("plotLearningCurve", {
   skip_if_not_installed("ggplot2")
-  skip_on_cran()
   skip_if_offline()
   test <- plotLearningCurve(
     learningCurve = learningCurve,

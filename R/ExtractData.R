@@ -157,7 +157,7 @@ createDatabaseDetails <- function(
     tempEmulationSchema = cdmDatabaseSchema,
     cohortDatabaseSchema = cdmDatabaseSchema,
     cohortTable = "cohort",
-    outcomeDatabaseSchema = cdmDatabaseSchema,
+    outcomeDatabaseSchema = cohortDatabaseSchema,
     outcomeTable = cohortTable,
     targetId = NULL,
     outcomeIds = NULL,
@@ -342,7 +342,7 @@ getPlpData <- function(
     target_id = databaseDetails$targetId
   )
 
-  if (!is.null(restrictPlpDataSettings$sampleSize)) {
+  if (!is.null(restrictPlpDataSettings)) {
     renderArgs$study_start_date <- restrictPlpDataSettings$studyStartDate
     renderArgs$study_end_date <- restrictPlpDataSettings$studyEndDate
     renderArgs$first_only <- restrictPlpDataSettings$firstExposureOnly

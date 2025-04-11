@@ -24,6 +24,9 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
     covariateRef = covariateData$covariateRef,
     analysisRef = covariateData$analysisRef
   )
+  if (!is.null(covariateData$timeRef)) {
+    newCovariateData$timeRef <- covariateData$timeRef
+  }
 
   covariateData$pop <- data.frame(rowId = rowIds)
   if (inherits(covariateData, "RSQLiteConnection")) {
@@ -64,6 +67,10 @@ batchRestrict <- function(covariateData, population, sizeN = 10000000) {
     covariateRef = covariateData$covariateRef,
     analysisRef = covariateData$analysisRef
   )
+
+  if (!is.null(covariateData$timeRef)) {
+    newCovariateData$timeRef <- covariateData$timeRef
+  }
 
   Andromeda::batchApply(covariateData$covariates, function(tempData) {
     filtered <- dplyr::inner_join(tempData, population, by = "rowId")

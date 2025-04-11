@@ -180,8 +180,8 @@ getCohortCovariateData <- function(
     analysisId = covariateSettings$analysisId,
     analysisName = "cohort covariate",
     domainId = "cohort covariate",
-    startDay = 0,
-    endDay = 0,
+    startDay = covariateSettings$startDay,
+    endDay = covariateSettings$endDays,
     isBinary = "Y",
     missingMeansZero = "Y"
   )

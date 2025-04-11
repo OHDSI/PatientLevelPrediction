@@ -36,7 +36,7 @@ if (rlang::is_installed("reticulate") && identical(Sys.getenv("NOT_CRAN"), "true
 }
 test_that("Decision tree to json is correct", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   classifier <- sklearn$tree$DecisionTreeClassifier(max_depth = 3L)
 
   model <- classifier$fit(X, y)
@@ -54,7 +54,7 @@ test_that("Decision tree to json is correct", {
 
 test_that("Random forest to json is correct", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   classifier <- sklearn$ensemble$RandomForestClassifier(n_estimators = 10L)
 
   model <- classifier$fit(X, y)
@@ -72,7 +72,7 @@ test_that("Random forest to json is correct", {
 
 test_that("Adaboost to json is correct", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   classifier <- sklearn$ensemble$AdaBoostClassifier(n_estimators = 10L)
 
   model <- classifier$fit(X, y)
@@ -90,7 +90,7 @@ test_that("Adaboost to json is correct", {
 
 test_that("Naive Bayes to json is correct", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   classifier <- sklearn$naive_bayes$GaussianNB()
 
   model <- classifier$fit(X, y)
@@ -108,7 +108,7 @@ test_that("Naive Bayes to json is correct", {
 
 test_that("MLP to json is correct", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   # lower tolerance to not get convergence warning
   classifier <- sklearn$neural_network$MLPClassifier(tol = 1e-2)
 

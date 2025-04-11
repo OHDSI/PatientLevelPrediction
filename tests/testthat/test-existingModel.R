@@ -15,7 +15,7 @@
 # limitations under the License.
 test_that("Create existing sklearn works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   expect_error(createSklearnModel("existing"))
   # create a file model.pkl for testing
   file.create("model.pkl")
@@ -72,8 +72,8 @@ test_that("Create existing sklearn works", {
 
 test_that("existing sklearn model works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
   skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   # fit a simple sklearn model with plp
   modelSettings <- setDecisionTree(
     criterion = list("gini"),
@@ -120,14 +120,14 @@ test_that("existing sklearn model works", {
 
 test_that("Externally trained sklearn model works", {
   skip_if_not_installed("reticulate")
-  skip_on_cran()
   skip_if_offline()
+  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   # change map to be some random order
   covariateIds <- tinyTrainData$covariateData$covariates %>%
     dplyr::pull(.data$covariateId) %>%
     unique()
   map <- data.frame(
-    columnId = sample(1:20, length(covariateIds)),
+    columnId = sample(seq_along(covariateIds), length(covariateIds)),
     covariateId = sample(covariateIds, length(covariateIds))
   )
   matrixData <- toSparseM(tinyTrainData, map = map)
@@ -186,7 +186,34 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "linear"))
+  ), mapping = 1))
+  
+  
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", targetId = "char"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", outcomeId = "char"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", populationSettings = "char"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", restrictPlpDataSettings = "char"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", covariateSettings = "char"))
+  expect_error(createGlmModel(coefficients = data.frame(
+    coefficient = c(1, 2),
+    covariateId = c(1, 2)
+  ), mapping = "logistic", requireDenseMatrix = 4))
+  
   model <- createGlmModel(
     coefficients = data.frame(
       coefficient = c(1, 2),
@@ -195,8 +222,58 @@ test_that("Create existing GLM model works", {
     intercept = 2,
     mapping = "logistic"
   )
+  expect_equal(model$model$intercept, 2)
+  expect_equal(model$model$mapping, "logistic")
   expect_equal(attr(model, "modelType"), "binary")
-  expect_equal(attr(model, "saveType"), "RToJson")
+  expect_equal(attr(model, "saveType"), "RtoJson")
+  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+  
+  model <- createGlmModel(
+    coefficients = data.frame(
+      coefficient = c(1, 2),
+      covariateId = c(1, 2)
+    ),
+    intercept = 2,
+    mapping = "logistic", 
+    targetId = 33, 
+    outcomeId = 1, 
+    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE), 
+    populationSettings = createStudyPopulationSettings(), 
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    requireDenseMatrix = TRUE
+  )
+  expect_equal(model$modelDesign$targetId, 33)
+  expect_equal(model$modelDesign$outcomeId, 1)
+  expect_equal(model$preprocessing$requireDenseMatrix, TRUE)
+  expect_equal(model$modelDesign$populationSettings, createStudyPopulationSettings())
+  expect_equal(model$modelDesign$restrictPlpDataSettings, createRestrictPlpDataSettings())
+  expect_equal(model$modelDesign$covariateSettings, FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE))
+  
+  madeupFunc <- function(x){return(x)}
+  model <- createGlmModel(
+    coefficients = data.frame(
+      coefficient = c(1, 2),
+      covariateId = c(1, 2)
+    ),
+    intercept = 2,
+    mapping = "madeupFunc"
+  )
+  expect_equal(model$model$mapping, "madeupFunc")
+  expect_equal(attr(model, "modelType"), "binary")
+  expect_equal(attr(model, "saveType"), "RtoJson")
+  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+  
+  model <- createGlmModel(
+    coefficients = data.frame(
+      coefficient = c(1, 2),
+      covariateId = c(1, 2)
+    ),
+    intercept = 2,
+    mapping = madeupFunc
+  )
+  expect_equal(model$model$mapping, madeupFunc)
+  expect_equal(attr(model, "modelType"), "binary")
+  expect_equal(attr(model, "saveType"), "RtoJson")
   expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
 })
 

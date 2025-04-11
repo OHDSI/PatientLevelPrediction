@@ -14,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 test_that("create simulation profile works", {
   cohorts <- data.frame(rowId = 1:10, subjectId = 1:10, targetId = rep(1, 10))
   covariates <- data.frame(

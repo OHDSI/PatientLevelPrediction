@@ -151,3 +151,99 @@ test_that("Print and print summary plpData work", {
   expect_true(any(grepl("Number of covariates: 75", printed)))
   expect_true(any(grepl("Number of non-zero covariate values: 21949", printed)))
 })
+
+test_that("getPlpData with restrict by dates only", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  restrictDatesSettings <- createRestrictPlpDataSettings(
+    studyStartDate = "20150101",
+    studyEndDate = "20200101",
+    firstExposureOnly = FALSE,
+    washoutPeriod = 0,
+    sampleSize = NULL
+  )
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  plpDateRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = restrictDatesSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  # max cohorts$cohortStartDate should be <= 2020-01-01 and >= 2015-01-01
+  expect_true(
+    max(plpDateRestricted$cohorts$cohortStartDate) <= "2020-01-01"
+  )
+  expect_true(
+    min(plpDateRestricted$cohorts$cohortStartDate) >= "2015-01-01"
+  )
+})
+
+test_that("getPlpData with restrict by sample size", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  restrictSampleSizeSettings <- createRestrictPlpDataSettings(
+    sampleSize = 100
+  )
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  plpSampleSizeRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = restrictSampleSizeSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_true(nrow(plpSampleSizeRestricted$cohorts) == 100)
+})
+
+test_that("getPlpData with restrict by sampleSize and dates", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  restrictSampleSizeSettings <- createRestrictPlpDataSettings(
+    studyStartDate = "20150101",
+    studyEndDate = "20200101",
+    sampleSize = 100
+  )
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  plpSampleSizeAndDateRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = restrictSampleSizeSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_true(
+    max(plpSampleSizeAndDateRestricted$cohorts$cohortStartDate) <= "2020-01-01"
+  )
+  expect_true(
+    min(plpSampleSizeAndDateRestricted$cohorts$cohortStartDate) >= "2015-01-01"
+  )
+  expect_true(nrow(plpSampleSizeAndDateRestricted$cohorts) == 100)
+})
+
+test_that("getPlpData with restrict by washoutPeriod", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  restrictWashoutSettings <- createRestrictPlpDataSettings(
+    washoutPeriod = 15000
+  )
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  plpWashoutRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = restrictWashoutSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_true(
+    min(plpWashoutRestricted$cohorts$daysFromObsStart) >= 15000
+  )
+})

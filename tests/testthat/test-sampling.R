@@ -137,7 +137,7 @@ test_that("underSampleData works", {
     numberOutcomestoNonOutcomes = 1
   )
 
-  underSampleData <- underSampleData(trainData, sampleSettings)
+  underSampleData <- underSampleData(newTrainData, sampleSettings)
 
   expect_true(inherits(underSampleData, "plpData")) # add test based on github issue
 

@@ -8,7 +8,8 @@ validateExternal(
   validationDesignList,
   databaseDetails,
   logSettings = createLogSettings(verbosity = "INFO", logName = "validatePLP"),
-  outputFolder
+  outputFolder,
+  cohortDefinitions = NULL
 )
 }
 \arguments{
@@ -20,7 +21,10 @@ validateExternal(
 \item{logSettings}{An object of \code{logSettings} created
 using \code{createLogSettings}}
 
-\item{outputFolder}{The directory to save the validation results to
+\item{outputFolder}{The directory to save the validation results to}
+
+\item{cohortDefinitions}{A cohortDefinitionSet object created with
+\code{CohortGenerator}
 (subfolders are created per database in validationDatabaseDetails)}
 }
 \value{

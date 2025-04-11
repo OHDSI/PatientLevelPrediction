@@ -1,9 +1,11 @@
 # add a test numerical feature with missing values of certain percentage
-createMissingData <- function(trainData, missingness) {
+createMissingData <- function(trainData, missingness, test = FALSE) {
   missingData <- list(
-    folds = trainData$folds,
     labels = trainData$labels
   )
+  if (!test) {
+    missingData$folds <- trainData$folds
+  }
   missingData$covariateData <- Andromeda::copyAndromeda(trainData$covariateData)
   rowIds <- missingData$labels$rowId
   nData <- floor(length(rowIds) * (1 - missingness))
@@ -117,7 +119,7 @@ test_that("simpleImpute works", {
   expect_equal(length(newFeature), nrow(imputedData$labels))
   expect_equal(mean(originalFeature), unique(imputedFeature))
 
-  missingTestData <- createMissingData(testData, 0.4)
+  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
@@ -211,7 +213,7 @@ test_that("IterativeImputer works", {
   expect_true(length(newFeature) > length(originalFeature))
   expect_equal(length(newFeature), nrow(imputedData$labels))
 
-  missingTestData <- createMissingData(testData, 0.4)
+  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings
