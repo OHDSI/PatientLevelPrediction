@@ -3,32 +3,25 @@ name: Release Docker
 on:
   push:
     branches:
-      - 'main'
+      - "main"
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
-  docker:
+  build:
     runs-on: ${{ matrix.config.runner }}
     name: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
-      matrix: 
+      matrix:
         config:
-          - {runner: ubuntu-latest, platform: "linux/amd64" }
-          - {runner: ubuntu-24.04-arm, platform: "linux/arm64" }
-              
+          - { runner: ubuntu-24.04, arch: "amd64" }
+          - { runner: ubuntu-24.04-arm, arch: "arm64" }
+
     env:
-      DOCKER_IMAGE: 'ohdsi/patient-level-prediction' 
+      DOCKER_IMAGE: "ohdsi/patient-level-prediction"
     steps:
-      - uses: actions/checkout@v4
-
-      # ------------------------------------
-      # The pattern for the following steps is specified
-      # in OHDSI/WebAPI.
-
-      # Add Docker labels and tags
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v5
@@ -50,31 +43,115 @@ jobs:
         id: build_params
         run: |
           echo "SHA8=${GITHUB_SHA::8}" >> $GITHUB_ENV
-      - name: Build and push
+
+      - name: Build and push by digest
         id: docker_build
         uses: docker/build-push-action@v6
         with:
-          context: ./
           cache-from: type=gha
           cache-to: type=gha, mode=max
           file: Dockerfile
-          platforms: ${{ matrix.config.platform }}
-          push: true
+          platforms: "linux/${{ matrix.config.arch }}"
           secrets: |
             build_github_pat=${{ secrets.GH_TOKEN }}
           build-args: |
             GIT_BRANCH=${{ steps.docker_meta.outputs.version }}
             GIT_COMMIT_ID_ABBREV=${{ env.SHA8 }}
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          # Use runtime labels from docker_meta as well as fixed labels
           labels: |
             ${{ steps.docker_meta.outputs.labels }}
             maintainer=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
             org.opencontainers.image.authors=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
             org.opencontainers.image.vendor=OHDSI
             org.opencontainers.image.licenses=Apache-2.0
+          outputs: type=image, name=${{ env.DOCKER_IMAGE}}, push-by-digest=true, name-canonical=true, push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch="/tmp/digest/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention_days: 1
+
+  test:
+    name: "test-${{ matrix.config.arch }}-docker"
+    runs-on: ${{ matrix.config.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {runs_on: "ubuntu-24.04", arch: "amd64"}
+          - {runs_on: "ubuntu-24.04-arm", arch: "arm64"}
+    needs: build
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: "digests-${{ matrix.config.arch }}"
+          merge-multiple: true
+
+      - name: Run R CMD check
+        run: |
+          digest=$(ls /tmp/digests)
+
+          # run package checks
+          docker run --rm \
+          -e _R_CHECK_FORCE_SUGGESTS=false \
+          -e _R_CHECK_CRAN_INCOMING=false \
+          -v $(pwd):/workspace -w /workspace \
+          ${{ env.DOCKER_IMAGE }}@sha256:$digest Rscript -e \
+          "install.packages('rcmdcheck');
+          rcmdcheck::rcmdcheck('.', args=c('--no-manual', '--as-cran'),
+          build_args='--no-manual', error_on='warning')"
+         
+
+  merge:
+    runs-on: ubuntu-24.04
+    needs: 
+      - build
+      - test
+    steps:
+      - name: Download digest
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw, value=test
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.DOCKER_IMAGE }}@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker pull ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
-          docker image inspect ${{ env.DOCKER_IMAGE }}:${{ steps.docker_meta.outputs.version }}
+          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}    
+

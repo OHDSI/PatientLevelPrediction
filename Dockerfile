@@ -4,6 +4,7 @@ RUN --mount=type=secret,id=build_github_pat export GITHUB_PAT=$(cat /run/secrets
 
 ARG GIT_BRANCH='develop'
 ARG GIT_COMMIT_ID_ABBREV
+ENV MAKEFLAGS="-j$(4)"
 
 RUN apt-get -y update && apt-get install -y \
       default-jre \
