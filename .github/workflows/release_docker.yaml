@@ -116,7 +116,8 @@ jobs:
           -e _R_CHECK_CRAN_INCOMING=false \
           -v $(pwd):/workspace -w /workspace \
           ${{ env.DOCKER_IMAGE }}@sha256:$digest Rscript -e \
-          "install.packages('rcmdcheck');
+          "options(repos = c(CRAN = 'https://cloud.r-project.org'));
+          install.packages('rcmdcheck');
           rcmdcheck::rcmdcheck('.', args=c('--no-manual', '--as-cran'),
           build_args='--no-manual', error_on='warning')"
          
