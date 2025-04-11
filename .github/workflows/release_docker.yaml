@@ -8,6 +8,9 @@ on:
       - "v*"
   workflow_dispatch:
 
+env:
+  DOCKER_IMAGE: "ohdsi/patient-level-prediction"
+
 jobs:
   build:
     runs-on: ${{ matrix.config.runner }}
@@ -17,10 +20,8 @@ jobs:
       matrix:
         config:
           - { runner: ubuntu-24.04, arch: "amd64" }
-          - { runner: ubuntu-24.04-arm, arch: "arm64" }
+          # - { runner: ubuntu-24.04-arm, arch: "arm64" }
 
-    env:
-      DOCKER_IMAGE: "ohdsi/patient-level-prediction"
     steps:
       - name: Prepare
         run: |
@@ -92,7 +93,7 @@ jobs:
       matrix:
         config:
           - {runs_on: "ubuntu-24.04", arch: "amd64"}
-          - {runs_on: "ubuntu-24.04-arm", arch: "arm64"}
+          # - {runs_on: "ubuntu-24.04-arm", arch: "arm64"}
     needs: build
     steps:
       - name: Check out repository
