@@ -50,7 +50,7 @@ jobs:
           echo "SHA8=${GITHUB_SHA::8}" >> $GITHUB_ENV
 
       - name: Build and push by digest
-        id: docker_build
+        id: build
         uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
