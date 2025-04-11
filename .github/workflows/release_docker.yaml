@@ -22,6 +22,11 @@ jobs:
     env:
       DOCKER_IMAGE: "ohdsi/patient-level-prediction"
     steps:
+      - name: Prepare
+        run: |
+          platform=${{ matrix.config.arch }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV      
+
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v5
