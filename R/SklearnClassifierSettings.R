@@ -23,13 +23,10 @@
 #' @param algorithm      Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.
 #' @param seed           A seed for the model
 #' @return a modelSettings object
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' model <- setAdaBoost(nEstimators = list(10),
 #'                      learningRate = list(0.1),
 #'                      seed = 42)
-#' }
 #' @export
 setAdaBoost <- function(nEstimators = list(10, 50, 200),
                         learningRate = list(1, 0.5, 0.1),
@@ -123,15 +120,12 @@ AdaBoostClassifierInputs <- function(classifier, param) {
 #' @param classWeight         (list) Weights associated with classes 'balance' or NULL
 #' @param seed                The random state seed
 #' @return a modelSettings object
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' model <- setDecisionTree(criterion = list("gini"),
 #'                          maxDepth = list(4),
 #'                          minSamplesSplit = list(2),
 #'                          minSamplesLeaf = list(10),
 #'                          seed = 42)
-#' }
 #' @export
 setDecisionTree <- function(criterion = list("gini"),
                             splitter = list("best"),
@@ -384,11 +378,8 @@ DecisionTreeClassifierInputs <- function(classifier, param) {
 #' @param seed       A seed for the model
 #' @return a modelSettings object
 #'
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it } 
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' model <- setMLP(hiddenLayerSizes = list(c(20)), alpha=list(3e-4), seed = 42)
-#' }
 #' @export
 setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
                    # must be integers
@@ -544,9 +535,7 @@ MLPClassifierInputs <- function(classifier, param) {
 #' Create setting for naive bayes model with python
 #'
 #' @return a modelSettings object
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' plpData <- getEunomiaPlpData()
 #' model <- setNaiveBayes()
 #' analysisId <- "naiveBayes"
@@ -556,7 +545,6 @@ MLPClassifierInputs <- function(classifier, param) {
 #'                   analysisId = analysisId)
 #' # clean up
 #' unlink(saveLocation, recursive = TRUE)
-#' }
 #' @export
 setNaiveBayes <- function() {
   param <- list(none = "true")
@@ -615,9 +603,7 @@ GaussianNBInputs <- function(classifier, param) {
 #' @param nJobs The number of jobs to run in parallel.
 #' @param seed  A seed when training the final model
 #' @return a modelSettings object
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' plpData <- getEunomiaPlpData()
 #' model <- setRandomForest(ntrees = list(100),
 #'                           maxDepth = list(4),
@@ -629,7 +615,6 @@ GaussianNBInputs <- function(classifier, param) {
 #' results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 #' # clean up
 #' unlink(saveLoc, recursive = TRUE)
-#' }
 #' @export
 setRandomForest <- function(ntrees = list(100, 500),
                             criterion = list("gini"),
@@ -789,16 +774,13 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #' @param cacheSize     Specify the size of the kernel cache (in MB).
 #' @param seed           A seed for the model
 #' @return a modelSettings object
-#' @examples
-#' \dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-#' \dontrun{ 
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
 #' plpData <- getEunomiaPlpData()
 #' model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
 #' saveLoc <- file.path(tempdir(), "svm")
 #' results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 #' # clean up
 #' unlink(saveLoc, recursive = TRUE)
-#' }
 #' @export
 setSVM <- function(C = list(1, 0.9, 2, 0.1),
                    kernel = list("rbf"),
