@@ -71,6 +71,7 @@ RUN apt-get -y update && apt-get install -y \
       liblzma5 \
       libbz2-1.0 \
       libicu74 \
+      qpdf \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/* \
