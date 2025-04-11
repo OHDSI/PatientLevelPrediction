@@ -102,7 +102,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: /tmp/digests
-          pattern: "digests-${{ matrix.config.arch }}"
+          pattern: "digest-${{ matrix.config.arch }}"
           merge-multiple: true
 
       - name: Run R CMD check
