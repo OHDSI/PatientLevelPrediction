@@ -74,7 +74,7 @@ jobs:
         run: |
           mkdir -p /tmp/digests
           digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
+          echo "${digest#sha256:}" > "/tmp/digests/digest-{{ matrix.config.arch }}"
 
       - name: Upload digest
         uses: actions/upload-artifact@v4
@@ -107,7 +107,7 @@ jobs:
 
       - name: Run R CMD check
         run: |
-          digest=$(ls /tmp/digests)
+          digest=$(cat /tmp/digests/digest-${{ matrix.config.arch }})
 
           # run package checks
           docker run --rm \
