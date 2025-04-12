@@ -27,6 +27,9 @@ RUN apt-get -y update && apt-get install -y \
       libgit2-dev \
       libharfbuzz-dev \
       libfribidi-dev \
+      libfreetype6-dev \
+      libtiff5-dev \
+      libjpeg-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
