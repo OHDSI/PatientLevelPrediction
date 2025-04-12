@@ -20,7 +20,7 @@ jobs:
       matrix:
         config:
           - { runner: ubuntu-24.04, arch: "amd64" }
-          # - { runner: ubuntu-24.04-arm, arch: "arm64" }
+          - { runner: ubuntu-24.04-arm, arch: "arm64" }
 
     steps:
       - name: Prepare
@@ -93,7 +93,7 @@ jobs:
       matrix:
         config:
           - {runs_on: "ubuntu-24.04", arch: "amd64"}
-          # - {runs_on: "ubuntu-24.04-arm", arch: "arm64"}
+          - {runs_on: "ubuntu-24.04-arm", arch: "arm64"}
     needs: build
     steps:
       - name: Check out repository
@@ -157,7 +157,6 @@ jobs:
         run: |
           IMAGES=""
           for f in digest-*; do
-            # Read the digest from the file (make sure it is trimmed if needed)
             DIGEST=$(cat "$f" | tr -d '\n')
             IMAGES="$IMAGES ${{ env.DOCKER_IMAGE }}@sha256:$DIGEST"
           done
