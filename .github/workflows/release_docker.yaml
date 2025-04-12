@@ -155,8 +155,15 @@ jobs:
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
+          IMAGES=""
+          for f in digest-*; do
+            # Read the digest from the file (make sure it is trimmed if needed)
+            DIGEST=$(cat "$f" | tr -d '\n')
+            IMAGES="$IMAGES ${{ env.DOCKER_IMAGE }}@sha256:$DIGEST"
+          done
+          echo "Using image references:$IMAGES"
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf '${{ env.DOCKER_IMAGE }}@sha256:%s ' *)
+          $IMAGES
 
       - name: Inspect image
         run: |
