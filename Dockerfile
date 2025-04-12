@@ -24,6 +24,7 @@ RUN apt-get -y update && apt-get install -y \
       libpng-dev \
       cmake \
       libfontconfig1-dev \
+      libgit2-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
