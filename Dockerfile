@@ -66,6 +66,7 @@ RUN apt-get -y update && apt-get install -y \
       default-jdk \
       libssl3 \
       python3-dev \
+      libcurl4-openssl-dev \
       libpcre2-8-0 \
       libdeflate0 \
       liblzma5 \
