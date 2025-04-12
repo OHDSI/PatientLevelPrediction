@@ -18,6 +18,8 @@ RUN apt-get -y update && apt-get install -y \
       libicu-dev \
       xz-utils \
       libcurl4-openssl-dev \
+      curl \
+      ca-certificates \
       libxml2-dev \
       libpng-dev \
       cmake \
