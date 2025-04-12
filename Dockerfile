@@ -25,6 +25,8 @@ RUN apt-get -y update && apt-get install -y \
       cmake \
       libfontconfig1-dev \
       libgit2-dev \
+      libharfbuzz-dev \
+      libfribidi-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
