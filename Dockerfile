@@ -11,13 +11,17 @@ RUN apt-get -y update && apt-get install -y \
       default-jdk \
       libssl-dev  \
       python3-dev \
-      curl \
-      ca-certificates \
       libpcre2-dev \
       libdeflate-dev \
       liblzma-dev \
       libbz2-dev \
       libicu-dev \
+      xz-utils \
+      libcurl4-openssl-dev \
+      libxml2-dev \
+      libpng-dev \
+      cmake \
+      libfontconfig1-dev \
       --no-install-recommends \
       && apt-get clean \
       && rm -rf /var/lib/apt/lists/*
