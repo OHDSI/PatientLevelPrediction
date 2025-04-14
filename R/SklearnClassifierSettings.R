@@ -536,6 +536,7 @@ MLPClassifierInputs <- function(classifier, param) {
 #'
 #' @return a modelSettings object
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' \donttest{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setNaiveBayes()
 #' analysisId <- "naiveBayes"
@@ -545,6 +546,7 @@ MLPClassifierInputs <- function(classifier, param) {
 #'                   analysisId = analysisId)
 #' # clean up
 #' unlink(saveLocation, recursive = TRUE)
+#' }
 #' @export
 setNaiveBayes <- function() {
   param <- list(none = "true")
@@ -604,6 +606,7 @@ GaussianNBInputs <- function(classifier, param) {
 #' @param seed  A seed when training the final model
 #' @return a modelSettings object
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' \donttest{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setRandomForest(ntrees = list(100),
 #'                           maxDepth = list(4),
@@ -615,6 +618,7 @@ GaussianNBInputs <- function(classifier, param) {
 #' results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 #' # clean up
 #' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 setRandomForest <- function(ntrees = list(100, 500),
                             criterion = list("gini"),
@@ -775,12 +779,14 @@ RandomForestClassifierInputs <- function(classifier, param) {
 #' @param seed           A seed for the model
 #' @return a modelSettings object
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' \donttest{ 
 #' plpData <- getEunomiaPlpData()
 #' model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
 #' saveLoc <- file.path(tempdir(), "svm")
 #' results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 #' # clean up
 #' unlink(saveLoc, recursive = TRUE)
+#' }
 #' @export
 setSVM <- function(C = list(1, 0.9, 2, 0.1),
                    kernel = list("rbf"),

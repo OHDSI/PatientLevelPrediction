@@ -20,7 +20,8 @@
 #' @param     model a fitted sklearn python model object
 #' @param     path  path to the saved model file
 #' @return    nothing, saves the model to the path as json
-#' @examplesIf rlang::is_installed("reticulate") && retuculate::py_module_available("sklearn")
+#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' /donttest{ /dontshow{ # takes too long }
 #' sklearn <- reticulate::import("sklearn", convert = FALSE)
 #' model <- sklearn$tree$DecisionTreeClassifier()
 #' model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
@@ -30,6 +31,7 @@
 #' dir(tempdir())
 #' # clean up
 #' unlink(saveLoc)
+#' }
 #' @export
 sklearnToJson <- function(model, path) {
   py <- reticulate::import_builtins(convert = FALSE)

@@ -18,8 +18,8 @@ nothing, saves the model to the path as json
 Saves sklearn python model object to json in path
 }
 \examples{
-\dontshow{ # dontrun reason: requires python environment with sklearn }
-\dontrun{ 
+\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+/donttest{ /dontshow{ # takes too long }
 sklearn <- reticulate::import("sklearn", convert = FALSE)
 model <- sklearn$tree$DecisionTreeClassifier()
 model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
@@ -30,4 +30,5 @@ dir(tempdir())
 # clean up
 unlink(saveLoc)
 }
+\dontshow{\}) # examplesIf}
 }

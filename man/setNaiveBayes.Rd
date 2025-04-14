@@ -13,8 +13,8 @@ a modelSettings object
 Create setting for naive bayes model with python
 }
 \examples{
-\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-\dontrun{ 
+\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ 
 plpData <- getEunomiaPlpData()
 model <- setNaiveBayes()
 analysisId <- "naiveBayes"
@@ -25,4 +25,5 @@ results <- runPlp(plpData, modelSettings = model,
 # clean up
 unlink(saveLocation, recursive = TRUE)
 }
+\dontshow{\}) # examplesIf}
 }

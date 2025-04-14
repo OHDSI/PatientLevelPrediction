@@ -48,12 +48,11 @@ a modelSettings object
 Create setting for the scikit-learn DecisionTree with python
 }
 \examples{
-\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
-\dontrun{ 
+\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 model <- setDecisionTree(criterion = list("gini"),
                          maxDepth = list(4),
                          minSamplesSplit = list(2),
                          minSamplesLeaf = list(10),
                          seed = 42)
-}
+\dontshow{\}) # examplesIf}
 }

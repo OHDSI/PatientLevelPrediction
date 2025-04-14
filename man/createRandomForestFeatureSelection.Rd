@@ -21,7 +21,9 @@ Create the settings for random foreat based feature selection
 Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
 }
 \examples{
-\dontshow{ # dontrun reason: requires python and scikit-learn }
-\dontrun{ #' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{ 
+featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 }
+\dontshow{\}) # examplesIf}
 }

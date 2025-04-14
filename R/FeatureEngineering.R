@@ -122,7 +122,9 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' @return
 #' An object of class \code{featureEngineeringSettings}
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' \donttest{ 
 #' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+#' }
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
   rlang::check_installed(
