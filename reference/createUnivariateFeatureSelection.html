@@ -87,7 +87,11 @@ SelectKBest function with chi2 for univariate feature selection.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># rlang::is_installed("reticulate") &amp;&amp; reticulate::py_module_available("sklearn")</span></span></span>
+<span class="r-in"><span><span class="co"># create a feature selection that selects the 100 most associated features</span></span></span>
+<span class="r-in"><span><span class="va">featureSelector</span> <span class="op">&lt;-</span> <span class="fu">createUnivariateFeatureSelection</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> </span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
