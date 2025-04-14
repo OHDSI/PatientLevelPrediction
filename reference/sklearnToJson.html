@@ -84,7 +84,20 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># rlang::is_installed("reticulate") &amp;&amp; reticulate::py_module_available("sklearn")</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{ </span></span></span>
+<span class="r-in"><span><span class="va">sklearn</span> <span class="op">&lt;-</span> <span class="fu">reticulate</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/reticulate/reference/import.html" class="external-link">import</a></span><span class="op">(</span><span class="st">"sklearn"</span>, convert <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="va">sklearn</span><span class="op">$</span><span class="va">tree</span><span class="op">$</span><span class="fu">DecisionTreeClassifier</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">model</span><span class="op">$</span><span class="fu">fit</span><span class="op">(</span><span class="va">sklearn</span><span class="op">$</span><span class="va">datasets</span><span class="op">$</span><span class="fu">load_iris</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">data</span>, <span class="va">sklearn</span><span class="op">$</span><span class="va">datasets</span><span class="op">$</span><span class="fu">load_iris</span><span class="op">(</span><span class="op">)</span><span class="op">$</span><span class="va">target</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"model.json"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">sklearnToJson</span><span class="op">(</span><span class="va">model</span>, <span class="va">saveLoc</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># the model.json is saved in the tempdir</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># clean up</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saveLoc</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+</code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
