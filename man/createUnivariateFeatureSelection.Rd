@@ -22,8 +22,8 @@ the function that will be called and the settings. Uses the scikit-learn
 SelectKBest function with chi2 for univariate feature selection.
 }
 \examples{
-\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-# create a feature selection that selects the 100 most associated features
+\dontshow{ # dontrun reason: requires python and scikit-learn }
+\dontrun{ #' # create a feature selection that selects the 100 most associated features
 featureSelector <- createUnivariateFeatureSelection(k = 100) 
-\dontshow{\}) # examplesIf}
+}
 }

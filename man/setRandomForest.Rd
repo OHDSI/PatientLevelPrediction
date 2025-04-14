@@ -67,8 +67,8 @@ a modelSettings object
 Create setting for random forest model using sklearn
 }
 \examples{
-\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ 
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 model <- setRandomForest(ntrees = list(100),
                           maxDepth = list(4),
@@ -81,5 +81,4 @@ results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 # clean up
 unlink(saveLoc, recursive = TRUE)
 }
-\dontshow{\}) # examplesIf}
 }

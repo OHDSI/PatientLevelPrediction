@@ -28,9 +28,10 @@ a modelSettings object
 Create setting for AdaBoost with python DecisionTreeClassifier base estimator
 }
 \examples{
-\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 model <- setAdaBoost(nEstimators = list(10),
                      learningRate = list(0.1),
                      seed = 42)
-\dontshow{\}) # examplesIf}
+}
 }

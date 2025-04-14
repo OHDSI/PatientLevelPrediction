@@ -45,8 +45,8 @@ a modelSettings object
 Create setting for the python sklearn SVM (SVC function)
 }
 \examples{
-\dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-\donttest{ 
+\dontshow{ # dontrun reason: requires python's scikit-learn, checkSklearn() will error without it }
+\dontrun{ 
 plpData <- getEunomiaPlpData()
 model <- setSVM(C = list(1), gamma = list("scale"), seed = 42)
 saveLoc <- file.path(tempdir(), "svm")
@@ -54,5 +54,4 @@ results <- runPlp(plpData, modelSettings = model, saveDirectory = saveLoc)
 # clean up
 unlink(saveLoc, recursive = TRUE)
 }
-\dontshow{\}) # examplesIf}
 }
