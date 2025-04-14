@@ -17,6 +17,7 @@ Loads sklearn python model from json
 }
 \examples{
 \dontshow{if (rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\donttest{
 plpData <- getEunomiaPlpData()
 modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
                                   minSamplesLeaf = list(1), maxFeatures = list(100))
@@ -30,5 +31,6 @@ model <- sklearnFromJson(file.path(results$model$model, "model.json"))
 model$max_depth
 # clean up
 unlink(saveLocation, recursive = TRUE)
+}
 \dontshow{\}) # examplesIf}
 }
