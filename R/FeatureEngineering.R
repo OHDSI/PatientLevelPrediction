@@ -79,9 +79,11 @@ createFeatureEngineeringSettings <- function(type = "none") {
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
-#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
-#' # create a feature selection that selects the 100 most associated features
+#' @examples
+#' \dontshow{ # dontrun reason: requires python and scikit-learn }
+#' \dontrun{ #' # create a feature selection that selects the 100 most associated features
 #' featureSelector <- createUnivariateFeatureSelection(k = 100) 
+#' }
 #' @export
 createUnivariateFeatureSelection <- function(k = 100) {
   if (inherits(k, "numeric")) {
@@ -121,9 +123,9 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
-#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
-#' \donttest{ 
-#' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
+#' @examples
+#' \dontshow{ # dontrun reason: requires python and scikit-learn }
+#' \dontrun{ #' featureSelector <- createRandomForestFeatureSelection(ntrees = 2000, maxDepth = 10)
 #' }
 #' @export
 createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {

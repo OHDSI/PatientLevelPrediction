@@ -20,8 +20,9 @@
 #' @param     model a fitted sklearn python model object
 #' @param     path  path to the saved model file
 #' @return    nothing, saves the model to the path as json
-#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
-#' \donttest{ 
+#' @examples
+#' \dontshow{ # dontrun reason: requires python environment with sklearn }
+#' \dontrun{ 
 #' sklearn <- reticulate::import("sklearn", convert = FALSE)
 #' model <- sklearn$tree$DecisionTreeClassifier()
 #' model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
@@ -62,8 +63,9 @@ sklearnToJson <- function(model, path) {
 #' @param     path  path to the model json file
 #' @return    a sklearn python model object
 #' @export
-#' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
-#' \donttest{
+#' @examples
+#' \dontshow{ # dontrun reason: requires python environment with sklearn }
+#' \dontrun{ 
 #' plpData <- getEunomiaPlpData()
 #' modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
 #'                                   minSamplesLeaf = list(1), maxFeatures = list(100))

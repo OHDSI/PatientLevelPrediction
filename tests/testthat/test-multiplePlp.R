@@ -79,6 +79,7 @@ test_that("loading analyses settings", {
 
 test_that("test run multiple", {
   skip_if_not_installed("ResultModelManager")
+  skip_on_cran()
   skip_if_offline()
 
   analysis3 <- createModelDesign(
@@ -124,6 +125,7 @@ test_that("test run multiple", {
 
 test_that("validateMultiplePlp errors", {
   skip_if_not_installed("ResultModelManager")
+  skip_on_cran()
   skip_if_offline()
   PatientLevelPrediction::validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "multiple"),

@@ -90,6 +90,7 @@ test_that("set LR incorrect inputs", {
 
 test_that("set cox regression inputs", {
   skip_if_not_installed("polspline")
+  skip_on_cran()
   # =====================================
   # checking Cox Regression
   # =====================================
@@ -145,6 +146,7 @@ test_that("set cox regression inputs", {
 
 test_that("set cox regression incorrect inputs", {
   skip_if_not_installed("polspline")
+  skip_on_cran()
   expect_error(setCoxModel(variance = -0.01))
   expect_error(setCoxModel(variance = "variance"))
   expect_error(setCoxModel(seed = "seed"))
@@ -161,6 +163,7 @@ test_that("set cox regression incorrect inputs", {
 
 test_that("set IHT inputs", {
   skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
   # =====================================
   # checking IHT
   # =====================================
@@ -210,6 +213,7 @@ test_that("set IHT inputs", {
 
 test_that("test IHT incorrect inputs", {
   skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
   expect_error(setIterativeHardThresholding(K = 0))
   expect_error(setIterativeHardThresholding(penalty = "L1"))
   expect_error(setIterativeHardThresholding(fitBestSubset = "true"))

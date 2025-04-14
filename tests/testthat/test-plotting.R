@@ -18,6 +18,7 @@
 pdf(file = NULL)
 test_that("plots", {
   skip_if_not_installed("ggplot2")
+  skip_on_cran()
   skip_if_offline()
   # test all the outputs are ggplots
   test <- plotSparseRoc(plpResult, typeColumn = "evaluation")
@@ -56,6 +57,7 @@ test_that("plots", {
 
 test_that("outcomeSurvivalPlot", {
   skip_if_not_installed("survminer")
+  skip_on_cran()
   skip_if_offline()
   # test the plot works
   test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
@@ -68,8 +70,8 @@ test_that("outcomeSurvivalPlot", {
 
 
 test_that("plotPlp", {
-  skip_if_not_installed("ggplot2")
-  skip_if_not_installed("gridExtra")
+  skip_if_not_installed(c("ggplot2", "gridExtra"))
+  skip_on_cran()
   skip_if_offline()
   # test the plot works
   test <- plotPlp(
@@ -85,8 +87,8 @@ test_that("plotPlp", {
 })
 
 test_that("plotSmoothCalibration", {
-  skip_if_not_installed("ggplot2")
-  skip_if_not_installed("mgcv")
+  skip_if_not_installed(c("ggplot2", "mgcv"))
+  skip_on_cran()
   skip_if_offline()
   # test the plot works
   test <- plotSmoothCalibration(
@@ -121,7 +123,7 @@ test_that("plotSmoothCalibration", {
 test_that("Smooth calibration plot works with rcs", {
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("mgcv")
-  skip_if_offline()
+  skip_on_cran()
   test3 <- plotSmoothCalibration(plpResult,
     smooth = "rcs",
     span = 1,
@@ -169,6 +171,7 @@ test_that("getNetBenefit handles invalid evalType gracefully", {
 
 test_that("plotNetBenefit returns a grob object", {
   skip_if_not_installed("ggplot2")
+  skip_on_cran()
   skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = "Test")
   expect_true(inherits(plot, "arrangelist"))
@@ -176,6 +179,7 @@ test_that("plotNetBenefit returns a grob object", {
 
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
   skip_if_not_installed("ggplot2")
+  skip_on_cran()
   skip_if_offline()
   tempDir <- tempfile()
   plotNetBenefit(plpResult, saveLocation = tempDir, fileName = "netBenefit.png", evalType = "Test")
@@ -186,6 +190,7 @@ test_that("plotNetBenefit saves plot when saveLocation is specified", {
 
 test_that("plotNetBenefit handles NULL evalType", {
   skip_if_not_installed("ggplot2")
+  skip_on_cran()
   skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   expect_true(inherits(plot, "arrangelist"))

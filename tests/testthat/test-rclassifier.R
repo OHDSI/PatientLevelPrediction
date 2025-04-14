@@ -15,6 +15,7 @@
 # limitations under the License.
 test_that("GBM settings work", {
   skip_if_not_installed("xgboost")
+  skip_on_cran()
   seed <- sample(10000000, 1)
   # =====================================
   # checking Gradient Boosting Machine
@@ -58,6 +59,7 @@ test_that("GBM settings work", {
 
 test_that("GBM settings expected errors", {
   skip_if_not_installed("xgboost")
+  skip_on_cran()
   # =====================================
   # checking Gradient Boosting Machine
   # =====================================
@@ -76,8 +78,8 @@ test_that("GBM settings expected errors", {
 
 
 test_that("GBM working checks", {
-  skip_if_not_installed("xgboost")
-  skip_if_not_installed("Eunomia")
+  skip_if_not_installed(c("xgboost", "Eunomia"))
+  skip_on_cran()
   skip_if_offline()
   modelSettings <- setGradientBoostingMachine(ntrees = 10,
     maxDepth = 3, learnRate = 0.1)
@@ -111,6 +113,7 @@ test_that("GBM working checks", {
 
 test_that("GBM without outcomes in early stopping set errors", {
   skip_if_not_installed("xgboost")
+  skip_on_cran()
   hyperParameters <- list(
     ntrees = 10,
     earlyStopRound = 2,

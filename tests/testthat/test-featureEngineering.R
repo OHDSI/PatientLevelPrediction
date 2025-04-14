@@ -37,7 +37,7 @@ if (rlang::is_installed("reticulate")) {
 
 test_that("createUnivariateFeatureSelection correct class", {
   skip_if_not_installed("reticulate")
-  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
+  skip_on_cran()
   k <- sample(1000, 1)
   featureEngineeringSettings <- testUniFun(k = k)
 
@@ -53,8 +53,8 @@ test_that("createUnivariateFeatureSelection correct class", {
 
 test_that("univariateFeatureSelection", {
   skip_if_not_installed("reticulate")
+  skip_on_cran()
   skip_if_offline()
-  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   k <- 20 + sample(10, 1)
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -81,7 +81,7 @@ test_that("univariateFeatureSelection", {
 
 test_that("createRandomForestFeatureSelection correct class", {
   skip_if_not_installed("reticulate")
-  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
+  skip_on_cran()
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -127,8 +127,8 @@ test_that("createRandomForestFeatureSelection correct class", {
 
 test_that("randomForestFeatureSelection", {
   skip_if_not_installed("reticulate")
+  skip_on_cran()
   skip_if_offline()
-  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -155,8 +155,8 @@ test_that("randomForestFeatureSelection", {
 
 test_that("featureSelection is applied on test_data", {
   skip_if_not_installed("reticulate")
+  skip_on_cran()
   skip_if_offline()
-  skip_if(reticulate::py_module_available("sklearn") == FALSE, "sklearn not available")
   k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)

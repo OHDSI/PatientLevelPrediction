@@ -15,6 +15,7 @@
 # limitations under the License.
 test_that("LightGBM settings work", {
   skip_if_not_installed("lightgbm")
+  skip_on_cran()
   seed <- sample(10000000, 1)
   # =====================================
   # checking Light GBM
@@ -64,6 +65,7 @@ test_that("LightGBM settings work", {
 
 test_that("LightGBM settings expected errors", {
   skip_if_not_installed("lightgbm")
+  skip_on_cran()
   # =====================================
   # checking Gradient Boosting Machine
   # =====================================
@@ -84,6 +86,7 @@ test_that("LightGBM settings expected errors", {
 
 test_that("LightGBM working checks", {
   skip_if_not_installed("lightgbm")
+  skip_on_cran()
   skip_if_offline()
   modelSettings <- setLightGBM(numIterations = 10, maxDepth = 3, learningRate = 0.1, numLeaves = 31, minDataInLeaf = 10, lambdaL1 = 0, lambdaL2 = 0)
 
