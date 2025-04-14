@@ -1,8 +1,8 @@
 Package: PatientLevelPrediction
 Type: Package
 Title: Develop Clinical Prediction Models Using the Common Data Model
-Version: 6.4.0.9999
-Date: 2025-02-05
+Version: 6.4.1
+Date: 2025-04-15
 Authors@R: c(
     person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),

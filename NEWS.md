@@ -1,9 +1,15 @@
-PatientLevelPrediction 6.4.0.9999
+PatientLevelPrediction 6.4.1
 ======================
-- Fix bug when sampleSize is NULL but restricting by dates in getPlpData
+- [Bug] Fix bug when sampleSize is NULL but restricting by dates in getPlpData (PR #559)
+- [Bug] Add cohort definitions to external validation (PR #562)
+- [Bug] Copy attributes correctly in new FE methods (PR #557)
+- [Bug] Specify more settings for existing models (GLM and Scikit-learn) (PR #555)
+- [Bug] temporal data compatibility (PR #554)
+- [Bug] Specify start and endDays in cohortCovariates (PR #553)
+- [Bug] Fix bugs when uploading same cohorts in parallel (PR #544)
 
 
-PatientLevelPrediction 6.4
+PatientLevelPrediction 6.4.0
 ======================
 - Official maintainer updated to Egill Fridgeirsson
 - Feature: Added experimental imputation methods
