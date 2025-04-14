@@ -63,6 +63,7 @@ sklearnToJson <- function(model, path) {
 #' @return    a sklearn python model object
 #' @export
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
+#' \donttest{
 #' plpData <- getEunomiaPlpData()
 #' modelSettings <- setDecisionTree(maxDepth = list(3), minSamplesSplit = list(2),
 #'                                   minSamplesLeaf = list(1), maxFeatures = list(100))
@@ -76,6 +77,7 @@ sklearnToJson <- function(model, path) {
 #' model$max_depth
 #' # clean up
 #' unlink(saveLocation, recursive = TRUE)
+#' }
 sklearnFromJson <- function(path) {
   py <- reticulate::import_builtins(convert = FALSE)
   json <- reticulate::import("json", convert = FALSE)
