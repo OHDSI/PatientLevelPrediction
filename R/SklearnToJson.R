@@ -21,7 +21,7 @@
 #' @param     path  path to the saved model file
 #' @return    nothing, saves the model to the path as json
 #' @examplesIf rlang::is_installed("reticulate") && reticulate::py_module_available("sklearn")
-#' /donttest{ /dontshow{ # takes too long }
+#' \donttest{ 
 #' sklearn <- reticulate::import("sklearn", convert = FALSE)
 #' model <- sklearn$tree$DecisionTreeClassifier()
 #' model$fit(sklearn$datasets$load_iris()$data, sklearn$datasets$load_iris()$target)
