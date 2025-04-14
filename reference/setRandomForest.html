@@ -157,22 +157,7 @@
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># rlang::is_installed("reticulate") &amp;&amp; reticulate::py_module_available("sklearn")</span></span></span>
-<span class="r-in"><span><span class="co"># \donttest{ </span></span></span>
-<span class="r-in"><span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="getEunomiaPlpData.html">getEunomiaPlpData</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu">setRandomForest</span><span class="op">(</span>ntrees <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          maxDepth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          minSamplesSplit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          minSamplesLeaf <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          maxSamples <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">0.9</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                          seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"randomForest"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">plpData</span>, modelSettings <span class="op">=</span> <span class="va">model</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># clean up</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saveLoc</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-</code></pre></div>
+
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
