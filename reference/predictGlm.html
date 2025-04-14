@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>predict using a logistic regression model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Glm.R" class="external-link"><code>R/Glm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Glm.R" class="external-link"><code>R/Glm.R</code></a></small>
       <div class="d-none name"><code>predictGlm.Rd</code></div>
     </div>
 
@@ -104,23 +104,23 @@ population</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">predictGlm</span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.0843 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.108 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2010-11-08              930             488</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2011-12-09              588             896</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2010-02-14              809             715</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2007-10-07              137              79</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2008-05-26               82             903</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2012-04-21              415             348</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2007-12-31              541             320</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2007-07-14              769               1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2010-05-16              195             544</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2011-10-07              966             842</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2007-05-08              760             492</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2010-10-19              732             870</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1337      42   8507 0.4013123</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2          912      38   8507 0.3543437</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          945      39   8507 0.3658644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          564      41   8507 0.3893608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1673      33   8532 0.2994329</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6         1187      38   8507 0.3543437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1          569      39   8507 0.3658644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2          882      40   8532 0.3775407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          859      38   8507 0.3543437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1478      36   8532 0.3318122</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5          535      36   8507 0.3318122</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          897      40   8507 0.3775407</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

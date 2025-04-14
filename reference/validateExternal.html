@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>validateExternal - Validate model performance on new data</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/ExternalValidatePlp.R" class="external-link"><code>R/ExternalValidatePlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/ExternalValidatePlp.R" class="external-link"><code>R/ExternalValidatePlp.R</code></a></small>
       <div class="d-none name"><code>validateExternal.Rd</code></div>
     </div>
 
@@ -66,7 +66,8 @@
 <span>  <span class="va">validationDesignList</span>,</span>
 <span>  <span class="va">databaseDetails</span>,</span>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"INFO"</span>, logName <span class="op">=</span> <span class="st">"validatePLP"</span><span class="op">)</span>,</span>
-<span>  <span class="va">outputFolder</span></span>
+<span>  <span class="va">outputFolder</span>,</span>
+<span>  cohortDefinitions <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -89,7 +90,12 @@ using <code>createLogSettings</code></p></dd>
 
 
 <dt id="arg-outputfolder">outputFolder<a class="anchor" aria-label="anchor" href="#arg-outputfolder"></a></dt>
-<dd><p>The directory to save the validation results to
+<dd><p>The directory to save the validation results to</p></dd>
+
+
+<dt id="arg-cohortdefinitions">cohortDefinitions<a class="anchor" aria-label="anchor" href="#arg-cohortdefinitions"></a></dt>
+<dd><p>A cohortDefinitionSet object created with
+<code>CohortGenerator</code>
 (subfolders are created per database in validationDatabaseDetails)</p></dd>
 
 </dl></div>

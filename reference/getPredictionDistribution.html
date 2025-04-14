@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculates the prediction distribution</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
       <div class="d-none name"><code>getPredictionDistribution.Rd</code></div>
     </div>
 
@@ -103,17 +103,17 @@ the mean and standard deviation per class</p>
 <span class="r-in"><span>                         evaluation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Train"</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">getPredictionDistribution</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   class PersonCount averagePredictedProbability StDevPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          48                   0.4252816                 0.2997716</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          52                   0.5264230                 0.3040586</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          59                   0.4573650                 0.3173900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          41                   0.4679611                 0.2767069</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MinPredictedProbability P05PredictedProbability P25PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             0.003963875             0.006501341               0.2024474</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2             0.010248506             0.082913429               0.2658186</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0038786188              0.05016270               0.1871836</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.0008937623              0.02819794               0.3078777</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MedianPredictedProbability P75PredictedProbability P95PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.3841630               0.6302162               0.8890166</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.4654906               0.8292939               0.9844527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.4287375               0.7820303               0.9386516</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.4382716               0.6981910               0.9258297</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MaxPredictedProbability evaluation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9918727      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9905317      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9891444      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9465100      Train</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
