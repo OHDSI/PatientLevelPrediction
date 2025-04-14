@@ -95,7 +95,7 @@ Creates a learning curve object, which can be plotted using the
 \dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1800)
 outcomeId <- 3
 modelSettings <- setLassoLogisticRegression(seed=42)
 learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
