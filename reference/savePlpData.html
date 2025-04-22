@@ -52,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Save the plpData to folder</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.4.1/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
       <div class="d-none name"><code>savePlpData.Rd</code></div>
     </div>
 
@@ -103,11 +103,11 @@ folder specified by the user.</p>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"savePlpData"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">savePlpData</span><span class="op">(</span><span class="va">plpData</span>, <span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">saveLoc</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmphqsWIw/savePlpData/cohorts.rds" </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "/tmp/RtmphqsWIw/savePlpData/covariates"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/RtmphqsWIw/savePlpData/metaData.rds"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "/tmp/RtmphqsWIw/savePlpData/outcomes.rds"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/RtmphqsWIw/savePlpData/timeRef.rds" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/Rtmp4M56u3/savePlpData/cohorts.rds" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "/tmp/Rtmp4M56u3/savePlpData/covariates"  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "/tmp/Rtmp4M56u3/savePlpData/metaData.rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "/tmp/Rtmp4M56u3/savePlpData/outcomes.rds"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "/tmp/Rtmp4M56u3/savePlpData/timeRef.rds" </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saveLoc</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
