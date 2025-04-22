@@ -142,7 +142,7 @@ jobs:
         id: extract_release_notes
         run: |
           version="${{ env.new_version }}"
-          notes=$(awk '/^PatientLevelPrediction '"$version"'/ {flag=1: next} /^PatientLevelPrediction/ {if(flag){exit}} flag {print}' NEWS.md))
+          notes=$(awk '/^PatientLevelPrediction '"$version"'/ {flag=1; next} /^PatientLevelPrediction/ {if(flag){exit}} flag {print}' NEWS.md)
           if [ -z "$notes" ]: then
             echo "ERROR: No release notes found for version $version" >&2
             exit 1
