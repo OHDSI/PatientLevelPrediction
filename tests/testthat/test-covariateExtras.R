@@ -110,4 +110,6 @@ test_that("extraction works", {
   expect_equal(1, covs$covariateRef %>% dplyr::tally() %>% dplyr::pull())
   expect_equal(as.double(covs$covariateRef %>% dplyr::select("covariateId") %>% dplyr::collect()), covSet$covariateId)
   expect_true(covs$covariates %>% dplyr::tally() %>% dplyr::pull() > 0)
+  expect_equal(covs$analysisRef %>% dplyr::pull(.data$startDay), -350)
+  expect_equal(covs$analysisRef %>% dplyr::pull(.data$endDay), -2)
 })

@@ -83,7 +83,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
     # do feature engineering/selection
     ParallelLogger::logInfo("Running FE in model")
     plpData <- do.call(
-      applyFeatureengineering,
+      applyFeatureEngineering,
       list(
         plpData = plpData,
         settings = plpResult$model$preprocessing$featureEngineering

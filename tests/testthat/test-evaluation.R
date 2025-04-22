@@ -30,6 +30,8 @@ test_that("modelBasedConcordance", {
 })
 
 test_that("evaluatePlp_survival", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
   n <- 100
   plpResultSurvivalPred <- data.frame(
     rowId = 1:n,

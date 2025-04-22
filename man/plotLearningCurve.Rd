@@ -51,11 +51,11 @@ from \code{createLearningCurve}.
 \dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long to run }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1800)
 outcomeId <- 3
 modelSettings <- setLassoLogisticRegression(seed=42)
 learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,
-saveDirectory = file.path(tempdir(), "learningCurve"), cores = 2)
+saveDirectory = file.path(tempdir(), "learningCurve"), parallel = FALSE)
 plotLearningCurve(learningCurve)
 }
 \dontshow{\}) # examplesIf}

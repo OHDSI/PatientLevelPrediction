@@ -113,10 +113,14 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$foldsa,
+      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -124,7 +128,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(is.na(.data$missing) ||
+      dplyr::filter(is.na(.data$missing) |
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
 
@@ -191,10 +195,13 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$foldsa,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
@@ -279,7 +286,11 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -331,10 +342,13 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       featureEngineeringSettings$missingThreshold)
     outputData <- list(
       labels = trainData$labels,
-      folds = trainData$folds,
       covariateData = Andromeda::copyAndromeda(trainData$covariateData)
     )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
     class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <- 
+      attr(trainData$covariateData, "metaData")
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -570,7 +584,7 @@ pmmFit <- function(data, k = 5) {
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- data$rowMap %>%
-    dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId"), copy = TRUE) %>%
+    dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
     dplyr::pull(.data$y)
   # for each missing value, find the k closest observed values
   imputedValues <- numeric(nrow(xMiss))
@@ -663,12 +677,13 @@ pmmPredict <- function(data, k = 5, imputer) {
 }
 
 extractMissingInfo <- function(trainData) {
-    ParallelLogger::logInfo("Calculating missingness in data")
+  ParallelLogger::logInfo("Calculating missingness in data")
   total <- trainData$covariateData$covariates %>%
     dplyr::summarise(total = dplyr::n_distinct(.data$rowId)) %>%
     dplyr::pull()
   continuousFeatures <- trainData$covariateData$analysisRef %>%
-    dplyr::filter(.data$isBinary == "N") %>%
+    dplyr::filter(.data$isBinary == "N",
+                  .data$missingMeansZero == "N") %>%
     dplyr::select("analysisId") %>%
     dplyr::inner_join(trainData$covariateData$covariateRef, by = "analysisId") %>%
     dplyr::pull(.data$covariateId)

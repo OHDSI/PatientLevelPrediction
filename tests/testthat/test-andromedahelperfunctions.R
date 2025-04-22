@@ -31,3 +31,36 @@ test_that("batchRestrict", {
     names(attr(covariateData, "metaData"))
   )
 })
+
+test_that("limitPop with timeRef", {
+  covs <- Andromeda::andromeda(
+    covariates = data.frame(
+      covariateId = c(1, 2, 1, 2, 2),
+      rowId = c(1, 1, 2, 2, 2),
+      value = c(1, 1, 1, 1, 1),
+      timeId = c(1, 1, 1, 1, 2)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1, 2),
+      covariateName = c("cov1", "cov2"),
+      analysisId = c(1, 2)
+    ),
+    analysisRef = data.frame(
+      analysisId = c(1, 2),
+      analysisName = c("analysis1", "analysis2")
+    ),
+    timeRef = data.frame(
+      timePart = "day",
+      timeInterval = 1,
+      sequenceStartDay = 0,
+      sequenceEndDay = 1
+    )
+  )
+  class(covs) <- "CovariateData"
+  rowIds <- c(2)
+  limitedCovs <- limitCovariatesToPopulation(covs, rowIds)
+  expect_equal(
+    as.data.frame(limitedCovs$timeRef),
+    as.data.frame(covs$timeRef)
+  )
+})

@@ -37,6 +37,7 @@ fitCyclopsModel <- function(
       y = sapply(.data$outcomeCount, function(x) min(1, x)),
       time = .data$survivalTime
     )
+  on.exit(trainData$covariateData$labels <- NULL, add = TRUE)
 
   covariates <- filterCovariateIds(param, trainData$covariateData)
 

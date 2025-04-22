@@ -313,6 +313,7 @@ test_that("createRareFeatureRemover works", {
 })
 
 test_that("Removing rare features works", {
+  skip_if_offline()
   remover <- createRareFeatureRemover(threshold = 0.1)
 
   removedData <- removeRareFeatures(tinyTrainData, remover)
@@ -328,4 +329,90 @@ test_that("Removing rare features works", {
   testSettings <- metaData$featureEngineering$removeRare$settings$featureEngineeringSettings
 
   removedTestData <- removeRareFeatures(testData, remover, done = TRUE)
+  expect_true(
+    removedTestData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      dplyr::n_distinct() <=
+      testData$covariateData$covariates %>%
+        dplyr::pull(.data$covariateId) %>%
+        dplyr::n_distinct()
+  )
+})
+
+test_that("two step FE and RClassifier works", {
+  skip_if_offline()
+  skip_if_not_installed("xgboost")
+
+  remover <- createRareFeatureRemover(threshold = 0.1)
+  normalizer <- createNormalizer(type = "minmax")
+  featureEngineeringSettings <- list(
+    remover,
+    normalizer
+  )
+  newTrainData <- copyTrainData(trainData)
+  engineeredData <- featureEngineer(
+    data = newTrainData,
+    featureEngineeringSettings = featureEngineeringSettings
+  )
+  expect_true(
+    engineeredData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      dplyr::n_distinct() <=
+      newTrainData$covariateData$covariates %>%
+        dplyr::pull(.data$covariateId) %>%
+        dplyr::n_distinct()
+  )
+  expect_true(
+    engineeredData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 1002) %>%
+      dplyr::pull(.data$covariateValue) %>%
+      max() <= 1.0
+  )
+  expect_true(
+    engineeredData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 1002) %>%
+      dplyr::pull(.data$covariateValue) %>%
+      min() >= 0.0
+  )
+  modelSettings <- setGradientBoostingMachine(
+    ntrees = 10,
+    maxDepth = 3,
+    nthread = 2,
+    learnRate = 0.1,
+    seed = 42
+  )
+  plpModel <- fitPlp(engineeredData, modelSettings,
+    analysisId = "FE",
+    analysisPath = file.path(saveLoc, "FE2")
+  )
+  testEngineeredData <- applyFeatureEngineering(
+    testData,
+    plpModel$preprocessing$featureEngineering
+  )
+  expect_true(
+    length(plpModel$preprocessing$featureEngineering) == 2
+  )
+  expect_true(
+    testEngineeredData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      dplyr::n_distinct() <=
+      testData$covariateData$covariates %>%
+        dplyr::pull(.data$covariateId) %>%
+        dplyr::n_distinct()
+  )
+  minMaxs <- attr(plpModel$preprocessing$featureEngineering[["minMaxNormalize"]]$settings$featureEngineeringSettings, "minMaxs")
+  minAge <- minMaxs$min[minMaxs$covariateId == 1002]
+  maxAge <- minMaxs$max[minMaxs$covariateId == 1002]
+
+  testAge <- testEngineeredData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 1002) %>%
+    dplyr::pull(.data$covariateValue)
+  originalTestAge <- testData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 1002) %>%
+    dplyr::pull(.data$covariateValue)
+
+  expect_equal(
+    testAge,
+    (originalTestAge - minAge) / (maxAge - minAge)
+  )
 })

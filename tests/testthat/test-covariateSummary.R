@@ -82,3 +82,33 @@ test_that("covariateSummary works with labels", {
 
   expect_equal(abs(res$StandardizedMeanDiff), abs((2 / 15 - 3 / 5) / sqrt(((2 * (2 / 15 - 1)^2 + 13 * (2 / 15)^2) / 15 + (3 * (3 / 5 - 1)^2 + 2 * (3 / 5)^2) / 5) / 2)))
 })
+
+test_that("covariateSummarySubset works with temporal data", {
+  covs <- Andromeda::andromeda(
+    covariates = data.frame(
+      covariateId = c(1, 2, 1, 2, 2),
+      rowId = c(1, 1, 2, 2, 2),
+      covariateValue = c(1, 1, 1, 1, 1),
+      timeId = c(1, 1, 1, 1, 2)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1, 2),
+      covariateName = c("cov1", "cov2"),
+      analysisId = c(1, 2)
+    ),
+    analysisRef = data.frame(
+      analysisId = c(1, 2),
+      analysisName = c("analysis1", "analysis2")
+    ),
+    timeRef = data.frame(
+      timePart = "day",
+      timeInterval = 1,
+      sequenceStartDay = 0,
+      sequenceEndDay = 1
+    )
+  )
+  class(covs) <- "CovariateData"
+  rowIds <- c(2)
+  restrictToSubset <- covariateSummarySubset(covs, rowIds)
+  expect_equal(nrow(restrictToSubset), 2)
+})

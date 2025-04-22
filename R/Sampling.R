@@ -34,9 +34,11 @@
 #' @examplesIf rlang::is_installed("Eunomia")
 #' \donttest{
 #' # sample even rate of outcomes to non-outcomes
-#' sampleSetting <- createSampleSettings(type = "underSample", 
-#'                                       numberOutcomestoNonOutcomes = 1, 
-#'                                       sampleSeed = 42)
+#' sampleSetting <- createSampleSettings(
+#'   type = "underSample",
+#'   numberOutcomestoNonOutcomes = 1,
+#'   sampleSeed = 42
+#' )
 #' }
 #' @export
 createSampleSettings <- function(type = "none",
@@ -100,8 +102,10 @@ sampleData <- function(trainData, sampleSettings) {
 
   attr(trainData, "metaData") <- metaData
   delta <- Sys.time() - start
-  ParallelLogger::logInfo("Sampling took ", 
-    signif(delta, 3), " ", attr(delta, "units"))
+  ParallelLogger::logInfo(
+    "Sampling took ",
+    signif(delta, 3), " ", attr(delta, "units")
+  )
   return(trainData)
 }
 
@@ -126,10 +130,6 @@ sameData <- function(trainData, ...) {
 }
 
 underSampleData <- function(trainData, sampleSettings) {
-  checkIsClass(sampleSettings$sampleSeed, c("numeric", "integer"))
-  checkIsClass(sampleSettings$numberOutcomestoNonOutcomes, c("numeric", "integer"))
-  checkHigherEqual(sampleSettings$numberOutcomestoNonOutcomes, 0)
-
   ParallelLogger::logInfo(paste0("sampleSeed: ", sampleSettings$sampleSeed))
   ParallelLogger::logInfo(paste0("numberOutcomestoNonOutcomes: ", sampleSettings$numberOutcomestoNonOutcomes))
 
@@ -188,10 +188,6 @@ underSampleData <- function(trainData, sampleSettings) {
 }
 
 overSampleData <- function(trainData, sampleSettings) {
-  checkIsClass(sampleSettings$sampleSeed, c("numeric", "integer"))
-  checkIsClass(sampleSettings$numberOutcomestoNonOutcomes, c("numeric", "integer"))
-  checkHigherEqual(sampleSettings$numberOutcomestoNonOutcomes, 0)
-
   ParallelLogger::logInfo(paste0("sampleSeed: ", sampleSettings$sampleSeed))
   ParallelLogger::logInfo(paste0("numberOutcomestoNonOutcomes: ", sampleSettings$numberOutcomestoNonOutcomes))
 
@@ -237,27 +233,48 @@ overSampleData <- function(trainData, sampleSettings) {
       pplOfInterest <- unique(sampleOutcomeIds) # to enable oversampling with replacement
       sampleSize <- sampleSize - length(pplOfInterest)
 
-      addTrainData <- list()
-      addTrainData$labels <- trainData$labels %>% dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(newRowId = 1:nrow(addTrainData$labels))
-      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(newRowId = .data$newRowId + max(sampleTrainData$labels$rowId))
+      addTrainData <- Andromeda::andromeda()
+      addTrainData$covariates <- trainData$covariateData$covariates %>%
+        dplyr::filter(.data$rowId %in% pplOfInterest)
+      addTrainData$folds <- trainData$folds %>%
+        dplyr::filter(.data$rowId %in% pplOfInterest)
 
-      addTrainData$folds <- trainData$folds %>% dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$folds <- dplyr::inner_join(addTrainData$folds, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE, by = "rowId")
-      addTrainData$folds <- addTrainData$folds %>% dplyr::mutate(rowId = .data$newRowId)
-      addTrainData$folds <- dplyr::select(addTrainData$folds, -dplyr::starts_with("newRowId"))
+      addTrainData$labels <- trainData$labels %>%
+        dplyr::filter(.data$rowId %in% pplOfInterest) %>%
+        dplyr::mutate(newRowId = dplyr::row_number()) %>%
+        dplyr::mutate(rowId = .data$newRowId + max(sampleTrainData$labels$rowId))
 
-      addTrainData$covariateData$covariates <- trainData$covariateData$covariates %>% dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$covariateData$covariates <- dplyr::inner_join(addTrainData$covariateData$covariates, addTrainData$labels[, c("rowId", "newRowId")], copy = TRUE, by = "rowId")
-      addTrainData$covariateData$covariates <- addTrainData$covariateData$covariates %>% dplyr::mutate(rowId = .data$newRowId)
-      addTrainData$covariateData$covariates <- dplyr::select(addTrainData$covariateData$covariates, -dplyr::starts_with("newRowId"))
+      addTrainData$folds <- addTrainData$folds %>%
+        dplyr::inner_join(addTrainData$labels %>% 
+          dplyr::select("rowId", "newRowId"), by = "rowId") %>%
+        dplyr::mutate(rowId = .data$newRowId) %>%
+        dplyr::select(-"newRowId")
 
-      addTrainData$labels <- addTrainData$labels %>% dplyr::mutate(rowId = .data$newRowId)
-      addTrainData$labels <- dplyr::select(addTrainData$labels, -dplyr::starts_with("newRowId"))
+      addTrainData$covariates <- addTrainData$covariates %>%
+        dplyr::inner_join(addTrainData$labels %>% dplyr::select("rowId", "newRowId"),
+          by = "rowId"
+        ) %>%
+        dplyr::mutate(rowId = .data$newRowId) %>%
+        dplyr::select(-"newRowId")
+      labels <- addTrainData$labels %>% dplyr::collect()
 
-      sampleTrainData$labels <- dplyr::bind_rows(sampleTrainData$labels, addTrainData$labels)
-      sampleTrainData$folds <- dplyr::bind_rows(sampleTrainData$folds, addTrainData$folds)
-      Andromeda::appendToTable(sampleTrainData$covariateData$covariates, addTrainData$covariateData$covariates)
+      labels <- labels %>%
+        dplyr::collect() %>%
+        dplyr::mutate(rowId = .data$newRowId) %>%
+        dplyr::select(-"newRowId")
+
+      sampleTrainData$labels <- dplyr::bind_rows(
+        sampleTrainData$labels,
+        labels
+      )
+      sampleTrainData$folds <- dplyr::bind_rows(
+        sampleTrainData$folds,
+        addTrainData$folds %>% dplyr::collect()
+      )
+      Andromeda::appendToTable(
+        sampleTrainData$covariateData$covariates,
+        addTrainData$covariates
+      )
     }
   }
 

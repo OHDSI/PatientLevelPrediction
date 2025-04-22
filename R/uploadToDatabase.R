@@ -642,7 +642,8 @@ addRunPlpToDatabase <- function(
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDef(cohortDefinitions, targetId),
-    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    cgTablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    plpTablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
 
@@ -651,7 +652,8 @@ addRunPlpToDatabase <- function(
     resultSchema = databaseSchemaSettings$cohortDefinitionSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
     cohortDefinition = getCohortDef(cohortDefinitions, outcomeId),
-    tablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    cgTablePrefix = databaseSchemaSettings$tablePrefixCohortDefinitionTables,
+    plpTablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
 
@@ -1136,7 +1138,8 @@ addCohort <- function(
     conn,
     resultSchema,
     targetDialect,
-    tablePrefix = "",
+    cgTablePrefix = "",
+    plpTablePrefix = "",
     cohortDefinition, # this is the R data.frame of the cohortDefinition
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   # make sure the json has been converted
@@ -1155,7 +1158,7 @@ addCohort <- function(
   result <- checkTable(
     conn = conn,
     resultSchema = resultSchema,
-    tablePrefix = tablePrefix,
+    tablePrefix = cgTablePrefix,
     targetDialect = targetDialect,
     tableName = "cohort_definition",
     columnNames = c("cohort_name"),
@@ -1170,8 +1173,8 @@ addCohort <- function(
   }
 
   if (addNew) {
-    cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json]
-    ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohort_definition with cohort id", result$cohortDefinitionId[result$json %in% json]))
+    cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json][1] # restrict to 1 if duplicates
+    ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohort_definition with cohort id", cohortDefinitionId))
   } else {
     ParallelLogger::logInfo(paste0("Adding cohort ", gsub("'", "", cohortDefinition$cohortName)))
 
@@ -1183,7 +1186,7 @@ addCohort <- function(
     DatabaseConnector::insertTable(
       connection = conn,
       databaseSchema = resultSchema,
-      tableName = paste0(tablePrefix, "cohort_definition"),
+      tableName = paste0(cgTablePrefix, "cohort_definition"),
       data = data,
       dropTableIfExists = FALSE,
       createTable = FALSE,
@@ -1197,7 +1200,7 @@ addCohort <- function(
     result <- checkTable(
       conn = conn,
       resultSchema = resultSchema,
-      tablePrefix = tablePrefix,
+      tablePrefix = cgTablePrefix,
       targetDialect = targetDialect,
       tableName = "cohort_definition",
       columnNames = c("cohort_name", "cohort_definition_id"),
@@ -1206,14 +1209,14 @@ addCohort <- function(
     )
 
     jsonInd <- result$json %in% json
-    cohortDefinitionId <- result$cohortDefinitionId[jsonInd]
+    cohortDefinitionId <- result$cohortDefinitionId[jsonInd][1] # restrict to 1 if duplicated
   }
 
   # now add to cohorts table
   result <- checkTable(
     conn = conn,
     resultSchema = resultSchema,
-    tablePrefix = tablePrefix,
+    tablePrefix = plpTablePrefix,
     targetDialect = targetDialect,
     tableName = "cohorts",
     columnNames = c("cohort_definition_id", "cohort_name"),
@@ -1222,7 +1225,7 @@ addCohort <- function(
   )
 
   if (nrow(result) > 0) {
-    ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohorts with cohort id", result$cohortId))
+    ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohorts with cohort id", result$cohortId[1]))
   } else {
     ParallelLogger::logInfo(paste0("Adding cohort ", gsub("'", "", cohortDefinition$cohortName)))
 
@@ -1233,7 +1236,7 @@ addCohort <- function(
     DatabaseConnector::insertTable(
       connection = conn,
       databaseSchema = resultSchema,
-      tableName = paste0(tablePrefix, "cohorts"),
+      tableName = paste0(plpTablePrefix, "cohorts"),
       data = data,
       dropTableIfExists = FALSE,
       createTable = FALSE,
@@ -1247,7 +1250,7 @@ addCohort <- function(
     result <- checkTable(
       conn = conn,
       resultSchema = resultSchema,
-      tablePrefix = tablePrefix,
+      tablePrefix = plpTablePrefix,
       targetDialect = targetDialect,
       tableName = "cohorts",
       columnNames = c("cohort_definition_id", "cohort_name"),
@@ -1351,7 +1354,7 @@ addDatabase <- function(
   )
 
   if (nrow(result) > 0) {
-    ParallelLogger::logInfo(paste0("Database", result$databaseId, " already exists"))
+    ParallelLogger::logInfo(paste0("Database", result$databaseId[1], " already exists"))
   } else {
     sql <- "INSERT INTO @my_schema.@string_to_appenddatabase_details(database_meta_data_id)
           VALUES ('@database_meta_data_id');"
