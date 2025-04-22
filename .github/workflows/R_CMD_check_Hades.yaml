@@ -169,7 +169,8 @@ jobs:
         with:
           tag_name: ${{ env.new_version }}
           release_name: Release ${{ env.new_version }}
-          body: ${{ steps.extract_release_notes }}
+          body: |
+            ${{ steps.extract_release_notes.outputs.notes }}
           draft: false
           prerelease: false
           
