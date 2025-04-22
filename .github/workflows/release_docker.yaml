@@ -63,12 +63,9 @@ jobs:
           build-args: |
             GIT_BRANCH=${{ steps.docker_meta.outputs.version }}
             GIT_COMMIT_ID_ABBREV=${{ env.SHA8 }}
-          labels: |
-            ${{ steps.docker_meta.outputs.labels }}
-            maintainer=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
-            org.opencontainers.image.authors=Egill A. Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
-            org.opencontainers.image.vendor=OHDSI
-            org.opencontainers.image.licenses=Apache-2.0
+
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          # Use runtime labels from docker_meta as well as fixed labels
           outputs: type=image, name=${{ env.DOCKER_IMAGE}}, push-by-digest=true, name-canonical=true, push=true
 
       - name: Export digest
@@ -167,4 +164,3 @@ jobs:
       - name: Inspect image
         run: |
           docker buildx imagetools inspect ${{ env.DOCKER_IMAGE }}:${{ steps.meta.outputs.version }}    
-
