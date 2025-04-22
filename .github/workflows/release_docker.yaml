@@ -112,8 +112,8 @@ jobs:
 
           # run package checks
           docker run --rm \
-          -e _R_CHECK_FORCE_SUGGESTS=false \
-          -e _R_CHECK_CRAN_INCOMING=false \
+          -e _R_CHECK_FORCE_SUGGESTS_=false \
+          -e _R_CHECK_CRAN_INCOMING_=false \
           -v $(pwd):/workspace -w /workspace \
           ${{ env.DOCKER_IMAGE }}@sha256:$digest Rscript -e \
           "options(repos = c(CRAN = 'https://cloud.r-project.org'));
