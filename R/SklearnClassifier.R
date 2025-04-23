@@ -18,6 +18,7 @@
 
 fitSklearn <- function(trainData,
                        modelSettings,
+                       evalmetric,
                        search = "grid",
                        analysisId,
                        ...) {
@@ -64,6 +65,7 @@ fitSklearn <- function(trainData,
       pythonClass = pySettings$pythonClass,
       modelLocation = outLoc,
       paramSearch = param,
+      perfomanceFunct = evalmetric,
       saveToJson = attr(param, "saveToJson")
     )
   )
@@ -99,6 +101,7 @@ fitSklearn <- function(trainData,
     modelDesign = PatientLevelPrediction::createModelDesign(
       targetId = attr(trainData, "metaData")$targetId,
       outcomeId = attr(trainData, "metaData")$outcomeId,
+      evalmetric = evalmetric,
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
@@ -222,6 +225,7 @@ gridCvPython <- function(matrixData,
                          pythonClass,
                          modelLocation,
                          paramSearch,
+                         perfomanceFunct, #new addition
                          saveToJson) {
   ParallelLogger::logInfo(paste0("Running CV for ", modelName, " model"))
 
@@ -289,13 +293,18 @@ gridCvPython <- function(matrixData,
 
   paramGridSearch <-
     lapply(gridSearchPredictons, function(x) {
-      do.call(computeGridPerformance, x)
-    }) # cvAUCmean, cvAUC, param
-
-  optimalParamInd <-
-    which.max(unlist(lapply(paramGridSearch, function(x) {
-      x$cvPerformance
-    })))
+      computeGridPerformance(prediction = x$prediction,
+                             param = x$param,
+                             performanceFunct = perfomanceFunct)
+    })
+  if (performanceFunct == 'logLossScore' | 'hammingLossScore' | 'rmseScore'
+      | 'mLogLossScore' | 'errorScore' | 'maeScore' | 'mapeScore' | 'brierScore'){
+    optimalParamInd <- which.min(unlist(lapply(paramGridSearch, function(x)
+      x$cvPerformance)))
+  } else { optimalParamInd <-
+    which.max(unlist(lapply(paramGridSearch, function(x)
+      x$cvPerformance)))
+  }
 
   finalParam <- paramGridSearch[[optimalParamInd]]$param
 
@@ -446,33 +455,29 @@ fitPythonModel <-
 #' computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
 #' @export
 computeGridPerformance <-
-  function(prediction, param, performanceFunct = "computeAuc") {
-    performance <- do.call(
-      what = eval(parse(text = performanceFunct)),
-      args = list(prediction = prediction)
-    )
-
+  function(prediction, param, performanceFunct) {
+    performance <- do.call(what = eval(parse(text = performanceFunct)),
+                           args = list(prediction = prediction))
+    
     performanceFold <- c()
     for (i in 1:max(prediction$index)) {
-      performanceFold <- c(
-        performanceFold,
-        do.call(
-          what = eval(parse(text = performanceFunct)),
-          args = list(prediction = prediction[prediction$index == i, ])
-        )
-      )
+      performanceFold <- c(performanceFold,
+                           do.call(
+                             what = eval(parse(text = performanceFunct)),
+                             args = list(prediction = prediction[prediction$index == i, ])
+                           ))
     }
-
+    
     paramString <- param
     for (ind in 1:length(paramString)) {
       if (is.null(paramString[[ind]])) {
-        paramString[[ind]] <- "null"
+        paramString[[ind]] <- 'null'
       }
     }
-
+    
     paramValues <- unlist(paramString)
     names(paramValues) <- names(param)
-
+    
     hyperSummary <- as.data.frame(c(
       data.frame(
         metric = performanceFunct,

@@ -202,6 +202,7 @@ fitXgboost <- function(
     dataMatrix,
     labels,
     hyperParameters,
+    evalmetric, #new addition
     settings) {
   set.seed(settings$seed)
   if (!is.null(hyperParameters$earlyStopRound)) {
@@ -230,6 +231,14 @@ fitXgboost <- function(
   outcomes <- sum(labels$outcomeCount > 0)
   N <- nrow(labels)
   outcomeProportion <- outcomes / N
+  
+  if (evalmetric == 'rmseScore' |evalmetric == 'maeScore' |
+      evalmetric == 'brierScore'){
+    maximize = F
+  }  else{
+    maximize = T
+  }
+  
   model <- xgboost::xgb.train(
     data = train,
     params = list(
@@ -242,14 +251,14 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc"
+      eval_metric = eval(parse(text = evalmetric))
     ),
     nthread = settings$threads, # ?
     nrounds = hyperParameters$ntrees,
     watchlist = watchlist,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
-    maximize = TRUE
+    maximize = maximize
   )
 
   return(model)
