@@ -45,6 +45,8 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
+      UV_SYSTEM_PYTHON: 1
+      RETICULATE_USE_MANAGED_VENV: "no"
 
     steps:
       - uses: actions/checkout@v4
@@ -76,9 +78,6 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
           
-      - name: Setup conda
-        uses: conda-incubator/setup-miniconda@v3
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran")'
