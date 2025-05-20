@@ -108,6 +108,19 @@ test_that("GBM working checks", {
 
   # test that at least some features have importances that are not zero
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
+
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "gbmTestOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>%
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 

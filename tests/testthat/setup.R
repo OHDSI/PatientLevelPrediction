@@ -165,6 +165,9 @@ if (internet && rlang::is_installed("Eunomia")) {
   tinyTrainData <- reduceData(trainData, includeAge = TRUE)  
   tinyTestData <- reduceData(testData, includeAge = TRUE)
 
+  oneTrainData <- copyTrainData(tinyTrainData)
+  oneTrainData$covariateData$covariates <- oneTrainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 1002)
   tinyPlpData <- createTinyPlpData(plpData, plpResult)
 
   nanoData <- createTinyPlpData(plpData, plpResult, n = 2)

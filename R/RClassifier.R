@@ -131,7 +131,7 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
       model <- do.call(
         attr(hyperparamGrid, "settings")$trainRFunction,
         list(
-          dataMatrix = dataMatrix[ind, ],
+          dataMatrix = dataMatrix[ind, , drop = FALSE],
           labels = labels[ind, ],
           hyperParameters = param,
           settings = attr(hyperparamGrid, "settings")
@@ -144,7 +144,7 @@ applyCrossValidationInR <- function(dataMatrix, labels, hyperparamGrid, covariat
           attr(hyperparamGrid, "settings")$predictRFunction,
           list(
             plpModel = model,
-            data = dataMatrix[!ind, ],
+            data = dataMatrix[!ind, , drop = FALSE],
             cohort = labels[!ind, ]
           )
         )
