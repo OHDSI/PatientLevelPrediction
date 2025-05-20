@@ -120,7 +120,7 @@ test_that("GBM working checks", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
