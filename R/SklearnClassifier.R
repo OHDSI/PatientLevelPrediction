@@ -246,8 +246,8 @@ gridCvPython <- function(matrixData,
     for (i in 1:max(fold)) {
       ParallelLogger::logInfo(paste0("Fold ", i))
       trainY <- reticulate::r_to_py(labels$outcomeCount[fold != i])
-      trainX <- reticulate::r_to_py(matrixData[fold != i, ])
-      testX <- reticulate::r_to_py(matrixData[fold == i, ])
+      trainX <- reticulate::r_to_py(matrixData[fold != i, , drop = FALSE])
+      testX <- reticulate::r_to_py(matrixData[fold == i, , drop = FALSE])
 
       if (requiresDenseMatrix) {
         ParallelLogger::logInfo("Converting sparse martix to dense matrix (CV)")

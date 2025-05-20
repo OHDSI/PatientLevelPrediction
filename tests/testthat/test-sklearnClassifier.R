@@ -88,6 +88,20 @@ test_that("check fit of DecisionTree", {
   expect_equal(mean(predictions$value), mean(trainPredictions))
   expect_correct_fitPlp(plpModel, trainData)
   # add check for other model design settings
+  # test with one feature
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "DecisionTreeOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData)
+
 })
 
 test_that("fitSklearn errors with wrong covariateData", {
@@ -123,6 +137,19 @@ test_that("AdaBoost fit works", {
 
   expect_correct_fitPlp(plpModel, trainData)
   expect_equal(dir(plpModel$model), "model.json")
+
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "AdaBoostOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData)
 })
 
 
@@ -148,6 +175,19 @@ test_that("RandomForest fit works", {
 
   expect_correct_fitPlp(plpModel, trainData)
   expect_equal(dir(plpModel$model), "model.json")
+
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "RFOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData)
 })
 
 
@@ -172,6 +212,19 @@ test_that("MLP fit works", {
 
   expect_correct_fitPlp(plpModel, trainData)
   expect_equal(dir(plpModel$model), "model.json")
+  
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "MLPOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData)
 })
 
 
@@ -189,6 +242,19 @@ test_that("Naive bayes fit works", {
 
   expect_correct_fitPlp(plpModel, trainData)
   expect_equal(dir(plpModel$model), "model.json")
+  
+  oneModel <- fitPlp(
+    trainData = oneTrainData,
+    modelSettings = modelSettings,
+    analysisId = "NaiveBayesOne",
+    analysisPath = tempdir()
+  )
+  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
+  oneTrainPredictions <- oneModel$prediction %>% 
+    dplyr::filter(.data$evaluationType == "Train") %>%
+    dplyr::pull(.data$value)
+  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
+  expect_correct_fitPlp(oneModel, oneTrainData)
 })
 
 
