@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2025-04-14</h4>
+            <h4 data-toc-skip class="date">2025-05-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="d-none name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -135,7 +135,7 @@ in time (t = 0) will experience some outcome during a time-at-risk.
 Prediction is done using only information about the patients in an
 observation window prior to that moment in time.</p>
 <div class="float">
-<img src="images%2FFigure1.avif" alt="The prediction problem"><div class="figcaption">The prediction problem</div>
+<img src="images/Figure1.avif" alt="The prediction problem"><div class="figcaption">The prediction problem</div>
 </div>
 <p>As shown in Figure 2, to define a prediction problem we have to
 define t=0 by a Target Cohort (T), the outcome we like to predict by an
@@ -145,10 +145,10 @@ observational datasets to perform internal and external validation. This
 conceptual framework works for all type of prediction problems, for
 example those presented in Figure 3.</p>
 <div class="float">
-<img src="images%2Fstudydesign.avif" alt="Design choices"><div class="figcaption">Design choices</div>
+<img src="images/studydesign.avif" alt="Design choices"><div class="figcaption">Design choices</div>
 </div>
 <div class="float">
-<img src="images%2Fproblems.avif" alt="Examples of prediction problems"><div class="figcaption">Examples of prediction problems</div>
+<img src="images/problems.avif" alt="Examples of prediction problems"><div class="figcaption">Examples of prediction problems</div>
 </div>
 <p>This vignette describes how you can use the
 <code>PatientLevelPrediction</code> package to build patient-level
@@ -609,7 +609,7 @@ problem.</p>
 <h4 id="atlas-cohort-builder">ATLAS cohort builder<a class="anchor" aria-label="anchor" href="#atlas-cohort-builder"></a>
 </h4>
 <div class="float">
-<img src="example1%2FATLAS_T.avif" alt="Figure 4: Target Cohort Atrial Fibrillation"><div class="figcaption">Figure 4: Target Cohort Atrial
+<img src="example1/ATLAS_T.avif" alt="Figure 4: Target Cohort Atrial Fibrillation"><div class="figcaption">Figure 4: Target Cohort Atrial
 Fibrillation</div>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort
@@ -623,7 +623,7 @@ end date is less relevant. As an example, Figure 4 shows how we created
 the Atrial Fibrillation cohort and Figure 5 shows how we created the
 stroke cohort in ATLAS.</p>
 <div class="float">
-<img src="example1%2FATLAS_O.avif" alt="Figure 5: Outcome Cohort Stroke"><div class="figcaption">Figure 5: Outcome Cohort Stroke</div>
+<img src="example1/ATLAS_O.avif" alt="Figure 5: Outcome Cohort Stroke"><div class="figcaption">Figure 5: Outcome Cohort Stroke</div>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <ul>
@@ -1232,7 +1232,7 @@ problem.</p>
 <h4 id="atlas-cohort-builder-1">ATLAS cohort builder<a class="anchor" aria-label="anchor" href="#atlas-cohort-builder-1"></a>
 </h4>
 <div class="float">
-<img src="example2%2Faceinhibitors.avif" alt="Target Cohort ACE inhibitors"><div class="figcaption">Target Cohort ACE inhibitors</div>
+<img src="example2/aceinhibitors.avif" alt="Target Cohort ACE inhibitors"><div class="figcaption">Target Cohort ACE inhibitors</div>
 </div>
 <p>ATLAS allows you to define cohorts interactively by specifying cohort
 entry and cohort exit criteria. Cohort entry criteria involve selecting
@@ -1245,7 +1245,7 @@ end date is less relevant. As an example, Figure 6 shows how we created
 the ACE inhibitors cohort and Figure 7 shows how we created the
 angioedema cohort in ATLAS.</p>
 <div class="float">
-<img src="example2%2Fangioedema.avif" alt="Outcome Cohort Angioedema"><div class="figcaption">Outcome Cohort Angioedema</div>
+<img src="example2/angioedema.avif" alt="Outcome Cohort Angioedema"><div class="figcaption">Outcome Cohort Angioedema</div>
 </div>
 <p>The T and O cohorts can be found here:</p>
 <ul>
@@ -1693,7 +1693,7 @@ Create a new prediction study and select your target and outcome
 cohorts.
 </dt>
 <dd>
-<img src="images%2Fatlasplp1.avif">
+<img src="images/atlasplp1.avif">
 </dd>
 </dl></li>
 <li>
@@ -1702,7 +1702,7 @@ cohorts.
 Specify one or more analysis settings.
 </dt>
 <dd>
-<img src="images%2Fatlasplp2.avif">
+<img src="images/atlasplp2.avif">
 </dd>
 </dl>
 <div style="page-break-after: always;"></div>
@@ -1712,7 +1712,7 @@ Specify one or more analysis settings.
 Specify the trainings settigns
 </dt>
 <dd>
-<img src="images%2Fatlasplp3.avif">
+<img src="images/atlasplp3.avif">
 </dd>
 </dl></li>
 <li>
@@ -1721,7 +1721,7 @@ Specify the trainings settigns
 Specify the execution settings
 </dt>
 <dd>
-<img src="images%2Fatlasplp4.avif">
+<img src="images/atlasplp4.avif">
 </dd>
 </dl>
 ] </li>
@@ -1737,7 +1737,7 @@ the full study specification</p>
 </dt>
 <dd>
 <div class="float">
-<img src="images%2Fatlasdownload1.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
+<img src="images/atlasdownload1.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
 </div>
 </dd>
 </dl></li>
@@ -1748,7 +1748,7 @@ the full study specification</p>
 </dt>
 <dd>
 <div class="float">
-<img src="images%2Fatlasdownload2.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
+<img src="images/atlasdownload2.avif" alt="R package download functionality in ATLAS"><div class="figcaption">R package download functionality in ATLAS</div>
 </div>
 </dd>
 </dl></li>
@@ -1771,7 +1771,7 @@ in your browser in which you can view all performance measures created
 by the framework as shown in the figure below.</p>
 <dd>
 <div class="float">
-<img src="images%2Fshinysummary.avif" alt="Summary of all the performance measures of the analyses"><div class="figcaption">Summary of all the performance measures of the
+<img src="images/shinysummary.avif" alt="Summary of all the performance measures of the analyses"><div class="figcaption">Summary of all the performance measures of the
 analyses</div>
 </div>
 </dd>
@@ -1780,7 +1780,7 @@ for example the ROC curve in which you can move over the plot to see the
 threshold and the corresponding sensitivity and specificity values.</p>
 <dd>
 <div class="float">
-<img src="images%2Fshinyroc.avif" alt="Example of the interactive ROC curve"><div class="figcaption">Example of the interactive ROC curve</div>
+<img src="images/shinyroc.avif" alt="Example of the interactive ROC curve"><div class="figcaption">Example of the interactive ROC curve</div>
 </div>
 </dd>
 <p>To generate and save all the evaluation plots to a folder run the
@@ -1802,7 +1802,7 @@ created by changing the probability threshold to assign the positive
 class.</p>
 <dd>
 <div class="float">
-<img src="images%2FsparseRoc.avif" alt="Receiver Operating Characteristic Plot"><div class="figcaption">Receiver Operating Characteristic Plot</div>
+<img src="images/sparseRoc.avif" alt="Receiver Operating Characteristic Plot"><div class="figcaption">Receiver Operating Characteristic Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1818,7 +1818,7 @@ represented the 95% lower and upper confidence intervals of the slope of
 the fitted line.</p>
 <dd>
 <div class="float">
-<img src="images%2FsparseCalibration.avif" alt="Calibration Plot"><div class="figcaption">Calibration Plot</div>
+<img src="images/sparseCalibration.avif" alt="Calibration Plot"><div class="figcaption">Calibration Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1849,7 +1849,7 @@ not highlight the miss-calibration at the lower predicted probability
 levels that well.</p>
 <dd>
 <div class="float">
-<img src="images%2FsmoothCalibration.avif" alt="Smooth Calibration plot"><div class="figcaption">Smooth Calibration plot</div>
+<img src="images/smoothCalibration.avif" alt="Smooth Calibration plot"><div class="figcaption">Smooth Calibration plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1860,7 +1860,7 @@ outcome (red) and ii) people in the test set without the outcome
 (blue).</p>
 <dd>
 <div class="float">
-<img src="images%2FpreferencePDF.avif" alt="Preference Plot"><div class="figcaption">Preference Plot</div>
+<img src="images/preferencePDF.avif" alt="Preference Plot"><div class="figcaption">Preference Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1874,7 +1874,7 @@ also overlap between the two distribution which lead to an imperfect
 discrimination.</p>
 <dd>
 <div class="float">
-<img src="images%2FpredictionDistribution.avif" alt="Prediction Distribution Box Plot"><div class="figcaption">Prediction Distribution Box Plot</div>
+<img src="images/predictionDistribution.avif" alt="Prediction Distribution Box Plot"><div class="figcaption">Prediction Distribution Box Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1886,7 +1886,7 @@ and without the outcome.</p>
 values of the covariates are on the diagonal.</p>
 <dd>
 <div class="float">
-<img src="images%2Fgeneralizability.avif" alt="Similarity plots of train and test set"><div class="figcaption">Similarity plots of train and test set</div>
+<img src="images/generalizability.avif" alt="Similarity plots of train and test set"><div class="figcaption">Similarity plots of train and test set</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1901,7 +1901,7 @@ covariate to show more details (name, value etc).</p>
 subjects with the outcome compared to those without.</p>
 <dd>
 <div class="float">
-<img src="images%2FvariableScatterplot.avif" alt="Variabel scatter Plot"><div class="figcaption">Variabel scatter Plot</div>
+<img src="images/variableScatterplot.avif" alt="Variabel scatter Plot"><div class="figcaption">Variabel scatter Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1932,7 +1932,7 @@ results. It is also possible that lowering the threshold may leave
 recall unchanged, while the precision fluctuates.</p>
 <dd>
 <div class="float">
-<img src="images%2FprecisionRecall.avif" alt="Precision Recall Plot"><div class="figcaption">Precision Recall Plot</div>
+<img src="images/precisionRecall.avif" alt="Precision Recall Plot"><div class="figcaption">Precision Recall Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -1943,7 +1943,7 @@ in different age groups together with a confidence area.</p>
 age groups.</p>
 <dd>
 <div class="float">
-<img src="images%2FdemographicSummary.avif" alt="Demographic Summary Plot"><div class="figcaption">Demographic Summary Plot</div>
+<img src="images/demographicSummary.avif" alt="Demographic Summary Plot"><div class="figcaption">Demographic Summary Plot</div>
 </div>
 </dd>
 <div style="page-break-after: always;"></div>
@@ -2088,8 +2088,8 @@ the <code>Cyclops</code> package.</p>
 <span><span class="co">##   Suchard MA, Simpson SE, Zorych I, Ryan P, Madigan D (2013). "Massive</span></span>
 <span><span class="co">##   parallelization of serial inference algorithms for complex</span></span>
 <span><span class="co">##   generalized linear models." _ACM Transactions on Modeling and</span></span>
-<span><span class="co">##   Computer Simulation_, *23*, 10.</span></span>
-<span><span class="co">##   &lt;https://dl.acm.org/doi/10.1145/2414416.2414791&gt;.</span></span>
+<span><span class="co">##   Computer Simulation_, *23*, 10. doi:10.1145/2414416.2414791</span></span>
+<span><span class="co">##   &lt;https://doi.org/10.1145/2414416.2414791&gt;.</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## A BibTeX entry for LaTeX users is</span></span>
 <span><span class="co">## </span></span>
@@ -2100,7 +2100,7 @@ the <code>Cyclops</code> package.</p>
 <span><span class="co">##     volume = {23},</span></span>
 <span><span class="co">##     pages = {10},</span></span>
 <span><span class="co">##     year = {2013},</span></span>
-<span><span class="co">##     url = {https://dl.acm.org/doi/10.1145/2414416.2414791},</span></span>
+<span><span class="co">##     doi = {10.1145/2414416.2414791},</span></span>
 <span><span class="co">##   }</span></span></code></pre>
 <p><strong>Please reference this paper if you use the PLP Package in
 your work:</strong></p>
@@ -2129,7 +2129,7 @@ final study population in the Venn diagrams below are colored green.</p>
 Require minimum time-at-risk for all person in the target cohort
 </dt>
 <dd>
-<img src="images%2Fpopdef1.avif">
+<img src="images/popdef1.avif">
 </dd>
 </dl></li>
 <li><dl>
@@ -2138,7 +2138,7 @@ Require minumum time-at-risk for target cohort, except for persons with
 outcomes during time-at-risk.
 </dt>
 <dd>
-<img src="images%2Fpopdef2.avif">
+<img src="images/popdef2.avif">
 </dd>
 </dl></li>
 </ol>
@@ -2149,7 +2149,7 @@ Include all persons in the target cohort exclude persons with prior
 outcomes
 </dt>
 <dd>
-<img src="images%2Fpopdef3.avif">
+<img src="images/popdef3.avif">
 </dd>
 </dl>
 <ol start="4" style="list-style-type: decimal">
@@ -2159,7 +2159,7 @@ Require minimum time-at-risk for target cohort, except for persons with
 outcomes during time-at-risk, exclude persons with prior outcomes
 </dt>
 <dd>
-<img src="images%2Fpopdef4.avif">
+<img src="images/popdef4.avif">
 </dd>
 </dl></li>
 </ol>
@@ -2169,7 +2169,7 @@ outcomes during time-at-risk, exclude persons with prior outcomes
 Include all persons in target cohort exclude persons with prior outcomes
 </dt>
 <dd>
-<img src="images%2Fpopdef5.avif">
+<img src="images/popdef5.avif">
 </dd>
 </dl>
 <ol start="6" style="list-style-type: decimal">
@@ -2178,7 +2178,7 @@ Include all persons in target cohort exclude persons with prior outcomes
 Include all persons in target cohort
 </dt>
 <dd>
-<img src="images%2Fpopdef6.avif">
+<img src="images/popdef6.avif">
 </dd>
 </dl></li>
 </ol>
@@ -2194,7 +2194,7 @@ Include all persons in target cohort
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
     </footer>

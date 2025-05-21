@@ -9,7 +9,7 @@ the data and remove rare or redundant features"><meta name="robots" content="noi
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,23 +114,23 @@ all obervations.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 2 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.617 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.12 secs</span>
 <span class="r-in"><span><span class="co"># check age is normalized by max value</span></span></span>
 <span class="r-in"><span><span class="va">preProcessedData</span><span class="op">$</span><span class="va">covariates</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">covariateId</span> <span class="op">==</span> <span class="fl">1002</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Source:   SQL [?? x 3]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: sqlite 3.47.1 [/tmp/RtmpgRbUml/file23737e3e2a6.sqlite]</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: DuckDB v1.2.2 [unknown@Linux 6.11.0-1014-azure:R 4.5.0//tmp/RtmpIi6XXQ/file211d4fdffb.duckdb]</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    rowId covariateId covariateValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1        <span style="text-decoration: underline;">1</span>002          0.787</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2        <span style="text-decoration: underline;">1</span>002          0.851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1        <span style="text-decoration: underline;">1</span>002          0.660</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2        <span style="text-decoration: underline;">1</span>002          0.872</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     3        <span style="text-decoration: underline;">1</span>002          0.830</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4        <span style="text-decoration: underline;">1</span>002          0.809</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4        <span style="text-decoration: underline;">1</span>002          0.702</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     5        <span style="text-decoration: underline;">1</span>002          0.809</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6        <span style="text-decoration: underline;">1</span>002          0.787</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7        <span style="text-decoration: underline;">1</span>002          0.766</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8        <span style="text-decoration: underline;">1</span>002          0.766</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9        <span style="text-decoration: underline;">1</span>002          0.766</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    10        <span style="text-decoration: underline;">1</span>002          0.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6        <span style="text-decoration: underline;">1</span>002          0.766</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7        <span style="text-decoration: underline;">1</span>002          0.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8        <span style="text-decoration: underline;">1</span>002          0.851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9        <span style="text-decoration: underline;">1</span>002          0.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    10        <span style="text-decoration: underline;">1</span>002          0.766</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ more rows</span></span>
 </code></pre></div>
     </div>
@@ -143,7 +143,7 @@ all obervations.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
     </footer></div>

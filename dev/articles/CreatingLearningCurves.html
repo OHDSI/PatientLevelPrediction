@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@
                         <h4 data-toc-skip class="author">Luis H. John,
 Jenna M. Reps, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2025-04-14</h4>
+            <h4 data-toc-skip class="date">2025-05-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/CreatingLearningCurves.Rmd" class="external-link"><code>vignettes/CreatingLearningCurves.Rmd</code></a></small>
       <div class="d-none name"><code>CreatingLearningCurves.Rmd</code></div>
@@ -106,7 +106,7 @@ performance by training a sequence of prediction models on successively
 larger subsets of the training set. A learning curve plot can also help
 in diagnosing a bias or variance problem as explained below.</p>
 <div class="float">
-<img src="images%2FlearningCurve.avif" alt="Learning curve example."><div class="figcaption">Learning curve example.</div>
+<img src="images/learningCurve.avif" alt="Learning curve example."><div class="figcaption">Learning curve example.</div>
 </div>
 <p>Figure 1, shows an example of learning curve plot in which the
 vertical axis represents the model performance and the horizontal axis
@@ -133,7 +133,7 @@ plateaued and, thus, the model is not saturated yet. Therefore, adding
 more data will decrease the gap between training set and testing set,
 which is the main indicator for a high variance problem.</p>
 <div class="float">
-<img src="images%2FlearningCurveVariance.avif" alt="Prediction model suffering from high variance."><div class="figcaption">Prediction model suffering from high
+<img src="images/learningCurveVariance.avif" alt="Prediction model suffering from high variance."><div class="figcaption">Prediction model suffering from high
 variance.</div>
 </div>
 <p>Furthermore, we can observe high bias (underfitting) if a prediction
@@ -145,7 +145,7 @@ model performance. Choosing another prediction algorithm that can find
 more complex (for example non-linear) relationships in the data may be
 an alternative approach to consider in this high bias situation.</p>
 <div class="float">
-<img src="images%2FlearningCurveBias.avif" alt="Prediction model suffering from high bias."><div class="figcaption">Prediction model suffering from high bias.</div>
+<img src="images/learningCurveBias.avif" alt="Prediction model suffering from high bias."><div class="figcaption">Prediction model suffering from high bias.</div>
 </div>
 </div>
 <div class="section level2">
@@ -242,7 +242,7 @@ and databases.</p>
 <span>  plotSubtitle <span class="op">=</span> <span class="st">"AUROC performance"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="float">
-<img src="images%2FlearningCurvePlot.avif" alt="Learning curve plot."><div class="figcaption">Learning curve plot.</div>
+<img src="images/learningCurvePlot.avif" alt="Learning curve plot."><div class="figcaption">Learning curve plot.</div>
 </div>
 </div>
 <div class="section level2">
@@ -328,7 +328,7 @@ models using observational healthcare data. J Am Med Inform Assoc.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
     </footer>

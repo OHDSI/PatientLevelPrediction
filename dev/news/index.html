@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,11 +56,21 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="6.4.0.9999" id="patientlevelprediction-6409999">PatientLevelPrediction 6.4.0.9999<a class="anchor" aria-label="anchor" href="#patientlevelprediction-6409999"></a></h2>
-<ul><li>Fix bug when sampleSize is NULL but restricting by dates in getPlpData</li>
+<h2 class="pkg-version" data-toc-text="6.4.1.9999" id="patientlevelprediction-6419999">PatientLevelPrediction 6.4.1.9999<a class="anchor" aria-label="anchor" href="#patientlevelprediction-6419999"></a></h2>
+<ul><li>[Bug] Fix failure of rclassifier and sklearn models with only one feature (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/569" class="external-link">#569</a>)</li>
 </ul></div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="6.4" id="patientlevelprediction-64">PatientLevelPrediction 6.4<a class="anchor" aria-label="anchor" href="#patientlevelprediction-64"></a></h2>
+<h2 class="pkg-version" data-toc-text="6.4.1" id="patientlevelprediction-641">PatientLevelPrediction 6.4.1<a class="anchor" aria-label="anchor" href="#patientlevelprediction-641"></a></h2><p class="text-muted">CRAN release: 2025-04-20</p>
+<ul><li>[Bug] Fix bug when sampleSize is NULL but restricting by dates in getPlpData (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/559" class="external-link">#559</a>)</li>
+<li>[Bug] Add cohort definitions to external validation (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/562" class="external-link">#562</a>)</li>
+<li>[Bug] Copy attributes correctly in new FE methods (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/557" class="external-link">#557</a>)</li>
+<li>[Bug] Specify more settings for existing models (GLM and Scikit-learn) (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/555" class="external-link">#555</a>)</li>
+<li>[Bug] temporal data compatibility (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/554" class="external-link">#554</a>)</li>
+<li>[Bug] Specify start and endDays in cohortCovariates (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/553" class="external-link">#553</a>)</li>
+<li>[Bug] Fix bugs when uploading same cohorts in parallel (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/544" class="external-link">#544</a>)</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="6.4.0" id="patientlevelprediction-640">PatientLevelPrediction 6.4.0<a class="anchor" aria-label="anchor" href="#patientlevelprediction-640"></a></h2><p class="text-muted">CRAN release: 2025-02-11</p>
 <ul><li>Official maintainer updated to Egill Fridgeirsson</li>
 <li>Feature: Added experimental imputation methods
 <ul><li>Simple imputation using median or mean</li>
@@ -556,7 +566,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
     </footer></div>

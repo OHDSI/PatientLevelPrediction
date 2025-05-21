@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.0.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -105,29 +105,29 @@ from a prediction object</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">summary</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 'data.frame':	100 obs. of  24 variables:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ evaluation             : chr  "Train" "Train" "Train" "Train" ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ predictionThreshold    : num  0.993 0.993 0.986 0.982 0.973 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ preferenceThreshold    : num  0.994 0.993 0.988 0.984 0.976 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ predictionThreshold    : num  0.998 0.992 0.988 0.962 0.951 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ preferenceThreshold    : num  0.998 0.992 0.988 0.964 0.953 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ positiveCount          : num  1 2 3 4 5 6 7 8 9 10 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ negativeCount          : num  99 98 97 96 95 94 93 92 91 90 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ trueCount              : num  47 47 47 47 47 47 47 47 47 47 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseCount             : num  53 53 53 53 53 53 53 53 53 53 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ truePositiveCount      : num  0 1 1 1 2 3 3 4 4 5 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ trueNegativeCount      : num  52 52 51 50 50 50 49 49 48 48 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falsePositiveCount     : num  1 1 2 3 3 3 4 4 5 5 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseNegativeCount     : num  47 46 46 46 45 44 44 43 43 42 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ f1Score                : num  NaN 0.0408 0.04 0.0392 0.0769 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ accuracy               : num  0.52 0.53 0.52 0.51 0.52 0.53 0.52 0.53 0.52 0.53 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ sensitivity            : num  0 0.0213 0.0213 0.0213 0.0426 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseNegativeRate      : num  1 0.979 0.979 0.979 0.957 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falsePositiveRate      : num  0.0189 0.0189 0.0377 0.0566 0.0566 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ specificity            : num  0.981 0.981 0.962 0.943 0.943 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ positivePredictiveValue: num  0 0.5 0.333 0.25 0.4 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseDiscoveryRate     : num  1 0.5 0.667 0.75 0.6 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ negativePredictiveValue: num  0.525 0.531 0.526 0.521 0.526 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseOmissionRate      : num  0.475 0.469 0.474 0.479 0.474 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ positiveLikelihoodRatio: num  0 1.128 0.564 0.376 0.752 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ negativeLikelihoodRatio: num  1.019 0.998 1.017 1.037 1.015 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ diagnosticOddsRatio    : num  0 1.13 0.554 0.362 0.741 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ trueCount              : num  49 49 49 49 49 49 49 49 49 49 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseCount             : num  51 51 51 51 51 51 51 51 51 51 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ truePositiveCount      : num  1 2 3 4 4 4 5 6 7 8 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ trueNegativeCount      : num  51 51 51 51 50 49 49 49 49 49 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falsePositiveCount     : num  0 0 0 0 1 2 2 2 2 2 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseNegativeCount     : num  48 47 46 45 45 45 44 43 42 41 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ f1Score                : num  0.04 0.0784 0.1154 0.1509 0.1481 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ accuracy               : num  0.52 0.53 0.54 0.55 0.54 0.53 0.54 0.55 0.56 0.57 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ sensitivity            : num  0.0204 0.0408 0.0612 0.0816 0.0816 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseNegativeRate      : num  0.98 0.959 0.939 0.918 0.918 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falsePositiveRate      : num  0 0 0 0 0.0196 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ specificity            : num  1 1 1 1 0.98 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ positivePredictiveValue: num  1 1 1 1 0.8 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseDiscoveryRate     : num  0 0 0 0 0.2 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ negativePredictiveValue: num  0.515 0.52 0.526 0.531 0.526 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ falseOmissionRate      : num  0.485 0.48 0.474 0.469 0.474 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ positiveLikelihoodRatio: num  Inf Inf Inf Inf 4.16 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ negativeLikelihoodRatio: num  0.98 0.959 0.939 0.918 0.937 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ diagnosticOddsRatio    : num  Inf Inf Inf Inf 4.44 ...</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -139,7 +139,7 @@ from a prediction object</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
 </div>
 
     </footer></div>
