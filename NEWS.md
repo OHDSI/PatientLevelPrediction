@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.4.1.9999
+======================
+- [Bug] Fix failure of rclassifier and sklearn models with only one feature (PR #569)
+
 PatientLevelPrediction 6.4.1
 ======================
 - [Bug] Fix bug when sampleSize is NULL but restricting by dates in getPlpData (PR #559)
