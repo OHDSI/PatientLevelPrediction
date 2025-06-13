@@ -94,7 +94,13 @@ createSklearnModel <- function(
   checkIsClass(requireDenseMatrix, c("logical"))
   
   # start to make the plpModel
-  existingModel <- list(model = "existingSklearn")
+  # add param with modelType attribute 
+  param <- list()
+  attr(param, "settings") <- list(modelType = 'Sklearn')
+  existingModel <- list(
+    model = "existingSklearn",
+    param = param
+  )
   class(existingModel) <- "modelSettings"
 
   plpModel <- list(
