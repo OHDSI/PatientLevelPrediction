@@ -626,8 +626,13 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::group_by(.data$covariateId) %>%
       dplyr::summarise(
         max = max(.data$covariateValue, na.rm = TRUE),
-        min = min(.data$covariateValue, na.rm = TRUE)
+        min = min(.data$covariateValue, na.rm = TRUE),
       ) %>%
+      dplyr::mutate(
+        range = .data$max - .data$min,
+        max = dplyr::if_else(.data$range == 0, .data$min + 1, .data$max),
+      ) %>%
+      dplyr::select(-"range") %>% 
       dplyr::collect()
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
 
@@ -734,6 +739,9 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
           median = stats::median(.data$covariateValue, na.rm = TRUE)
         ) %>%
         dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::mutate(
+          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr) # if iqr is 0, set it to 1 to avoid division by 0
+        ) %>%
         dplyr::select(-c("q75", "q25")) %>%
         dplyr::collect()
     } else {
@@ -746,6 +754,9 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
           median = stats::median(.data$covariateValue, na.rm = TRUE)
         ) %>%
         dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+        dplyr::mutate(
+          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr), # if iqr is 0, set it to 1 to avoid division by 0
+        ) %>%
         dplyr::select(-c("q75", "q25")) %>%
         dplyr::collect()
     }

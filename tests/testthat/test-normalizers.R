@@ -170,3 +170,70 @@ test_that("normalization works", {
   testNormalizer(tinyTrainData, testData, normalizer, outliers = TRUE)
 })
 
+test_that("normalization with constant column doesn't produce NaNs", {
+  addConstantFeature <- function(data, covariateId, value) {
+    data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
+    nSubjects <- nrow(data$labels)
+    Andromeda::appendToTable(
+      data$covariateData$covariates,
+      data.frame(
+        rowId = data$labels$rowId,
+        covariateId = rep(covariateId, nSubjects),
+        covariateValue = rep(value, nSubjects)
+      )
+    )
+    Andromeda::appendToTable(
+      data$covariateData$covariateRef,
+      data.frame(
+        covariateId = covariateId,
+        covariateName = "constantCovariate",
+        analysisId = 999,
+        conceptId = 1
+      )
+    )
+    Andromeda::appendToTable(
+      data$covariateData$analysisRef,
+      data.frame(
+        analysisId = 999,
+        analysisName = "constantAnalysis",
+        domainId = "testDomain",
+        startDay = 0,
+        endDay = 0,
+        isBinary = "N",
+        missingMeansZero = "N"
+      )
+    )
+    return(data)
+  }
+
+  normalizer <- createNormalizer(type = "minmax")
+  newData <- addConstantFeature(tinyTrainData, 12101, 5)
+  newTestData <- addConstantFeature(testData, 12101, 5)
+  normalizedData <- minMaxNormalize(newData, normalizer)
+  testNormalizedData <- minMaxNormalize(newTestData, attr(normalizedData$covariateData, "metaData")$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings, done = TRUE)
+
+  trainFeature <- normalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(is.finite(trainFeature)))
+  newTestFeature <- testNormalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(is.finite(newTestFeature)))
+  expect_equal(newTestFeature, rep(0, nrow(newTestData$labels)))
+  # now same with robust normalization
+  normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
+  newData <- addConstantFeature(tinyTrainData, 12101, 5)
+  newTestData <- addConstantFeature(testData, 12101, 5)
+  normalizedData <- robustNormalize(newData, normalizer)
+  testNormalizedData <- robustNormalize(newTestData, attr(normalizedData$covariateData, "metaData")$featureEngineering$robustNormalize$settings$featureEngineeringSettings, done = TRUE)
+  trainFeature <- normalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(is.finite(trainFeature)))
+  newTestFeature <- testNormalizedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(all(is.finite(newTestFeature)))
+  expect_equal(newTestFeature, rep(0, nrow(newTestData$labels)))
+})
