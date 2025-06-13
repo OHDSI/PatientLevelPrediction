@@ -172,8 +172,7 @@ underSampleData <- function(trainData, sampleSettings) {
 
 
 
-  sampleTrainData$covariateData <- Andromeda::andromeda()
-  sampleTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef
+  sampleTrainData$covariateData <- Andromeda::copyAndromeda(trainData$covariateData)
   sampleTrainData$covariateData$covariates <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$rowId %in% pplOfInterest)
 
@@ -209,9 +208,7 @@ overSampleData <- function(trainData, sampleSettings) {
   sampleTrainData$labels <- trainData$labels %>% dplyr::collect()
   sampleTrainData$folds <- trainData$folds %>% dplyr::collect()
 
-  sampleTrainData$covariateData <- Andromeda::andromeda()
-  sampleTrainData$covariateData$covariateRef <- trainData$covariateData$covariateRef
-  sampleTrainData$covariateData$covariates <- trainData$covariateData$covariates
+  sampleTrainData$covariateData <- Andromeda::copyAndromeda(trainData$covariateData)
 
   for (i in unique(folds$index)) {
     outcomeIds <- population$rowId[population$outcomeCount > 0 & population$index == i]
