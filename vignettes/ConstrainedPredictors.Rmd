@@ -35,7 +35,7 @@ phenotypeDefinitions <- PhenotypeLibrary::getPlCohortDefinitionSet(1152:1215)
 
 ### The full set of predictor phenotypes
 
-```{r show-table, eval=TRUE, echo=FALSE}
+```{r show-table, eval=TRUE, echo=FALSE, tidy = FALSE}
 df <- tibble::tribble(
   ~"Phenotype Name", ~"Disorder classification", ~"OHDSI Phenotype library ID",
   "Alcoholism", "Behavioral", 1165,

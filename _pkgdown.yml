@@ -1,7 +1,6 @@
 template:
   bootstrap: 5
-  params:
-    bootswatch: cosmo
+  bootswatch: cosmo
   light-switch: true
 
 development:
@@ -20,12 +19,8 @@ navbar:
     - intro
     - reference
     - articles
-    - benchmarks
-    - predictors
-    - bestpractice
-    - clinicalmodels
     - news
-    right: [hades, github]
+    right: [hades, search, github, lightswitch]
   components:
     home:
       icon: fa-home fa-lg

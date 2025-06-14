@@ -13,6 +13,7 @@ docs/*
 _pkgdown.yml
 ^vignettes/articles$
 ^vignettes/Videos.Rmd
+^vignettes/ConstrainedPredictors.Rmd
 ^doc$
 ^Meta$
 ^CRAN-RELEASE$
