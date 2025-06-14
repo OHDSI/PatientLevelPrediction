@@ -53,15 +53,22 @@
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul>
 </li>
-<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
+<li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul>
+</li>
       </ul>
 </div>
 
@@ -71,16 +78,17 @@
 
 
 
-
-<div class="row">
+<script src="ConstrainedPredictors_files/core-js-2.5.3/shim.min.js"></script><script src="ConstrainedPredictors_files/react-18.2.0/react.min.js"></script><script src="ConstrainedPredictors_files/react-18.2.0/react-dom.min.js"></script><script src="ConstrainedPredictors_files/reactwidget-2.0.0/react-tools.js"></script><link href="ConstrainedPredictors_files/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="ConstrainedPredictors_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><link href="ConstrainedPredictors_files/reactable-0.4.4/reactable.css" rel="stylesheet">
+<script src="ConstrainedPredictors_files/reactable-binding-0.4.4/reactable.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Constrained Predictors</h1>
                         <h4 data-toc-skip class="author">Jenna Reps</h4>
             
-            <h4 data-toc-skip class="date">2025-06-13</h4>
+            <h4 data-toc-skip class="date">2025-06-14</h4>
       
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/ConstrainedPredictors.Rmd" class="external-link"><code>vignettes/ConstrainedPredictors.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/vignettes/ConstrainedPredictors.Rmd" class="external-link"><code>vignettes/ConstrainedPredictors.Rmd</code></a></small>
       <div class="d-none name"><code>ConstrainedPredictors.Rmd</code></div>
     </div>
 
@@ -97,7 +105,7 @@ prediction models or best practice research.</p>
 <p>These phenotypes can be extracted from the PhenotypeLibrary R
 package. To install the R package run:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ohdsi/PhenotypeLibrary"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"OHDSI/PhenotypeLibrary"</span><span class="op">)</span></span></code></pre></div>
 <p>To extract the cohort definition for Alcoholism with an id of 1165,
 just run:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -109,340 +117,8 @@ just run:</p>
 <div class="section level3">
 <h3 id="the-full-set-of-predictor-phenotypes">The full set of predictor phenotypes<a class="anchor" aria-label="anchor" href="#the-full-set-of-predictor-phenotypes"></a>
 </h3>
-<table class="table">
-<colgroup>
-<col width="45%">
-<col width="28%">
-<col width="26%">
-</colgroup>
-<thead><tr class="header">
-<th>Phenotype Name</th>
-<th>Disorder classification</th>
-<th>OHDSI Phenotype library ID</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>Alcoholism</td>
-<td>Behavioral</td>
-<td>1165</td>
-</tr>
-<tr class="even">
-<td>Smoking</td>
-<td>Behavioral</td>
-<td>1166</td>
-</tr>
-<tr class="odd">
-<td>Anemia</td>
-<td>Blood</td>
-<td>1188</td>
-</tr>
-<tr class="even">
-<td>Osteoarthritis</td>
-<td>Bone</td>
-<td>1184</td>
-</tr>
-<tr class="odd">
-<td>Osteoporosis</td>
-<td>Bone</td>
-<td>1185</td>
-</tr>
-<tr class="even">
-<td>Cancer</td>
-<td>Cancer</td>
-<td>1215</td>
-</tr>
-<tr class="odd">
-<td>Atrial fibrillation</td>
-<td>Cardiovascular</td>
-<td>1160</td>
-</tr>
-<tr class="even">
-<td>Congestive heart failure</td>
-<td>Cardiovascular</td>
-<td>1154</td>
-</tr>
-<tr class="odd">
-<td>Coronary artery disease</td>
-<td>Cardiovascular</td>
-<td>1162</td>
-</tr>
-<tr class="even">
-<td>Heart valve disorder</td>
-<td>Cardiovascular</td>
-<td>1172</td>
-</tr>
-<tr class="odd">
-<td>Hyperlipidemia</td>
-<td>Cardiovascular</td>
-<td>1170</td>
-</tr>
-<tr class="even">
-<td>Hypertension</td>
-<td>Cardiovascular</td>
-<td>1198</td>
-</tr>
-<tr class="odd">
-<td>Angina</td>
-<td>Cardiovascular</td>
-<td>1159</td>
-</tr>
-<tr class="even">
-<td>Skin Ulcer</td>
-<td>Debility</td>
-<td>1168</td>
-</tr>
-<tr class="odd">
-<td>Diabetes type 1</td>
-<td>Endocrine</td>
-<td>1193</td>
-</tr>
-<tr class="even">
-<td>Diabetes type 2</td>
-<td>Endocrine</td>
-<td>1194</td>
-</tr>
-<tr class="odd">
-<td>Hypothyroidism</td>
-<td>Endocrine</td>
-<td>1171</td>
-</tr>
-<tr class="even">
-<td>Obesity</td>
-<td>Endocrine</td>
-<td>1179</td>
-</tr>
-<tr class="odd">
-<td>Gastroesophageal reflux disease (GERD)</td>
-<td>GI</td>
-<td>1178</td>
-</tr>
-<tr class="even">
-<td>Gastrointestinal (GI) bleed</td>
-<td>GI</td>
-<td>1197</td>
-</tr>
-<tr class="odd">
-<td>Inflammatory bowel disorder (IBD)</td>
-<td>GI/Rheumatology</td>
-<td>1180</td>
-</tr>
-<tr class="even">
-<td>Hormonal contraceptives</td>
-<td>Gynecologic</td>
-<td>1190</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Aminoglycosides</td>
-<td>Infection</td>
-<td>1201</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Carbapenems</td>
-<td>Infection</td>
-<td>1202</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Cephalosporins</td>
-<td>Infection</td>
-<td>1203</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Fluoroquinolones</td>
-<td>Infection</td>
-<td>1204</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Glycopeptides and lipoglycopeptides</td>
-<td>Infection</td>
-<td>1205</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Macrolides</td>
-<td>Infection</td>
-<td>1206</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Monobactams</td>
-<td>Infection</td>
-<td>1207</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Oxazolidinones</td>
-<td>Infection</td>
-<td>1208</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Penicillins</td>
-<td>Infection</td>
-<td>1209</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Polypeptides</td>
-<td>Infection</td>
-<td>1210</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Rifamycins</td>
-<td>Infection</td>
-<td>1211</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Sulfonamides</td>
-<td>Infection</td>
-<td>1212</td>
-</tr>
-<tr class="odd">
-<td>Antibiotics Streptogramins</td>
-<td>Infection</td>
-<td>1213</td>
-</tr>
-<tr class="even">
-<td>Antibiotics Tetracyclines</td>
-<td>Infection</td>
-<td>1214</td>
-</tr>
-<tr class="odd">
-<td>Pneumonia</td>
-<td>Infection/Respiratory</td>
-<td>1199</td>
-</tr>
-<tr class="even">
-<td>Sepsis</td>
-<td>Infection</td>
-<td>1176</td>
-</tr>
-<tr class="odd">
-<td>Urinary tract infection (UTI)</td>
-<td>Infection</td>
-<td>1186</td>
-</tr>
-<tr class="even">
-<td>Hepatitis</td>
-<td>Liver</td>
-<td>1169</td>
-</tr>
-<tr class="odd">
-<td>Anxiety</td>
-<td>Mood</td>
-<td>1189</td>
-</tr>
-<tr class="even">
-<td>Depression (MDD)</td>
-<td>Mood</td>
-<td>1161</td>
-</tr>
-<tr class="odd">
-<td>Psychotic disorder</td>
-<td>Mood</td>
-<td>1175</td>
-</tr>
-<tr class="even">
-<td>Antiepileptics (pain)</td>
-<td>Neurology/Pain</td>
-<td>1183</td>
-</tr>
-<tr class="odd">
-<td>Seizure</td>
-<td>Neurology</td>
-<td>1153</td>
-</tr>
-<tr class="even">
-<td>Hemorrhagic stroke</td>
-<td>Neurology/Vascular</td>
-<td>1156</td>
-</tr>
-<tr class="odd">
-<td>Non-hemorrhagic stroke</td>
-<td>Neurology/Vascular</td>
-<td>1155</td>
-</tr>
-<tr class="even">
-<td>Acetaminophen prescription</td>
-<td>Pain/Infection</td>
-<td>1187</td>
-</tr>
-<tr class="odd">
-<td>Low back pain</td>
-<td>Pain</td>
-<td>1173</td>
-</tr>
-<tr class="even">
-<td>Neuropathy</td>
-<td>Pain/Neurology</td>
-<td>1174</td>
-</tr>
-<tr class="odd">
-<td>Opioids</td>
-<td>Pain</td>
-<td>1182</td>
-</tr>
-<tr class="even">
-<td>Acute kidney injury</td>
-<td>Kidney</td>
-<td>1163</td>
-</tr>
-<tr class="odd">
-<td>Chronic kidney disease</td>
-<td>Kidney</td>
-<td>1191</td>
-</tr>
-<tr class="even">
-<td>Asthma</td>
-<td>Respiratory</td>
-<td>1164</td>
-</tr>
-<tr class="odd">
-<td>Chronic obstructive pulmonary disorder (COPD)</td>
-<td>Respiratory</td>
-<td>1192</td>
-</tr>
-<tr class="even">
-<td>Dyspnea</td>
-<td>Respiratory</td>
-<td>1195</td>
-</tr>
-<tr class="odd">
-<td>Respiratory failure</td>
-<td>Respiratory</td>
-<td>1177</td>
-</tr>
-<tr class="even">
-<td>Sleep apnea</td>
-<td>Respiratory</td>
-<td>1167</td>
-</tr>
-<tr class="odd">
-<td>Rheumatoid arthritis</td>
-<td>Rheumatology</td>
-<td>1200</td>
-</tr>
-<tr class="even">
-<td>Steroids</td>
-<td>Rheumatology/Pain/Pulmonary</td>
-<td>1181</td>
-</tr>
-<tr class="odd">
-<td>Peripheral vascular disease</td>
-<td>Vascular</td>
-<td>1157</td>
-</tr>
-<tr class="even">
-<td>Aspirin</td>
-<td>Vascular</td>
-<td>1158</td>
-</tr>
-<tr class="odd">
-<td>Deep vein thrombosis (DVT)</td>
-<td>Vascular</td>
-<td>1152</td>
-</tr>
-<tr class="even">
-<td>Edema</td>
-<td>Vascular</td>
-<td>1196</td>
-</tr>
-</tbody>
-</table>
+<div class="reactable html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:auto;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"tag":{"name":"Reactable","attribs":{"data":{"Phenotype Name":["Alcoholism","Smoking","Anemia","Osteoarthritis","Osteoporosis","Cancer","Atrial fibrillation","Congestive heart failure","Coronary artery disease","Heart valve disorder","Hyperlipidemia","Hypertension","Angina","Skin Ulcer","Diabetes type 1","Diabetes type 2","Hypothyroidism","Obesity","Gastroesophageal reflux disease (GERD)","Gastrointestinal (GI) bleed","Inflammatory bowel disorder (IBD)","Hormonal contraceptives","Antibiotics Aminoglycosides","Antibiotics Carbapenems","Antibiotics Cephalosporins","Antibiotics Fluoroquinolones","Antibiotics Glycopeptides and lipoglycopeptides","Antibiotics Macrolides","Antibiotics Monobactams","Antibiotics Oxazolidinones","Antibiotics Penicillins","Antibiotics Polypeptides","Antibiotics Rifamycins","Antibiotics Sulfonamides","Antibiotics Streptogramins","Antibiotics Tetracyclines","Pneumonia","Sepsis","Urinary tract infection (UTI)","Hepatitis","Anxiety","Depression (MDD)","Psychotic disorder","Antiepileptics (pain)","Seizure","Hemorrhagic stroke","Non-hemorrhagic stroke","Acetaminophen prescription","Low back pain","Neuropathy","Opioids","Acute kidney injury","Chronic kidney disease","Asthma","Chronic obstructive pulmonary disorder (COPD)","Dyspnea","Respiratory failure","Sleep apnea","Rheumatoid arthritis","Steroids","Peripheral vascular disease","Aspirin","Deep vein thrombosis (DVT)","Edema"],"Disorder classification":["Behavioral","Behavioral","Blood","Bone","Bone","Cancer","Cardiovascular","Cardiovascular","Cardiovascular","Cardiovascular","Cardiovascular","Cardiovascular","Cardiovascular","Debility","Endocrine","Endocrine","Endocrine","Endocrine","GI","GI","GI/Rheumatology","Gynecologic","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection","Infection/Respiratory","Infection","Infection","Liver","Mood","Mood","Mood","Neurology/Pain","Neurology","Neurology/Vascular","Neurology/Vascular","Pain/Infection","Pain","Pain/Neurology","Pain","Kidney","Kidney","Respiratory","Respiratory","Respiratory","Respiratory","Respiratory","Rheumatology","Rheumatology/Pain/Pulmonary","Vascular","Vascular","Vascular","Vascular"],"OHDSI Phenotype library ID":[1165,1166,1188,1184,1185,1215,1160,1154,1162,1172,1170,1198,1159,1168,1193,1194,1171,1179,1178,1197,1180,1190,1201,1202,1203,1204,1205,1206,1207,1208,1209,1210,1211,1212,1213,1214,1199,1176,1186,1169,1189,1161,1175,1183,1153,1156,1155,1187,1173,1174,1182,1163,1191,1164,1192,1195,1177,1167,1200,1181,1157,1158,1152,1196]},"columns":[{"id":"Phenotype Name","name":"Phenotype","type":"character","minWidth":200},{"id":"Disorder classification","name":"Category","type":"character"},{"id":"OHDSI Phenotype library ID","name":"Library ID","type":"numeric","defaultSortDesc":true,"align":"right"}],"searchable":true,"defaultPageSize":30,"highlight":true,"bordered":true,"striped":true,"theme":{"color":"var(--bs-table-color)","backgroundColor":"var(--bs-table-bg)","searchInputStyle":{"backgroundColor":"var(--bs-table-bg)","color":"var(--bs-table-color)"}},"dataKey":"6d1334ffb77655674f9acbd0c37c09ce"},"children":[]},"class":"reactR_markup"},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

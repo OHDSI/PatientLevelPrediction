@@ -50,13 +50,17 @@ based on https://arxiv.org/abs/2407.04491 for more details"><meta name="robots" 
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
-<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
-<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul></li>
       </ul></div>
 
 
@@ -66,7 +70,7 @@ based on https://arxiv.org/abs/2407.04491 for more details"><meta name="robots" 
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>A function that normalizes continous by the interquartile range and optionally forces the resulting values to be between -3 and 3 with f(x) = x / sqrt(1 + (x/3)^2) '@details uses (value - median) / iqr to normalize the data and then can applies the function f(x) = x / sqrt(1 + (x/3)^2) to the normalized values. This forces the values to be between -3 and 3 while preserving the relative ordering of the values. based on https://arxiv.org/abs/2407.04491 for more details</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/FeatureEngineering.R" class="external-link"><code>R/FeatureEngineering.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/FeatureEngineering.R" class="external-link"><code>R/FeatureEngineering.R</code></a></small>
       <div class="d-none name"><code>robustNormalize.Rd</code></div>
     </div>
 
