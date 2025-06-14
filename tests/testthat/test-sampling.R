@@ -153,6 +153,11 @@ test_that("underSampleData works", {
       dplyr::tally() %>%
       dplyr::pull()
   )
+  expect_true(
+    underSampleData$covariateData$analysisRef %>%
+      dplyr::pull(.data$analysisId) %>% 
+      length() > 0
+  )
 
   # perhaps add manual data test
 })
@@ -185,5 +190,10 @@ test_that("overSampleData works", {
       dplyr::pull()
   )
 
+  expect_true(
+    overSampleData$covariateData$analysisRef %>%
+      dplyr::pull(.data$analysisId) %>% 
+      length() > 0
+  )
   # perhaps add manual data test
 })

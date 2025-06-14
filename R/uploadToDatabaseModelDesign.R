@@ -141,7 +141,7 @@ insertModelDesignSettings <- function(
     conn = conn,
     resultSchema = databaseSchemaSettings$resultSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
-    modelType = attr(object$modelSettings$param, "settings")$modelType, # make this the same as model$trainDetails$modelName?
+    modelType = ifelse(is.null(attr(object$modelSettings$param, "settings")$modelType), 'NULL', attr(object$modelSettings$param, "settings")$modelType), # make this the same as model$trainDetails$modelName?
     json = object$modelSettings,
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema

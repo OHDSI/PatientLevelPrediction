@@ -90,7 +90,13 @@ createGlmModel <- function(
     mapping = mapping,
     predictionFunction = "PatientLevelPrediction::predictGlm"
   )
-  existingModel <- list(model = "existingGlm")
+  # add param with modelType attribute 
+  param <- list()
+  attr(param, "settings") <- list(modelType = 'GLM')
+  existingModel <- list(
+    model = "existingGlm",
+    param = param
+  )
   class(existingModel) <- "modelSettings"
 
   plpModel <- list(
