@@ -33,7 +33,7 @@
 #' A `ggsurvplot` object
 #' @examplesIf rlang::is_installed("survminer")
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 999, seed = 42)
 #' plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 #' print(plotObject)
 #' @export
@@ -130,7 +130,7 @@ outcomeSurvivalPlot <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotPlp")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotPlp(results)
@@ -347,7 +347,7 @@ plotPlp <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotSparseRoc")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotSparseRoc(results)
@@ -424,7 +424,7 @@ plotSparseRoc <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotPredictedPDF")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotPredictedPDF(results)
@@ -536,7 +536,7 @@ plotPredictedPDF <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotPreferencePDF")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotPreferencePDF(results)
@@ -648,7 +648,7 @@ plotPreferencePDF <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotPrecisionRecall")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotPrecisionRecall(results)
@@ -728,7 +728,7 @@ plotPrecisionRecall <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotF1Measure")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotF1Measure(results)
@@ -798,7 +798,7 @@ plotF1Measure <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 #' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotDemographicSummary(plpResult)
@@ -944,7 +944,7 @@ plotDemographicSummary <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotSparseCalibration")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotSparseCalibration(results)
@@ -1040,7 +1040,7 @@ plotSparseCalibration <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotSparseCalibration2")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotSparseCalibration2(results)
@@ -1426,7 +1426,7 @@ plotSmoothCalibration <- function(plpResult,
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotNetBenefit")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotNetBenefit(results)
@@ -1759,7 +1759,7 @@ plotSmoothCalibrationRcs <- function(data, numberOfKnots) {
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotPredictionDistribution")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotPredictionDistribution(results)
@@ -1852,7 +1852,7 @@ plotPredictionDistribution <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "plotVariableScatterplot")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' plotVariableScatterplot(results$covariateSummary)
@@ -1907,7 +1907,7 @@ plotVariableScatterplot <- function(
 #' @examplesIf rlang::is_installed("ggplot2")
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' population <- createStudyPopulation(plpData, outcomeId = 3)
 #' data <- splitData(plpData, population = population)
 #' strata <- data.frame(

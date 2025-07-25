@@ -27,7 +27,7 @@ Create a directory with all the plots
 \dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotPlp")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 plotPlp(results)

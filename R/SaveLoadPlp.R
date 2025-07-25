@@ -33,7 +33,7 @@
 #'
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 500)
+#' plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #' saveLoc <- file.path(tempdir(), "savePlpData")
 #' savePlpData(plpData, saveLoc)
 #  # This should show the files saved
@@ -89,7 +89,7 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
 #' An object of class plpData.
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 500)
+#' plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #' saveLoc <- file.path(tempdir(), "loadPlpData")
 #' savePlpData(plpData, saveLoc)
 #' dir(saveLoc)
@@ -129,7 +129,7 @@ loadPlpData <- function(file, readOnly = TRUE) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "savePlpModel")
 #' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' path <- savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
@@ -267,7 +267,7 @@ saveModelPart <- function(model, savetype, dirPath) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "loadPlpModel")
 #' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))
@@ -412,7 +412,7 @@ savePrediction <- function(prediction, dirPath, fileName = "prediction.json") {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "loadPrediction")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' savePrediction(results$prediction, saveLoc)
@@ -437,7 +437,7 @@ loadPrediction <- function(fileLocation) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "savePlpResult")
 #  # develop a model with default settings
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
@@ -479,7 +479,7 @@ savePlpResult <- function(result, dirPath) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "loadPlpResult")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' savePlpResult(results, saveLoc)
@@ -519,7 +519,7 @@ loadPlpResult <- function(dirPath) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "savePlpShareable")
 #' results <- runPlp(plpData, saveDirectory = saveLoc)
 #' newSaveLoc <- file.path(tempdir(), "savePlpShareable", "saved")
@@ -614,7 +614,7 @@ removeList <- function(x) {
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "loadPlpShareable")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' savePlpShareable(results, saveLoc)
@@ -755,7 +755,7 @@ removeCellCount <- function(
 #' \donttest{ \dontshow{ # takes too long }
 #' # develop a simple model on simulated data
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 500)
+#' plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #' saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
 #' results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #' # now upload the results to a sqlite database

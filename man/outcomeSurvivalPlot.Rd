@@ -41,7 +41,7 @@ This creates a survival plot that can be used to pick a suitable time-at-risk pe
 \examples{
 \dontshow{if (rlang::is_installed("survminer")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=1000)
+plpData <- simulatePlpData(simulationProfile, n = 999, seed = 42)
 plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 print(plotObject)
 \dontshow{\}) # examplesIf}

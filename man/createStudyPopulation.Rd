@@ -43,7 +43,7 @@ a risk window, and determining which outcomes fall inside the risk window.
 \examples{
 \donttest{ \dontshow{ # takes too long } 
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 100)
+plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 # Create study population, require time at risk of 30 days. The risk window is 1 to 90 days.
 populationSettings <- createStudyPopulationSettings(requireTimeAtRisk = TRUE,
                                                      minTimeAtRisk = 30,

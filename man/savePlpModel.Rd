@@ -24,7 +24,7 @@ Saves the plp model to a user specificed folder
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "savePlpModel")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 path <- savePlpModel(plpResult$model, file.path(saveLoc, "savedModel"))

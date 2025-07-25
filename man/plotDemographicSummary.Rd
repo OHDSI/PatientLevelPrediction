@@ -37,7 +37,7 @@ Create a plot showing the Observed vs. expected incidence, by age and gender
 \dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 plotDemographicSummary(plpResult)

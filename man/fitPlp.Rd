@@ -40,7 +40,7 @@ The user can define the machine learning model to train
 \donttest{ \dontshow{ # takes too long }
 # simulate data
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 # create study population, split into train/test and preprocess with default settings
 population <- createStudyPopulation(plpData, outcomeId = 3)
 data <- splitData(plpData, population, createDefaultSplitSetting())

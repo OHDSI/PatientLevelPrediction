@@ -24,7 +24,7 @@ Saves the result from runPlp into the location directory
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "savePlpResult")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 # save the results

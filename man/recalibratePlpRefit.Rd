@@ -25,10 +25,10 @@ Recalibrating a model by refitting it
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "recalibratePlpRefit")
 plpResults <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
-newData <- simulatePlpData(simulationProfile, n = 1000)
+newData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 newPopulation <- createStudyPopulation(newData, outcomeId = 3)
 predictions <- recalibratePlpRefit(plpModel = plpResults$model, 
                                    newPopulation = newPopulation, 

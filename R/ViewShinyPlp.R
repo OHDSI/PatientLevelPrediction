@@ -87,7 +87,7 @@ viewMultiplePlp <- function(analysesLocation) {
 #' @examplesIf rlang::is_interactive() && rlang::is_installed("OhdsiShinyAppBuilder") 
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n= 1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "viewPlp", "development")
 #' results <- runPlp(plpData, saveDirectory = saveLoc)
 #' # view result files

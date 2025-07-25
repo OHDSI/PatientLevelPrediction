@@ -37,7 +37,7 @@
 #'                                           to create covariates before summarising
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n = 100)
+#' plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #' covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #' head(covariateSummary)
 #' @return
