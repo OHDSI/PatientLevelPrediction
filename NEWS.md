@@ -1,7 +1,9 @@
-PatientLevelPrediction 6.4.1.9999
+PatientLevelPrediction 6.5.0
 ======================
+- [Bug] Add seed to `simulatePlpData` to stop convergence issues in examples (PR #583)
 - [Feature] skip diagnostics when using `runMultiplePlp` (PR #581)
 - [Bug] Fix failure of rclassifier and sklearn models with only one feature (PR #569)
+
 
 PatientLevelPrediction 6.4.1
 ======================
