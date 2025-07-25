@@ -10,6 +10,9 @@ man-roxygen
 compare_versions
 .github
 docs/*
+^pyproject.toml$
+^.python-version$
+^uv.lock$
 _pkgdown.yml
 ^vignettes/articles$
 ^vignettes/Videos.Rmd
@@ -18,3 +21,5 @@ _pkgdown.yml
 ^CRAN-RELEASE$
 ^cran-comments\.md$
 ^Dockerfile$
+^.venv$
+

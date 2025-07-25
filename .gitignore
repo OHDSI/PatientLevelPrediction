@@ -31,3 +31,7 @@ standalone/build/*
 /sql/
 .project
 .cproject
+/docs/
+.python-version
+pyproject.toml
+uv.lock
