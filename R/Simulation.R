@@ -87,6 +87,7 @@ createSimulationProfile <- function(plpData) {
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
+#' @param seed                       An optional seed for the random number generator. If provided
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which

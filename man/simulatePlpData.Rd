@@ -11,6 +11,8 @@ simulatePlpData(plpDataSimulationProfile, n = 10000, seed = NULL)
 using the \cr\code{createplpDataSimulationProfile} function.}
 
 \item{n}{The size of the population to be generated.}
+
+\item{seed}{An optional seed for the random number generator. If provided}
 }
 \value{
 An object of type \code{plpData}.
