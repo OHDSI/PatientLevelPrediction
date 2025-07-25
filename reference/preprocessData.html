@@ -54,7 +54,7 @@ the data and remove rare or redundant features"></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data and remove rare or redundant features</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/PreprocessingData.R" class="external-link"><code>R/PreprocessingData.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.5.0/R/PreprocessingData.R" class="external-link"><code>R/PreprocessingData.R</code></a></small>
       <div class="d-none name"><code>preprocessData.Rd</code></div>
     </div>
 
@@ -114,11 +114,11 @@ all obervations.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 2 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.981 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.923 secs</span>
 <span class="r-in"><span><span class="co"># check age is normalized by max value</span></span></span>
 <span class="r-in"><span><span class="va">preProcessedData</span><span class="op">$</span><span class="va">covariates</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">covariateId</span> <span class="op">==</span> <span class="fl">1002</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Source:   SQL [?? x 3]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: DuckDB v1.3.2 [unknown@Linux 6.11.0-1018-azure:R 4.5.1//tmp/Rtmphi5Sir/file240429efd830.duckdb]</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: DuckDB v1.3.2 [unknown@Linux 6.11.0-1018-azure:R 4.5.1//tmp/RtmpFMy6ag/file2196c4dade6.duckdb]</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    rowId covariateId covariateValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1        <span style="text-decoration: underline;">1</span>002          0.851</span>
