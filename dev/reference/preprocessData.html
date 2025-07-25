@@ -38,17 +38,13 @@ the data and remove rare or redundant features"><meta name="robots" content="noi
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
-  </ul></li>
       </ul></div>
 
 
@@ -58,7 +54,7 @@ the data and remove rare or redundant features"><meta name="robots" content="noi
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data and remove rare or redundant features</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/PreprocessingData.R" class="external-link"><code>R/PreprocessingData.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/PreprocessingData.R" class="external-link"><code>R/PreprocessingData.R</code></a></small>
       <div class="d-none name"><code>preprocessData.Rd</code></div>
     </div>
 
@@ -122,18 +118,18 @@ all obervations.</p>
 <span class="r-in"><span><span class="co"># check age is normalized by max value</span></span></span>
 <span class="r-in"><span><span class="va">preProcessedData</span><span class="op">$</span><span class="va">covariates</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">.data</span><span class="op">$</span><span class="va">covariateId</span> <span class="op">==</span> <span class="fl">1002</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Source:   SQL [?? x 3]</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: DuckDB v1.3.0 [unknown@Linux 6.11.0-1015-azure:R 4.5.1//tmp/RtmpZnDiZQ/file23cb89a6bcb.duckdb]</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># Database: DuckDB v1.3.2 [unknown@Linux 6.11.0-1018-azure:R 4.5.1//tmp/Rtmpx6SvBg/file242b30fb80c5.duckdb]</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    rowId covariateId covariateValue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1        <span style="text-decoration: underline;">1</span>002          0.660</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2        <span style="text-decoration: underline;">1</span>002          0.872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     3        <span style="text-decoration: underline;">1</span>002          0.830</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4        <span style="text-decoration: underline;">1</span>002          0.702</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     5        <span style="text-decoration: underline;">1</span>002          0.809</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6        <span style="text-decoration: underline;">1</span>002          0.766</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7        <span style="text-decoration: underline;">1</span>002          0.787</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8        <span style="text-decoration: underline;">1</span>002          0.851</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9        <span style="text-decoration: underline;">1</span>002          0.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1        <span style="text-decoration: underline;">1</span>002          0.830</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2        <span style="text-decoration: underline;">1</span>002          0.915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     3        <span style="text-decoration: underline;">1</span>002          0.851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     4        <span style="text-decoration: underline;">1</span>002          0.851</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     5        <span style="text-decoration: underline;">1</span>002          0.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     6        <span style="text-decoration: underline;">1</span>002          0.723</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     7        <span style="text-decoration: underline;">1</span>002          0.872</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     8        <span style="text-decoration: underline;">1</span>002          0.809</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     9        <span style="text-decoration: underline;">1</span>002          0.830</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    10        <span style="text-decoration: underline;">1</span>002          0.766</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ more rows</span></span>
 </code></pre></div>

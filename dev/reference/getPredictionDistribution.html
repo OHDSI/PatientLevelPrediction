@@ -36,17 +36,13 @@
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
-  </ul></li>
       </ul></div>
 
 
@@ -56,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculates the prediction distribution</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/PredictionDistribution.R" class="external-link"><code>R/PredictionDistribution.R</code></a></small>
       <div class="d-none name"><code>getPredictionDistribution.Rd</code></div>
     </div>
 
@@ -107,17 +103,17 @@ the mean and standard deviation per class</p>
 <span class="r-in"><span>                         evaluation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Train"</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">getPredictionDistribution</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   class PersonCount averagePredictedProbability StDevPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          58                   0.5012528                 0.2983744</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          42                   0.4982404                 0.2475504</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0          45                   0.4602473                 0.2879663</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     1          55                   0.3905233                 0.2790044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MinPredictedProbability P05PredictedProbability P25PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0.01587656              0.07351161               0.2405522</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0.01750672              0.04448114               0.3012616</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             0.027444995              0.05907415               0.1942841</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             0.001970668              0.06852040               0.1482621</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MedianPredictedProbability P75PredictedProbability P95PredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.4919488               0.7509835               0.9537860</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.5046674               0.6470561               0.9100018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  0.4365398               0.7483206               0.8216117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                  0.3375482               0.5740511               0.9328592</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   MaxPredictedProbability evaluation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9989599      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9646697      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.9960138      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.9584869      Train</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

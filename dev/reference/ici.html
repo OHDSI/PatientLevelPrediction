@@ -38,17 +38,13 @@ https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281"><meta name="robots" c
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
-  </ul></li>
       </ul></div>
 
 
@@ -58,7 +54,7 @@ https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281"><meta name="robots" c
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculate the Integrated Calibration Index from Austin and Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/EvaluationSummary.R" class="external-link"><code>R/EvaluationSummary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/EvaluationSummary.R" class="external-link"><code>R/EvaluationSummary.R</code></a></small>
       <div class="d-none name"><code>ici.Rd</code></div>
     </div>
 
@@ -96,7 +92,7 @@ https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281</p>
 <span class="r-in"><span>                        value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>                        evaluation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"Train"</span>, <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">ici</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2615994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.2564706</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

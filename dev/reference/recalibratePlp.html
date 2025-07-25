@@ -36,17 +36,13 @@
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
-  </ul></li>
       </ul></div>
 
 
@@ -56,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>recalibratePlp</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/Recalibration.R" class="external-link"><code>R/Recalibration.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Recalibration.R" class="external-link"><code>R/Recalibration.R</code></a></small>
       <div class="d-none name"><code>recalibratePlp.Rd</code></div>
     </div>
 
@@ -118,22 +114,22 @@ also known as Platt scaling/logistic recalibration.</p>
 <span class="r-in"><span><span class="va">outcomeRate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">outcomeCount</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">observedRisk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"outcome rate is: "</span>, <span class="va">outcomeRate</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> outcome rate is: 0.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> outcome rate is: 0.11</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"observed risk is: "</span>, <span class="va">observedRisk</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> observed risk is: 0.478301520289388</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> observed risk is: 0.51228725640336</span>
 <span class="r-in"><span><span class="co"># lets recalibrate the predictions</span></span></span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">recalibratePlp</span><span class="op">(</span><span class="va">prediction</span>, </span></span>
 <span class="r-in"><span>                             analysisId <span class="op">=</span> <span class="st">"recalibration"</span>, </span></span>
 <span class="r-in"><span>                             method <span class="op">=</span> <span class="st">"recalibrationInTheLarge"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">recalibratedRisk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"recalibrated risk with recalibration in the large is: "</span>, <span class="va">recalibratedRisk</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> recalibrated risk with recalibration in the large is: 0.325871900596131</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> recalibrated risk with recalibration in the large is: 0.3464512533573</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">recalibratePlp</span><span class="op">(</span><span class="va">prediction</span>, </span></span>
 <span class="r-in"><span>                             analysisId <span class="op">=</span> <span class="st">"recalibration"</span>, </span></span>
 <span class="r-in"><span>                             method <span class="op">=</span> <span class="st">"weakRecalibration"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">recalibratedRisk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"recalibrated risk with weak recalibration is: "</span>, <span class="va">recalibratedRisk</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> recalibrated risk with weak recalibration is: 0.212935950298076</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> recalibrated risk with weak recalibration is: 0.228225626678651</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

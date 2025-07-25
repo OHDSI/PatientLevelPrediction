@@ -36,17 +36,13 @@
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/BestPractices.html">Best Practices</a></li>
+<li class="nav-item"><a class="nav-link" href="../articles/ClinicalModels.html">Clinical Models</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://ohdsi.github.io/Hades"><img src='https://ohdsi.github.io/Hades/images/hadesMini.png' width=80 height=17 style='vertical-align: top;'></a></li>
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/OHDSI/PatientLevelPrediction"><span class="fa fa-github fa-lg"></span></a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
-    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
-  </ul></li>
       </ul></div>
 
 
@@ -56,7 +52,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Get a sparse summary of the calibration</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/constrained_predictors_Table/R/CalibrationSummary.R" class="external-link"><code>R/CalibrationSummary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/CalibrationSummary.R" class="external-link"><code>R/CalibrationSummary.R</code></a></small>
       <div class="d-none name"><code>getCalibrationSummary.Rd</code></div>
     </div>
 
@@ -139,28 +135,28 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing subjects with prior outcomes (if any)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing non outcome subjects with insufficient time at risk (if any)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 483 observations, 483 unique subjects and 233 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0414 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 481 observations, 481 unique subjects and 230 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0416 secs</span>
 <span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="splitData.html">splitData</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">population</span>, <span class="fu"><a href="createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> test: 0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> train: 0.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nfold: 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> seed: 75775</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> seed: 64248</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 25% test and 75% train (into 3 folds) random stratified split by class</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 120 test cases and 363 train cases (122, 121, 120)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 119 test cases and 362 train cases (121, 121, 120)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to limit covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to limit covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.763 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.764 secs</span>
 <span class="r-in"><span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocessData.html">preprocessData</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> minFraction: 0.001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> normalize: TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> removeRedundancy: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Removing 1 redundant covariates</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Removing 2 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.2 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.19 secs</span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"calibrationSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># fit a lasso logistic regression model using the training data</span></span></span>
 <span class="r-in"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="fitPlp.html">fitPlp</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span>, modelSettings<span class="op">=</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span>seed<span class="op">=</span><span class="fl">42</span><span class="op">)</span>,</span></span>
@@ -170,93 +166,33 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GLM fit status:  OK</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Returned from fitting to LassoLogisticRegression</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Getting variable importance</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Getting predictions on train set</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predictProbabilities - predictAndromeda start</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.162 secs</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Model had no non-zero coefficients so predicted same for all population...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.000757 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Returned from classifier function</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.34 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.141 secs</span>
 <span class="r-in"><span><span class="va">calibrationSummary</span> <span class="op">&lt;-</span> <span class="fu">getCalibrationSummary</span><span class="op">(</span><span class="va">plpModel</span><span class="op">$</span><span class="va">prediction</span>, </span></span>
 <span class="r-in"><span>                                            <span class="st">"binary"</span>, </span></span>
 <span class="r-in"><span>                                            numberOfStrata <span class="op">=</span> <span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                                            typeColumn <span class="op">=</span> <span class="st">"evaluationType"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">calibrationSummary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    predictionThreshold PersonCountAtRisk PersonCountWithOutcome</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0000000                86                     29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.3862219                29                     12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4227336                92                     39</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.4397387                11                      8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.4478777                37                     16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.4989161                35                     21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7            0.6214513                36                     23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8            0.6708076                37                     27</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9            0.0000000                38                     16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10           0.3964319                36                     17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11           0.4190337                38                     14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12           0.4208268                42                     14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13           0.4357011                28                     15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14           0.4397177                43                     21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15           0.4632520                29                     12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16           0.5078695                42                     23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17           0.5949383                30                     19</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18           0.6530045                37                     24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    averagePredictedProbability StDevPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0.3826749              0.0067767442</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0.4162459              0.0116983791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                    0.4386274              0.0036754045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    0.4446562              0.0003721349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    0.4737807              0.0125073555</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    0.5452762              0.0424326447</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    0.6312294              0.0150942234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    0.6874332              0.0212373606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                    0.3737215              0.0187817683</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                   0.4079824              0.0038437379</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                   0.4201410              0.0008707856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                   0.4298384              0.0063933570</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                   0.4368809              0.0016166432</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                   0.4569184              0.0057233368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                   0.4758155              0.0145058836</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                   0.5567212              0.0363445510</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                   0.6147343              0.0199305037</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                   0.7008847              0.0324304289</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    MinPredictedProbability P25PredictedProbability MedianPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.3622672               0.3862219                  0.3862219</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.3911199               0.4147074                  0.4227336</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4251824               0.4397387                  0.4397387</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4439036               0.4448235                  0.4448235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.4600944               0.4610800                  0.4773596</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5014228               0.5162451                  0.5177583</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.6226150               0.6226150                  0.6226150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.6729727               0.6729727                  0.6729727</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.3300787               0.3646785                  0.3646785</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4042652               0.4050912                  0.4086875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4190337               0.4190337                  0.4208268</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4208268               0.4248095                  0.4329971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4357011               0.4357011                  0.4357011</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4414145               0.4542988                  0.4542988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4648032               0.4648032                  0.4648032</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5078695               0.5182265                  0.5768796</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.5976164               0.6017476                  0.6094904</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.6530746               0.6692046                  0.6936688</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    P75PredictedProbability MaxPredictedProbability observedIncidence evaluation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.3862219               0.3862219         0.3372093      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.4227336               0.4227336         0.4137931      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4397387               0.4397387         0.4239130      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4448235               0.4448235         0.7272727      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.4798769               0.4989161         0.4324324      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5982903               0.6197058         0.6000000      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.6310196               0.6621469         0.6388889      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.7054237               0.7367001         0.7297297      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.3964319               0.3964319         0.4210526         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4086875               0.4190337         0.4722222         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4208268               0.4208268         0.3684211         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4357011               0.4357011         0.3333333         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4383906               0.4397177         0.5357143         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4632520               0.4632520         0.4883721         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4845111               0.5078695         0.4137931         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5949383               0.5949383         0.5476190         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.6094904               0.6527245         0.6333333         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.7398389               0.7616838         0.6486486         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   predictionThreshold PersonCountAtRisk PersonCountWithOutcome</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           0.0000000               362                    173</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           0.0000000               242                    116</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           0.4771784               120                     57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   averagePredictedProbability StDevPredictedProbability MinPredictedProbability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                   0.4779006                         0               0.4779006</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                   0.4771784                         0               0.4771784</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                   0.4793388                         0               0.4793388</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   P25PredictedProbability MedianPredictedProbability P75PredictedProbability</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.4779006                  0.4779006               0.4779006</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.4771784                  0.4771784               0.4771784</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               0.4793388                  0.4793388               0.4793388</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   MaxPredictedProbability observedIncidence evaluation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1               0.4779006         0.4779006      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               0.4771784         0.4793388         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               0.4793388         0.4750000         CV</span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saveLoc</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 </code></pre></div>
