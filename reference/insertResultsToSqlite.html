@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,8 @@
 <span>  <span class="va">resultLocation</span>,</span>
 <span>  cohortDefinitions <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  databaseList <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  sqliteLocation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">resultLocation</span>, <span class="st">"sqlite"</span><span class="op">)</span></span>
+<span>  sqliteLocation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">resultLocation</span>, <span class="st">"sqlite"</span><span class="op">)</span>,</span>
+<span>  skipDiagnostics <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -88,6 +89,10 @@
 
 <dt id="arg-sqlitelocation">sqliteLocation<a class="anchor" aria-label="anchor" href="#arg-sqlitelocation"></a></dt>
 <dd><p>(string) location of directory where the sqlite database will be saved</p></dd>
+
+
+<dt id="arg-skipdiagnostics">skipDiagnostics<a class="anchor" aria-label="anchor" href="#arg-skipdiagnostics"></a></dt>
+<dd><p>Whether to skip uploading the diagnostics</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -112,7 +117,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

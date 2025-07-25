@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,7 @@
 <span>    <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="createModelDesign.html">createModelDesign</a></span><span class="op">(</span>targetId <span class="op">=</span> <span class="fl">1</span>, outcomeId <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    modelSettings <span class="op">=</span> <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  onlyFetchData <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  skipDiagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cohortDefinitions <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"DEBUG"</span>, timeStamp <span class="op">=</span> <span class="cn">TRUE</span>, logName <span class="op">=</span></span>
 <span>    <span class="st">"runPlp Log"</span><span class="op">)</span>,</span>
@@ -90,6 +91,10 @@
 
 <dt id="arg-onlyfetchdata">onlyFetchData<a class="anchor" aria-label="anchor" href="#arg-onlyfetchdata"></a></dt>
 <dd><p>Only fetches and saves the data object to the output folder without running the analysis.</p></dd>
+
+
+<dt id="arg-skipdiagnostics">skipDiagnostics<a class="anchor" aria-label="anchor" href="#arg-skipdiagnostics"></a></dt>
+<dd><p>Skip the diagnostics for speed if you just want the models to be developed and evaluated.</p></dd>
 
 
 <dt id="arg-cohortdefinitions">cohortDefinitions<a class="anchor" aria-label="anchor" href="#arg-cohortdefinitions"></a></dt>
@@ -130,7 +135,7 @@ for a set of analysis choices.</td></tr><tr><td><code>targetId</code></td><td>Th
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

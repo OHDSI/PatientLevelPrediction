@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.4.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,7 +111,7 @@ stratified into equally sized bins of predicted probabilities.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># simulate data</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"simulationProfile"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span><span class="va">simulationProfile</span>, n<span class="op">=</span><span class="fl">500</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span><span class="va">simulationProfile</span>, n <span class="op">=</span> <span class="fl">500</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating cohorts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
@@ -135,20 +135,20 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing subjects with prior outcomes (if any)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing non outcome subjects with insufficient time at risk (if any)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 483 observations, 483 unique subjects and 233 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0436 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 477 observations, 477 unique subjects and 235 outcomes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.041 secs</span>
 <span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="splitData.html">splitData</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">population</span>, <span class="fu"><a href="createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> test: 0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> train: 0.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nfold: 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> seed: 75775</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> seed: 87414</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 25% test and 75% train (into 3 folds) random stratified split by class</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 120 test cases and 363 train cases (122, 121, 120)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 118 test cases and 359 train cases (120, 120, 119)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to limit covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to limit covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.807 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.82 secs</span>
 <span class="r-in"><span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocessData.html">preprocessData</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> minFraction: 0.001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> normalize: TRUE</span>
@@ -156,7 +156,7 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 1 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.16 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.13 secs</span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"calibrationSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># fit a lasso logistic regression model using the training data</span></span></span>
 <span class="r-in"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="fitPlp.html">fitPlp</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span>, modelSettings<span class="op">=</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span>seed<span class="op">=</span><span class="fl">42</span><span class="op">)</span>,</span></span>
@@ -169,90 +169,90 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Getting predictions on train set</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predictProbabilities - predictAndromeda start</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.142 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.139 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Returned from classifier function</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.331 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.327 secs</span>
 <span class="r-in"><span><span class="va">calibrationSummary</span> <span class="op">&lt;-</span> <span class="fu">getCalibrationSummary</span><span class="op">(</span><span class="va">plpModel</span><span class="op">$</span><span class="va">prediction</span>, </span></span>
 <span class="r-in"><span>                                            <span class="st">"binary"</span>, </span></span>
 <span class="r-in"><span>                                            numberOfStrata <span class="op">=</span> <span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                                            typeColumn <span class="op">=</span> <span class="st">"evaluationType"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">calibrationSummary</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    predictionThreshold PersonCountAtRisk PersonCountWithOutcome</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0000000                86                     29</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.3862219                29                     12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4227336                92                     39</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.4397387                11                      8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.4478777                37                     16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.4989161                35                     21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7            0.6214513                36                     23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8            0.6708076                37                     27</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9            0.0000000                38                     16</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10           0.3964319                36                     17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11           0.4190337                38                     14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12           0.4208268                42                     14</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13           0.4357011                28                     15</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14           0.4397177                43                     21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15           0.4632520                29                     12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16           0.5078695                42                     23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17           0.5949383                30                     19</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18           0.6530045                37                     24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            0.0000000                80                     26</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2            0.4378269                56                     25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3            0.4449642                54                     24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4            0.4525005                47                     21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5            0.4596815                15                      8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            0.5432848                38                     25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7            0.5851795                43                     33</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8            0.5995251                26                     15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9            0.0000000                53                     22</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10           0.4347187                48                     21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11           0.4360719                31                     15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12           0.4459475                37                     13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13           0.4612994                43                     22</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14           0.4784741                 3                      0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15           0.4880717                37                     16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16           0.4904711                45                     34</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17           0.5418925                27                     17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18           0.6244405                35                     17</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    averagePredictedProbability StDevPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0.3826749              0.0067767442</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0.4162459              0.0116983791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                    0.4386274              0.0036754045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    0.4446562              0.0003721349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    0.4737807              0.0125073555</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    0.5452762              0.0424326447</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    0.6312294              0.0150942234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    0.6874332              0.0212373606</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                    0.3737215              0.0187817683</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                   0.4079824              0.0038437379</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                   0.4201410              0.0008707856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                   0.4298384              0.0063933570</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                   0.4368809              0.0016166432</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                   0.4569184              0.0057233368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                   0.4758155              0.0145058836</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                   0.5567212              0.0363445510</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17                   0.6147343              0.0199305037</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                   0.7008847              0.0324304289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                    0.4199545              0.0324866091</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    0.4449642              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                    0.4525005              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                    0.4596815              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                    0.5128086              0.0193008989</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                    0.5785022              0.0090283277</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                    0.5950694              0.0036456538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                    0.6608608              0.0536727630</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                    0.4249096              0.0280345463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                   0.4360439              0.0001359861</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                   0.4459475              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                   0.4612994              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                   0.4780158              0.0011538080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                   0.4784741              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                   0.4904711              0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                   0.5281255              0.0151116471</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                   0.5780195              0.0249779640</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                   0.6417163              0.0218675577</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    MinPredictedProbability P25PredictedProbability MedianPredictedProbability</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.3622672               0.3862219                  0.3862219</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.3911199               0.4147074                  0.4227336</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4251824               0.4397387                  0.4397387</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4439036               0.4448235                  0.4448235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.4600944               0.4610800                  0.4773596</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5014228               0.5162451                  0.5177583</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.6226150               0.6226150                  0.6226150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.6729727               0.6729727                  0.6729727</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.3300787               0.3646785                  0.3646785</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4042652               0.4050912                  0.4086875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4190337               0.4190337                  0.4208268</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4208268               0.4248095                  0.4329971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4357011               0.4357011                  0.4357011</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4414145               0.4542988                  0.4542988</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4648032               0.4648032                  0.4648032</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5078695               0.5182265                  0.5768796</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.5976164               0.6017476                  0.6094904</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.6530746               0.6692046                  0.6936688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.3529353               0.4378269                  0.4378269</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.4449642               0.4449642                  0.4449642</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4525005               0.4525005                  0.4525005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4596815               0.4596815                  0.4596815</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.4820612               0.5005591                  0.5042112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5504580               0.5706220                  0.5851140</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.5921234               0.5921234                  0.5921886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.6064548               0.6064548                  0.6590167</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.3263596               0.4347187                  0.4347187</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4353985               0.4360719                  0.4360719</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4459475               0.4459475                  0.4459475</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4612994               0.4612994                  0.4612994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4747578               0.4784741                  0.4784741</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4784741               0.4784741                  0.4784741</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4904711               0.4904711                  0.4904711</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5039843               0.5222591                  0.5404674</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.5531805               0.5531805                  0.5825347</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.6249322               0.6265852                  0.6355502</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    P75PredictedProbability MaxPredictedProbability observedIncidence evaluation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.3862219               0.3862219         0.3372093      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.4227336               0.4227336         0.4137931      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4397387               0.4397387         0.4239130      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4448235               0.4448235         0.7272727      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.4798769               0.4989161         0.4324324      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5982903               0.6197058         0.6000000      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.6310196               0.6621469         0.6388889      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.7054237               0.7367001         0.7297297      Train</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.3964319               0.3964319         0.4210526         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4086875               0.4190337         0.4722222         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4208268               0.4208268         0.3684211         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4357011               0.4357011         0.3333333         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4383906               0.4397177         0.5357143         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4632520               0.4632520         0.4883721         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4845111               0.5078695         0.4137931         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5949383               0.5949383         0.5476190         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.6094904               0.6527245         0.6333333         CV</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.7398389               0.7616838         0.6486486         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                0.4378269               0.4378269         0.3250000      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                0.4449642               0.4449642         0.4464286      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                0.4525005               0.4525005         0.4444444      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                0.4596815               0.4596815         0.4468085      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                0.5285091               0.5432848         0.5333333      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                0.5851140               0.5851795         0.6578947      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                0.5995251               0.5995251         0.7674419      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                0.7171175               0.7244831         0.5769231      Train</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                0.4347187               0.4347187         0.4150943         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10               0.4360719               0.4360719         0.4375000         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11               0.4459475               0.4459475         0.4838710         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12               0.4612994               0.4612994         0.3513514         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13               0.4784741               0.4784741         0.5116279         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14               0.4784741               0.4784741         0.0000000         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15               0.4904711               0.4904711         0.4324324         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16               0.5418925               0.5418925         0.7555556         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17               0.5825347               0.6244405         0.6296296         CV</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18               0.6423369               0.7193268         0.4857143         CV</span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">saveLoc</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 </code></pre></div>
@@ -266,7 +266,7 @@ stratified into equally sized bins of predicted probabilities.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
