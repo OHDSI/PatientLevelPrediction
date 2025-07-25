@@ -25,6 +25,7 @@
 #' @param databaseDetails               The database settings created using \code{createDatabaseDetails()}
 #' @param modelDesignList                A list of model designs created using \code{createModelDesign()}
 #' @param onlyFetchData                  Only fetches and saves the data object to the output folder without running the analysis.
+#' @param skipDiagnostics                Skip the diagnostics for speed if you just want the models to be developed and evaluated.
 #' @param cohortDefinitions               A list of cohort definitions for the target and outcome cohorts
 #' @param logSettings                    The setting specifying the logging for the analyses created using \code{createLogSettings()}
 #' @param saveDirectory                   Name of the folder where all the outputs will written to.
@@ -92,6 +93,7 @@ runMultiplePlp <- function(
       createModelDesign(targetId = 1, outcomeId = 3, modelSettings = setLassoLogisticRegression())
     ),
     onlyFetchData = FALSE,
+    skipDiagnostics = FALSE,
     cohortDefinitions = NULL,
     logSettings = createLogSettings(
       verbosity = "DEBUG",
@@ -179,7 +181,7 @@ runMultiplePlp <- function(
   }
 
   # runDiagnosis - NEW
-  if (!onlyFetchData) {
+  if (!onlyFetchData & !skipDiagnostics) {
     for (i in 1:nrow(as.data.frame(settingstable))) {
       modelDesign <- modelDesignList[[i]]
       settings <- settingstable[i, ] # just the data locations?
@@ -275,7 +277,8 @@ runMultiplePlp <- function(
         cdmDatabaseNames = databaseDetails$cdmDatabaseName,
         databaseRefIds = databaseDetails$cdmDatabaseId
       ),
-      sqliteLocation = sqliteLocation
+      sqliteLocation = sqliteLocation, 
+      skipDiagnostics = skipDiagnostics
     )
   }
 

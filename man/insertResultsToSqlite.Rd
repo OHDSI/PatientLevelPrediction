@@ -8,7 +8,8 @@ insertResultsToSqlite(
   resultLocation,
   cohortDefinitions = NULL,
   databaseList = NULL,
-  sqliteLocation = file.path(resultLocation, "sqlite")
+  sqliteLocation = file.path(resultLocation, "sqlite"),
+  skipDiagnostics = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ insertResultsToSqlite(
 \item{databaseList}{A list created by \code{createDatabaseList} to specify the databases}
 
 \item{sqliteLocation}{(string) location of directory where the sqlite database will be saved}
+
+\item{skipDiagnostics}{Whether to skip uploading the diagnostics}
 }
 \value{
 Returns the location of the sqlite database file

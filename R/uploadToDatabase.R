@@ -103,6 +103,7 @@ insertRunPlpToSqlite <- function(
 #' @param cohortDefinitions            A set of one or more cohorts extracted using ROhdsiWebApi::exportCohortDefinitionSet()
 #' @param databaseList             A list created by \code{createDatabaseList} to specify the databases
 #' @param sqliteLocation               (string) location of directory where the sqlite database will be saved
+#' @param skipDiagnostics             Whether to skip uploading the diagnostics
 #'
 #' @return
 #' Returns the location of the sqlite database file
@@ -131,7 +132,9 @@ insertResultsToSqlite <- function(
     resultLocation,
     cohortDefinitions = NULL,
     databaseList = NULL,
-    sqliteLocation = file.path(resultLocation, "sqlite")) {
+    sqliteLocation = file.path(resultLocation, "sqlite"),
+    skipDiagnostics = FALSE
+    ) {
   if (!dir.exists(sqliteLocation)) {
     dir.create(sqliteLocation, recursive = TRUE)
   }
@@ -162,14 +165,16 @@ insertResultsToSqlite <- function(
     modelSaveLocation = sqliteLocation
   )
 
-  # run insert diagnosis
-  addMultipleDiagnosePlpToDatabase(
-    connectionDetails = connectionDetails,
-    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
-    cohortDefinitions = cohortDefinitions,
-    databaseList = databaseList,
-    resultLocation = resultLocation
-  )
+  # run insert diagnosis - only if skipDiagnostics is FALSE
+  if(!skipDiagnostics){
+    addMultipleDiagnosePlpToDatabase(
+      connectionDetails = connectionDetails,
+      databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+      cohortDefinitions = cohortDefinitions,
+      databaseList = databaseList,
+      resultLocation = resultLocation
+    )
+  }
 
   return(file.path(sqliteLocation, "databaseFile.sqlite"))
 }
