@@ -105,7 +105,7 @@ test_that("simulatePlpData works", {
   )
 
   n <- 100 # population size for the simulation
-  simData <- simulatePlpData(dummyProfile, n = n)
+  simData <- simulatePlpData(dummyProfile, n = n, seed = 42)
   expect_s3_class(simData, "plpData")
   expect_true(is.data.frame(simData$cohorts))
   expect_equal(nrow(simData$cohorts), n)

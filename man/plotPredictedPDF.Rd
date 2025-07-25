@@ -36,7 +36,7 @@ Create a plot showing the predicted probability density function, showing predic
 \dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotPredictedPDF")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 plotPredictedPDF(results)

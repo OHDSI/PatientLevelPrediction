@@ -19,7 +19,7 @@ Print a summary.plpData object
 }
 \examples{
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=10)
+plpData <- simulatePlpData(simulationProfile, n = 10, seed = 42)
 summary <- summary(plpData)
 print(summary)
 }

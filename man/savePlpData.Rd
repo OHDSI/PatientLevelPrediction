@@ -26,7 +26,7 @@ folder specified by the user.
 }
 \examples{
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 500)
+plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 saveLoc <- file.path(tempdir(), "savePlpData")
 savePlpData(plpData, saveLoc)
 dir(saveLoc, full.names = TRUE)

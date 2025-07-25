@@ -1,5 +1,5 @@
 # common tests that can be grouped together, such as testing the output from fitplp
-expect_correct_fitPlp <- function(plpModel, trainData) {
+expect_correct_fitPlp <- function(plpModel, trainData, testLocation = TRUE) {
   outcomeId <- 3
   # predictions are same amount as labels
   multiplicativeFactor <- dplyr::n_distinct(plpModel$prediction %>%
@@ -11,7 +11,9 @@ expect_correct_fitPlp <- function(plpModel, trainData) {
     (plpModel$prediction$value <= 1)))
 
   # model directory exists
-  expect_true(dir.exists(plpModel$model))
+  if (testLocation) {
+    expect_true(dir.exists(plpModel$model))
+  }
 
   expect_equal(plpModel$modelDesign$outcomeId, outcomeId)
   expect_equal(plpModel$modelDesign$targetId, 1)

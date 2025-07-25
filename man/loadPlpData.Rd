@@ -23,7 +23,7 @@ The data will be written to a set of files in the folder specified by the user.
 }
 \examples{
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 500)
+plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 saveLoc <- file.path(tempdir(), "loadPlpData")
 savePlpData(plpData, saveLoc)
 dir(saveLoc)

@@ -1,3 +1,13 @@
+PatientLevelPrediction 6.5.0
+======================
+- [Feature] skip diagnostics when using `runMultiplePlp` (PR #581)
+- [Bug] Add seed to `simulatePlpData` to stop convergence issues in examples (PR #583)
+- [Bug] Conserve andromeda object when samplig (PR #579)
+- [Bug] Fix `modelSettings` of existing GLM (PR #575)
+- [Bug] Fix normalizers if feature is a constant (PR #573)
+- [Bug] Fix failure of rclassifier and sklearn models with only one feature (PR #569)
+
+
 PatientLevelPrediction 6.4.1
 ======================
 - [Bug] Fix bug when sampleSize is NULL but restricting by dates in getPlpData (PR #559)

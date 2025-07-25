@@ -10,6 +10,7 @@ runMultiplePlp(
     setLassoLogisticRegression()), createModelDesign(targetId = 1, outcomeId = 3,
     modelSettings = setLassoLogisticRegression())),
   onlyFetchData = FALSE,
+  skipDiagnostics = FALSE,
   cohortDefinitions = NULL,
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
@@ -23,6 +24,8 @@ runMultiplePlp(
 \item{modelDesignList}{A list of model designs created using \code{createModelDesign()}}
 
 \item{onlyFetchData}{Only fetches and saves the data object to the output folder without running the analysis.}
+
+\item{skipDiagnostics}{Skip the diagnostics for speed if you just want the models to be developed and evaluated.}
 
 \item{cohortDefinitions}{A list of cohort definitions for the target and outcome cohorts}
 

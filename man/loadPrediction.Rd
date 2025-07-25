@@ -22,7 +22,7 @@ Loads the prediciton json file
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "loadPrediction")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 savePrediction(results$prediction, saveLoc)

@@ -39,7 +39,7 @@
 #' library(dplyr)
 #' # simulate some data
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' # now fit a model
 #' saveLoc <- file.path(tempdir(), "pfi")
 #' plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)

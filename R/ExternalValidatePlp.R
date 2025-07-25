@@ -173,7 +173,7 @@ externalValidatePlp <- function(plpModel,
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' # first fit a model on some data, default is a L1 logistic regression
 #' saveLoc <- file.path(tempdir(), "development")
 #' results <- runPlp(plpData, 
@@ -523,7 +523,7 @@ createValidationDesign <-
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' # first fit a model on some data, default is a L1 logistic regression
 #' saveLoc <- file.path(tempdir(), "development")
 #' results <- runPlp(plpData, saveDirectory = saveLoc)
