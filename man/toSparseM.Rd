@@ -34,7 +34,7 @@ the package Matrix
 \donttest{ \dontshow{ # takes too long }
 library(dplyr)
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n=100)
+plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 # how many covariates are there before we convert to sparse matrix
 plpData$covariateData$covariates \%>\% 
  dplyr::group_by(.data$covariateId) \%>\% 

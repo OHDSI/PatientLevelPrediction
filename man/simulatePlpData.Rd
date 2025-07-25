@@ -4,7 +4,7 @@
 \alias{simulatePlpData}
 \title{Generate simulated data}
 \usage{
-simulatePlpData(plpDataSimulationProfile, n = 10000)
+simulatePlpData(plpDataSimulationProfile, n = 10000, seed = NULL)
 }
 \arguments{
 \item{plpDataSimulationProfile}{An object of type \code{plpDataSimulationProfile} as generated
@@ -26,6 +26,6 @@ the simulation profile is based.
 # first load the simulation profile to use
 data("simulationProfile")
 # then generate the simulated data
-plpData <- simulatePlpData(simulationProfile, n = 100)
+plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 nrow(plpData$cohorts)
 }

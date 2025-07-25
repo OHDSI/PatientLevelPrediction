@@ -35,7 +35,7 @@
 #' @examples
 #' \donttest{ \dontshow{ # takes too long to run }
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n= 1500)
+#' plpData <- simulatePlpData(simulationProfile, n = 1500, seed = 42)
 #' population <- createStudyPopulation(plpData, outcomeId = 3, 
 #'                                     populationSettings = createStudyPopulationSettings())
 #' data <- splitData(plpData, population, splitSettings=createDefaultSplitSetting(splitSeed=42))

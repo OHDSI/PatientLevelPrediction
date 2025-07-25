@@ -54,7 +54,8 @@ data(simulationProfile)
 sampleSize <- 12000
 plpData <- simulatePlpData(
   plpDataSimulationProfile,
-  n = sampleSize
+  n = sampleSize,
+  seed = 42
 )
 ```
 

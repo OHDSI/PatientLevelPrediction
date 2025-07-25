@@ -37,7 +37,7 @@
 #' \donttest{ \dontshow{ # takes too long }
 #' # develop a simple model on simulated data
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=1000)
+#' plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #' saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
 #' results <- runPlp(plpData, outcomeId=3, saveDirectory=saveLoc)
 #' # now upload the results to a sqlite database

@@ -207,7 +207,7 @@ test_that("splineCovariates works", {
     knots = knots
   )
   data(simulationProfile)
-  trainData <- simulatePlpData(simulationProfile, n = 200)
+  trainData <- simulatePlpData(simulationProfile, n = 200, seed = 42)
 
   n <- 50
   trainData$covariateData$covariates <- data.frame(

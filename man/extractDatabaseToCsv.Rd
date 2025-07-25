@@ -42,7 +42,7 @@ Extracts the results from a database into a set of csv files
 \donttest{ \dontshow{ # takes too long }
 # develop a simple model on simulated data
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 500)
+plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 saveLoc <- file.path(tempdir(), "extractDatabaseToCsv")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 # now upload the results to a sqlite database

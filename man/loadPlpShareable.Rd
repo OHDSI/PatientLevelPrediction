@@ -22,7 +22,7 @@ Load the main results from json/csv files into a runPlp object
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "loadPlpShareable")
 results <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 savePlpShareable(results, saveLoc)

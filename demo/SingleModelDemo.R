@@ -6,7 +6,7 @@ devAskNewPage(ask = FALSE)
 set.seed(1234)
 data(plpDataSimulationProfile)
 sampleSize <- 2000
-plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize)
+plpData <- simulatePlpData(plpDataSimulationProfile, n = sampleSize, seed = 42)
 
 ### Define the study population
 populationSettings <- createStudyPopulationSettings(

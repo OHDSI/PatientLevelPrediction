@@ -14,7 +14,8 @@ set.seed(1234)
 sampleSize <- 2000
 plpData <- simulatePlpData(
   plpDataSimulationProfile,
-  n = sampleSize
+  n = sampleSize,
+  seed = 42
 )
 
 # Generate the study population
