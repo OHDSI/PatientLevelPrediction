@@ -87,6 +87,7 @@ createSimulationProfile <- function(plpData) {
 #' @param plpDataSimulationProfile   An object of type \code{plpDataSimulationProfile} as generated
 #'                                   using the \cr\code{createplpDataSimulationProfile} function.
 #' @param n                          The size of the population to be generated.
+#' @param seed                       An optional seed for the random number generator. If provided
 #'
 #' @details
 #' This function generates simulated data that is in many ways similar to the original data on which
@@ -99,10 +100,26 @@ createSimulationProfile <- function(plpData) {
 #' # first load the simulation profile to use
 #' data("simulationProfile")
 #' # then generate the simulated data
-#' plpData <- simulatePlpData(simulationProfile, n = 100)
+#' plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #' nrow(plpData$cohorts)
 #' @export
-simulatePlpData <- function(plpDataSimulationProfile, n = 10000) {
+simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
+  if (!is.null(seed)) {
+    if (!is.numeric(seed) || length(seed) != 1L || seed %% 1 != 0) {
+      stop("Seed must be a single integer")
+    }
+    oldSeedExists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if (oldSeedExists) oldSeed <- get(".Random.seed", envir = .GlobalEnv)
+    set.seed(as.integer(seed))
+    on.exit({
+      if (oldSeedExists) {
+        assign(".Random.seed", oldSeed, envir = .GlobalEnv)
+      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    }, add = TRUE)
+  }
+
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
   writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariateInfo$covariatePrevalence

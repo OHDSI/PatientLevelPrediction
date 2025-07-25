@@ -26,7 +26,7 @@ Saves the main results json/csv files (these files can be read by the shiny app)
 \examples{
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "savePlpShareable")
 results <- runPlp(plpData, saveDirectory = saveLoc)
 newSaveLoc <- file.path(tempdir(), "savePlpShareable", "saved")

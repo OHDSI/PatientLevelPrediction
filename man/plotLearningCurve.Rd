@@ -51,7 +51,7 @@ from \code{createLearningCurve}.
 \dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long to run }
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1800)
+plpData <- simulatePlpData(simulationProfile, n = 1800, seed = 42)
 outcomeId <- 3
 modelSettings <- setLassoLogisticRegression(seed=42)
 learningCurve <- createLearningCurve(plpData, outcomeId, modelSettings = modelSettings,

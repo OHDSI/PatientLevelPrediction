@@ -46,7 +46,7 @@ Split the plpData into test/train sets using a splitting settings of class
 }
 \examples{
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 population <- createStudyPopulation(plpData)
 splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
                                            trainFraction = 0.50, nfold = 5)

@@ -525,7 +525,7 @@ getPlpData <- function(
 #' @return A message describing the object
 #' @examples  
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=10)
+#' plpData <- simulatePlpData(simulationProfile, n = 10, seed = 42)
 #' print(plpData)
 #' @export
 print.plpData <- function(x, ...) {
@@ -542,7 +542,7 @@ print.plpData <- function(x, ...) {
 #' @return A summary of the object containing the number of people, outcomes and covariates
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=10)
+#' plpData <- simulatePlpData(simulationProfile, n = 10, seed = 42)
 #' summary(plpData)
 #' @export
 summary.plpData <- function(object, ...) {
@@ -577,7 +577,7 @@ summary.plpData <- function(object, ...) {
 #' @return A message describing the object
 #' @examples
 #' data("simulationProfile")
-#' plpData <- simulatePlpData(simulationProfile, n=10)
+#' plpData <- simulatePlpData(simulationProfile, n = 10, seed = 42)
 #' summary <- summary(plpData)
 #' print(summary)
 print.summary.plpData <- function(x, ...) {

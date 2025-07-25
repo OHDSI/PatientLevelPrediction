@@ -32,7 +32,7 @@ coefficients <- data.frame(
 )
 model <- createGlmModel(coefficients, intercept = -2.5)
 data("simulationProfile")
-plpData <- simulatePlpData(simulationProfile, n = 50)
+plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 # see the predicted risk values
 head(prediction)

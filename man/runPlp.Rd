@@ -94,7 +94,7 @@ develop and internally validate a model for the specified outcomeId.
 \donttest{ \dontshow{ # takes too long }
 # simulate some data
 data('simulationProfile')
-plpData <- simulatePlpData(simulationProfile, n = 1000)
+plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 # develop a model with the default settings
 saveLoc <- file.path(tempdir(), "runPlp")
 results <- runPlp(plpData = plpData, outcomeId = 3, analysisId = 1,
