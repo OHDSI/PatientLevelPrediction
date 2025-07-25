@@ -1,5 +1,6 @@
 PatientLevelPrediction 6.4.1.9999
 ======================
+- [Feature] skip diagnostics when using `runMultiplePlp` (PR #581)
 - [Bug] Fix failure of rclassifier and sklearn models with only one feature (PR #569)
 
 PatientLevelPrediction 6.4.1
