@@ -1420,7 +1420,7 @@ plotSmoothCalibration <- function(plpResult,
 #' @param modelNames (optional) names of the models to be used in the plot. If NULL, the names of the plpResults are used. Must have the same length as plpResults.
 #' @param typeColumn The name of the column specifying the evaluation type
 #' @param saveLocation Directory to save plot (if NULL plot is not saved)
-#' @param plot If TRUE, the plot is shown on the screen, if FALSE the plot 
+#' @param showPlot If TRUE, the plot is shown on the screen, if FALSE the plot 
 #' object is returned without plotting.
 #' @param fileName Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.
 #' @param evalType Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted
@@ -1442,7 +1442,7 @@ plotNetBenefit <- function(plpResults,
                            modelNames = NULL,
                            typeColumn = "evaluation",
                            saveLocation = NULL,
-                           plot = TRUE,
+                           showPlot = TRUE,
                            fileName = "netBenefit.png",
                            evalType = NULL,
                            ylim = NULL,
@@ -1542,7 +1542,7 @@ plotNetBenefit <- function(plpResults,
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  if (plot) {
+  if (showPlot) {
     print(plot)
   }
   return(invisible(plot))

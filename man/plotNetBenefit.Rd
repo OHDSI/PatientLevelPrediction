@@ -9,7 +9,7 @@ plotNetBenefit(
   modelNames = NULL,
   typeColumn = "evaluation",
   saveLocation = NULL,
-  plot = TRUE,
+  showPlot = TRUE,
   fileName = "netBenefit.png",
   evalType = NULL,
   ylim = NULL,
@@ -26,7 +26,7 @@ generated using the \code{\link{runPlp}} function.}
 
 \item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
 
-\item{plot}{If TRUE, the plot is shown on the screen, if FALSE the plot
+\item{showPlot}{If TRUE, the plot is shown on the screen, if FALSE the plot
 object is returned without plotting.}
 
 \item{fileName}{Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.}
