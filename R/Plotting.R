@@ -1415,9 +1415,13 @@ plotSmoothCalibration <- function(plpResult,
 }
 
 #' Plot the net benefit
-#' @param plpResult A plp result object as generated using the \code{\link{runPlp}} function.
+#' @param plpResults list of (named) plpResult objects or a single plpResult as 
+#' generated using the \code{\link{runPlp}} function.
+#' @param modelNames (optional) names of the models to be used in the plot. If NULL, the names of the plpResults are used. Must have the same length as plpResults.
 #' @param typeColumn The name of the column specifying the evaluation type
 #' @param saveLocation Directory to save plot (if NULL plot is not saved)
+#' @param plot If TRUE, the plot is shown on the screen, if FALSE the plot 
+#' object is returned without plotting.
 #' @param fileName Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.
 #' @param evalType Which evaluation type to plot for. For example `Test`, `Train`. If NULL everything is plotted
 #' @param ylim The y limits for the plot, if NULL the limits are calculated from the data
@@ -1434,71 +1438,103 @@ plotSmoothCalibration <- function(plpResult,
 #' unlink(saveLoc, recursive = TRUE)
 #' }
 #' @export
-plotNetBenefit <- function(plpResult,
+plotNetBenefit <- function(plpResults,
+                           modelNames = NULL,
                            typeColumn = "evaluation",
                            saveLocation = NULL,
+                           plot = TRUE,
                            fileName = "netBenefit.png",
                            evalType = NULL,
                            ylim = NULL,
                            xlim = NULL) {
+  if (inherits(plpResults, "runPlp")) plpResults <- list(plpResults)
+  nModels <- length(plpResults)
+
+  if (is.null(modelNames)) {
+    modelNames <- names(plpResults)
+    if (any(modelNames == "") || is.null(modelNames)) {
+      modelNames <- paste0("Model ", seq_len(nModels))
+    }
+  }
+  if (length(modelNames) != nModels) {
+    stop("modelNames must have the same length as plpResults, ",
+         "but found ", length(modelNames), " model names and ", nModels, " plpResults.")
+  }
+  
+  extractNB <- function(results, evalType, modelName) {
+    nb <- getNetBenefit(results, evalType)
+    nb$model <- modelName
+    nb$evalType <- evalType
+    return(nb)
+  }
+
   if (is.null(evalType)) {
-    evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary[, typeColumn])
-  } else {
-    evalTypes <- evalType
+    evalType <- unique(plpResults[[1]]$performanceEvaluation$thresholdSummary[, typeColumn])
   }
 
-  plots <- list()
-  length(plots) <- length(evalTypes)
-  for (i in 1:length(evalTypes)) {
-    evalType <- evalTypes[i]
-    # calculate net benefit straight from predictions instead of thresholdSummary.
-    nbData <- getNetBenefit(plpResult, evalType)
-    if (is.null(ylim)) {
-      ylim <- c(
-        min(nbData$netBenefit),
-        max(nbData$netBenefit)
-      )
-    }
-    if (is.null(xlim)) {
-      # match limit in Smooth Calibration by default
-      xlim <- c(
-        min(nbData$threshold),
-        max(
-          max(plpResult$performanceEvaluation$calibrationSummary$averagePredictedProbability),
-          max(plpResult$performanceEvaluation$calibrationSummary$observedIncidence)
-        )
-      )
-    }
+  nbNested <- lapply(seq_along(plpResults), function(i) {
+    res <- plpResults[[i]]
+    lapply(evalType, 
+      extractNB,
+      results = res,
+      modelName = modelNames[i])
+  })
+  nbAll <- nbNested %>%
+    unlist(recursive = FALSE) %>%
+    dplyr::bind_rows()
 
-    plots[[i]] <- ggplot2::ggplot(data = nbData, ggplot2::aes(x = .data$threshold)) +
-      ggplot2::geom_line(ggplot2::aes(y = .data$treatAll, color = "Treat All", linetype = "Treat All")) +
-      ggplot2::geom_line(ggplot2::aes(y = .data$treatNone, color = "Treat None", linetype = "Treat None")) +
-      ggplot2::geom_line(ggplot2::aes(y = .data$netBenefit, color = "Net Benefit", linetype = "Net Benefit")) +
-      ggplot2::scale_color_manual(
-        name = "Strategies",
-        values = c(
-          "Model" = "blue",
-          "Treat all" = "red",
-          "Treat None" = "brown"
-        )
-      ) +
-      ggplot2::scale_linetype_manual(
-        name = "Strategies",
-        values = c(
-          "Net Benefit" = "solid",
-          "Treat All" = "dashed",
-          "Treat None" = "dashed"
-        )
-      ) +
-      ggplot2::labs(
-        x = "Prediction Threshold",
-        y = "Net Benefit"
-      ) +
-      ggplot2::ggtitle(evalType) +
-      ggplot2::coord_cartesian(xlim = xlim, ylim = ylim)
+  treatLines <- nbAll %>% 
+    dplyr::select("threshold", "treatAll", "treatNone", "evalType") %>%
+    dplyr::distinct()
+
+
+  if (is.null(ylim)) {
+    ylim <- range(
+      nbAll$netBenefit
+    )
+  }
+  if (is.null(xlim)) {
+    allThresholds <- nbAll$threshold
+    cal1 <- plpResults[[1]]$performanceEvaluation$calibrationSummary  
+    maxCal <- max(cal1$averagePredictedProbability, cal1$observedIncidence, na.rm = TRUE)
+    xlim <- c(min(allThresholds, na.rm = TRUE), maxCal)
   }
 
-  plot <- gridExtra::marrangeGrob(plots, nrow = length(plots), ncol = 1)
+  modCols <- grDevices::hcl.colors(nModels, palette = "Dark 3")
+  names(modCols) <- modelNames
+  modCols[["Treat All"]] <- "red"
+  modCols[["Treat None"]] <- "brown"
+
+  ltVals <- c(setNames(rep("solid", nModels), modelNames),
+              "Treat All" = "dashed",
+              "Treat None" = "dashed")
+  legendOrder <- c(modelNames, "Treat All", "Treat None")
+  plot <- ggplot2::ggplot() +
+    ggplot2::geom_line(
+      data = treatLines,
+      ggplot2::aes(.data$threshold, .data$treatAll, linetype = "Treat All", color = "Treat All")) +
+    ggplot2::geom_line(
+      data = treatLines,
+      ggplot2::aes(.data$threshold, .data$treatNone, linetype = "Treat None", color = "Treat None")) +
+    ggplot2::geom_line(
+      data = nbAll,
+      ggplot2::aes(.data$threshold, .data$netBenefit, color = .data$model, linetype = .data$model)
+    ) +
+    ggplot2::scale_color_manual(
+      name = "Strategy",
+      values = modCols,
+      breaks = legendOrder) +
+    ggplot2::scale_linetype_manual(
+      name = "Strategy",
+      values = ltVals,
+      breaks = legendOrder) +
+    ggplot2::labs(
+      x = "Prediction Threshold",
+      y = "Net Benefit"
+    ) +
+    ggplot2::facet_wrap(~ evalType) +
+    ggplot2::coord_cartesian(xlim = xlim, ylim = ylim) +
+    ggplot2::ggtitle(evalType)
 
   if (!is.null(saveLocation)) {
     if (!dir.exists(saveLocation)) {
@@ -1506,17 +1542,62 @@ plotNetBenefit <- function(plpResult,
     }
     ggplot2::ggsave(file.path(saveLocation, fileName), plot, width = 5, height = 4.5, dpi = 400)
   }
-  return(plot)
+  if (plot) {
+    print(plot)
+  }
+  return(invisible(plot))
 }
 
-#' Calculate net benefit in an efficient way
+#' Calculate net benefit in an efficient way either from the thresholdSummary or the prediction dataframe
 #' @param plpResult A plp result object as generated using the \code{\link{runPlp}} function.
 #' @param evalType The evaluation type column
 #' @return A data frame with the net benefit, treat all and treat none values
 #' @noRd
 #' @keywords internal
 getNetBenefit <- function(plpResult, evalType) {
+  if (is.null(plpResult$prediction)) {
+    # get net benefit from thresholdSummary
+    nbData <- getNetBenefitThresholdSummary(plpResult, evalType)
+  } else {
+    nbData <- getNetBenefitPredictions(plpResult, evalType)
+
+  }
+  return(nbData)
+}
+
+getNetBenefitThresholdSummary <- function(plpResult, evalType) {
+  thresholdSummary <- plpResult$performanceEvaluation$thresholdSummary %>%
+    dplyr::filter(.data$evaluation == evalType)
+
+  if (nrow(thresholdSummary) == 0) {
+    stop("No threshold summary data found for evaluation type ", evalType)
+  }
+
+  prediction <- thresholdSummary %>%
+    dplyr::select(
+      "predictionThreshold", "falsePositiveCount", "truePositiveCount",
+    ) 
+  n <- thresholdSummary$positiveCount[[1]] + thresholdSummary$negativeCount[[1]]
+  evaluationStatistics <- plpResult$performanceEvaluation$evaluationStatistics %>%
+    dplyr::filter(.data$evaluation == evalType)
+  outcomeRate <- evaluationStatistics %>%
+    dplyr::filter(.data$metric == "outcomeCount") %>%
+    dplyr::pull(.data$value) %>% 
+    as.numeric() / n
+  nbData <- prediction %>%
+    dplyr::mutate(
+      threshold = .data$predictionThreshold,
+      netBenefit = .data$truePositiveCount / n - (.data$falsePositiveCount / n) * (.data$predictionThreshold / (1 - .data$predictionThreshold)),
+      treatAll = outcomeRate - (1 - outcomeRate) * .data$predictionThreshold / (1 - .data$predictionThreshold),
+      treatNone = 0
+    )
+  return(nbData)
+}
+
+# get net benefit from prediction dataframe
+getNetBenefitPredictions <- function(plpResult, evalType) {
   prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
+
   if (nrow(prediction) == 0) {
     stop("No prediction data found for evaluation type ", evalType)
   }
