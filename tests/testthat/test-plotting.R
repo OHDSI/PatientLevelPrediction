@@ -169,12 +169,12 @@ test_that("getNetBenefit handles invalid evalType gracefully", {
   )
 })
 
-test_that("plotNetBenefit returns a grob object", {
+test_that("plotNetBenefit returns a ggplot object", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
   skip_if_offline()
-  plot <- plotNetBenefit(plpResult, evalType = "Test")
-  expect_true(inherits(plot, "arrangelist"))
+  plot <- plotNetBenefit(plpResult, evalType = "Test", showPlot = FALSE)
+  expect_true(inherits(plot, "ggplot"))
 })
 
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
@@ -182,7 +182,13 @@ test_that("plotNetBenefit saves plot when saveLocation is specified", {
   skip_on_cran()
   skip_if_offline()
   tempDir <- tempfile()
-  plotNetBenefit(plpResult, saveLocation = tempDir, fileName = "netBenefit.png", evalType = "Test")
+  plotNetBenefit(
+    plpResult,
+    saveLocation = tempDir, 
+    fileName = "netBenefit.png", 
+    evalType = "Test",
+    showPlot = FALSE
+  )
   expect_true(file.exists(file.path(tempDir, "netBenefit.png")))
   # Clean up
   file.remove(file.path(tempDir, "netBenefit.png"))
@@ -193,7 +199,7 @@ test_that("plotNetBenefit handles NULL evalType", {
   skip_on_cran()
   skip_if_offline()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
-  expect_true(inherits(plot, "arrangelist"))
+  expect_true(inherits(plot, "ggplot"))
 })
 
 
