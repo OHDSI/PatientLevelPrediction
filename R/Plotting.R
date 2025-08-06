@@ -1505,7 +1505,7 @@ plotNetBenefit <- function(plpResults,
   modCols[["Treat All"]] <- "red"
   modCols[["Treat None"]] <- "brown"
 
-  ltVals <- c(setNames(rep("solid", nModels), modelNames),
+  ltVals <- c(stats::setNames(rep("solid", nModels), modelNames),
               "Treat All" = "dashed",
               "Treat None" = "dashed")
   legendOrder <- c(modelNames, "Treat All", "Treat None")
