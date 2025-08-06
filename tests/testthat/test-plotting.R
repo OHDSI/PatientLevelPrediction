@@ -210,6 +210,6 @@ test_that("plotNetBenefit creates correct number of plots when evalType is NULL"
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   # Since evalType is NULL, it should plot for all unique evaluation types
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)
-  expect_equal(length(plot[[1]]$grobs) - 1, length(evalTypes)) # -1 for text grob
+  expect_equal(length(plot$facet), length(evalTypes)) # -1 for text grob
 })
 dev.off()
