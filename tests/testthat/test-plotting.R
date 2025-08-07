@@ -212,4 +212,24 @@ test_that("plotNetBenefit creates correct number of plots when evalType is NULL"
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)
   expect_equal(length(plot$facet), length(evalTypes)) # -1 for text grob
 })
+
+test_that("Plot net benefit errors", {
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
+  skip_if_offline()
+  expect_error(plotNetBenefit(plpResults, modelNames = c("Model1", "Model2")))
+})
+
+test_that("getNetBenefit works with thresholdSummary", { 
+  skip_if_not_installed("ggplot2")
+  skip_on_cran()
+  skip_if_offline()
+
+  result <- plpResult
+  result$prediction <- NULL
+  netBenefit <- getNetBenefit(result, evalType = "Test")
+
+  expect_true(!is.null(netBenefit$netBenefit))
+  expect_true(is.numeric(netBenefit$netBenefit))
+})
 dev.off()
