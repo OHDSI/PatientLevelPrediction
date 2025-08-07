@@ -5,9 +5,11 @@
 \title{Plot the net benefit}
 \usage{
 plotNetBenefit(
-  plpResult,
+  plpResults,
+  modelNames = NULL,
   typeColumn = "evaluation",
   saveLocation = NULL,
+  showPlot = TRUE,
   fileName = "netBenefit.png",
   evalType = NULL,
   ylim = NULL,
@@ -15,11 +17,17 @@ plotNetBenefit(
 )
 }
 \arguments{
-\item{plpResult}{A plp result object as generated using the \code{\link{runPlp}} function.}
+\item{plpResults}{list of (named) plpResult objects or a single plpResult as
+generated using the \code{\link{runPlp}} function.}
+
+\item{modelNames}{(optional) names of the models to be used in the plot. If NULL, the names of the plpResults are used. Must have the same length as plpResults.}
 
 \item{typeColumn}{The name of the column specifying the evaluation type}
 
 \item{saveLocation}{Directory to save plot (if NULL plot is not saved)}
+
+\item{showPlot}{If TRUE, the plot is shown on the screen, if FALSE the plot
+object is returned without plotting.}
 
 \item{fileName}{Name of the file to save to plot, for example 'plot.png'. See the function \code{ggsave} in the ggplot2 package for supported file formats.}
 

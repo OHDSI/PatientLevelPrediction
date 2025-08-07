@@ -1,3 +1,7 @@
+PatientLevelPrediction 6.5.0.9999
+======================
+- [Feature] Improve net benefit plot to handle multiple results and thresholdSummary (PR #586)
+
 PatientLevelPrediction 6.5.0
 ======================
 - [Feature] skip diagnostics when using `runMultiplePlp` (PR #581)
