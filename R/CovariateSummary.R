@@ -391,10 +391,8 @@ getCovariatesForGroup <- function(covariateData, restrictIds) {
     )
   } else {
     newCovariateData <- Andromeda::copyAndromeda(covariateData)
-    covariateData$restrictIds <- data.frame(rowId = restrictIds)
-    on.exit(covariateData$restrictIds <- NULL)
     newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$restrictIds, by = "rowId")
+      dplyr::filter(.data$rowId %in% restrictIds)
   }
   return(newCovariateData)
 }
