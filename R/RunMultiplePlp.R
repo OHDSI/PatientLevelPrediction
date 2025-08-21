@@ -36,6 +36,27 @@
 #' for a set of analysis choices.\cr \verb{targetId} \tab The ID of the target cohort populations.\cr
 #' \verb{outcomeId} \tab The ID of the outcomeId.\cr \verb{dataLocation} \tab The location where the plpData was saved
 #'  \cr \verb{the settings ids} \tab The ids for all other settings used for model development.\cr }
+log_plp_event <- function(plp_data_object, event_context, event_message) {
+  try({
+    ts <- format(Sys.time(), "%Y-%m-%d %H:%M:%OS6")
+    pid <- Sys.getpid()
+    
+    # Get the connection address of the Andromeda object inside plpData
+    conn_addr <- "NA"
+    obj_id <- "UNKNOWN FILE"
+    if (!is.null(plp_data_object) && "covariateData" %in% names(plp_data_object) && 
+        !is.null(plp_data_object$covariateData) && inherits(plp_data_object$covariateData, "Andromeda")) {
+      conn_addr <- lobstr::obj_addr(plp_data_object$covariateData)
+      obj_id <- basename(plp_data_object$covariateData@dbname)
+    }
+    
+    # Using message() is robust and will go to the main console/log file
+    message(sprintf("[MasterLog] [%s] [PID:%s] [OBJ:%s] [CONN:%s] [%s] %s", 
+                    ts, pid, obj_id, conn_addr, event_context, event_message))
+  }, silent = TRUE)
+}
+
+
 #'
 #' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
 #' \donttest{ \dontshow{ # takes too long }
@@ -112,6 +133,16 @@ runMultiplePlp <- function(
   checkIsClass(onlyFetchData, "logical")
   checkIsClass(logSettings, "logSettings")
   checkIsClass(saveDirectory, "character")
+  logger <- createLog(
+    verbosity = "INFO",
+    timeStamp = logSettings$timeStamp,
+    logName = "MasterLog",
+    saveDirectory = saveDirectory,
+    logFileName = "masterLog.txt"
+  )
+
+  ParallelLogger::registerLogger(logger)
+  on.exit(closeLog(logger))
   if (!dir.exists(saveDirectory)) {
     dir.create(saveDirectory, recursive = TRUE)
   }
@@ -225,6 +256,7 @@ runMultiplePlp <- function(
 
   # runPlp
   if (!onlyFetchData) {
+    plpData <- NULL
     for (i in 1:nrow(as.data.frame(settingstable))) {
       modelDesign <- modelDesignList[[i]]
       settings <- settingstable[i, ] # just the data locations?
@@ -235,7 +267,11 @@ runMultiplePlp <- function(
         analysisExists <- file.exists(file.path(saveDirectory, settings$analysisId, "plpResult", "runPlp.rds"))
 
         if (!analysisExists) {
+          if (!is.null(plpData)) {
+                      log_plp_event(plpData, paste("Analysis", settings$analysisId, "- PRE-LOAD"), "An old plpData object exists and is about to be dereferenced.")
+          }
           plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
+          log_plp_event(plpData, paste("Analysis", settings$analysisId), "loadPlpData completed. New plpData object created.")
           runPlpSettings <- list(
             plpData = quote(plpData),
             outcomeId = modelDesign$outcomeId,
@@ -258,6 +294,9 @@ runMultiplePlp <- function(
             error = function(e) {
               ParallelLogger::logInfo(e)
               return(NULL)
+            },
+            finally = {
+              log_plp_event(plpData, paste("Analysis", settings$analysisId), "runPlp call finished (or failed).")
             }
           )
         } else {
@@ -265,6 +304,10 @@ runMultiplePlp <- function(
         }
       }
     } # end run per setting
+
+    if (!is.null(plpData)) {
+          log_plp_event(plpData, "Post-Loop Cleanup", "The last plpData object was not closed. It will now be garbage collected.")
+      }
   }
 
   # [TODO] add code to create sqlite database and populate with results...
