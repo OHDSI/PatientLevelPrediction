@@ -380,6 +380,32 @@ covariateSummarySubset <- function(
   return(result)
 }
 
+log_andromeda_event <- function(obj_or_filename, context, event_message) {
+  try(
+    { # Use try to ensure logging never crashes the process
+      ts <- format(Sys.time(), "%Y-%-%d %H:%M:%OS6")
+      pid <- Sys.getpid()
+      obj_id <- "UNKNOWN_FILE"
+      conn_addr <- "UNKNOWN_CONN"
+
+      # Check if we were passed a valid Andromeda object
+      if (Andromeda::isAndromeda(obj_or_filename) && try(Andromeda::isValidAndromeda(obj_or_filename), silent = TRUE)) {
+        obj_id <- basename(obj_or_filename@dbname)
+        # Get the memory address of the R object itself
+        conn_addr <- lobstr::obj_addr(obj_or_filename)
+      } else if (is.character(obj_or_filename)) {
+        # This case handles the finalizer where the object may no longer be valid
+        obj_id <- basename(obj_or_filename)
+        conn_addr <- "NA_FINALIZED"
+      }
+
+      message(sprintf("[AndromedaDiag] [%s] [PID:%s] [OBJ:%s] [CONN:%s] [%s] %s", ts, pid, obj_id, conn_addr, context, event_message))
+    },
+    silent = TRUE
+  )
+}
+
+
 getCovariatesForGroup <- function(covariateData, restrictIds) {
   # restrict covariateData to specified rowIds
   if (inherits(covariateData, "RSQLiteConnection") &&
@@ -390,11 +416,14 @@ getCovariatesForGroup <- function(covariateData, restrictIds) {
       sizeN = 10000000
     )
   } else {
+    log_andromeda_event(covariateData, "QUERY", "Original object")
     newCovariateData <- Andromeda::copyAndromeda(covariateData)
     covariateData$restrictIds <- data.frame(rowId = restrictIds)
     on.exit(covariateData$restrictIds <- NULL)
+    log_andromeda_event(covariateData, "QUERY", paste("STARTING inner_join to populate target", lobstr::obj_addr(newCovariateData)))
     newCovariateData$covariates <- covariateData$covariates %>%
       dplyr::inner_join(covariateData$restrictIds, by = "rowId")
   }
+  log_andromeda_event(covariateData, "QUERY", paste("FINISHED inner_join to populate target", lobstr::obj_addr(newCovariateData)))
   return(newCovariateData)
 }
