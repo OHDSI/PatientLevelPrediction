@@ -689,6 +689,9 @@ validateModel <-
     if (is.character(plpModel)) {
       plpModel <- loadPlpModel(plpModel)
     }
+  ParallelLogger::logDebug("Validating model with analysisName:", analysisName)
+  ParallelLogger::logDebug("Model details:", capture.output(str(plpModel$model)))
+
 
     result <- externalValidatePlp(
       plpModel = plpModel,
@@ -875,6 +878,7 @@ getData <- function(design, database, outputFolder, downloadTasks) {
     ))
     plpData <- loadPlpData(plpDataLocation)
   }
+  ParallelLogger::logDebug("plpData with covariateSettings: ", capture.output(str(task$covariateSettings)))
   return(plpData)
 }
 
