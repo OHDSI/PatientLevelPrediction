@@ -1,0 +1,56 @@
+---
+title: "Health Informatics Conferences"
+output: 
+  html_document:
+    theme: cosmo
+---
+
+# 2025
+
+```{r setup-data-test, include=FALSE}
+
+df <- data.frame(
+  conference = c(
+    "2025 International Conference on Machine Learning",
+    "The IEEE International Conference on Data Mining",
+    "KDD", 
+    "International Conference on Medical and Health Informatics",
+    "MEDINFO",
+    "American Medical Informatics Association (AMIA) Annual Symposium"
+),
+
+submission = c(
+  "30-Jan-25",
+  "6-Jun-25",
+  "3-Feb-25",
+  "15-Mar-25",
+  "10-Jan-25",
+  "19-Mar-25"
+  ),
+
+attendance = c(
+  "13-Jul-25",
+  "12-Nov-25",
+  "3-Aug-25",
+  "16-May-25",
+  "9-Aug-25",
+  "15-Nov-25"
+),
+
+location = c(
+  "Vancouver, Canada",
+  "Washington DC, USA",
+  "Toronto, Canada",
+  "Kyoto, Japan",
+  "Taipei, Taiwan",
+  "Atlanta, GA"
+)
+)
+
+```
+```{r, test, echo=FALSE}
+knitr::kable(
+  x = df, 
+  caption = 'List of potential conferences with dates'
+    )
+```
