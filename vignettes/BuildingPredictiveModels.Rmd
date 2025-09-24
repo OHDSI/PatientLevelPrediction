@@ -607,7 +607,7 @@ The T and O cohorts can be found here:
 -   Ace inhibitors (T): <https://atlas-demo.ohdsi.org/#/cohortdefinition/1770617>
 -   Angioedema (O) : <https://atlas-demo.ohdsi.org/#/cohortdefinition/1770616>
 
-In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](https://www.ohdsi.org/web/wiki/doku.php?id=documentation:software:atlas).
+In depth explanation of cohort creation in ATLAS is out of scope of this vignette but can be found on the OHDSI wiki pages [(link)](https://github.com/OHDSI/Atlas/wiki).
 
 Note that when a cohort is created in ATLAS the cohortid is needed to extract the data in R. The cohortid can be found at the top of the ATLAS screen, e.g. 1770617 in Figure 6.
 

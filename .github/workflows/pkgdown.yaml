@@ -29,12 +29,12 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: always
-          extra-packages: any::pkgdown, ohdsi/OhdsiRTools
+          extra-packages: any::pkgdown, ohdsi/OhdsiRTools, any::reactable
           needs: website
 
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --base . --verbose --no-progress --accept '100..=103, 200..=299, 403' './**/*.md' './**/*.Rmd'
+          args: --base . --verbose --no-progress --accept '100..=103, 200..=299, 403' --exclude https://codecov.io './**/*.md' './**/*.Rmd'
     
       - name: Build site
         run: Rscript -e 'pkgdown::build_site_github_pages(new_process = FALSE, install = TRUE)'
