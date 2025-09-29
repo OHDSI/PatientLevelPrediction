@@ -818,15 +818,15 @@ extractDatabaseToCsv <- function(
       targetDialect = databaseSchemaSettings$targetDialect,
       tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
     )
-    result <- DatabaseConnector::querySql(conn, sql)
+    result <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
 
     # get the model locations
     if (table == "MODELS") {
-      modelLocations <- result$PLP_MODEL_FILE
+      modelLocations <- result$plpModelFile
     }
 
     # lower case for consistency in sharing csv results
-    colnames(result) <- tolower(colnames(result))
+    colnames(result) <- tolower(SqlRender::camelCaseToSnakeCase(colnames(result)))
 
     # TODO: add min cell count filter here
     if (tolower(table) %in% names(sensitiveColumns)) {
