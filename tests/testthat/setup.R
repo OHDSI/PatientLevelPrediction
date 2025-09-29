@@ -11,6 +11,103 @@ if (Sys.getenv("GITHUB_ACTIONS") == "true") {
   }
 }
 
+# helper so manual sourcing works without testthat
+get_defer_env <- function(default = .GlobalEnv) {
+  if (rlang::is_installed("testthat")) {
+    env <- tryCatch(testthat::teardown_env(), error = function(...) NULL)
+    if (!is.null(env)) {
+      return(env)
+    }
+  }
+  default
+}
+
+register_cleanup <- function(action) {
+  stopifnot(is.function(action))
+  env <- get_defer_env(default = NULL)
+  if (!is.null(env) && !identical(env, .GlobalEnv)) {
+    withr::defer(action(), envir = env)
+  } else {
+    cleanupName <- ".plp_system_file_teardown"
+    existing <- get0(cleanupName, envir = .GlobalEnv, ifnotfound = list())
+    assign(cleanupName, c(existing, list(action)), envir = .GlobalEnv)
+  }
+}
+
+run_system_file_cleanups <- function() {
+  cleanupName <- ".plp_system_file_teardown"
+  if (exists(cleanupName, envir = .GlobalEnv, inherits = FALSE)) {
+    cleanups <- get(cleanupName, envir = .GlobalEnv)
+    rm(list = cleanupName, envir = .GlobalEnv)
+    lapply(rev(cleanups), function(fn) {
+      try(fn(), silent = TRUE)
+    })
+    invisible(TRUE)
+  } else {
+    invisible(FALSE)
+  }
+}
+
+resetSystemFileShim <- function() {
+  run_system_file_cleanups()
+}
+
+# shim system.file to point to inst/ when in dev mode:
+if (requireNamespace("pkgload", quietly = TRUE) &&
+      pkgload::is_dev_package("PatientLevelPrediction")) {
+
+  devRoot <- tryCatch(
+    normalizePath(pkgload::pkg_path(), mustWork = TRUE),
+    error = function(err) NA_character_
+  )
+
+  if (!is.na(devRoot) && nzchar(devRoot)) {
+    run_system_file_cleanups()
+
+    devInst <- file.path(devRoot, "inst")
+    baseEnv <- baseenv()
+
+    makeShim <- function(original) {
+      force(original)
+      function(..., package = "base", lib.loc = NULL, mustWork = FALSE) {
+        parts <- list(...)
+
+        if (!missing(package) && identical(package, "PatientLevelPrediction") && is.null(lib.loc)) {
+          target <- if (!length(parts)) devRoot else do.call(file.path, c(list(devInst), parts))
+          if (!mustWork || (length(target) && all(file.exists(target)))) return(target)
+        }
+
+        original(..., package = package, lib.loc = lib.loc, mustWork = mustWork)
+      }
+    }
+
+    patchEnv <- function(env) {
+      original <- get("system.file", envir = env)
+      bindingWasLocked <- bindingIsLocked("system.file", env)
+      if (bindingWasLocked) unlockBinding("system.file", env)
+      assign("system.file", makeShim(original), envir = env)
+      if (bindingWasLocked) lockBinding("system.file", env)
+      register_cleanup(function() {
+        if (bindingIsLocked("system.file", env)) unlockBinding("system.file", env)
+        assign("system.file", original, envir = env)
+        if (bindingWasLocked) lockBinding("system.file", env)
+      })
+    }
+
+    patchEnv(baseEnv)
+    for (packageName in c("ResultModelManager", "SqlRender")) {
+      if (rlang::is_installed(packageName)) {
+        importsEnv <- parent.env(getNamespace(packageName))
+        if (!identical(importsEnv, baseEnv) && exists("system.file", envir = importsEnv, inherits = FALSE)) {
+          patchEnv(importsEnv)
+        }
+      }
+    }
+  }
+}
+
+
+
 if (rlang::is_installed("curl")) {
   internet <- curl::has_internet()
   message("Internet: ", internet)
@@ -188,19 +285,16 @@ if (internet && rlang::is_installed("Eunomia")) {
   )
 }
 
-withr::defer(
-  {
-    if (Sys.getenv("GITHUB_ACTIONS") == "true") {
-      # Remove the JDBC driver folder
-      jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
-      if (jarFolder != "") {
-        unlink(jarFolder, recursive = TRUE)
-      }
+register_cleanup(function() {
+  if (Sys.getenv("GITHUB_ACTIONS") == "true") {
+    # Remove the JDBC driver folder
+    jarFolder <- Sys.getenv("DATABASECONNECTOR_JAR_FOLDER", unset = "")
+    if (jarFolder != "") {
+      unlink(jarFolder, recursive = TRUE)
     }
-    unlink(saveLoc, recursive = TRUE)
-    if (internet && rlang::is_installed("Eunomia")) {
-      unlink(connectionDetails$server())
-    }
-  },
-  envir = teardown_env()
-)
+  }
+  unlink(saveLoc, recursive = TRUE)
+  if (internet && rlang::is_installed("Eunomia")) {
+    unlink(connectionDetails$server())
+  }
+})
