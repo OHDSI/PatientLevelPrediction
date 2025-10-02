@@ -52,6 +52,7 @@ Suggests:
     mgcv,
     OhdsiShinyAppBuilder (>= 1.0.0),
     parallel,
+    pkgload,
     polspline,
     readr,
     ResourceSelection,
