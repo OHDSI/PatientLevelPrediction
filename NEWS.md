@@ -1,5 +1,6 @@
 PatientLevelPrediction 6.5.0.9999
 ======================
+- [Bug] Refresh the xgboost training call to remove watchlist/nthread deprecation warnings (PR #587)
 - [Bug] Align querySql() usage and migration discovery with DatabaseConnector 7 to keep PLP uploads and exports working (PR #595)
 - [Internal] Add pkgload to Suggests for dev/test tooling (PR #595)
 - [Feature] Improve net benefit plot to handle multiple results and thresholdSummary (PR #586)
