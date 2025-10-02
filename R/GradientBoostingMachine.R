@@ -230,7 +230,8 @@ fitXgboost <- function(
   outcomes <- sum(labels$outcomeCount > 0)
   N <- nrow(labels)
   outcomeProportion <- outcomes / N
-  model <- xgboost::xgb.train(
+  evalsArgument <- if (utils::packageVersion("xgboost") >= "3.1.0.1") "evals" else "watchlist"
+  trainArgs <- list(
     data = train,
     params = list(
       booster = "gbtree",
@@ -246,11 +247,12 @@ fitXgboost <- function(
       nthread = settings$threads
     ),
     nrounds = hyperParameters$ntrees,
-    evals = evals,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
     maximize = TRUE
   )
+  trainArgs[[evalsArgument]] <- evals
+  model <- do.call(xgboost::xgb.train, trainArgs)
 
   return(model)
 }
