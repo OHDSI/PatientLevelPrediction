@@ -14,7 +14,11 @@ articles:
   ConstrainedPredictors: ConstrainedPredictors.html
   CreatingLearningCurves: CreatingLearningCurves.html
   CreatingNetworkStudies: CreatingNetworkStudies.html
+  maintainers/design-metrics-hyperparameters: maintainers/design-metrics-hyperparameters.html
   GISExample: GISExample.html
   InstallationGuide: InstallationGuide.html
   Videos: Videos.html
-last_built: 2025-07-25T10:04Z
+last_built: 2025-10-04T14:14Z
+urls:
+  reference: https://ohdsi.github.io/PatientLevelPrediction/reference
+  article: https://ohdsi.github.io/PatientLevelPrediction/articles

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.4.1.9999</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">6.5.0.9999</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,6 +35,8 @@
     <li><a class="dropdown-item" href="../articles/GISExample.html">Integration of GIS Data Into OHDSI Model Building</a></li>
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
@@ -52,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Plot the Observed vs. expected incidence, by age and gender</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/maintainer-docs/R/Plotting.R" class="external-link"><code>R/Plotting.R</code></a></small>
       <div class="d-none name"><code>plotDemographicSummary.Rd</code></div>
     </div>
 
@@ -114,11 +116,11 @@ format.</p>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"plotDemographicSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plpResult</span> <span class="op">&lt;-</span> <span class="fu"><a href="runPlp.html">runPlp</a></span><span class="op">(</span><span class="va">plpData</span>, outcomeId <span class="op">=</span> <span class="fl">3</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Use timeStamp: TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/RtmpBBYORx/plotDemographicSummary/2025-07-25-3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Creating save directory at: /tmp/Rtmpp4eQes/plotDemographicSummary/2025-10-04-3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Patient-Level Prediction Package version 6.4.1.9999</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-07-25 10:04:36.665044</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisID:         2025-07-25-3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Patient-Level Prediction Package version 6.5.0.9999</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Study started at: 2025-10-04 14:15:25.387592</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisID:         2025-10-04-3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> AnalysisName:       Study details</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> TargetID:           1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> OutcomeID:          3</span>
@@ -127,11 +129,11 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating population</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 954 observations, 954 unique subjects and 434 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0491 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0574 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> seed: 123</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating a 25% test and 75% train (into 3 folds) random stratified split by class</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Data split into 238 test cases and 716 train cases (239, 239, 238)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.796 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.665 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 66 covariates in train data</span>
@@ -140,7 +142,7 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 2 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.16 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.962 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Train Set:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 64 covariates in train data</span>
@@ -151,53 +153,53 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> GLM fit status:  OK</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.155 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.311 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.19 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.429 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates and normalizing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.36 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.156 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.876 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Removing infrequent and redundant covariates covariates and normalizing took 0.189 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.185 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.553 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for Test</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 61.40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      54.59</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      68.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              57.58</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 60.80</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      53.84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      67.77</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              56.81</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.23</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.06</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4497 : observed risk 0.4538</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.3069</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.3069 - gradient:2.3474</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 2.41 intercept:         -0.69</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4487 : observed risk 0.4538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.226</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.226 - gradient:1.937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.43 intercept:         -0.18</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.58</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for Train</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 59.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      55.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      63.20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              55.33</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 59.44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      55.38</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      63.50</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              55.19</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4553 : observed risk 0.4553</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0515</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0515 - gradient:1.2817</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.31 intercept:         -0.14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0329</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0329 - gradient:1.1795</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.04 intercept:         -0.00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.55</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating Performance for CV</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> =============</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 56.25</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      52.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      60.46</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              52.52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUC                 56.60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% lower AUC:      52.37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 95% upper AUC:      60.83</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> AUPRC:              52.14</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Brier:              0.24</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4558 : observed risk 0.4553</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept 0.0403</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: 0.0403 - gradient:1.2344</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 1.19 intercept:         -0.09</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.53</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.216 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-07-25 10:04:40.367607</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Eavg:               0.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Mean predicted risk 0.4555 : observed risk 0.4553</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calibration in large- Intercept -0.0048</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weak calibration intercept: -0.0048 - gradient:0.9771</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Hosmer-Lemeshow calibration gradient: 0.90 intercept:         0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Average Precision:  0.52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate evaluation metrics: 0.24 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-10-04 14:15:28.607994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> This can take a while...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating binary labels</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Joining with strata</span>
@@ -214,13 +216,13 @@ format.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup TestWithNoOutcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Aggregating with labels and strata</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-07-25 10:04:43.822783</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 3.46 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-10-04 14:15:30.170219</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 1.56 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Run finished successfully.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving PlpResult</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating directory to save model</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/RtmpBBYORx/plotDemographicSummary/2025-07-25-3\plpResult</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 7.25 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> plpResult saved to ..\/tmp/Rtmpp4eQes/plotDemographicSummary/2025-10-04-3\plpResult</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> runPlp time taken: 4.87 secs</span>
 <span class="r-in"><span><span class="fu">plotDemographicSummary</span><span class="op">(</span><span class="va">plpResult</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plotDemographicSummary-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># clean up </span></span></span>
