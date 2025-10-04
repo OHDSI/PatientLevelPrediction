@@ -1,3 +1,5 @@
+url: https://ohdsi.github.io/PatientLevelPrediction
+
 template:
   bootstrap: 5
   params:
@@ -14,14 +16,15 @@ home:
     href: http://forums.ohdsi.org
 
 articles:
-  sections:
-    - title: internal
-      contents:
-        - starts_with("maintainers")
-    - title: Articles
-      navbar: Articles
-      contents:
-        - matches("^(?!maintainers/).+")
+  - title: internal
+    contents:
+      - starts_with("maintainers/")
+
+  - title: Articles
+    navbar: ~
+    contents:
+      - starts_with("")
+      - -starts_with("maintainers/")
 
 navbar:
   structure:
