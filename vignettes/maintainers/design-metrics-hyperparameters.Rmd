@@ -42,7 +42,7 @@ vignette: >
       class = "hyperparameterSettings"
     )
  }
- 	  ```
+```
 
   - search: `grid` (default, current behavior), `random` (sample), or `custom` if you provide generator.
   - `tuningMetric`: object created with `createTuningMetric()`; `NULL` falls back to AUC/maximize.
@@ -70,7 +70,7 @@ vignette: >
     class(settings) <- "modelDesign"
     settings
   }
-  ```
+```
 
   - Keep defaults so existing calls stay untouched.
   - Update docs describing `hyperparameterSettings`.
@@ -90,7 +90,7 @@ vignette: >
     analysisId = analysisId,
     analysisPath = analysisPath
   )
-  ```
+```
 
 Note: `%||%` means take `modelDesign$hyperparameterSettings` if it exists, otherwise default to `createHyperparameterSettings()`
 
@@ -121,7 +121,7 @@ runPlp(
       analysisId = analysisId,
       analysisPath = analysisPath
     )
-	```
+```
 
   (Deprecate search if you like, but keep it for compatibility and let it override `hyperparameterSettings$search` when non-default.)
 
@@ -206,7 +206,7 @@ Example code:
 
       stop(sprintf("Unknown hyper-parameter search strategy '%s'.", settings$search))
     }
-    ```
+```
 - The unified CV loop consumes the iterator uniformly:
 ```R
 
@@ -271,7 +271,7 @@ Grid, random, and adaptive custom searches all plug into this structure by retur
       hyperSummary = ...
     )
   }
-  ```
+```
 
   For metrics needing thresholds, the supplied function can capture the threshold:
 ```R
@@ -283,7 +283,7 @@ Grid, random, and adaptive custom searches all plug into this structure by retur
     maximize = TRUE,
     label = "Accuracy@0.6"
   )
-  ```
+```
 
   Because the function itself closes over 0.6, no extra plumbing is needed.
 
@@ -304,7 +304,7 @@ Grid, random, and adaptive custom searches all plug into this structure by retur
 
   ———
 
-  8. Usage example
+#  8. Usage example
 ```R
   metric <- createTuningMetric(
     fun = function(prediction) mean(ifelse(prediction$value >= 0.55, 1, 0) == (prediction$outcomeCount > 0)),
@@ -327,7 +327,7 @@ Grid, random, and adaptive custom searches all plug into this structure by retur
   )
 
   result <- runMultiplePlp(databaseDetails = databaseDetails, modelDesignList = list(modelDesign))
-  ```
+```
 
   ———
 
