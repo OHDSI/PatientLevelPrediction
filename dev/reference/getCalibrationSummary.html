@@ -138,7 +138,7 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing non outcome subjects with insufficient time at risk (if any)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Outcome is 0 or 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Population created with: 477 observations, 477 unique subjects and 235 outcomes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.0441 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Population created in 0.042 secs</span>
 <span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="splitData.html">splitData</a></span><span class="op">(</span><span class="va">plpData</span>, <span class="va">population</span>, <span class="fu"><a href="createDefaultSplitSetting.html">createDefaultSplitSetting</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> test: 0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> train: 0.75</span>
@@ -150,7 +150,7 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Starting to limit covariate data to population...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Finished limiting covariate data to population...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.598 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Data split in 0.564 secs</span>
 <span class="r-in"><span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span> <span class="op">&lt;-</span> <span class="fu"><a href="preprocessData.html">preprocessData</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span><span class="op">$</span><span class="va">covariateData</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> minFraction: 0.001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> normalize: TRUE</span>
@@ -158,7 +158,7 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 1 redundant covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Removing 0 infrequent covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Normalizing covariates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 0.89 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Tidying covariates took 1.05 secs</span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"calibrationSummary"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># fit a lasso logistic regression model using the training data</span></span></span>
 <span class="r-in"><span><span class="va">plpModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="fitPlp.html">fitPlp</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">Train</span>, modelSettings<span class="op">=</span><span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span>seed<span class="op">=</span><span class="fl">42</span><span class="op">)</span>,</span></span>
@@ -171,9 +171,9 @@ stratified into equally sized bins of predicted probabilities.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating variable importance data frame</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Getting predictions on train set</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predictProbabilities - predictAndromeda start</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.174 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.169 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Returned from classifier function</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.365 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to fit model: 0.351 secs</span>
 <span class="r-in"><span><span class="va">calibrationSummary</span> <span class="op">&lt;-</span> <span class="fu">getCalibrationSummary</span><span class="op">(</span><span class="va">plpModel</span><span class="op">$</span><span class="va">prediction</span>, </span></span>
 <span class="r-in"><span>                                            <span class="st">"binary"</span>, </span></span>
 <span class="r-in"><span>                                            numberOfStrata <span class="op">=</span> <span class="fl">10</span>,</span></span>

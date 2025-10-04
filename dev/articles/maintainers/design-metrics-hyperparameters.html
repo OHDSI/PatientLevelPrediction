@@ -93,62 +93,78 @@ Fridgeirsson</h4>
 <h2 id="new-helper-createhyperparametersettings">1. New helper: <code>createHyperparameterSettings()</code><a class="anchor" aria-label="anchor" href="#new-helper-createhyperparametersettings"></a>
 </h2>
 <p>Add a file <code>R/HyperparameterSettings.R</code>:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>  createHyperparameterSettings <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>      <span class="at">search =</span> <span class="st">"grid"</span>,</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>      <span class="at">tuningMetric =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>      <span class="at">sampleSize =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>      <span class="at">randomSeed =</span> <span class="cn">NULL</span>,</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>      <span class="at">searchControl =</span> <span class="fu">list</span>(),</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>      <span class="at">generator =</span> <span class="cn">NULL</span>) {</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    <span class="fu">stopifnot</span>(search <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"grid"</span>, <span class="st">"random"</span>, <span class="st">"custom"</span>))</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">identical</span>(search, <span class="st">"random"</span>)) {</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>      <span class="fu">stopifnot</span>(<span class="fu">length</span>(sampleSize) <span class="sc">==</span> <span class="dv">1</span>, <span class="fu">is.numeric</span>(sampleSize))</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>    }</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>    <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(generator)) {</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>      <span class="fu">stopifnot</span>(<span class="fu">is.function</span>(generator))</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>      search <span class="ot">&lt;-</span> <span class="st">"custom"</span></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>    }</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>    <span class="fu">structure</span>(</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>      <span class="fu">list</span>(</span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>        <span class="at">search =</span> search,</span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>        <span class="at">tuningMetric =</span> tuningMetric,</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>        <span class="at">sampleSize =</span> sampleSize,</span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>        <span class="at">randomSeed =</span> randomSeed,</span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>        <span class="at">searchControl =</span> searchControl,</span>
-<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>        <span class="at">generator =</span> generator</span>
-<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>      ),</span>
-<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a>      <span class="at">class =</span> <span class="st">"hyperparameterSettings"</span></span>
-<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a>    )</span>
-<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a> }</span>
-<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>      <span class="st">```</span></span>
-<span id="cb1-30"><a href="#cb1-30" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" tabindex="-1"></a><span class="at">  - search: </span><span class="st">`</span>grid<span class="st">`</span><span class="at"> (default, current behavior), </span><span class="st">`</span>random<span class="st">`</span><span class="at"> (sample), or </span><span class="st">`</span>custom<span class="st">`</span><span class="at"> if you provide generator.</span></span>
-<span id="cb1-32"><a href="#cb1-32" tabindex="-1"></a><span class="at">  - </span><span class="st">`</span>tuningMetric<span class="st">`</span><span class="at">: object created with </span><span class="st">`</span><span class="fu">createTuningMetric</span>()<span class="st">`</span><span class="at">; </span><span class="st">`</span>NULL<span class="st">`</span><span class="at"> falls back to AUC/maximize.</span></span>
-<span id="cb1-33"><a href="#cb1-33" tabindex="-1"></a><span class="at">  - </span><span class="st">`</span>sampleSize<span class="st">`</span><span class="at">: required when </span><span class="st">`</span>search <span class="ot">=</span> <span class="st">"random"`</span><span class="at">; number of parameter sets to draw.</span></span>
-<span id="cb1-34"><a href="#cb1-34" tabindex="-1"></a><span class="at">  - </span><span class="st">`</span>randomSeed<span class="st">`</span><span class="at">: optional, ensures reproducible random search.</span></span>
-<span id="cb1-35"><a href="#cb1-35" tabindex="-1"></a><span class="at">  - </span><span class="st">`</span>searchControl<span class="st">`</span><span class="at">: free-form list for future knobs (e.g., stratified sampling).</span></span>
-<span id="cb1-36"><a href="#cb1-36" tabindex="-1"></a><span class="at">  - </span><span class="st">`</span>generator<span class="st">`</span><span class="at">: optional function that receives the base parameter grid and a copy of the settings and must return a list of parameter sets; if present we force search = "custom".</span></span>
-<span id="cb1-37"><a href="#cb1-37" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" tabindex="-1"></a><span class="at">  Document this with </span><span class="st">`</span>roxygen2<span class="st">`</span><span class="at"> tags and run </span><span class="st">`</span>roxygen2<span class="sc">::</span><span class="fu">roxygenize</span>()<span class="st">`</span><span class="at"> to document. </span><span class="st">``</span></span>
-<span id="cb1-39"><a href="#cb1-39" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" tabindex="-1"></a><span class="at">  ———</span></span>
-<span id="cb1-41"><a href="#cb1-41" tabindex="-1"></a></span>
-<span id="cb1-42"><a href="#cb1-42" tabindex="-1"></a><span class="at"># 2. Extend </span><span class="st">`</span><span class="fu">createModelDesign</span>()<span class="st">`</span></span>
-<span id="cb1-43"><a href="#cb1-43" tabindex="-1"></a></span>
-<span id="cb1-44"><a href="#cb1-44" tabindex="-1"></a><span class="at">  In </span><span class="st">`</span>R<span class="sc">/</span>RunMultiplePlp.R<span class="st">`</span><span class="at">:</span></span>
-<span id="cb1-45"><a href="#cb1-45" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" tabindex="-1"></a><span class="at">  - Update signature:</span></span>
-<span id="cb1-47"><a href="#cb1-47" tabindex="-1"></a><span class="st">```</span>R</span>
-<span id="cb1-48"><a href="#cb1-48" tabindex="-1"></a>  createModelDesign <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
-<span id="cb1-49"><a href="#cb1-49" tabindex="-1"></a>      ...,</span>
-<span id="cb1-50"><a href="#cb1-50" tabindex="-1"></a>      <span class="at">hyperparameterSettings =</span> <span class="fu">createHyperparameterSettings</span>(),</span>
-<span id="cb1-51"><a href="#cb1-51" tabindex="-1"></a>      <span class="at">runCovariateSummary =</span> <span class="cn">TRUE</span>) {</span>
-<span id="cb1-52"><a href="#cb1-52" tabindex="-1"></a>    ...</span>
-<span id="cb1-53"><a href="#cb1-53" tabindex="-1"></a>    settings<span class="sc">$</span>hyperparameterSettings <span class="ot">&lt;-</span> hyperparameterSettings</span>
-<span id="cb1-54"><a href="#cb1-54" tabindex="-1"></a>    <span class="fu">class</span>(settings) <span class="ot">&lt;-</span> <span class="st">"modelDesign"</span></span>
-<span id="cb1-55"><a href="#cb1-55" tabindex="-1"></a>    settings</span>
-<span id="cb1-56"><a href="#cb1-56" tabindex="-1"></a>  }</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">createHyperparameterSettings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
+<span>      <span class="va">search</span> <span class="op">=</span> <span class="st">"grid"</span>,</span>
+<span>      <span class="va">tuningMetric</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      <span class="va">sampleSize</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      <span class="va">randomSeed</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>      <span class="va">searchControl</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      <span class="va">generator</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="va">search</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grid"</span>, <span class="st">"random"</span>, <span class="st">"custom"</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">search</span>, <span class="st">"random"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">sampleSize</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric</a></span><span class="op">(</span><span class="va">sampleSize</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">generator</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.function.html" class="external-link">is.function</a></span><span class="op">(</span><span class="va">generator</span><span class="op">)</span><span class="op">)</span></span>
+<span>      <span class="va">search</span> <span class="op">&lt;-</span> <span class="st">"custom"</span></span>
+<span>    <span class="op">}</span></span>
+<span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/structure.html" class="external-link">structure</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>        search <span class="op">=</span> <span class="va">search</span>,</span>
+<span>        tuningMetric <span class="op">=</span> <span class="va">tuningMetric</span>,</span>
+<span>        sampleSize <span class="op">=</span> <span class="va">sampleSize</span>,</span>
+<span>        randomSeed <span class="op">=</span> <span class="va">randomSeed</span>,</span>
+<span>        searchControl <span class="op">=</span> <span class="va">searchControl</span>,</span>
+<span>        generator <span class="op">=</span> <span class="va">generator</span></span>
+<span>      <span class="op">)</span>,</span>
+<span>      class <span class="op">=</span> <span class="st">"hyperparameterSettings"</span></span>
+<span>    <span class="op">)</span></span>
+<span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>search: <code>grid</code> (default, current behavior),
+<code>random</code> (sample), or <code>custom</code> if you provide
+generator.</li>
+<li>
+<code>tuningMetric</code>: object created with
+<code>createTuningMetric()</code>; <code>NULL</code> falls back to
+AUC/maximize.</li>
+<li>
+<code>sampleSize</code>: required when
+<code>search = "random"</code>; number of parameter sets to draw.</li>
+<li>
+<code>randomSeed</code>: optional, ensures reproducible random
+search.</li>
+<li>
+<code>searchControl</code>: free-form list for future knobs (e.g.,
+stratified sampling).</li>
+<li>
+<code>generator</code>: optional function that receives the base
+parameter grid and a copy of the settings and must return a list of
+parameter sets; if present we force search = “custom”.</li>
+</ul>
+<p>Document this with <code>roxygen2</code> tags and run
+<code><a href="https://roxygen2.r-lib.org/reference/roxygenize.html" class="external-link">roxygen2::roxygenize()</a></code> to document. ``</p>
+<p>———</p>
+</div>
+<div class="section level2">
+<h2 id="extend-createmodeldesign">2. Extend <code>createModelDesign()</code><a class="anchor" aria-label="anchor" href="#extend-createmodeldesign"></a>
+</h2>
+<p>In <code>R/RunMultiplePlp.R</code>:</p>
+<ul>
+<li>Update signature:</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="va">createModelDesign</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
+<span>      <span class="va">...</span>,</span>
+<span>      <span class="va">hyperparameterSettings</span> <span class="op">=</span> <span class="fu">createHyperparameterSettings</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      <span class="va">runCovariateSummary</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">...</span></span>
+<span>    <span class="va">settings</span><span class="op">$</span><span class="va">hyperparameterSettings</span> <span class="op">&lt;-</span> <span class="va">hyperparameterSettings</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">settings</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="st">"modelDesign"</span></span>
+<span>    <span class="va">settings</span></span>
+<span>  <span class="op">}</span></span></code></pre></div>
 <ul>
 <li>Keep defaults so existing calls stay untouched.</li>
 <li>Update docs describing <code>hyperparameterSettings</code>.</li>
@@ -164,7 +180,7 @@ Fridgeirsson</h4>
 call, pass both <code>hyperparameterSettings</code> and their
 <code>tuningMetric</code> into <code><a href="../../reference/fitPlp.html">fitPlp()</a></code>:</li>
 </ul>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">hyperparameterSettings</span> <span class="op">&lt;-</span> <span class="va">modelDesign</span><span class="op">$</span><span class="va">hyperparameterSettings</span> <span class="op"><a href="https://rdrr.io/r/base/Control.html" class="external-link">%||%</a></span> <span class="fu">createHyperparameterSettings</span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    trainData <span class="op">=</span> <span class="va">data</span><span class="op">$</span><span class="va">Train</span>,</span>
@@ -179,136 +195,165 @@ default to <code>createHyperparameterSettings()</code></p>
 <ul>
 <li>Update <code>runPlp</code> signature.</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">runPlp</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>    ...</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="at">modelSettings =</span> <span class="fu">setLassoLogisticRegression</span>(),</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">hyperparameterSettings =</span> <span class="fu">createHyperparameterSettings</span>(),</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    ...</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">runPlp</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>    ...</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="at">modelSettings =</span> <span class="fu">setLassoLogisticRegression</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    <span class="at">hyperparameterSettings =</span> <span class="fu">createHyperparameterSettings</span>(),</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    ...</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>)</span></code></pre></div>
 <pre><code>Update docs to describe `hyperparameterSettings`</code></pre>
 <ul>
 <li>R/Fit.R: Update function signature:</li>
 </ul>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>  fitPlp <span class="ot">&lt;-</span> <span class="cf">function</span>(trainData,</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>                     modelSettings,</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                     <span class="at">hyperparameterSettings =</span> <span class="fu">createHyperparameterSettings</span>(),</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                     <span class="at">search =</span> <span class="st">"grid"</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                     analysisId,</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>                     analysisPath) {</span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>    ...</span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>    args <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>      <span class="at">trainData =</span> trainData,</span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>      <span class="at">modelSettings =</span> modelSettings,</span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>      <span class="at">hyperparameterSettings =</span> hyperparameterSettings,</span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>      <span class="at">analysisId =</span> analysisId,</span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>      <span class="at">analysisPath =</span> analysisPath</span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>    )</span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>    <span class="st">```</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="at">  (Deprecate search if you like, but keep it for compatibility and let it override </span><span class="st">`</span>hyperparameterSettings<span class="sc">$</span>search<span class="st">`</span><span class="at"> when non-default.)</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a></span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="at">  ———</span></span>
-<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="at">#  4. Update classifier fitters</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a></span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="at">  Each classifier with CV (e.g., </span><span class="st">`</span>fitSklearn<span class="st">`</span><span class="at">, </span><span class="st">`</span>fitRclassifier<span class="st">`</span><span class="at">, </span><span class="st">`</span>fitGradientBoostingMachine<span class="st">`</span><span class="at">, </span><span class="st">`</span>fitLightGBM<span class="er">)</span><span class="st">`</span><span class="at"> gains a  </span><span class="st">`</span>hyperparameterSettings<span class="st">`</span><span class="at"> argument.</span></span>
-<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="at">  </span></span>
-<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="at">  Within these functions:</span></span>
-<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a></span>
-<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="at">  - Call a new helper </span><span class="st">`</span><span class="fu">prepareHyperparameterGrid</span>(param, hyperparameterSettings)<span class="st">`</span><span class="at"> (see next section) to obtain the actual list of parameter sets to evaluate.</span></span>
-<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="at">  - Pass both the  </span><span class="st">`</span>tuningMetric<span class="st">`</span><span class="at"> and the final grid into the CV routines.</span></span>
-<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a></span>
-<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="at">  ———</span></span>
-<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a></span>
-<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="at">#  5. Helpers for search preparation</span></span>
-<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a></span>
-<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="at">- Replace the current “return a list of params” approach with a lightweight iterator façade: </span><span class="st">`</span><span class="fu">prepareHyperparameterGrid</span>()<span class="st">`</span><span class="at"> now returns an object exposing </span><span class="st">```</span>R <span class="cf">next</span> <span class="ot">=</span> <span class="cf">function</span>(history) <span class="st">```</span><span class="at"> … (and optionally finalize). The CV code simply calls candidate &lt;- iterator$next(history) until it gets NULL, so grid, random, and custom searches all execute through the same loop.</span></span>
-<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="at">- For grid and random, wrap the fully expanded combinations in that iterator: keep a private index (or shuffled index for random), yield one entry per call, and stop once the pool is exhausted. Seeding</span></span>
-<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="at">  logic stays unchanged but is now encapsulated in the iterator’s closure.</span></span>
-<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="at">- For custom searches accept both simple generators (functions returning a finite list) and adaptive generators. Detect which shape was supplied and wrap it so the iterator always exposes the next(history) contract. Provide adapters so legacy one-shot functions still work while more advanced strategies get a stateful interface.</span></span>
-<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="at">- Document an adaptive generator contract: initialize(definition, settings) to set up any internal state, next(history) to emit the next configuration using past performance, finalize(history) to clean up if needed. The iterator constructor calls </span><span class="st">`</span><span class="fu">initialize</span>()<span class="st">`</span><span class="at"> once, then delegates each </span><span class="st">`</span><span class="fu">next</span>()<span class="st">`</span><span class="at"> invocation, allowing techniques like Bayesian optimization that fit surrogate models or maintain other state between trials.</span></span>
-<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="at">- Retain backwards compatibility by allowing code that still expects a plain list to receive one (wrap the iterator for now and emit a deprecation warning), but direct all new fitters and CV routines to the iterator-based API so every search strategy—static or adaptive—lives behind the same helper and can hold state safely inside its closure/environment.</span></span>
-<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a></span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="at">Example code:</span></span>
-<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="at">- </span><span class="st">`</span><span class="fu">prepareHyperparameterGrid</span>()<span class="st">`</span><span class="at"> returns an iterator object with next/finalize so every search path looks the same:</span></span>
-<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a></span>
-<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="st">```</span>R</span>
-<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a>    prepareHyperparameterGrid <span class="ot">&lt;-</span> <span class="cf">function</span>(paramDefinition, hyperSettings, <span class="at">modelName =</span> <span class="cn">NULL</span>) {</span>
-<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a>      settings <span class="ot">&lt;-</span> hyperSettings <span class="sc">%||%</span> <span class="fu">createHyperparameterSettings</span>()</span>
-<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a>      makeSequentialIterator <span class="ot">&lt;-</span> <span class="cf">function</span>(pool) {</span>
-<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a>        i <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
-<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>        <span class="fu">list</span>(</span>
-<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>          <span class="at">next =</span> <span class="cf">function</span>(history) {</span>
-<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>            i <span class="ot">&lt;&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
-<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>            <span class="cf">if</span> (i <span class="sc">&gt;</span> <span class="fu">length</span>(pool)) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
-<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>            pool[[i]]</span>
-<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>          },</span>
-<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>          <span class="at">finalize =</span> <span class="cf">function</span>(history) <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
-<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>        )</span>
-<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>      }</span>
-<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">is.null</span>(paramDefinition) {</span>
-<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a>          empty <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">list</span>())</span>
-<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a>          <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(empty))</span>
-<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a>      }</span>
-<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a>      expanded <span class="ot">&lt;-</span> <span class="fu">expandParamDefinition</span>(paramDefinition)</span>
-<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a></span>
-<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"grid"</span>)) {</span>
-<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(expanded))</span>
-<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a>      }</span>
-<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a></span>
-<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"random"</span>)) {</span>
-<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a>        idx <span class="ot">&lt;-</span> <span class="fu">sample.int</span>(</span>
-<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a>          <span class="fu">length</span>(expanded),</span>
-<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a>          <span class="at">size =</span> <span class="fu">min</span>(settings<span class="sc">$</span>sampleSize, <span class="fu">length</span>(expanded))</span>
-<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a>        )</span>
-<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(expanded[idx]))</span>
-<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a>      }</span>
-<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a></span>
-<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"custom"</span>)) {</span>
-<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a>        generator <span class="ot">&lt;-</span> settings<span class="sc">$</span>generator</span>
-<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">is.function</span>(generator)) {</span>
-<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a>          pool <span class="ot">&lt;-</span> <span class="fu">generator</span>(</span>
-<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a>            <span class="at">definition =</span> paramDefinition, </span>
-<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a>            <span class="at">expanded =</span> expanded, </span>
-<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a>            <span class="at">settings =</span> settings</span>
-<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a>          )</span>
-<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a>          <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(pool))</span>
-<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a>        }</span>
-<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a>        generator<span class="sc">$</span><span class="fu">initialize</span>(</span>
-<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a>          <span class="at">definition =</span> paramDefinition,</span>
-<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a>          <span class="at">settings =</span> settings</span>
-<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a>        )</span>
-<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">list</span>(</span>
-<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a>          <span class="at">next =</span> <span class="cf">function</span>(history) generator<span class="sc">$</span><span class="cf">next</span>(history),</span>
-<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a>          <span class="at">finalize =</span> <span class="cf">function</span>(history) {</span>
-<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a>              finalizeFn <span class="ot">&lt;-</span> generator<span class="sc">$</span>finalize <span class="sc">%||%</span> <span class="cf">function</span>(...) <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
-<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a>              <span class="fu">finalizeFn</span>(history)</span>
-<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a>        <span class="er">))</span></span>
-<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a>      }</span>
-<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a></span>
-<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="st">"Unknown hyper-parameter search strategy '%s'."</span>, settings<span class="sc">$</span>search))</span>
-<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a>    <span class="er">}</span></span>
-<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a>    <span class="st">```</span></span>
-<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a><span class="at">- The unified CV loop consumes the iterator uniformly:</span></span>
-<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a><span class="st">```</span>R</span>
-<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a></span>
-<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a>    iterator <span class="ot">&lt;-</span> <span class="fu">prepareHyperparameterGrid</span>(</span>
-<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a>      paramDefinition, </span>
-<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a>      hyperSettings, </span>
-<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a>      modelName</span>
-<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a>      )</span>
-<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a>    history <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a></span>
-<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a>    <span class="cf">repeat</span> {</span>
-<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a>      candidate <span class="ot">&lt;-</span> iterator<span class="sc">$</span><span class="cf">next</span>(history)</span>
-<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">is.null</span>(candidate)) <span class="cf">break</span></span>
-<span id="cb5-114"><a href="#cb5-114" tabindex="-1"></a></span>
-<span id="cb5-115"><a href="#cb5-115" tabindex="-1"></a>      perf <span class="ot">&lt;-</span> <span class="fu">evaluateCandidate</span>(candidate, data, metric)</span>
-<span id="cb5-116"><a href="#cb5-116" tabindex="-1"></a>      history[[<span class="fu">length</span>(history) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>]] <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">param =</span> candidate, <span class="at">performance =</span> perf)</span>
-<span id="cb5-117"><a href="#cb5-117" tabindex="-1"></a>    }</span>
-<span id="cb5-118"><a href="#cb5-118" tabindex="-1"></a></span>
-<span id="cb5-119"><a href="#cb5-119" tabindex="-1"></a>    iterator<span class="sc">$</span><span class="fu">finalize</span>(history)</span>
-<span id="cb5-120"><a href="#cb5-120" tabindex="-1"></a>    best <span class="ot">&lt;-</span> <span class="fu">selectBest</span>(history, metric)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>  fitPlp <span class="ot">&lt;-</span> <span class="cf">function</span>(trainData,</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>                     modelSettings,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>                     <span class="at">hyperparameterSettings =</span> <span class="fu">createHyperparameterSettings</span>(),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>                     <span class="at">search =</span> <span class="st">"grid"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>                     analysisId,</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>                     analysisPath) {</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    ...</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    args <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>      <span class="at">trainData =</span> trainData,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>      <span class="at">modelSettings =</span> modelSettings,</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>      <span class="at">hyperparameterSettings =</span> hyperparameterSettings,</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>      <span class="at">analysisId =</span> analysisId,</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>      <span class="at">analysisPath =</span> analysisPath</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    )</span></code></pre></div>
+<p>(Deprecate search if you like, but keep it for compatibility and let
+it override <code>hyperparameterSettings$search</code> when
+non-default.)</p>
+<p>———</p>
+</div>
+<div class="section level2">
+<h2 id="update-classifier-fitters">4. Update classifier fitters<a class="anchor" aria-label="anchor" href="#update-classifier-fitters"></a>
+</h2>
+<p>Each classifier with CV (e.g., <code>fitSklearn</code>,
+<code>fitRclassifier</code>, <code>fitGradientBoostingMachine</code>,
+<code>fitLightGBM)</code> gains a <code>hyperparameterSettings</code>
+argument.</p>
+<p>Within these functions:</p>
+<ul>
+<li>Call a new helper
+<code>prepareHyperparameterGrid(param, hyperparameterSettings)</code>
+(see next section) to obtain the actual list of parameter sets to
+evaluate.</li>
+<li>Pass both the <code>tuningMetric</code> and the final grid into the
+CV routines.</li>
+</ul>
+<p>———</p>
+</div>
+<div class="section level2">
+<h2 id="helpers-for-search-preparation">5. Helpers for search preparation<a class="anchor" aria-label="anchor" href="#helpers-for-search-preparation"></a>
+</h2>
+<ul>
+<li>Replace the current “return a list of params” approach with a
+lightweight iterator façade: <code>prepareHyperparameterGrid()</code>
+now returns an object exposing <code>R next = function(history)</code> …
+(and optionally finalize). The CV code simply calls candidate &lt;-
+iterator$next(history) until it gets NULL, so grid, random, and custom
+searches all execute through the same loop.</li>
+<li>For grid and random, wrap the fully expanded combinations in that
+iterator: keep a private index (or shuffled index for random), yield one
+entry per call, and stop once the pool is exhausted. Seeding logic stays
+unchanged but is now encapsulated in the iterator’s closure.</li>
+<li>For custom searches accept both simple generators (functions
+returning a finite list) and adaptive generators. Detect which shape was
+supplied and wrap it so the iterator always exposes the next(history)
+contract. Provide adapters so legacy one-shot functions still work while
+more advanced strategies get a stateful interface.</li>
+<li>Document an adaptive generator contract: initialize(definition,
+settings) to set up any internal state, next(history) to emit the next
+configuration using past performance, finalize(history) to clean up if
+needed. The iterator constructor calls <code>initialize()</code> once,
+then delegates each <code>next()</code> invocation, allowing techniques
+like Bayesian optimization that fit surrogate models or maintain other
+state between trials.</li>
+<li>Retain backwards compatibility by allowing code that still expects a
+plain list to receive one (wrap the iterator for now and emit a
+deprecation warning), but direct all new fitters and CV routines to the
+iterator-based API so every search strategy—static or adaptive—lives
+behind the same helper and can hold state safely inside its
+closure/environment.</li>
+</ul>
+<p>Example code: - <code>prepareHyperparameterGrid()</code> returns an
+iterator object with next/finalize so every search path looks the
+same:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>    prepareHyperparameterGrid <span class="ot">&lt;-</span> <span class="cf">function</span>(paramDefinition, hyperSettings, <span class="at">modelName =</span> <span class="cn">NULL</span>) {</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>      settings <span class="ot">&lt;-</span> hyperSettings <span class="sc">%||%</span> <span class="fu">createHyperparameterSettings</span>()</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>      makeSequentialIterator <span class="ot">&lt;-</span> <span class="cf">function</span>(pool) {</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>        i <span class="ot">&lt;-</span> <span class="dv">0</span><span class="dt">L</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>          <span class="at">next =</span> <span class="cf">function</span>(history) {</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>            i <span class="ot">&lt;&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>            <span class="cf">if</span> (i <span class="sc">&gt;</span> <span class="fu">length</span>(pool)) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>            pool[[i]]</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>          },</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>          <span class="at">finalize =</span> <span class="cf">function</span>(history) <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>        )</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>      }</span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">is.null</span>(paramDefinition) {</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>          empty <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">list</span>())</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>          <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(empty))</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>      }</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>      expanded <span class="ot">&lt;-</span> <span class="fu">expandParamDefinition</span>(paramDefinition)</span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"grid"</span>)) {</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(expanded))</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>      }</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"random"</span>)) {</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>        idx <span class="ot">&lt;-</span> <span class="fu">sample.int</span>(</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>          <span class="fu">length</span>(expanded),</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a>          <span class="at">size =</span> <span class="fu">min</span>(settings<span class="sc">$</span>sampleSize, <span class="fu">length</span>(expanded))</span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a>        )</span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(expanded[idx]))</span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>      }</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">identical</span>(settings<span class="sc">$</span>search, <span class="st">"custom"</span>)) {</span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a>        generator <span class="ot">&lt;-</span> settings<span class="sc">$</span>generator</span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">is.function</span>(generator)) {</span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a>          pool <span class="ot">&lt;-</span> <span class="fu">generator</span>(</span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a>            <span class="at">definition =</span> paramDefinition, </span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a>            <span class="at">expanded =</span> expanded, </span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a>            <span class="at">settings =</span> settings</span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a>          )</span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a>          <span class="fu">return</span>(<span class="fu">makeSequentialIterator</span>(pool))</span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a>        }</span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a>        generator<span class="sc">$</span><span class="fu">initialize</span>(</span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a>          <span class="at">definition =</span> paramDefinition,</span>
+<span id="cb7-44"><a href="#cb7-44" tabindex="-1"></a>          <span class="at">settings =</span> settings</span>
+<span id="cb7-45"><a href="#cb7-45" tabindex="-1"></a>        )</span>
+<span id="cb7-46"><a href="#cb7-46" tabindex="-1"></a>        <span class="fu">return</span>(<span class="fu">list</span>(</span>
+<span id="cb7-47"><a href="#cb7-47" tabindex="-1"></a>          <span class="at">next =</span> <span class="cf">function</span>(history) generator<span class="sc">$</span><span class="cf">next</span>(history),</span>
+<span id="cb7-48"><a href="#cb7-48" tabindex="-1"></a>          <span class="at">finalize =</span> <span class="cf">function</span>(history) {</span>
+<span id="cb7-49"><a href="#cb7-49" tabindex="-1"></a>              finalizeFn <span class="ot">&lt;-</span> generator<span class="sc">$</span>finalize <span class="sc">%||%</span> <span class="cf">function</span>(...) <span class="fu">invisible</span>(<span class="cn">NULL</span>)</span>
+<span id="cb7-50"><a href="#cb7-50" tabindex="-1"></a>              <span class="fu">finalizeFn</span>(history)</span>
+<span id="cb7-51"><a href="#cb7-51" tabindex="-1"></a>        <span class="er">))</span></span>
+<span id="cb7-52"><a href="#cb7-52" tabindex="-1"></a>      }</span>
+<span id="cb7-53"><a href="#cb7-53" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" tabindex="-1"></a>      <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="st">"Unknown hyper-parameter search strategy '%s'."</span>, settings<span class="sc">$</span>search))</span>
+<span id="cb7-55"><a href="#cb7-55" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
+<ul>
+<li>The unified CV loop consumes the iterator uniformly:</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>    iterator <span class="ot">&lt;-</span> <span class="fu">prepareHyperparameterGrid</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>      paramDefinition, </span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>      hyperSettings, </span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>      modelName</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>      )</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    history <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>    <span class="cf">repeat</span> {</span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a>      candidate <span class="ot">&lt;-</span> iterator<span class="sc">$</span><span class="cf">next</span>(history)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">is.null</span>(candidate)) <span class="cf">break</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a>      perf <span class="ot">&lt;-</span> <span class="fu">evaluateCandidate</span>(candidate, data, metric)</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a>      history[[<span class="fu">length</span>(history) <span class="sc">+</span> <span class="dv">1</span><span class="dt">L</span>]] <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">param =</span> candidate, <span class="at">performance =</span> perf)</span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a>    }</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a>    iterator<span class="sc">$</span><span class="fu">finalize</span>(history)</span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a>    best <span class="ot">&lt;-</span> <span class="fu">selectBest</span>(history, metric)</span></code></pre></div>
 <p>Grid, random, and adaptive custom searches all plug into this
 structure by returning an iterator that maintains its own state inside
 the closure or generator object.</p>
@@ -322,23 +367,23 @@ the closure or generator object.</p>
 <code>gridCvPython(..., hyperparameterSettings, metric)</code> (or
 similar) now receives the metric and uses it:</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>evaluated <span class="ot">&lt;-</span> <span class="fu">lapply</span>(grid, <span class="cf">function</span>(entry) {</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="fu">computeGridPerformance</span>(</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    <span class="at">prediction =</span> entry<span class="sc">$</span>prediction,</span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">param =</span> entry<span class="sc">$</span>param,</span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    <span class="at">metric =</span> metric</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  )</span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>})</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>whichBest <span class="ot">&lt;-</span> <span class="cf">if</span> (metric<span class="sc">$</span>maximize) {</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>  <span class="fu">which.max</span>(<span class="fu">vapply</span>(evaluated, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="fu">numeric</span>(<span class="dv">1</span>), <span class="st">"cvPerformance"</span>))</span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  <span class="fu">which.min</span>(<span class="fu">vapply</span>(evaluated, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="fu">numeric</span>(<span class="dv">1</span>), <span class="st">"cvPerformance"</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>evaluated <span class="ot">&lt;-</span> <span class="fu">lapply</span>(grid, <span class="cf">function</span>(entry) {</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="fu">computeGridPerformance</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>    <span class="at">prediction =</span> entry<span class="sc">$</span>prediction,</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    <span class="at">param =</span> entry<span class="sc">$</span>param,</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>    <span class="at">metric =</span> metric</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  )</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>})</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>whichBest <span class="ot">&lt;-</span> <span class="cf">if</span> (metric<span class="sc">$</span>maximize) {</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>  <span class="fu">which.max</span>(<span class="fu">vapply</span>(evaluated, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="fu">numeric</span>(<span class="dv">1</span>), <span class="st">"cvPerformance"</span>))</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>  <span class="fu">which.min</span>(<span class="fu">vapply</span>(evaluated, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="fu">numeric</span>(<span class="dv">1</span>), <span class="st">"cvPerformance"</span>))</span></code></pre></div>
 <ul>
 <li>
 <code><a href="../../reference/computeGridPerformance.html">computeGridPerformance()</a></code> signature changes:</li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">computeGridPerformance</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">prediction</span>, <span class="va">param</span>, <span class="va">metric</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">perf</span> <span class="op">&lt;-</span> <span class="va">metric</span><span class="op">$</span><span class="fu">fun</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span>
 <span>    <span class="va">folds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">index</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">foldId</span><span class="op">)</span> <span class="op">{</span></span>
@@ -356,7 +401,7 @@ similar) now receives the metric and uses it:</li>
 <span>  <span class="op">}</span></span></code></pre></div>
 <p>For metrics needing thresholds, the supplied function can capture the
 threshold:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="fu">createTuningMetric</span><span class="op">(</span></span>
 <span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span> <span class="op">&gt;=</span> <span class="fl">0.6</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
@@ -384,17 +429,18 @@ configuration.</li>
 maybe on the classifier fitters) but internally let it override the
 design-level setting only when explicitly set, e.g.:</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/missing.html" class="external-link">missing</a></span><span class="op">(</span><span class="va">search</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">hyperparameterSettings</span><span class="op">$</span><span class="va">search</span> <span class="op">&lt;-</span> <span class="va">search</span></span>
 <span>  <span class="op">}</span></span></code></pre></div>
 <p>This means existing code that calls
 <code>fitPlp(..., search = "grid")</code> keeps working.</p>
 <p>———</p>
-<ol start="8" style="list-style-type: decimal">
-<li>Usage example</li>
-</ol>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+</div>
+<div class="section level2">
+<h2 id="usage-example">8. Usage example<a class="anchor" aria-label="anchor" href="#usage-example"></a>
+</h2>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">metric</span> <span class="op">&lt;-</span> <span class="fu">createTuningMetric</span><span class="op">(</span></span>
 <span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span> <span class="op">&gt;=</span> <span class="fl">0.55</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">==</span> <span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">outcomeCount</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    maximize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
