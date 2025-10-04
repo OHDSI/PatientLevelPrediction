@@ -12,7 +12,17 @@ home:
   links:
   - text: Ask a question
     href: http://forums.ohdsi.org
-    
+
+articles:
+  sections:
+    - title: internal
+      contents:
+        - starts_with("maintainers")
+    - title: Articles
+      navbar: Articles
+      contents:
+        - matches("^(?!maintainers/).+")
+
 navbar:
   structure:
     left:
