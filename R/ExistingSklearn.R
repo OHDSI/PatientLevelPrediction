@@ -76,6 +76,7 @@ createSklearnModel <- function(
     tidyCovariates = NULL,
     requireDenseMatrix = FALSE
     ) {
+  reticulate::py_require("sklearn")
   checkSklearn()
   checkFileExists(modelLocation)
   checkIsClass(covariateMap, "data.frame")

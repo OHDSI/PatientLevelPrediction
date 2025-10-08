@@ -37,6 +37,7 @@ checkSklearn <- function() {
     "reticulate",
     reason = "Reticulate is required to use the Python models"
   )
+  reticulate::py_require("sklearn")
   tryCatch({
     reticulate::import("sklearn")
   }, error = function(e) {
