@@ -39,7 +39,7 @@ migrateDataModel <- function(connectionDetails, databaseSchema, tablePrefix = ""
     tablePrefix = tablePrefix
     )
   migrator$executeMigrations()
-  migrator$finalize()
+  migrator$closeConnection()
   
   ParallelLogger::logInfo("Updating version number")
   updateVersionSql <- SqlRender::loadRenderTranslateSql(
