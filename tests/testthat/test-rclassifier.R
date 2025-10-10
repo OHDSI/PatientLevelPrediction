@@ -44,16 +44,6 @@ test_that("GBM settings work", {
   expect_equal(attr(gbmSet$param, "settings")$varImpRFunction, "varImpXgboost")
   expect_equal(attr(gbmSet$param, "settings")$trainRFunction, "fitXgboost")
   expect_equal(attr(gbmSet$param, "settings")$predictRFunction, "predictXgboost")
-
-  expect_equal(length(gbmSet$param), 2)
-
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$ntrees)))), 2)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$earlyStopRound)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$maxDepth)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$minChildWeight)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$learnRate)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$lambda)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$alpha)))), 1)
 })
 
 

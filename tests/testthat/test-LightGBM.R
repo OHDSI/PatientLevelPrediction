@@ -47,19 +47,6 @@ test_that("LightGBM settings work", {
   expect_equal(attr(lgbmSet$param, "settings")$varImpRFunction, "varImpLightGBM")
   expect_equal(attr(lgbmSet$param, "settings")$trainRFunction, "fitLightGBM")
   expect_equal(attr(lgbmSet$param, "settings")$predictRFunction, "predictLightGBM")
-
-  expect_equal(length(lgbmSet$param), 2)
-
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$numIterations)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$numLeaves)))), 2)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$earlyStopRound)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$maxDepth)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$minDataInLeaf)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$learningRate)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$lambdaL1)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$lambdaL2)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$scalePosWeight)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$isUnbalance)))), 1)
 })
 
 

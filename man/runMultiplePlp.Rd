@@ -48,7 +48,7 @@ Run a list of predictions analyses
 This function will run all specified predictions as defined using .
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 databaseDetails <- createDatabaseDetails(connectionDetails = connectionDetails,

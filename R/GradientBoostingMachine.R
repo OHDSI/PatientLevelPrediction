@@ -106,7 +106,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     stop("scalePosWeight must be 0 or greater")
   }
 
-  paramGrid <- list(
+  param <- list(
     ntrees = ntrees,
     earlyStopRound = earlyStopRound,
     maxDepth = maxDepth,
@@ -117,7 +117,6 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     scalePosWeight = scalePosWeight
   )
 
-  param <- listCartesian(paramGrid)
 
   attr(param, "settings") <- list(
     modelType = "Xgboost",

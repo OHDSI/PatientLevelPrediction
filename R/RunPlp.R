@@ -107,6 +107,7 @@ runPlp <- function(
     normalize = TRUE
     ),
   modelSettings = setLassoLogisticRegression(),
+  hyperparameterSettings = createHyperparameterSettings(),
   logSettings = createLogSettings(
     verbosity = "DEBUG",
     timeStamp = TRUE,
@@ -286,6 +287,7 @@ runPlp <- function(
     settings <- list(
       trainData = data$Train, 
       modelSettings = modelSettings,
+      hyperparameterSettings = hyperparameterSettings,
       analysisId = analysisId,
       analysisPath = analysisPath
     )

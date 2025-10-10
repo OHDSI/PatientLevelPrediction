@@ -84,7 +84,7 @@ setLightGBM <- function(nthread = 20,
     stop("isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them")
   }
 
-  paramGrid <- list(
+  param <- list(
     earlyStopRound = earlyStopRound,
     numIterations = numIterations,
     numLeaves = numLeaves,
@@ -96,8 +96,6 @@ setLightGBM <- function(nthread = 20,
     isUnbalance = isUnbalance,
     scalePosWeight = scalePosWeight
   )
-
-  param <- listCartesian(paramGrid)
 
   attr(param, "settings") <- list(
     modelType = "LightGBM",

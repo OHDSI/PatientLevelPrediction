@@ -63,6 +63,7 @@
 fitPlp <- function(
     trainData,
     modelSettings,
+    hyperparameterSettings = createHyperparameterSettings(),
     search = "grid",
     analysisId,
     analysisPath) {
@@ -88,6 +89,7 @@ fitPlp <- function(
   args <- list(
     trainData = trainData,
     modelSettings, # old: param = modelSettings$param, # make this model settings?
+    hyperparameterSettings = hyperparameterSettings,
     search = search,
     analysisId = analysisId,
     analysisPath = analysisPath

@@ -16,6 +16,7 @@ runPlp(
   featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
   preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
   modelSettings = setLassoLogisticRegression(),
+  hyperparameterSettings = createHyperparameterSettings(),
   logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
     "runPlp Log"),
   executeSettings = createDefaultExecuteSettings(),

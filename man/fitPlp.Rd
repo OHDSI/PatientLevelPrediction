@@ -4,7 +4,14 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
+fitPlp(
+  trainData,
+  modelSettings,
+  hyperparameterSettings = createHyperparameterSettings(),
+  search = "grid",
+  analysisId,
+  analysisPath
+)
 }
 \arguments{
 \item{trainData}{An object of type \code{trainData} created using \code{splitData}

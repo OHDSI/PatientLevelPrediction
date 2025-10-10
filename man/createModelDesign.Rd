@@ -15,6 +15,7 @@ createModelDesign(
   preprocessSettings = NULL,
   modelSettings = NULL,
   splitSettings = createDefaultSplitSetting(),
+  hyperparameterSettings = createHyperparameterSettings(),
   runCovariateSummary = TRUE
 )
 }
@@ -38,6 +39,8 @@ createModelDesign(
 \item{modelSettings}{The model settings such as \code{setLassoLogisticRegression()}}
 
 \item{splitSettings}{The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}}
+
+\item{hyperparameterSettings}{The hyperparameter settings created using \code{createHyperparameterSettings()}}
 
 \item{runCovariateSummary}{Whether to run the covariateSummary}
 }
