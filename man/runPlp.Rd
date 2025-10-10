@@ -60,6 +60,8 @@ and whether to normalise the covariates before training}
 \item setKNN() A KNN model
 }}
 
+\item{hyperparameterSettings}{An object of \code{hyperparameterSettings} created using \code{createHyperparameterSettings}}
+
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
 

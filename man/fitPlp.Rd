@@ -20,6 +20,8 @@ data extracted from the CDM.}
 \item{modelSettings}{An object of class \code{modelSettings} created using
 one of the \code{createModelSettings} functions}
 
+\item{hyperparameterSettings}{An object of class \code{hyperparameterSettings}'}
+
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 
 \item{analysisId}{The id of the analysis}

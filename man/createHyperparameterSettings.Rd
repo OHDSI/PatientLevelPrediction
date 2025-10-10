@@ -6,10 +6,9 @@
 \usage{
 createHyperparameterSettings(
   search = "grid",
-  tuningMetric = "auc",
+  tuningMetric = aucMetric,
   sampleSize = NULL,
   randomSeed = NULL,
-  searchControl = list(),
   generator = NULL
 )
 }
@@ -17,6 +16,13 @@ createHyperparameterSettings(
 \item{search}{The type of hyperparameter search to perform. Options are "grid" for grid search, "random" for random search, and "custom" for a user-defined search strategy.}
 
 \item{tuningMetric}{The metric to optimize during hyperparameter tuning.}
+
+\item{sampleSize}{Sample size in case of random sampling}
+
+\item{randomSeed}{Random seed for random sampling}
+
+\item{generator}{An object with \code{initialize}, \code{getNext} and \code{finalize} methods
+for custom flexible hyperparameter tuning.}
 }
 \description{
 Create Hyperparameter Settings
