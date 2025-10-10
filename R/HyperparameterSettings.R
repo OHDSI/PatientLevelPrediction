@@ -1,13 +1,16 @@
 #' Create Hyperparameter Settings
 #' @param search The type of hyperparameter search to perform. Options are "grid" for grid search, "random" for random search, and "custom" for a user-defined search strategy.
 #' @param tuningMetric The metric to optimize during hyperparameter tuning.
+#' @param sampleSize Sample size in case of random sampling
+#' @param randomSeed Random seed for random sampling
+#' @param generator An object with `initialize`, `getNext` and `finalize` methods 
+#' for custom flexible hyperparameter tuning.
 #' @export
 createHyperparameterSettings <- function(
   search = "grid",
   tuningMetric = aucMetric,
   sampleSize = NULL,
   randomSeed = NULL,
-  searchControl = list(), # TODO do I need this.
   generator = NULL
 ) {
   stopifnot(search %in% c("grid", "random", "custom"))
@@ -25,7 +28,6 @@ createHyperparameterSettings <- function(
       tuningMetric = tuningMetric,
       sampleSize = sampleSize,
       randomSeed = randomSeed,
-      searchControl = searchControl,
       generator = generator
     ),
     class = "hyperparameterSettings"
