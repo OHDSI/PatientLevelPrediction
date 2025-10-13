@@ -53,7 +53,7 @@ Create setting for gradient boosting machine model using lightGBM
 (https://github.com/microsoft/LightGBM/tree/master/R-package).
 }
 \examples{
-\dontshow{if (rlang::is_installed("lightgbm")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("lightgbm")) withAutoprint(\{ # examplesIf}
 modelLightGbm <- setLightGBM(
   numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
   minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
