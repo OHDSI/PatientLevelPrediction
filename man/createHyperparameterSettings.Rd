@@ -15,7 +15,8 @@ createHyperparameterSettings(
 \arguments{
 \item{search}{The type of hyperparameter search to perform. Options are "grid" for grid search, "random" for random search, and "custom" for a user-defined search strategy.}
 
-\item{tuningMetric}{The metric to optimize during hyperparameter tuning.}
+\item{tuningMetric}{The metric to optimize during hyperparameter tuning. Common
+choices include \code{aucMetric} and \code{auprcMetric}.}
 
 \item{sampleSize}{Sample size in case of random sampling}
 
