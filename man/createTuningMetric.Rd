@@ -4,7 +4,7 @@
 \alias{createTuningMetric}
 \title{Create a tuning metric descriptor}
 \usage{
-createTuningMetric(fun, maximize = TRUE, name = NULL, funArgs = list())
+createTuningMetric(fun, maximize = TRUE, name, funArgs = list())
 }
 \arguments{
 \item{fun}{Function (or function name) that returns a single numeric score
@@ -12,7 +12,7 @@ when given a prediction data frame.}
 
 \item{maximize}{Logical; TRUE if larger is better.}
 
-\item{name}{Friendly name for logs and summaries; defaults to the function name.}
+\item{name}{Friendly name for logs and summaries.}
 
 \item{funArgs}{Optional named list of extra arguments passed to \code{fun}.}
 }

@@ -102,21 +102,18 @@ prepareHyperparameterGrid <- function(paramDefinition,
 #' @param fun Function (or function name) that returns a single numeric score
 #'   when given a prediction data frame.
 #' @param maximize Logical; TRUE if larger is better.
-#' @param name Friendly name for logs and summaries; defaults to the function name.
+#' @param name Friendly name for logs and summaries.
 #' @param funArgs Optional named list of extra arguments passed to `fun`.
 #' @export
 createTuningMetric <- function(fun,
                                maximize = TRUE,
-                               name = NULL,
+                               name,
                                funArgs = list()) {
   if (is.character(fun)) {
     funName <- fun
     fun <- get(funName, envir = parent.frame())
     if (!is.function(fun)) {
       stop(sprintf("`%s` is not a function.", funName), call. = FALSE)
-    }
-    if (is.null(name)) {
-      name <- funName
     }
   }
   if (!is.function(fun)) {
@@ -125,7 +122,9 @@ createTuningMetric <- function(fun,
   if (!is.list(funArgs)) {
     stop("`funArgs` must be a named list.", call. = FALSE)
   }
-  name <- name %||% rlang::friendly_type_of(fun)
+  if (!is.character(name) || length(name) != 1 || is.na(name) || !nzchar(name)) {
+    stop("`name` must be a non-empty character string.", call. = FALSE)
+  }
   metricFun <- function(prediction) {
     result <- do.call(fun, c(list(prediction = prediction), funArgs))
     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
