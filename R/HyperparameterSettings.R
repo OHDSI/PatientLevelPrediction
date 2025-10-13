@@ -1,6 +1,7 @@
 #' Create Hyperparameter Settings
 #' @param search The type of hyperparameter search to perform. Options are "grid" for grid search, "random" for random search, and "custom" for a user-defined search strategy.
-#' @param tuningMetric The metric to optimize during hyperparameter tuning.
+#' @param tuningMetric The metric to optimize during hyperparameter tuning. Common
+#'   choices include `aucMetric` and `auprcMetric`.
 #' @param sampleSize Sample size in case of random sampling
 #' @param randomSeed Random seed for random sampling
 #' @param generator An object with `initialize`, `getNext` and `finalize` methods 
@@ -64,7 +65,7 @@ prepareHyperparameterGrid <- function(paramDefinition,
         return(makeSequentialIterator(expanded))
       }
 
-      if (identical(settings$earch, "random")) {
+      if (identical(settings$search, "random")) {
         idx <- sample.int(
           length(expanded),
           size = min(settings$sampleSize, length(expanded))
@@ -146,4 +147,15 @@ aucMetric <- createTuningMetric(
   fun = computeAuc,
   maximize = TRUE,
   name = "AUC"
+)
+
+auprcMetric <- createTuningMetric(
+  fun = function(prediction) {
+    positive <- prediction$value[prediction$outcomeCount == 1]
+    negative <- prediction$value[prediction$outcomeCount == 0]
+    pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
+    auprc <- pr$auc.integral
+  },
+  maximize = TRUE,
+  name = "AUPRC"
 )
