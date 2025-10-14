@@ -42,7 +42,7 @@ This function executes a large set of SQL statements to create tables that can s
 This function can be used to create (or delete) PatientLevelPrediction result tables
 }
 \examples{
-\dontshow{if (rlang::is_installed("RSQLite")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("RSQLite")) withAutoprint(\{ # examplesIf}
 # create a sqlite database with the PatientLevelPrediction result tables
 connectionDetails <- DatabaseConnector::createConnectionDetails(
   dbms = "sqlite",

@@ -86,7 +86,7 @@ This function simply stores the settings for communicating with the cdmDatabase 
 the target cohort and outcomes
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 # create the database details for Eunomia example database
