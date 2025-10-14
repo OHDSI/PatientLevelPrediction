@@ -39,7 +39,7 @@ checkSklearn <- function() {
   )
   reticulate::py_require("scikit-learn")
   tryCatch({
-    reticulate::import("scikit-learn")
+    reticulate::import("sklearn")
   }, error = function(e) {
     stop("scikit-learn in a python environment reachable by reticulate is required to use the Python models")
   })
