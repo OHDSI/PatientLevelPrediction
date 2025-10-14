@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,6 +50,8 @@
     <li><a class="dropdown-item" href="../articles/GISExample.html">Integration of GIS Data Into OHDSI Model Building</a></li>
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
@@ -78,7 +80,7 @@
                         <h4 data-toc-skip class="author">Jared
 Houghtaling</h4>
             
-            <h4 data-toc-skip class="date">2025-10-02</h4>
+            <h4 data-toc-skip class="date">2025-10-14</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/GISExample.Rmd" class="external-link"><code>vignettes/GISExample.Rmd</code></a></small>
       <div class="d-none name"><code>GISExample.Rmd</code></div>
@@ -136,7 +138,7 @@ package.</p>
 imported necessary packages and defined the relevant parameters about
 the data source:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction/" class="external-link">PatientLevelPrediction</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ohdsi.github.io/PatientLevelPrediction/">PatientLevelPrediction</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="va">outputFolder</span> <span class="op">&lt;-</span> <span class="st">"/ohdsi-gis/copdResultsPM25_NEW"</span></span>
 <span><span class="va">saveDirectory</span> <span class="op">&lt;-</span> <span class="va">outputFolder</span></span>

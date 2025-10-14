@@ -13,7 +13,7 @@ by train and test set"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,8 @@ by train and test set"></head><body>
     <li><a class="dropdown-item" href="../articles/GISExample.html">Integration of GIS Data Into OHDSI Model Building</a></li>
     <li><a class="dropdown-item" href="../articles/InstallationGuide.html">Patient-Level Prediction Installation Guide</a></li>
     <li><a class="dropdown-item" href="../articles/Videos.html">Demo Videos</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item" href="../articles/index.html">More articles...</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../articles/BenchmarkTasks.html">Benchmarks</a></li>
 <li class="nav-item"><a class="nav-link" href="../articles/ConstrainedPredictors.html">Predictors</a></li>
@@ -132,14 +134,14 @@ for any specified stratification</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating cohorts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">covariateSummary</span> <span class="op">&lt;-</span> <span class="fu">covariateSummary</span><span class="op">(</span><span class="va">plpData</span><span class="op">$</span><span class="va">covariateData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-10-02 13:01:09.200572</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Calculating covariate summary @ 2025-10-14 13:29:19.600857</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> This can take a while...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> calculating subset of strata 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Restricting to subgroup</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Calculating summary for subgroup </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Aggregating with no labels or strata</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-10-02 13:01:09.537354</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.337 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Finished covariate summary @ 2025-10-14 13:29:19.963925</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Time to calculate covariate summary: 0.363 secs</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">covariateSummary</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 9</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   covariateId covariateName     analysisId conceptId valueAsConceptId collisions</span>
