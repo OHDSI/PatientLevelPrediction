@@ -84,7 +84,7 @@ setLightGBM <- function(nthread = 20,
     stop("isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them")
   }
 
-  paramGrid <- list(
+  param <- list(
     earlyStopRound = earlyStopRound,
     numIterations = numIterations,
     numLeaves = numLeaves,
@@ -97,9 +97,7 @@ setLightGBM <- function(nthread = 20,
     scalePosWeight = scalePosWeight
   )
 
-  param <- listCartesian(paramGrid)
-
-  attr(param, "settings") <- list(
+  settings <- list(
     modelType = "LightGBM",
     seed = seed[[1]],
     modelName = "LightGBM",
@@ -109,11 +107,12 @@ setLightGBM <- function(nthread = 20,
     predictRFunction = "predictLightGBM"
   )
 
-  attr(param, "saveType") <- "lightgbm"
-
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "lightgbm"
   )
 
   class(result) <- "modelSettings"

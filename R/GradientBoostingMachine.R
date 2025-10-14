@@ -106,7 +106,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     stop("scalePosWeight must be 0 or greater")
   }
 
-  paramGrid <- list(
+  param <- list(
     ntrees = ntrees,
     earlyStopRound = earlyStopRound,
     maxDepth = maxDepth,
@@ -117,9 +117,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     scalePosWeight = scalePosWeight
   )
 
-  param <- listCartesian(paramGrid)
-
-  attr(param, "settings") <- list(
+  settings <- list(
     modelType = "Xgboost",
     seed = seed[[1]],
     modelName = "Gradient Boosting Machine",
@@ -127,13 +125,15 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     varImpRFunction = "varImpXgboost",
     trainRFunction = "fitXgboost",
     predictRFunction = "predictXgboost"
+    # add data conversion function?
   )
 
-  attr(param, "saveType") <- "xgboost"
-
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "xgboost"
   )
 
   class(result) <- "modelSettings"
@@ -202,7 +202,12 @@ fitXgboost <- function(
     dataMatrix,
     labels,
     hyperParameters,
-    settings) {
+    settings
+    ) {
+  
+  # this function will just fit the parameters for given hyperparam
+  # values and data 
+  
   set.seed(settings$seed)
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
