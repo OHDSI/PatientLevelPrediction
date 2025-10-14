@@ -45,8 +45,6 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
-      UV_SYSTEM_PYTHON: 1
-      RETICULATE_USE_MANAGED_VENV: "no"
 
     steps:
       - uses: actions/checkout@v4
@@ -62,16 +60,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          version: "latest"
-          python-version: "3.11"
-
-      - name: setup r-reticulate venv
-        run: | 
-          uv pip install numpy scikit-learn scipy
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
