@@ -384,8 +384,11 @@ getPlpData <- function(
     targetDialect = dbms,
     tempEmulationSchema = databaseDetails$tempEmulationSchema
   )
-  cohorts <- DatabaseConnector::querySql(connection, cohortSql)
-  colnames(cohorts) <- SqlRender::snakeCaseToCamelCase(colnames(cohorts))
+  cohorts <- DatabaseConnector::querySql(
+    connection, 
+    cohortSql, 
+    snakeCaseToCamelCase = TRUE
+  )
   metaDataCohort <- list(targetId = databaseDetails$targetId)
 
   if (nrow(cohorts) == 0) {
@@ -447,8 +450,11 @@ getPlpData <- function(
       tempEmulationSchema = databaseDetails$tempEmulationSchema
     )
 
-    outcomes <- DatabaseConnector::querySql(connection, outcomeSql)
-    colnames(outcomes) <- SqlRender::snakeCaseToCamelCase(colnames(outcomes))
+    outcomes <- DatabaseConnector::querySql(
+      connection, 
+      outcomeSql, 
+      snakeCaseToCamelCase = TRUE
+    )
     metaDataOutcome <- data.frame(outcomeIds = databaseDetails$outcomeIds)
     attr(outcomes, "metaData") <- metaDataOutcome
     if (nrow(outcomes) == 0) {

@@ -153,8 +153,8 @@ test_that("results uploaded to database", {
   # check the results table is populated
   sql <- "select count(*) as N from @resultSchema.@appendperformances;"
   sql <- SqlRender::render(sql, resultSchema = ohdsiDatabaseSchema, append = appendRandom("test_"))
-  res <- DatabaseConnector::querySql(conn, sql)
-  expect_true(res$N[1] > 0)
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
+  expect_true(res$n[1] > 0)
 
   # add test: check model location has result?
 })

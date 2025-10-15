@@ -142,10 +142,12 @@ getCohortCovariateData <- function(
   )
 
   # Retrieve the covariate:
-  covariates <- DatabaseConnector::querySql(connection, sql)
+  covariates <- DatabaseConnector::querySql(
+    connection, 
+    sql, 
+    snakeCaseToCamelCase = TRUE
+  )
 
-  # Convert colum names to camelCase:
-  colnames(covariates) <- SqlRender::snakeCaseToCamelCase(colnames(covariates))
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
   @analysis_id as analysis_id, -1 as concept_id;"
@@ -173,8 +175,11 @@ getCohortCovariateData <- function(
   )
 
   # Retrieve the covariateRef:
-  covariateRef <- DatabaseConnector::querySql(connection, sql)
-  colnames(covariateRef) <- SqlRender::snakeCaseToCamelCase(colnames(covariateRef))
+  covariateRef <- DatabaseConnector::querySql(
+    connection, 
+    sql, 
+    snakeCaseToCamelCase = TRUE
+  )
 
   analysisRef <- data.frame(
     analysisId = covariateSettings$analysisId,

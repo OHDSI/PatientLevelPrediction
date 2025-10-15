@@ -57,7 +57,6 @@ test_that("AUROC", {
   ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
   attr(ePrediction, "metaData") <- list(modelType = "binary")
   procAuc <- pROC::roc(ePrediction$outcomeCount, ePrediction$value,
-    algorithm = 3,
     direction = "<"
   )
   tolerance <- 0.001

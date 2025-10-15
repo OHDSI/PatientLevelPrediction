@@ -22,4 +22,4 @@ _pkgdown.yml
 ^cran-comments\.md$
 ^Dockerfile$
 ^.venv$
-
+^.notVenv$

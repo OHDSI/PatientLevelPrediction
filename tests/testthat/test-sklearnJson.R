@@ -15,6 +15,7 @@
 # limitations under the License.
 
 if (rlang::is_installed("reticulate") && identical(Sys.getenv("NOT_CRAN"), "true")) {
+  reticulate::py_require("scikit-learn")
   sklearn <- reticulate::import("sklearn", convert = FALSE)
   np <- reticulate::import("numpy", convert = FALSE)
 

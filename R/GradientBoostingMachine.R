@@ -218,19 +218,20 @@ fitXgboost <- function(
       data = dataMatrix[-trainInd, , drop = FALSE],
       label = labels$outcomeCount[-trainInd]
     )
-    watchlist <- list(train = train, test = test)
+    evals <- list(train = train, test = test)
   } else {
     train <- xgboost::xgb.DMatrix(
       data = dataMatrix,
       label = labels$outcomeCount
     )
-    watchlist <- list()
+    evals <- list()
   }
 
   outcomes <- sum(labels$outcomeCount > 0)
   N <- nrow(labels)
   outcomeProportion <- outcomes / N
-  model <- xgboost::xgb.train(
+  evalsArgument <- if (utils::packageVersion("xgboost") >= "3.1.0.1") "evals" else "watchlist"
+  trainArgs <- list(
     data = train,
     params = list(
       booster = "gbtree",
@@ -242,15 +243,16 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc"
+      eval_metric = "auc",
+      nthread = settings$threads
     ),
-    nthread = settings$threads, # ?
     nrounds = hyperParameters$ntrees,
-    watchlist = watchlist,
     print_every_n = 10,
     early_stopping_rounds = hyperParameters$earlyStopRound,
     maximize = TRUE
   )
+  trainArgs[[evalsArgument]] <- evals
+  model <- do.call(xgboost::xgb.train, trainArgs)
 
   return(model)
 }

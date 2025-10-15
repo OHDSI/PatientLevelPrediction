@@ -1,8 +1,8 @@
 Package: PatientLevelPrediction
 Type: Package
 Title: Develop Clinical Prediction Models Using the Common Data Model
-Version: 6.5.0
-Date: 2025-07-25
+Version: 6.5.1
+Date: 2025-10-14
 Authors@R: c(
     person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),
@@ -52,11 +52,12 @@ Suggests:
     mgcv,
     OhdsiShinyAppBuilder (>= 1.0.0),
     parallel,
+    pkgload,
     polspline,
     readr,
     ResourceSelection,
-    ResultModelManager (>= 0.2.0),
-    reticulate (>= 1.30),
+    ResultModelManager (>= 0.6.0),
+    reticulate (>= 1.41),
     rmarkdown,
     RSQLite,
     scoring,
@@ -65,7 +66,7 @@ Suggests:
     testthat,
     withr,
     xgboost (> 1.3.2.1)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Encoding: UTF-8
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

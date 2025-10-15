@@ -77,7 +77,7 @@ follow-up time distribution, time-to-event information, characteriszation detail
 observation time distribution.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 
 # load the data
