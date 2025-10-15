@@ -1,9 +1,15 @@
-PatientLevelPrediction 6.5.0.9999
+PatientLevelPrediction 6.5.1.9999
 ======================
+
+PatientLevelPrediction 6.5.1
+======================
+- [Bug] Remove old R condition from Rd files throug new roxygen2 (PR #603)
+- [Internal] Use reticulate's `py_require` for stating python dependencies (PR #600)
+- [Bug] use `closeConnection` instead of `finalize` for RMM (PR #599)
 - [Bug] Refresh the xgboost training call to remove watchlist/nthread deprecation warnings (PR #587)
 - [Bug] Align querySql() usage and migration discovery with DatabaseConnector 7 to keep PLP uploads and exports working (PR #595)
 - [Internal] Add pkgload to Suggests for dev/test tooling (PR #595)
-- [Feature] Improve net benefit plot to handle multiple results and thresholdSummary (PR #586)
+- [Bug] Improve net benefit plot to handle multiple results and thresholdSummary (PR #586)
 
 PatientLevelPrediction 6.5.0
 ======================

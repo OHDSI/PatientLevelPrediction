@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if (rlang::is_installed("reticulate") && identical(Sys.getenv("NOT_CRAN"), "true")) {
+  reticulate::py_require("scikit-learn")
+}
+
 test_that("setAdaBoost settings work checks", {
   skip_if_not_installed("reticulate")
   skip_on_cran()

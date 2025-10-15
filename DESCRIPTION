@@ -1,8 +1,8 @@
 Package: PatientLevelPrediction
 Type: Package
 Title: Develop Clinical Prediction Models Using the Common Data Model
-Version: 6.5.0.9999
-Date: 2025-07-25
+Version: 6.5.1.9999
+Date: 2025-10-14
 Authors@R: c(
     person("Egill", "Fridgeirsson", email = "e.fridgeirsson@erasmusmc.nl", role = c("aut", "cre")),
     person("Jenna", "Reps", email = "jreps@its.jnj.com", role = c("aut")),
@@ -56,8 +56,8 @@ Suggests:
     polspline,
     readr,
     ResourceSelection,
-    ResultModelManager (>= 0.2.0),
-    reticulate (>= 1.30),
+    ResultModelManager (>= 0.6.0),
+    reticulate (>= 1.41),
     rmarkdown,
     RSQLite,
     scoring,
