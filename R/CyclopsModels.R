@@ -135,7 +135,8 @@ fitCyclopsModel <- function(
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
     folds = trainData$folds,
-    priorType = param$priorParams$priorType
+    priorType = param$priorParams$priorType,
+    covariateData  = trainData$covariateData
   )
 
   if (!is.null(param$priorCoefs)) {
@@ -336,22 +337,22 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by = "rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
-    prediction$value <- prediction$value + intercept
+    prediction$linearPredictor <- prediction$value + intercept
   } else {
     warning("Model had no non-zero coefficients so predicted same for all population...")
     prediction <- population
-    prediction$value <- rep(0, nrow(population)) + intercept
+    prediction$linearPredictor <- rep(0, nrow(population)) + intercept
   }
   if (modelType == "logistic") {
     link <- function(x) {
       return(1 / (1 + exp(0 - x)))
     }
-    prediction$value <- link(prediction$value)
+    prediction$value <- link(prediction$linearPredictor)
     attr(prediction, "metaData")$modelType <- "binary"
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     # add baseline hazard stuff
 
-    prediction$value <- exp(prediction$value)
+    prediction$value <- exp(prediction$linearPredictor)
     attr(prediction, "metaData")$modelType <- "survival"
     if (modelType == "survival") { # is this needed?
       attr(prediction, "metaData")$timepoint <- max(population$survivalTime, na.rm = TRUE)
@@ -362,7 +363,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
-                               priorType) {
+                               priorType, covariateData = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -415,9 +416,13 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   # get CV - added && status == "OK" to only run if the model fit sucsessfully
   if (modelType == "logistic" && useCrossValidation && status == "OK") {
-    outcomeModel$cv <- getCV(cyclopsData, labels,
+    outcomeModel$cv <- getCV(
+      cyclopsData, 
+      labels,
       cvVariance = fit$variance, folds = folds,
-      priorType = priorType
+      priorType = priorType,
+      covariateData = covariateData,
+      modelType = modelType
     )
   }
 
@@ -452,7 +457,10 @@ getCV <- function(
     labels,
     cvVariance,
     folds,
-    priorType) {
+    priorType,
+    covariateData = NULL,
+    modelType = "logistic"
+) {
   fixed_prior <- Cyclops::createPrior(
     priorType = priorType,
     variance = cvVariance,
@@ -470,12 +478,33 @@ getCV <- function(
       prior = fixed_prior,
       weights = weights
     ))
-    predict <- stats::predict(subset_fit)
+    coefficients <- stats::coef(subset_fit)
+    coefDf <- data.frame(
+      betas = as.numeric(coefficients),
+      covariateIds = names(coefficients),
+      stringsAsFactors = FALSE
+    )
+    if (!is.null(covariateData)) {
+      predAll <- predictCyclopsType(
+        coefficients = coefDf,
+        population = labels,
+        covariateData = covariateData,
+        modelType = modelType
+      )
+      probsAll <- predAll$value
+      linearPredictorAll <- predAll$linearPredictor
+    } else {
+      probsAll <- stats::predict(subset_fit)
+      probsAllClipped <- pmin(pmax(probsAll, 1e-15), 1 - 1e-15)
+      linearPredictorAll <- qlogis(probsAllClipped)
+    }
 
-    auc <- aucWithoutCi(predict[hold_out], labels$y[hold_out])
+    auc <- aucWithoutCi(linearPredictorAll[hold_out], labels$y[hold_out])
 
-    predCV <- cbind(labels[hold_out, ],
-      value = predict[hold_out]
+    predCV <- cbind(
+      labels[hold_out, ],
+      value = probsAll[hold_out],
+      linearPredictor = linearPredictorAll[hold_out]
     )
     return(list(
       out_sample_auc = auc,
