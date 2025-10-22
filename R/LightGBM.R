@@ -97,7 +97,8 @@ setLightGBM <- function(nthread = 20,
     scalePosWeight = scalePosWeight
   )
 
-  attr(param, "settings") <- list(
+
+  settings <- list(
     modelType = "LightGBM",
     seed = seed[[1]],
     modelName = "LightGBM",
@@ -107,11 +108,12 @@ setLightGBM <- function(nthread = 20,
     predictRFunction = "predictLightGBM"
   )
 
-  attr(param, "saveType") <- "lightgbm"
-
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "lightgbm"
   )
 
   class(result) <- "modelSettings"

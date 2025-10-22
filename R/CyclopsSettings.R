@@ -77,7 +77,7 @@ setLassoLogisticRegression <- function(
     priorCoefs = priorCoefs
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
     priorfunction = "Cyclops::createPrior",
     selectorType = "byPid", # is this correct?
     crossValidationInPrior = TRUE,
@@ -92,12 +92,13 @@ setLassoLogisticRegression <- function(
     maxIterations = maxIterations[1] # 3000
   )
 
-  attr(param, "modelType") <- "binary"
-  attr(param, "saveType") <- "RtoJson"
-
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "binary"  # needed?
   )
   class(result) <- "modelSettings"
 
@@ -158,7 +159,7 @@ setCoxModel <- function(
     lowerLimit = lowerLimit
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
     priorfunction = "Cyclops::createPrior",
     selectorType = "byRow",
     crossValidationInPrior = TRUE,
@@ -173,12 +174,13 @@ setCoxModel <- function(
     maxIterations = maxIterations[1] # 3000
   )
 
-  attr(param, "modelType") <- "survival"
-  attr(param, "saveType") <- "RtoJson"
-
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "survival"  # needed?
   )
   class(result) <- "modelSettings"
 
@@ -256,7 +258,7 @@ setIterativeHardThresholding <- function(
     )
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
     crossValidationInPrior = FALSE,
@@ -267,12 +269,13 @@ setIterativeHardThresholding <- function(
     name = "Iterative Hard Thresholding"
   )
 
-  attr(param, "modelType") <- "binary"
-  attr(param, "saveType") <- "RtoJson"
-
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings,
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "binary"  # needed?
   )
   class(result) <- "modelSettings"
 
