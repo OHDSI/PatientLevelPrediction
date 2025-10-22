@@ -129,7 +129,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
   )
 
   result <- list(
-    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings,
     saveToJson = TRUE,
@@ -248,7 +248,7 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc",
+      eval_metric = "auc", # TODO make this flexible?
       nthread = settings$threads
     ),
     nrounds = hyperParameters$ntrees,
