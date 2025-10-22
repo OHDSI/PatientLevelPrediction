@@ -65,7 +65,7 @@ fitBinaryClassifier <- function(
     {
       do.call(
         settings$varImpRFunction,
-        list(model = tuneResultResult$model, covariateMap = covariateRef)
+        list(model = tuneResult$model, covariateMap = covariateRef)
       )
     },
     error = function(e) {
@@ -101,7 +101,7 @@ fitBinaryClassifier <- function(
       outcomeId = attr(trainData, "metaData")$outcomeId,
       restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
       # ADDING hyperparamSearch
-      hyperparamSettings = hyperparamSettings,
+      hyperparameterSettings = hyperparameterSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
@@ -132,9 +132,9 @@ fitBinaryClassifier <- function(
   
   class(result) <- "plpModel"
   # remove attr and put this into attributes in result?
-  attr(result, "predictionFunction") <- settings$predictFunction
+  attr(result, "predictionFunction") <- settings$predictRFunction
   attr(result, "modelType") <- "binary"
-  attr(result, "saveType") <- attr(param, "saveType")
+  attr(result, "saveType") <- modelSettings$saveType
   
   return(result)
 }

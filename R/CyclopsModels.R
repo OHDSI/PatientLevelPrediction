@@ -159,7 +159,7 @@ fitCyclopsModel <- function(
   # get prediction on test set:
   ParallelLogger::logTrace("Getting predictions on train set")
   tempModel <- list(model = modelTrained)
-  attr(tempModel, "modelType") <- attr(param, "modelType")
+  attr(tempModel, "modelType") <- modelSettings$modelType
   prediction <- predictCyclops(
     plpModel = tempModel,
     cohort = trainData$labels,
@@ -241,8 +241,8 @@ fitCyclopsModel <- function(
 
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictCyclops"
-  attr(result, "modelType") <- attr(param, "modelType")
-  attr(result, "saveType") <- attr(param, "saveType")
+  attr(result, "modelType") <- modelSettings$modelType
+  attr(result, "saveType") <- modelSettings$saveType
   return(result)
 }
 

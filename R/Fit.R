@@ -89,7 +89,7 @@ fitPlp <- function(
   fun <- eval(parse(text = modelSettings$fitFunction))
   args <- list(
     trainData = trainData,
-    modelSettings, # old: param = modelSettings$param, # make this model settings?
+    modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
     hyperparameterSettings = hyperparameterSettings,
     search = search,
     analysisId = analysisId,

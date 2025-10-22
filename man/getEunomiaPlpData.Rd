@@ -35,7 +35,7 @@ the connection details, creates the cohorts, and extracts the data. The cohort
 is predicting GIbleed in new users of celecoxib.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 covariateSettings <- FeatureExtraction::createCovariateSettings(
   useDemographicsAge = TRUE,
