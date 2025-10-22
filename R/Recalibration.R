@@ -258,7 +258,6 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
       p <- pmin(pmax(recalibrated$value, eps), 1 - eps)
       lp <- stats::qlogis(p) + correctionFactor
       recalibrated$value <- stats::plogis(lp)
-      recalibrated$linearPredictor <- lp
     }
 
     recalibrated[, columnType] <- "recalibrationInTheLarge"
@@ -304,8 +303,12 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     # convert risk probailities to logits
     refit <- suppressWarnings(stats::glm(y ~ lp, family = "binomial"))
 
-    recalibrated$linearPredictor <- refit$coefficients[1] + refit$coefficients[2] * lp
-    recalibrated$value <- stats::plogis(recalibrated$linearPredictor)
+    newLp <- refit$coefficients[1] + refit$coefficients[2] * lp
+
+    if ("linearPredictor" %in% names(recalibrated)) {
+      recalibrated$linearPredictor <- newLp
+    }
+    recalibrated$value <- stats::plogis(newLp)
 
     recalibrated[, columnType] <- "weakRecalibration"
     prediction <- rbind(prediction, recalibrated)
@@ -354,7 +357,9 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     f.slope <- survival::coxph(S ~ lp)
     h.slope <- max(survival::basehaz(f.slope)$hazard) # maximum OK because of prediction_horizon
     lp.slope <- stats::predict(f.slope)
-    recalibrated$linearPredictor <- lp.slope
+    if ("linearPredictor" %in% names(recalibrated)) {
+      recalibrated$linearPredictor <- lp.slope
+    }
     recalibrated$value <- 1 - exp(-h.slope * exp(lp.slope))
     # 1-h.slope^exp(lp.slope)
 

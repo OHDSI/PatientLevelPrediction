@@ -110,5 +110,5 @@ test_that("survival", {
     method = "weakRecalibration"
   )
 
-  expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
+  testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })
