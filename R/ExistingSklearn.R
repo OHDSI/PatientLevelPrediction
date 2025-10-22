@@ -140,7 +140,7 @@ createSklearnModel <- function(
 
   attr(plpModel, "modelType") <- "binary"
   attr(plpModel, "saveType") <- "file"
-  attr(plpModel, "predictionFunction") <- "predictPythonSklearn"
+  attr(plpModel, "predictionFunction") <- "predictSklearn" # TODO check this works?
   attr(plpModel, "saveToJson") <- !isPickle
   class(plpModel) <- "plpModel"
   return(plpModel)

@@ -24,6 +24,9 @@ fitBinaryClassifier <- function(
   if(is.null(settings)){
     settings <- attr(param, "settings")
   }
+  
+  # TODO add a check for the settings?
+  # like the old checkPySettings()
 
   ParallelLogger::logInfo(paste0("Training ", settings$modelName))
   start <- Sys.time()

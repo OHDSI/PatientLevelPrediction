@@ -85,7 +85,7 @@ setLassoLogisticRegression <- function(
     addIntercept = TRUE,
     useControl = TRUE,
     seed = seed[1],
-    name = "Lasso Logistic Regression",
+    modelName = "Lasso Logistic Regression",
     threads = threads[1],
     tolerance = tolerance[1], # 2e-06
     cvRepetitions = 1, # 1
@@ -167,7 +167,7 @@ setCoxModel <- function(
     addIntercept = FALSE,
     useControl = TRUE,
     seed = seed[1],
-    name = "LASSO Cox Regression",
+    modelName = "LASSO Cox Regression",
     threads = threads[1],
     tolerance = tolerance[1], # 2e-07
     cvRepetitions = 1, # 1
@@ -266,7 +266,7 @@ setIterativeHardThresholding <- function(
     addIntercept = FALSE,
     useControl = FALSE,
     seed = seed[1],
-    name = "Iterative Hard Thresholding"
+    modelName = "Iterative Hard Thresholding"
   )
 
   result <- list(

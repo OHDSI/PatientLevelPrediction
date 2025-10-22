@@ -20,9 +20,16 @@
 fitCyclopsModel <- function(
     trainData,
     modelSettings, # old:param,
+    hyperparameterSettings = NULL,
     search = "adaptive",
     analysisId,
     ...) {
+  
+  # if hyperparameterSettings not NULL warn it is ignored
+  if(!is.null(hyperparameterSettings)){
+    warning('hyperparameterSettings ignored for Cyclops models')
+  }
+  
   param <- modelSettings$param
 
   # check plpData is coo format:
@@ -30,7 +37,7 @@ fitCyclopsModel <- function(
     stop("Needs correct covariateData")
   }
 
-  settings <- attr(param, "settings")
+  settings <- modelSettings$settings
 
   trainData$covariateData$labels <- trainData$labels %>%
     dplyr::mutate(
@@ -221,7 +228,7 @@ fitCyclopsModel <- function(
       attrition = attr(trainData, "metaData")$attrition,
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
-      modelName = settings$modelType,
+      modelName = settings$modelName,
       finalModelParameters = list(
         variance = modelTrained$priorVariance,
         log_likelihood = modelTrained$log_likelihood

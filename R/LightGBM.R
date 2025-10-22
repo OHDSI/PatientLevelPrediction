@@ -109,7 +109,7 @@ setLightGBM <- function(nthread = 20,
   )
 
   result <- list(
-    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings,
     saveToJson = TRUE,
