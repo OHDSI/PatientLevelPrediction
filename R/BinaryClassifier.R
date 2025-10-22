@@ -93,7 +93,7 @@ fitBinaryClassifier <- function(
     preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
-      requireDenseMatrix = FALSE
+      requiresDenseMatrix = settings$requiresDenseMatrix
     ),
     prediction = tuneResult$prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
@@ -126,7 +126,8 @@ fitBinaryClassifier <- function(
     #attributes = list(
     # predictionFunction = settings$predictFunction,
     # modelType = "binary",
-    # saveType = modelSettings$saveType
+    # saveType = settings$saveType
+    # saveToJson = settings$saveToJson
     #)
   )
   
@@ -134,7 +135,8 @@ fitBinaryClassifier <- function(
   # remove attr and put this into attributes in result?
   attr(result, "predictionFunction") <- settings$predictRFunction
   attr(result, "modelType") <- "binary"
-  attr(result, "saveType") <- modelSettings$saveType
+  attr(result, "saveType") <- settings$saveType
+  attr(result, "saveToJson") <- settings$saveToJson
   
   return(result)
 }

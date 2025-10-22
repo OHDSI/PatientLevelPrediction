@@ -76,7 +76,7 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
   settings <- list(
     modelType = "adaBoost",
     seed = seed[[1]],
-    paramNames = names(paramGrid),
+    paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
     modelName = "AdaBoost",
@@ -84,15 +84,15 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
     pythonClass = "AdaBoostClassifier",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -314,22 +314,22 @@ setDecisionTree <- function(criterion = list("gini"),
   settings <- list(
     modelType = "decisionTree",
     seed = seed[[1]],
-    paramNames = names(paramGrid),
+    paramNames = names(param),
     requiresDenseMatrix = FALSE,
     modelName = "Decision Tree",
     pythonModule = "sklearn.tree",
     pythonClass = "DecisionTreeClassifier",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -493,7 +493,7 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
   settings <- list(
     modelType = "mlp",
     seed = seed[[1]],
-    paramNames = names(paramGrid),
+    paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
     modelName = "Neural Network",
@@ -501,15 +501,15 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
     pythonClass = "MLPClassifier",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -579,16 +579,16 @@ setNaiveBayes <- function() {
     pythonClass = "GaussianNB",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
   checkSklearn()
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -741,7 +741,7 @@ setRandomForest <- function(ntrees = list(100, 500),
   settings <- list(
     modelType = "randomForest",
     seed = seed[[1]],
-    paramNames = names(paramGrid),
+    paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
     modelName = "Random forest",
@@ -749,15 +749,15 @@ setRandomForest <- function(ntrees = list(100, 500),
     pythonClass = "RandomForestClassifier",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -859,7 +859,7 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
   settings <- list(
     modelType = "svm",
     seed = seed[[1]],
-    paramNames = names(paramGrid),
+    paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
     modelName = "Support Vector Machine",
@@ -867,15 +867,15 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
     pythonClass = "SVC",
     varImpRFunction = "varImpSklearn",
     trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn"
+    predictRFunction = "predictSklearn",
+    saveToJson = TRUE,
+    saveType = "file"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "file"
+    settings = settings
   )
   
   class(result) <- "modelSettings"
@@ -906,6 +906,30 @@ SVCInputs <- function(classifier, param) {
 }
 
 
+# loading model
+loadPythonModel <- function(modelLocation){
+  
+  files <- dir(modelLocation)
+  
+  if ("model.json" %in% files) {
+    modelLocation <-
+      reticulate::r_to_py(file.path(modelLocation, "model.json"))
+    model <- sklearnFromJson(path = modelLocation)
+  } else if("model.pkl" %in% files){
+    os <- reticulate::import("os")
+    joblib <- reticulate::import("joblib", convert = FALSE)
+    modelLocation <-
+      reticulate::r_to_py(file.path(modelLocation, "model.pkl"))
+    model <- joblib$load(os$path$join(modelLocation))
+  } else{
+    stop('Cannot find python model in model directory')
+  }
+  
+  return(model)
+}
+  
+
+
 # ==== VAR IMP ==============
 # TODO- check varImp
 varImpSklearn <- function(
@@ -913,15 +937,12 @@ varImpSklearn <- function(
     covariateMap
     ) {
   
+  # load the model
+  model <- loadPythonModel(model)
+  
   variableImportance <- tryCatch(
       {
-        varImp <- reticulate::py_to_r(model$feature_importances_)
-        varImp[is.na(varImp)] <- 0
-        
-        # check this is correct columns  
-        # think this should work as long as covariateMap columnId is ordered
-        covariateMap$covariateValue <- unlist(varImp)
-        covariateMap$included <- 1
+        reticulate::py_to_r(model$feature_importances_)
       },
       error = function(e) {
         ParallelLogger::logInfo(e)
@@ -929,7 +950,21 @@ varImpSklearn <- function(
       }
     )
   
-  return(variableImportance)
+  # check this is correct columns  
+  # think this should work as long as covariateMap columnId is ordered
+  if(!is.null(variableImportance)){
+    variableImportance[is.na(variableImportance)] <- 0
+    covariateMap$covariateValue <- unlist(variableImportance)
+    covariateMap$included <- covariateMap$covariateValue != 0
+  } else{
+    covariateMap$covariateValue <- 0
+    covariateMap$included <- 1
+  }
+  
+  covariateMap <- covariateMap %>%
+    dplyr::select('covariateId','covariateValue','included')
+  
+  return(covariateMap)
 }
 
 
@@ -955,25 +990,29 @@ predictSklearn <- function(
     newData <- data
   }
   
-  # load model
-  if (attr(plpModel, "saveToJson")) {
-    modelLocation <-
-      reticulate::r_to_py(file.path(plpModel$model, "model.json"))
-    model <- sklearnFromJson(path = modelLocation)
-  } else {
-    os <- reticulate::import("os")
-    joblib <- reticulate::import("joblib", convert = FALSE)
-    modelLocation <-
-      reticulate::r_to_py(file.path(plpModel$model, "model.pkl"))
-    model <- joblib$load(os$path$join(modelLocation))
-  }
   pythonData <- reticulate::r_to_py(newData)
   
-  # make dense if needed
-  if (plpModel$preprocessing$requireDenseMatrix) {
-    pythonData <- pythonData$toarray()
+  # load model
+  if(inherits(plpModel, 'plpModel')){
+    model <- loadPythonModel(plpModel$model)
+    
+    # make dense if needed
+    if(!is.null(plpModel$preprocessing$requiresDenseMatrix)){
+      if (plpModel$preprocessing$requiresDenseMatrix) {
+        pythonData <- pythonData$toarray()
+      }
+    }
+    
+  } else{
+    
+    model <- loadPythonModel(plpModel)
+    
+    if(attr(plpModel, "requiresDenseMatrix")){
+      pythonData <- pythonData$toarray()
+    }
+    
   }
-  
+    
   cohort <- predictValues(
     model = model,
     data = pythonData,
@@ -1000,6 +1039,7 @@ predictValues <- function(model, data, cohort, type = "binary") {
 
 
 # ==== FITTING ==============
+# fits the model and returns the model temp location
 fitSklearn <- function(
     dataMatrix,
     labels,
@@ -1015,10 +1055,9 @@ fitSklearn <- function(
   trainY <- reticulate::r_to_py(labels$outcomeCount)
   trainX <- reticulate::r_to_py(dataMatrix)
   
-  if (requiresDenseMatrix) {
+  if (settings$requiresDenseMatrix) {
     ParallelLogger::logInfo("Converting sparse martix to dense matrix (CV)")
     trainX <- trainX$toarray()
-    testX <- testX$toarray()
   }
   
   model <- fitPythonModel(
@@ -1031,25 +1070,25 @@ fitSklearn <- function(
     settings$pythonClass
   )
   
-  if(FALSE){
-    joblib <- reticulate::import("joblib")
-    # saving model - do this somewhere else?
-    # do we need to save it?
-    modelLocation <- createTempModelLoc()
-    if (!dir.exists(file.path(modelLocation))) {
-      dir.create(file.path(modelLocation), recursive = TRUE)
-    }
-    if (settings$saveToJson) {
-      sklearnToJson(
-        model = model,
-        path = file.path(modelLocation, "model.json")
-      )
-    } else {
-      joblib$dump(model, file.path(modelLocation, "model.pkl"), compress = TRUE)
-    }
+  # save the model
+  joblib <- reticulate::import("joblib")
+  modelLocation <- createTempModelLoc()
+  if (!dir.exists(file.path(modelLocation))) {
+    dir.create(file.path(modelLocation), recursive = TRUE)
+  }
+  if (settings$saveToJson) {
+    sklearnToJson(
+      model = model,
+      path = file.path(modelLocation, "model.json")
+    )
+  } else {
+    joblib$dump(model, file.path(modelLocation, "model.pkl"), compress = TRUE)
   }
   
-  return(model) # return model or modelLocation?
+  # need to pass info about whether predict converts to dense
+  attr(modelLocation, "requiresDenseMatrix") <- settings$requiresDenseMatrix
+  
+  return(modelLocation) # return model or modelLocation?
 }
 
 fitPythonModel <- function(

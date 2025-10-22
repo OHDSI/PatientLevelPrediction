@@ -29,7 +29,8 @@ test_that("set LR inputs", {
 
   expect_equal(model_set$param$priorParams$priorType, "laplace")
 
-  expect_equal(model_set$settings$modelType, "logistic")
+  expect_equal(model_set$settings$cyclopsModelType, "logistic")
+  expect_equal(model_set$settings$modelType, "binary")
   expect_equal(model_set$settings$priorfunction, "Cyclops::createPrior")
   expect_equal(model_set$settings$addIntercept, TRUE)
   expect_equal(model_set$settings$useControl, TRUE)
@@ -103,7 +104,8 @@ test_that("set cox regression inputs", {
 
   expect_equal(modelSet$param$priorParams$priorType, "laplace")
 
-  expect_equal(modelSet$settings$modelType, "cox")
+  expect_equal(modelSet$settings$cyclopsModelType, "cox")
+  expect_equal(modelSet$settings$modelType, "survival")
   expect_equal(modelSet$settings$priorfunction, "Cyclops::createPrior")
   expect_equal(modelSet$settings$addIntercept, FALSE)
   expect_equal(modelSet$settings$useControl, TRUE)
@@ -173,7 +175,8 @@ test_that("set IHT inputs", {
   expect_equal(modelSet$fitFunction, "fitCyclopsModel")
   expect_type(modelSet$param, "list")
 
-  expect_equal(modelSet$settings$modelType, "logistic")
+  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
+  expect_equal(modelSet$settings$modelType, "binary")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
   expect_equal(modelSet$settings$addIntercept, FALSE)
   expect_equal(modelSet$settings$useControl, FALSE)

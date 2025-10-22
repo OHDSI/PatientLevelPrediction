@@ -124,16 +124,16 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     threads = nthread[1],
     varImpRFunction = "varImpXgboost",
     trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost"
+    predictRFunction = "predictXgboost",
+    saveToJson = TRUE,
+    saveType = "xgboost"
     # add data conversion function?
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "xgboost"
+    settings = settings
   )
 
   class(result) <- "modelSettings"

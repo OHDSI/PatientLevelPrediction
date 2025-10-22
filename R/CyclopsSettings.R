@@ -81,7 +81,7 @@ setLassoLogisticRegression <- function(
     priorfunction = "Cyclops::createPrior",
     selectorType = "byPid", # is this correct?
     crossValidationInPrior = TRUE,
-    modelType = "logistic",
+    cyclopsModelType = "logistic",
     addIntercept = TRUE,
     useControl = TRUE,
     seed = seed[1],
@@ -89,16 +89,16 @@ setLassoLogisticRegression <- function(
     threads = threads[1],
     tolerance = tolerance[1], # 2e-06
     cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1] # 3000
+    maxIterations = maxIterations[1], # 3000
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "binary"
   )
 
   result <- list(
     fitFunction = "fitCyclopsModel",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "RtoJson",
-    modelType = "binary"  # needed?
+    settings = settings
   )
   class(result) <- "modelSettings"
 
@@ -163,7 +163,7 @@ setCoxModel <- function(
     priorfunction = "Cyclops::createPrior",
     selectorType = "byRow",
     crossValidationInPrior = TRUE,
-    modelType = "cox",
+    cyclopsModelType = "cox",
     addIntercept = FALSE,
     useControl = TRUE,
     seed = seed[1],
@@ -171,16 +171,16 @@ setCoxModel <- function(
     threads = threads[1],
     tolerance = tolerance[1], # 2e-07
     cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1] # 3000
+    maxIterations = maxIterations[1], # 3000
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "survival"
   )
 
   result <- list(
     fitFunction = "fitCyclopsModel",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "RtoJson",
-    modelType = "survival"  # needed?
+    settings = settings
   )
   class(result) <- "modelSettings"
 
@@ -262,20 +262,20 @@ setIterativeHardThresholding <- function(
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
     crossValidationInPrior = FALSE,
-    modelType = "logistic",
+    cyclopsModelType = "logistic",
     addIntercept = FALSE,
     useControl = FALSE,
     seed = seed[1],
-    modelName = "Iterative Hard Thresholding"
+    modelName = "Iterative Hard Thresholding",
+    saveToJson = TRUE,
+    saveType = "RtoJson",
+    modelType = "binary"
   )
 
   result <- list(
     fitFunction = "fitCyclopsModel",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "RtoJson",
-    modelType = "binary"  # needed?
+    settings = settings
   )
   class(result) <- "modelSettings"
 

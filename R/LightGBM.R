@@ -105,15 +105,15 @@ setLightGBM <- function(nthread = 20,
     threads = nthread[1],
     varImpRFunction = "varImpLightGBM",
     trainRFunction = "fitLightGBM",
-    predictRFunction = "predictLightGBM"
+    predictRFunction = "predictLightGBM",
+    saveToJson = TRUE,
+    saveType = "lightgbm"
   )
 
   result <- list(
     fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "lightgbm"
+    settings = settings
   )
 
   class(result) <- "modelSettings"

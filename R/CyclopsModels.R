@@ -68,7 +68,7 @@ fitCyclopsModel <- function(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
     addIntercept = settings$addIntercept,
-    modelType = modelTypeToCyclopsModelType(settings$modelType),
+    modelType = modelTypeToCyclopsModelType(settings$cyclopsModelType),
     checkRowIds = FALSE,
     normalize = NULL,
     quiet = TRUE
@@ -137,7 +137,7 @@ fitCyclopsModel <- function(
 
   modelTrained <- createCyclopsModel(
     fit = fit,
-    modelType = settings$modelType,
+    modelType = settings$cyclopsModelType,
     useCrossValidation = max(trainData$folds$index) > 1,
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
@@ -159,7 +159,7 @@ fitCyclopsModel <- function(
   # get prediction on test set:
   ParallelLogger::logTrace("Getting predictions on train set")
   tempModel <- list(model = modelTrained)
-  attr(tempModel, "modelType") <- modelSettings$modelType
+  attr(tempModel, "modelType") <- settings$modelType
   prediction <- predictCyclops(
     plpModel = tempModel,
     cohort = trainData$labels,
@@ -205,7 +205,7 @@ fitCyclopsModel <- function(
     preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = FALSE
+      requiresDenseMatrix = FALSE
     ),
     prediction = prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
@@ -241,8 +241,8 @@ fitCyclopsModel <- function(
 
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictCyclops"
-  attr(result, "modelType") <- modelSettings$modelType
-  attr(result, "saveType") <- modelSettings$saveType
+  attr(result, "modelType") <- settings$modelType
+  attr(result, "saveType") <- settings$saveType
   return(result)
 }
 
