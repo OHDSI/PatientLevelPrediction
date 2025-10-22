@@ -44,7 +44,7 @@ A list of ggplot objects or a single ggplot object if only one evaluation type i
 Plot the net benefit
 }
 \examples{
-\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("ggplot2")) withAutoprint(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)

@@ -116,7 +116,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     alpha = alpha,
     scalePosWeight = scalePosWeight
   )
-
+  
   settings <- list(
     modelType = "Xgboost",
     seed = seed[[1]],

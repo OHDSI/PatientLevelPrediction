@@ -56,6 +56,7 @@
 #'                                         \item setDecisionTree() A decision tree model
 #'                                         \item setKNN() A KNN model
 #'                                         } 
+#' @param hyperparameterSettings      An object of \code{hyperparameterSettings} created using \code{createHyperparameterSettings}
 #' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings} 
 #'                                   specifying how the logging is done                                                                            
 #' @param executeSettings            An object of \code{executeSettings} specifying which parts of the analysis to run
@@ -107,6 +108,7 @@ runPlp <- function(
     normalize = TRUE
     ),
   modelSettings = setLassoLogisticRegression(),
+  hyperparameterSettings = createHyperparameterSettings(),
   logSettings = createLogSettings(
     verbosity = "DEBUG",
     timeStamp = TRUE,
@@ -286,6 +288,7 @@ runPlp <- function(
     settings <- list(
       trainData = data$Train, 
       modelSettings = modelSettings,
+      hyperparameterSettings = hyperparameterSettings,
       analysisId = analysisId,
       analysisPath = analysisPath
     )

@@ -4,7 +4,14 @@
 \alias{fitPlp}
 \title{fitPlp}
 \usage{
-fitPlp(trainData, modelSettings, search = "grid", analysisId, analysisPath)
+fitPlp(
+  trainData,
+  modelSettings,
+  hyperparameterSettings = createHyperparameterSettings(),
+  search = "grid",
+  analysisId,
+  analysisPath
+)
 }
 \arguments{
 \item{trainData}{An object of type \code{trainData} created using \code{splitData}
@@ -12,6 +19,8 @@ data extracted from the CDM.}
 
 \item{modelSettings}{An object of class \code{modelSettings} created using
 one of the \code{createModelSettings} functions}
+
+\item{hyperparameterSettings}{An object of class \code{hyperparameterSettings}'}
 
 \item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 

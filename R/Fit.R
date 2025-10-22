@@ -29,6 +29,7 @@
 #' data extracted from the CDM.
 #' @param modelSettings An object of class \code{modelSettings} created using 
 #' one of the \code{createModelSettings} functions
+#' @param hyperparameterSettings An object of class \code{hyperparameterSettings}'
 #' @param search The search strategy for the hyper-parameter selection (currently not used)
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
@@ -63,6 +64,7 @@
 fitPlp <- function(
     trainData,
     modelSettings,
+    hyperparameterSettings = createHyperparameterSettings(),
     search = "grid",
     analysisId,
     analysisPath) {
@@ -88,6 +90,7 @@ fitPlp <- function(
   args <- list(
     trainData = trainData,
     modelSettings, # old: param = modelSettings$param, # make this model settings?
+    hyperparameterSettings = hyperparameterSettings,
     search = search,
     analysisId = analysisId,
     analysisPath = analysisPath
