@@ -64,7 +64,7 @@ test_that("Create existing sklearn works", {
   )
   expect_equal(attr(model, "modelType"), "binary")
   expect_equal(attr(model, "saveType"), "file")
-  expect_equal(attr(model, "predictionFunction"), "predictPythonSklearn")
+  expect_equal(attr(model, "predictionFunction"), "predictSklearn")
   expect_equal(attr(model, "saveToJson"), FALSE)
   expect_equal(class(model), "plpModel")
   unlink("model.pkl")
