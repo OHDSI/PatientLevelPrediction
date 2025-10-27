@@ -74,7 +74,10 @@ jobs:
           cache: always
           extra-packages: any::rcmdcheck
           needs: check
-      
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3   
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran")'

@@ -61,6 +61,9 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3   
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck
