@@ -44,8 +44,6 @@ jobs:
       CDM5_SQL_SERVER_SERVER: ${{ secrets.CDM5_SQL_SERVER_SERVER }}
       CDM5_SQL_SERVER_USER: ${{ secrets.CDM5_SQL_SERVER_USER }}      
       UV_PYTHON_PREFERENCE: only-system
-      UV_NO_MANAGED_PYTHON: 1
-      UV_PYTHON_DOWNLOADS: never
 
     steps:
       - uses: actions/checkout@v4
