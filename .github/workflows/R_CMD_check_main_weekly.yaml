@@ -45,6 +45,9 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
+      UV_PYTHON_PREFERENCE: only-system
+      UV_NO_MANAGED_PYTHON: 1
+      UV_PYTHON_DOWNLOADS: never
 
     steps:
       - uses: actions/checkout@v4
@@ -60,9 +63,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3   
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
