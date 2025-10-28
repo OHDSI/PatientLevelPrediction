@@ -56,7 +56,7 @@ jobs:
 
       - uses: r-lib/actions/setup-pandoc@v2 
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         id: py
         with:
           python-version: '3.11'
