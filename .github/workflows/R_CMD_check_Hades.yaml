@@ -77,9 +77,8 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - name: Put setup-python on PATH (first)
-        shell: bash
-        run: echo "$(dirname '${{ steps.py.outputs.python-path }}')" >> "$GITHUB_PATH"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3   
 
       - name: Check R package
         run: |
