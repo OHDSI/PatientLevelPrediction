@@ -15,7 +15,11 @@
 # limitations under the License.
 
 if (rlang::is_installed("reticulate") && identical(Sys.getenv("NOT_CRAN"), "true")) {
-  reticulate::py_require("scikit-learn")
+  if (Sys.getenv("GITHUB_ACTIONS") == "true") {
+    reticulate::py_require("scikit-learn", python_version = Sys.getenv("RETICULATE_PY_VERSION"))
+  } else {
+    reticulate::py_require("scikit-learn")
+  }
 }
 
 test_that("setAdaBoost settings work checks", {
