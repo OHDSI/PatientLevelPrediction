@@ -57,6 +57,7 @@ jobs:
       - uses: r-lib/actions/setup-pandoc@v2 
 
       - uses: actions/setup-python@v5
+        id: py
         with:
           python-version: '3.11'
 
@@ -78,12 +79,14 @@ jobs:
 
       - name: Check R package
         env:
-          UV_PYTHON_PREFERENCE: only-system
+          UV_PYTHON: ${{ steps.py.outputs.python-path }}
         run: |
           Rscript -e 'sessionInfo(); cat("\nUV_PYTHON_PREFERENCE=", Sys.getenv("UV_PYTHON_PREFERENCE"), "\n", sep="")'
           Rscript -e 'library(reticulate); py_require("scikit-learn"); py_config()'
 
       - uses: r-lib/actions/check-r-package@v2
+        env:
+          UV_PYTHON: ${{ steps.py.outputs.python-path }}
         with:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"warning"'
