@@ -45,6 +45,7 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
+      RETICULATE_PY_VERSION: 3.11
 
     steps:
       - uses: actions/checkout@v4

@@ -72,9 +72,6 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3   
-
       - uses: r-lib/actions/check-r-package@v2
         env:
           UV_PYTHON: ${{ steps.py.outputs.python-path }}
