@@ -45,7 +45,6 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
-      UV_PYTHON_PREFERENCE: only-system
 
     steps:
       - uses: actions/checkout@v4
