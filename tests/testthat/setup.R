@@ -11,6 +11,16 @@ if (Sys.getenv("GITHUB_ACTIONS") == "true") {
   }
 }
 
+if (rlang::is_installed("reticulate") && identical(Sys.getenv("NOT_CRAN"), "true")) {
+  if (Sys.getenv("GITHUB_ACTIONS") == "true") {
+    reticulate::py_require("scikit-learn", python_version = Sys.getenv("RETICULATE_PY_VERSION"))
+    # force instantiation of python with correct version
+    sklearn <- reticulate::import("sklearn")
+  } else {
+    reticulate::py_require("scikit-learn")
+  }
+}
+
 # helper so manual sourcing works without testthat
 get_defer_env <- function(default = .GlobalEnv) {
   if (rlang::is_installed("testthat")) {
