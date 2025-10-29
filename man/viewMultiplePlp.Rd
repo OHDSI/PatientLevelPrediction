@@ -20,7 +20,7 @@ Opens a shiny app for viewing the results of the models from various T,O, Tar an
 settings.
 }
 \examples{
-\dontshow{if (rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  ) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 Eunomia::createCohorts(connectionDetails)

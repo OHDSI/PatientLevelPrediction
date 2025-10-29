@@ -64,7 +64,7 @@ test_that("Create existing sklearn works", {
   )
   expect_equal(attr(model, "modelType"), "binary")
   expect_equal(attr(model, "saveType"), "file")
-  expect_equal(attr(model, "predictionFunction"), "predictPythonSklearn")
+  expect_equal(attr(model, "predictionFunction"), "predictSklearn")
   expect_equal(attr(model, "saveToJson"), FALSE)
   expect_equal(class(model), "plpModel")
   unlink("model.pkl")
@@ -212,7 +212,7 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", requireDenseMatrix = 4))
+  ), mapping = "logistic", requiresDenseMatrix = 4))
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -240,11 +240,11 @@ test_that("Create existing GLM model works", {
     covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE), 
     populationSettings = createStudyPopulationSettings(), 
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
-    requireDenseMatrix = TRUE
+    requiresDenseMatrix = TRUE
   )
   expect_equal(model$modelDesign$targetId, 33)
   expect_equal(model$modelDesign$outcomeId, 1)
-  expect_equal(model$preprocessing$requireDenseMatrix, TRUE)
+  expect_equal(model$preprocessing$requiresDenseMatrix, TRUE)
   expect_equal(model$modelDesign$populationSettings, createStudyPopulationSettings())
   expect_equal(model$modelDesign$restrictPlpDataSettings, createRestrictPlpDataSettings())
   expect_equal(model$modelDesign$covariateSettings, FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE))

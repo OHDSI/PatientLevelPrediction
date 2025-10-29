@@ -16,7 +16,7 @@ createSklearnModel(
   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
   featureEngineering = NULL,
   tidyCovariates = NULL,
-  requireDenseMatrix = FALSE
+  requiresDenseMatrix = FALSE
 )
 }
 \arguments{
@@ -49,7 +49,7 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 
 \item{tidyCovariates}{Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)}
 
-\item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
+\item{requiresDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
 }
 \value{
 An object of class plpModel, this is a list that contains:

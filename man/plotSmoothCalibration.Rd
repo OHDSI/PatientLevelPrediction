@@ -56,7 +56,7 @@ was defined: from utopia to empirical data" (2016)
 Create a plot showing the smoothed calibration
 }
 \examples{
-\dontshow{if (rlang::is_installed("ggplot2")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # generate prediction dataaframe with 1000 patients
 predictedRisk <- stats::runif(1000)
 # overconfident for high risk patients

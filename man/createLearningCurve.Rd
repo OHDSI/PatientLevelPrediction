@@ -92,7 +92,7 @@ Creates a learning curve object, which can be plotted using the
 \code{plotLearningCurve()} function.
 }
 \examples{
-\dontshow{if (rlang::is_installed("parallel")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("parallel")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 1800, seed = 42)

@@ -36,17 +36,17 @@ test_that("LightGBM settings work", {
   )
 
   expect_s3_class(lgbmSet, "modelSettings")
-  expect_equal(lgbmSet$fitFunction, "fitRclassifier")
+  expect_equal(lgbmSet$fitFunction, "fitBinaryClassifier")
   expect_type(lgbmSet$param, "list")
 
-  expect_equal(attr(lgbmSet$param, "settings")$modelType, "LightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$seed, seed)
-  expect_equal(attr(lgbmSet$param, "settings")$modelName, "LightGBM")
+  expect_equal(lgbmSet$settings$modelType, "LightGBM")
+  expect_equal(lgbmSet$settings$seed, seed)
+  expect_equal(lgbmSet$settings$modelName, "LightGBM")
 
-  expect_equal(attr(lgbmSet$param, "settings")$threads, 5)
-  expect_equal(attr(lgbmSet$param, "settings")$varImpRFunction, "varImpLightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$trainRFunction, "fitLightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$predictRFunction, "predictLightGBM")
+  expect_equal(lgbmSet$settings$threads, 5)
+  expect_equal(lgbmSet$settings$varImpRFunction, "varImpLightGBM")
+  expect_equal(lgbmSet$settings$trainRFunction, "fitLightGBM")
+  expect_equal(lgbmSet$settings$predictRFunction, "predictLightGBM")
 })
 
 

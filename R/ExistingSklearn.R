@@ -46,7 +46,7 @@
 #'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
-#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param requiresDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
 #'
 #' @return
 #' An object of class plpModel, this is a list that contains: 
@@ -74,7 +74,7 @@ createSklearnModel <- function(
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
     featureEngineering = NULL,
     tidyCovariates = NULL,
-    requireDenseMatrix = FALSE
+    requiresDenseMatrix = FALSE
     ) {
   checkSklearn()
   checkFileExists(modelLocation)
@@ -91,7 +91,7 @@ createSklearnModel <- function(
   checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
   
-  checkIsClass(requireDenseMatrix, c("logical"))
+  checkIsClass(requiresDenseMatrix, c("logical"))
   
   # start to make the plpModel
   # add param with modelType attribute 
@@ -107,7 +107,7 @@ createSklearnModel <- function(
     preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
-      requireDenseMatrix = requireDenseMatrix
+      requiresDenseMatrix = requiresDenseMatrix
     ),
     covariateImportance = data.frame(
       columnId = covariateMap$columnId,
@@ -140,7 +140,7 @@ createSklearnModel <- function(
 
   attr(plpModel, "modelType") <- "binary"
   attr(plpModel, "saveType") <- "file"
-  attr(plpModel, "predictionFunction") <- "predictPythonSklearn"
+  attr(plpModel, "predictionFunction") <- "predictSklearn" # TODO check this works?
   attr(plpModel, "saveToJson") <- !isPickle
   class(plpModel) <- "plpModel"
   return(plpModel)

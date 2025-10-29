@@ -39,7 +39,7 @@
 #'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
-#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param requiresDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
 #' 
 #' @return A model object containing the model (Coefficients and intercept)
 #' and the prediction function.
@@ -65,7 +65,7 @@ createGlmModel <- function(
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
     featureEngineering = NULL,
     tidyCovariates = NULL,
-    requireDenseMatrix = FALSE
+    requiresDenseMatrix = FALSE
 ) {
   
   checkDataframe(coefficients, 
@@ -82,7 +82,7 @@ createGlmModel <- function(
   checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
   
-  checkIsClass(requireDenseMatrix, c("logical"))
+  checkIsClass(requiresDenseMatrix, c("logical"))
 
   model <- list(
     intercept = intercept,
@@ -103,7 +103,7 @@ createGlmModel <- function(
     preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
-      requireDenseMatrix = requireDenseMatrix
+      requiresDenseMatrix = requiresDenseMatrix
     ),
     covariateImportance = data.frame(
       covariateId = coefficients$covariateId,

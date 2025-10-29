@@ -20,9 +20,16 @@
 fitCyclopsModel <- function(
     trainData,
     modelSettings, # old:param,
+    hyperparameterSettings = NULL,
     search = "adaptive",
     analysisId,
     ...) {
+  
+  # if hyperparameterSettings not NULL warn it is ignored
+  if(!is.null(hyperparameterSettings)){
+    warning('hyperparameterSettings ignored for Cyclops models')
+  }
+  
   param <- modelSettings$param
 
   # check plpData is coo format:
@@ -30,7 +37,7 @@ fitCyclopsModel <- function(
     stop("Needs correct covariateData")
   }
 
-  settings <- attr(param, "settings")
+  settings <- modelSettings$settings
 
   trainData$covariateData$labels <- trainData$labels %>%
     dplyr::mutate(
@@ -61,7 +68,7 @@ fitCyclopsModel <- function(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
     addIntercept = settings$addIntercept,
-    modelType = modelTypeToCyclopsModelType(settings$modelType),
+    modelType = modelTypeToCyclopsModelType(settings$cyclopsModelType),
     checkRowIds = FALSE,
     normalize = NULL,
     quiet = TRUE
@@ -130,7 +137,7 @@ fitCyclopsModel <- function(
 
   modelTrained <- createCyclopsModel(
     fit = fit,
-    modelType = settings$modelType,
+    modelType = settings$cyclopsModelType,
     useCrossValidation = max(trainData$folds$index) > 1,
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
@@ -152,7 +159,7 @@ fitCyclopsModel <- function(
   # get prediction on test set:
   ParallelLogger::logTrace("Getting predictions on train set")
   tempModel <- list(model = modelTrained)
-  attr(tempModel, "modelType") <- attr(param, "modelType")
+  attr(tempModel, "modelType") <- settings$modelType
   prediction <- predictCyclops(
     plpModel = tempModel,
     cohort = trainData$labels,
@@ -198,7 +205,7 @@ fitCyclopsModel <- function(
     preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = FALSE
+      requiresDenseMatrix = FALSE
     ),
     prediction = prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
@@ -221,7 +228,7 @@ fitCyclopsModel <- function(
       attrition = attr(trainData, "metaData")$attrition,
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
-      modelName = settings$modelType,
+      modelName = settings$modelName,
       finalModelParameters = list(
         variance = modelTrained$priorVariance,
         log_likelihood = modelTrained$log_likelihood
@@ -234,8 +241,8 @@ fitCyclopsModel <- function(
 
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictCyclops"
-  attr(result, "modelType") <- attr(param, "modelType")
-  attr(result, "saveType") <- attr(param, "saveType")
+  attr(result, "modelType") <- settings$modelType
+  attr(result, "saveType") <- settings$saveType
   return(result)
 }
 
