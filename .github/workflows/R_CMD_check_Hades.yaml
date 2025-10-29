@@ -73,8 +73,6 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
-        env:
-          UV_PYTHON: ${{ steps.py.outputs.python-path }}
         with:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"warning"'
