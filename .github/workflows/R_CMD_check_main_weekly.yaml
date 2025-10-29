@@ -45,6 +45,7 @@ jobs:
       CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
       CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
       CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
+      RETICULATE_PY_VERSION: 3.11
 
     steps:
       - uses: actions/checkout@v4
@@ -56,10 +57,6 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@v2
 
       - uses: r-lib/actions/setup-pandoc@v2
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
