@@ -1,6 +1,3 @@
-PatientLevelPrediction 6.5.1.9999
-======================
-
 PatientLevelPrediction 6.5.1
 ======================
 - [Bug] Remove old R condition from Rd files throug new roxygen2 (PR #603)
