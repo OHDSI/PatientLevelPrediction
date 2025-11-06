@@ -40,6 +40,7 @@
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
 #' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param modelName A name that will be used for the model type in the shiny viewer
 #' 
 #' @return A model object containing the model (Coefficients and intercept)
 #' and the prediction function.
@@ -65,7 +66,8 @@ createGlmModel <- function(
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
     featureEngineering = NULL,
     tidyCovariates = NULL,
-    requireDenseMatrix = FALSE
+    requireDenseMatrix = FALSE,
+    modelName = "existingGlm"
 ) {
   
   checkDataframe(coefficients, 
@@ -90,12 +92,22 @@ createGlmModel <- function(
     mapping = mapping,
     predictionFunction = "PatientLevelPrediction::predictGlm"
   )
-  # add param with modelType attribute 
-  param <- list()
+
+  # create unique model settings per model
+  param <- list(
+    model = model 
+  )
   attr(param, "settings") <- list(modelType = 'GLM')
+  
   existingModel <- list(
-    model = "existingGlm",
-    param = param
+    fitFunction = "existingGlm",
+    param = param,
+    settings = list(
+      modelName = modelName,
+      saveToJson = TRUE,
+      saveType = "RtoJson",
+      modelType = "binary"
+      )
   )
   class(existingModel) <- "modelSettings"
 
