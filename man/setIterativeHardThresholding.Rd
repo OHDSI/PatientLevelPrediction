@@ -48,7 +48,7 @@ setIterativeHardThresholding(
 Create setting for Iterative Hard Thresholding model
 }
 \examples{
-\dontshow{if (rlang::is_installed("IterativeHardThresholding")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("IterativeHardThresholding")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
 \dontshow{\}) # examplesIf}
 }

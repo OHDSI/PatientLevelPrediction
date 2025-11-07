@@ -35,7 +35,7 @@ manually add the concept_ids and descendants to the \code{excludedCovariateConce
 \code{covariateSettings} argument.
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
  # use Eunomia database
  connectionDetails <- Eunomia::getEunomiaConnectionDetails()

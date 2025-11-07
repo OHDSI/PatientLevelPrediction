@@ -39,7 +39,7 @@ Plot the outcome incidence over time
 This creates a survival plot that can be used to pick a suitable time-at-risk period
 }
 \examples{
-\dontshow{if (rlang::is_installed("survminer")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("survminer")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 999, seed = 42)
 plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)

@@ -17,7 +17,7 @@ An object of class \code{featureEngineeringSettings}
 Create the settings for removing rare features
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 # create a rare feature remover that removes features that are present in less
 # than 1\% of the population

@@ -33,7 +33,7 @@ This function create an sqlite database with the PLP result schema and inserts a
 This function can be used upload PatientLevelPrediction results into an sqlite database
 }
 \examples{
-\dontshow{if (rlang::is_installed("RSQLite") && rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("RSQLite") && rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 plpData <- getEunomiaPlpData()
 saveLoc <- file.path(tempdir(), "insertResultsToSqlite")

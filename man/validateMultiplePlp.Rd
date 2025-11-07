@@ -38,7 +38,7 @@ Users need to input a location where the results of the multiple plp analyses
 are found and the connection and database settings for the new data
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long to run }
 # first develop a model using runMultiplePlp
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()

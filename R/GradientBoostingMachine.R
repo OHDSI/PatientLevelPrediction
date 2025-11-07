@@ -124,16 +124,16 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     threads = nthread[1],
     varImpRFunction = "varImpXgboost",
     trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost"
+    predictRFunction = "predictXgboost",
+    saveToJson = TRUE,
+    saveType = "xgboost"
     # add data conversion function?
   )
 
   result <- list(
-    fitFunction = "fitRclassifier", # or fitBinaryClassifier?
+    fitFunction = "fitBinaryClassifier",
     param = param,
-    settings = settings,
-    saveToJson = TRUE,
-    saveType = "xgboost"
+    settings = settings
   )
 
   class(result) <- "modelSettings"
@@ -248,7 +248,7 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc",
+      eval_metric = "auc", # TODO make this flexible?
       nthread = settings$threads
     ),
     nrounds = hyperParameters$ntrees,
