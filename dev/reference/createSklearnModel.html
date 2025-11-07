@@ -78,7 +78,8 @@ PLP framework</p>
 <span>  covariateSettings <span class="op">=</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createDefaultCovariateSettings.html" class="external-link">createDefaultCovariateSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  featureEngineering <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tidyCovariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  modelName <span class="op">=</span> <span class="st">"existingSklearn"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,6 +138,10 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 
 <dt id="arg-requiredensematrix">requireDenseMatrix<a class="anchor" aria-label="anchor" href="#arg-requiredensematrix"></a></dt>
 <dd><p>Specify whether the model needs a dense matrix (TRUE or FALSE)</p></dd>
+
+
+<dt id="arg-modelname">modelName<a class="anchor" aria-label="anchor" href="#arg-modelname"></a></dt>
+<dd><p>A name that will show as the model type in the shiny app</p></dd>
 
 </dl></div>
     <div class="section level2">

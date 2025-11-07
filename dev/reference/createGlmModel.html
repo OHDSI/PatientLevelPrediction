@@ -78,7 +78,8 @@ PatientLevelPrediction package.</p>
 <span>  covariateSettings <span class="op">=</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createDefaultCovariateSettings.html" class="external-link">createDefaultCovariateSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  featureEngineering <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tidyCovariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  modelName <span class="op">=</span> <span class="st">"existingGlm"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,6 +138,10 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 <dt id="arg-requiredensematrix">requireDenseMatrix<a class="anchor" aria-label="anchor" href="#arg-requiredensematrix"></a></dt>
 <dd><p>Specify whether the model needs a dense matrix (TRUE or FALSE)</p></dd>
 
+
+<dt id="arg-modelname">modelName<a class="anchor" aria-label="anchor" href="#arg-modelname"></a></dt>
+<dd><p>A name that will be used for the model type in the shiny viewer</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -159,8 +164,8 @@ and the prediction function.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> did FE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> did tidy</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.158 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.164 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.152 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.158 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644 0.3543437 0.3318122</span>
