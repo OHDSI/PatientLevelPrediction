@@ -47,6 +47,7 @@
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
 #' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param modelName A name that will show as the model type in the shiny app
 #'
 #' @return
 #' An object of class plpModel, this is a list that contains: 
@@ -74,7 +75,8 @@ createSklearnModel <- function(
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
     featureEngineering = NULL,
     tidyCovariates = NULL,
-    requireDenseMatrix = FALSE
+    requireDenseMatrix = FALSE,
+    modelName = "existingSklearn"
     ) {
   reticulate::py_require("scikit-learn")
   checkSklearn()
@@ -96,11 +98,20 @@ createSklearnModel <- function(
   
   # start to make the plpModel
   # add param with modelType attribute 
-  param <- list()
+  param <- list(
+    model = modelLocation
+  )
   attr(param, "settings") <- list(modelType = 'Sklearn')
+  
   existingModel <- list(
-    model = "existingSklearn",
-    param = param
+    fitFunction = "existingSklearn",
+    param = param,
+    settings = list(
+      modelName = modelName,
+      saveToJson = !isPickle,
+      saveType = "file",
+      modelType = "binary"
+    )
   )
   class(existingModel) <- "modelSettings"
 
