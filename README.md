@@ -55,7 +55,7 @@ Screenshots
 
 </td>
 <td width = 50%>
-<img src="vignettes/images/sparseROC.avif" alt="ROC plot" title="ROC plot" />
+<img src="vignettes/images/sparseRoc.avif" alt="ROC plot" title="ROC plot" />
 
 </td>
 </tr><tr>
