@@ -197,6 +197,7 @@ predictGlm <- function(plpModel, data, cohort) {
   prediction <- merge(cohort, prediction, by = "rowId", all.x = TRUE, fill = 0)
   prediction$value[is.na(prediction$value)] <- 0
   prediction$value <- prediction$value + plpModel$model$intercept
+  prediction$rawValue <- prediction$value
   
   if (plpModel$model$mapping == "linear") {
     prediction$value <- prediction$value
@@ -206,17 +207,17 @@ predictGlm <- function(plpModel, data, cohort) {
     prediction$value <- prediction$value^2
   } else if (plpModel$model$mapping == "exponential") {
     prediction$value <- exp(prediction$value)
-  } else if(inherits(plpModel$model$mapping, "character")){
+  } else if (inherits(plpModel$model$mapping, "character")) {
     # if some other character try and convert it to a function
-    ParallelLogger::logInfo('Creating mapping function from function name')
+    ParallelLogger::logInfo("Creating mapping function from function name")
     mapFun <- eval(parse(text = plpModel$model$mapping))
-    ParallelLogger::logInfo('Applying mapping function')
+    ParallelLogger::logInfo("Applying mapping function")
     prediction$value <- mapFun(prediction$value)
-  } else if(inherits(plpModel$model$mapping, "function")){
-    ParallelLogger::logInfo('Applying mapping function')
+  } else if (inherits(plpModel$model$mapping, "function")) {
+    ParallelLogger::logInfo("Applying mapping function")
     prediction$value <- plpModel$model$mapping(prediction$value)
-  } else{
-    ParallelLogger::logInfo('No mapping applied due to invalid mapping')
+  } else {
+    ParallelLogger::logInfo("No mapping applied due to invalid mapping")
   }
   
   attr(prediction, "metaData")$modelType <- "binary"
