@@ -496,7 +496,7 @@ getCV <- function(
     } else {
       probsAll <- stats::predict(subset_fit)
       probsAllClipped <- pmin(pmax(probsAll, 1e-15), 1 - 1e-15)
-      rawValueAll <- qlogis(probsAllClipped)
+      rawValueAll <- stats::qlogis(probsAllClipped)
     }
 
     auc <- aucWithoutCi(rawValueAll[hold_out], labels$y[hold_out])
