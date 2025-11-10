@@ -66,10 +66,7 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...) {
 
     # auprc
     ParallelLogger::logTrace("Calculating AUPRC")
-    positive <- predictionOfInterest$value[predictionOfInterest$outcomeCount == 1]
-    negative <- predictionOfInterest$value[predictionOfInterest$outcomeCount == 0]
-    pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
-    auprc <- pr$auc.integral
+    auprc <- computeAuprc(predictionOfInterest)
     result <- rbind(
       result,
       c(evalType, "AUPRC", auprc)
@@ -373,6 +370,37 @@ computeAuc <- function(
   } else {
     return(aucWithoutCi(prediction = scores, truth = prediction$outcomeCount))
   }
+}
+
+#' Compute the area under the Precision-Recall curve
+#'
+#' @details
+#' Computes the area under the Precision-Recall curve for the predicted scores, given the true observed
+#' outcomes.
+#'
+#' @param prediction            A prediction object as generated using the
+#'                              \code{\link{predict}} functions.
+#'
+#' @return A numeric value containing the AUPRC
+#' @examples
+#' prediction <- data.frame(
+#'   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
+#'   outcomeCount = c(0, 1, 0, 1, 1))
+#' computeAuprc(prediction)
+#' @export
+computeAuprc <- function(prediction) {
+  checkDataframe(prediction, c("value", "outcomeCount"), c("numeric", "numeric"))
+  scores <- if ("rawValue" %in% colnames(prediction)) {
+    checkDataframe(prediction, c("rawValue"), c("numeric"))
+    prediction$rawValue
+  } else {
+    prediction$value
+  }
+
+  positives <- scores[prediction$outcomeCount == 1]
+  negatives <- scores[prediction$outcomeCount == 0]
+  pr <- PRROC::pr.curve(scores.class0 = positives, scores.class1 = negatives)
+  return(as.double(pr$auc.integral))
 }
 
 aucWithCi <- function(prediction, truth) {
