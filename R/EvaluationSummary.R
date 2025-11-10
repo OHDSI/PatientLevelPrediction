@@ -361,9 +361,9 @@ computeAuc <- function(
     prediction,
     confidenceInterval = FALSE) {
   checkDataframe(prediction, c("value", "outcomeCount"), c("numeric", "numeric"))
-  if ("linearPredictor" %in% colnames(prediction)) {
-    checkDataframe(prediction, c("linearPredictor"), c("numeric"))
-    scores <- prediction$linearPredictor
+  if ("rawValue" %in% colnames(prediction)) {
+    checkDataframe(prediction, c("rawValue"), c("numeric"))
+    scores <- prediction$rawValue
   } else {
     scores <- prediction$value
   }

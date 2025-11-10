@@ -337,22 +337,22 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by = "rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
-    prediction$linearPredictor <- prediction$value + intercept
+    prediction$rawValue <- prediction$value + intercept
   } else {
     warning("Model had no non-zero coefficients so predicted same for all population...")
     prediction <- population
-    prediction$linearPredictor <- rep(0, nrow(population)) + intercept
+    prediction$rawValue <- rep(0, nrow(population)) + intercept
   }
   if (modelType == "logistic") {
     link <- function(x) {
       return(1 / (1 + exp(0 - x)))
     }
-    prediction$value <- link(prediction$linearPredictor)
+    prediction$value <- link(prediction$rawValue)
     attr(prediction, "metaData")$modelType <- "binary"
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     # add baseline hazard stuff
 
-    prediction$value <- exp(prediction$linearPredictor)
+    prediction$value <- exp(prediction$rawValue)
     attr(prediction, "metaData")$modelType <- "survival"
     if (modelType == "survival") { # is this needed?
       attr(prediction, "metaData")$timepoint <- max(population$survivalTime, na.rm = TRUE)
@@ -492,19 +492,19 @@ getCV <- function(
         modelType = modelType
       )
       probsAll <- predAll$value
-      linearPredictorAll <- predAll$linearPredictor
+      rawValueAll <- predAll$rawValue
     } else {
       probsAll <- stats::predict(subset_fit)
       probsAllClipped <- pmin(pmax(probsAll, 1e-15), 1 - 1e-15)
-      linearPredictorAll <- qlogis(probsAllClipped)
+      rawValueAll <- qlogis(probsAllClipped)
     }
 
-    auc <- aucWithoutCi(linearPredictorAll[hold_out], labels$y[hold_out])
+    auc <- aucWithoutCi(rawValueAll[hold_out], labels$y[hold_out])
 
     predCV <- cbind(
       labels[hold_out, ],
       value = probsAll[hold_out],
-      linearPredictor = linearPredictorAll[hold_out]
+      rawValue = rawValueAll[hold_out]
     )
     return(list(
       out_sample_auc = auc,

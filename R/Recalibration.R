@@ -123,18 +123,18 @@ recalibratePlpRefit <- function(
 
   oldPred$evaluationType <- "validation"
 
-  addLinearPredictorIfMissing <- function(pred) {              
+  addRawValueIfMissing <- function(pred) {              
       mt <- attr(pred, "metaData")$modelType                     
-      if (!is.null(mt) && mt == "binary" && !("linearPredictor" %in% names(pred))) {
+      if (!is.null(mt) && mt == "binary" && !("rawValue" %in% names(pred))) {
         eps <- .Machine$double.eps                               
         p <- pmin(pmax(pred$value, eps), 1 - eps)               
-        pred$linearPredictor <- stats::qlogis(p)               
+        pred$rawValue <- stats::qlogis(p)               
       }                                                       
       pred                                                   
     }                                                       
 
-    oldPred <- addLinearPredictorIfMissing(oldPred)        
-    newModel$prediction <- addLinearPredictorIfMissing(newModel$prediction) 
+    oldPred <- addRawValueIfMissing(oldPred)        
+    newModel$prediction <- addRawValueIfMissing(newModel$prediction) 
 
     commonCols <- union(names(oldPred), names(newModel$prediction))  
     missingOld <- setdiff(commonCols, names(oldPred))               
@@ -251,9 +251,9 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 
     recalibrated <- prediction
 
-    if ("linearPredictor" %in% names(recalibrated))  {
-      recalibrated$linearPredictor <- recalibrated$linearPredictor + correctionFactor
-      recalibrated$value <- stats::plogis(recalibrated$linearPredictor)
+    if ("rawValue" %in% names(recalibrated))  {
+      recalibrated$rawValue <- recalibrated$rawValue + correctionFactor
+      recalibrated$value <- stats::plogis(recalibrated$rawValue)
     } else {
       p <- pmin(pmax(recalibrated$value, eps), 1 - eps)
       lp <- stats::qlogis(p) + correctionFactor
@@ -291,8 +291,8 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     recalibrated <- prediction
     epsilon <- .Machine$double.eps
 
-    if ("linearPredictor" %in% names(recalibrated)) {
-      lp <- recalibrated$linearPredictor
+    if ("rawValue" %in% names(recalibrated)) {
+      lp <- recalibrated$rawValue
     } else {
       p <- pmin(pmax(recalibrated$value, epsilon), 1 - epsilon)
       lp <- stats::qlogis(p)
@@ -305,8 +305,8 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
 
     newLp <- refit$coefficients[1] + refit$coefficients[2] * lp
 
-    if ("linearPredictor" %in% names(recalibrated)) {
-      recalibrated$linearPredictor <- newLp
+    if ("rawValue" %in% names(recalibrated)) {
+      recalibrated$rawValue <- newLp
     }
     recalibrated$value <- stats::plogis(newLp)
 
@@ -337,8 +337,8 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     timepoint <- ifelse(is.null(attr(recalibrated, "timePoint")), 365, attr(recalibrated, "timePoint"))
     ParallelLogger::logInfo(paste0("recal initial timepoint: ", timepoint))
 
-    if ("linearPredictor" %in% names(recalibrated)) {
-      lp <- recalibrated$linearPredictor + offset
+    if ("rawValue" %in% names(recalibrated)) {
+      lp <- recalibrated$rawValue + offset
     } else {
       if (!is.null(baseline)) {
         lp <- log(log(1 - recalibrated$value) / log(baseline)) + offset
@@ -357,8 +357,8 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     f.slope <- survival::coxph(S ~ lp)
     h.slope <- max(survival::basehaz(f.slope)$hazard) # maximum OK because of prediction_horizon
     lp.slope <- stats::predict(f.slope)
-    if ("linearPredictor" %in% names(recalibrated)) {
-      recalibrated$linearPredictor <- lp.slope
+    if ("rawValue" %in% names(recalibrated)) {
+      recalibrated$rawValue <- lp.slope
     }
     recalibrated$value <- 1 - exp(-h.slope * exp(lp.slope))
     # 1-h.slope^exp(lp.slope)
