@@ -52,7 +52,7 @@ The user specifies a cohort and time period and then a covariate is constructed 
 cohort during the time periods relative to target population cohort index
 }
 \examples{
-\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long to run }
 library(DatabaseConnector)
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()

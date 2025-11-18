@@ -116,23 +116,24 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     alpha = alpha,
     scalePosWeight = scalePosWeight
   )
-
-
-  attr(param, "settings") <- list(
+  
+  settings <- list(
     modelType = "Xgboost",
     seed = seed[[1]],
     modelName = "Gradient Boosting Machine",
     threads = nthread[1],
     varImpRFunction = "varImpXgboost",
     trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost"
+    predictRFunction = "predictXgboost",
+    saveToJson = TRUE,
+    saveType = "xgboost"
+    # add data conversion function?
   )
 
-  attr(param, "saveType") <- "xgboost"
-
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    fitFunction = "fitBinaryClassifier",
+    param = param,
+    settings = settings
   )
 
   class(result) <- "modelSettings"
@@ -201,7 +202,12 @@ fitXgboost <- function(
     dataMatrix,
     labels,
     hyperParameters,
-    settings) {
+    settings
+    ) {
+  
+  # this function will just fit the parameters for given hyperparam
+  # values and data 
+  
   set.seed(settings$seed)
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
@@ -242,7 +248,7 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc",
+      eval_metric = "auc", # TODO make this flexible?
       nthread = settings$threads
     ),
     nrounds = hyperParameters$ntrees,

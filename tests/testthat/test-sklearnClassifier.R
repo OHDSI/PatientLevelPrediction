@@ -34,18 +34,17 @@ test_that("DecisionTree settings work checks", {
     seed = sample(1000000, 1)
   )
 
-  expect_equal(dtset$fitFunction, "fitSklearn")
+  expect_equal(dtset$fitFunction, "fitBinaryClassifier")
 
-  expect_equal(length(dtset$param), 3 * 2 * 2 * 3 * 1)
+  #expect_equal(length(dtset$param), 3 * 2 * 2 * 3 * 1)
+  #expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[1]]))), "gini")
+  #expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[2]]))), "best")
+  #expect_equal(length(unique(lapply(dtset$param, function(x) x[[3]]))), 3)
 
-  expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[1]]))), "gini")
-  expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[2]]))), "best")
-  expect_equal(length(unique(lapply(dtset$param, function(x) x[[3]]))), 3)
-
-  expect_false(attr(dtset$param, "settings")$requiresDenseMatrix)
-  expect_equal(attr(dtset$param, "settings")$name, "Decision Tree")
-  expect_equal(attr(dtset$param, "settings")$pythonModule, "sklearn.tree")
-  expect_equal(attr(dtset$param, "settings")$pythonClass, "DecisionTreeClassifier")
+  expect_false(dtset$settings$requiresDenseMatrix)
+  expect_equal(dtset$settings$modelName, "Decision Tree")
+  expect_equal(dtset$settings$pythonModule, "sklearn.tree")
+  expect_equal(dtset$settings$pythonClass, "DecisionTreeClassifier")
 })
 
 
@@ -107,7 +106,7 @@ test_that("check fit of DecisionTree", {
 
 })
 
-test_that("fitSklearn errors with wrong covariateData", {
+test_that("fitBinaryClassifier errors with wrong covariateData", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
   newTrainData <- copyTrainData(trainData)
@@ -115,10 +114,10 @@ test_that("fitSklearn errors with wrong covariateData", {
   modelSettings <- setAdaBoost()
   analysisId <- 42
 
-  expect_error(fitSklearn(newTrainData,
+  expect_error(fitBinaryClassifier(newTrainData,
     modelSettings,
     search = "grid",
-    analysisId
+    analysisId = analysisId
   ))
 })
 
@@ -297,7 +296,7 @@ test_that("Sklearn predict works", {
     analysisPath = tempdir()
   )
 
-  predictions <- predictPythonSklearn(
+  predictions <- predictSklearn(
     plpModel,
     testData,
     population

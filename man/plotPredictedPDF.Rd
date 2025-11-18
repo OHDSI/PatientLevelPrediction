@@ -33,7 +33,7 @@ Plot the Predicted probability density function, showing prediction overlap betw
 Create a plot showing the predicted probability density function, showing prediction overlap between true and false cases
 }
 \examples{
-\dontshow{if (rlang::is_installed("ggplot2")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("ggplot2")) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{ \dontshow{ # takes too long }
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
