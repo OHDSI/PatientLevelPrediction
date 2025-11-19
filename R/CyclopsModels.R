@@ -26,8 +26,10 @@ fitCyclopsModel <- function(
     ...) {
   
   # if hyperparameterSettings not NULL warn it is ignored
-  if(!is.null(hyperparameterSettings)){
-    warning('hyperparameterSettings ignored for Cyclops models')
+  if (!is.null(hyperparameterSettings)) {
+    if (hyperparameterSettings$search != "grid" && hyperparameterSettings$tuningMetric$name != "AUC") {
+      warning("Non-default hyperparameterSettings are not supported for Cyclops models.")
+    }
   }
   
   param <- modelSettings$param

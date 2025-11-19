@@ -76,9 +76,6 @@ fitPlp <- function(
     stop("covariateData is NULL")
   }
   checkIsClass(trainData$covariateData, "CovariateData")
-  if (is.null(modelSettings$fitFunction)) {
-    stop("No model specified")
-  }
   checkIsClass(modelSettings, "modelSettings")
 
   # =========================================================
@@ -86,7 +83,12 @@ fitPlp <- function(
   # =========================================================
 
   # Now apply the classifier:
-  fun <- eval(parse(text = modelSettings$fitFunction))
+  if (!is.null(modelSettings$fitFunction)) {
+    fun <- modelSettings$fitFunction
+  } else {
+    fun <- "fitClassifier"
+  }
+  fun <- eval(parse(text = fun))
   args <- list(
     trainData = trainData,
     modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?

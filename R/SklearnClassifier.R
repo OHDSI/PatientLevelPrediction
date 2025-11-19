@@ -74,23 +74,23 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
   )
 
   settings <- list(
-    modelType = "adaBoost",
+    modelType = "binary",
+
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "AdaBoost",
+    modelName = "adaboost",
     pythonModule = "sklearn.ensemble",
     pythonClass = "AdaBoostClassifier",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -147,6 +147,7 @@ setDecisionTree <- function(criterion = list("gini"),
                             classWeight = list(NULL),
                             seed = sample(1000000, 1)) {
   checkSklearn()
+  checkIsClass(seed, c("integer", "numeric"))
   checkIsClass(criterion, "list")
   checkIsClass(splitter, "list")
   checkIsClass(maxDepth, "list")
@@ -312,22 +313,21 @@ setDecisionTree <- function(criterion = list("gini"),
   )
 
   settings <- list(
-    modelType = "decisionTree",
+    modelName = "decisionTree",
     seed = seed[[1]],
     paramNames = names(param),
     requiresDenseMatrix = FALSE,
-    modelName = "Decision Tree",
     pythonModule = "sklearn.tree",
     pythonClass = "DecisionTreeClassifier",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn",
+    modelType = "binary"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -491,23 +491,22 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
   )
 
   settings <- list(
-    modelType = "mlp",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "Neural Network",
+    modelName = "mlp",
     pythonModule = "sklearn.neural_network",
     pythonClass = "MLPClassifier",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -569,24 +568,23 @@ setNaiveBayes <- function() {
   param <- list(none = "true")
 
   settings <- list(
-    modelType = "naiveBayes",
+    modelType = "binary",
     seed = as.integer(0),
     paramNames = c(),
     # use this for logging params
     requiresDenseMatrix = TRUE,
-    modelName = "Naive Bayes",
+    modelName = "naiveBayes",
     pythonModule = "sklearn.naive_bayes",
     pythonClass = "GaussianNB",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn"
   )
   checkSklearn()
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -739,23 +737,22 @@ setRandomForest <- function(ntrees = list(100, 500),
   )
 
   settings <- list(
-    modelType = "randomForest",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "Random forest",
+    modelName = "randomForest",
     pythonModule = "sklearn.ensemble",
     pythonClass = "RandomForestClassifier",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -857,23 +854,22 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
   )
 
   settings <- list(
-    modelType = "svm",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "Support Vector Machine",
+    modelName = "svm",
     pythonModule = "sklearn.svm",
     pythonClass = "SVC",
-    varImpRFunction = "varImpSklearn",
-    trainRFunction = "fitSklearn",
-    predictRFunction = "predictSklearn",
-    saveToJson = TRUE,
-    saveType = "file"
+    variableImportance = "varImpSklearn",
+    train = "fitSklearn",
+    predict = "predictSklearn",
+    prepareData = "toSparseM",
+    saveType = "saveLoadSklearn"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -906,29 +902,33 @@ SVCInputs <- function(classifier, param) {
 }
 
 
-# loading model
-loadPythonModel <- function(modelLocation){
+# loading pkl or json model
+loadPythonModel <- function(modelLocation) {
   
-  files <- dir(modelLocation)
-  
-  if ("model.json" %in% files) {
-    modelLocation <-
-      reticulate::r_to_py(file.path(modelLocation, "model.json"))
-    model <- sklearnFromJson(path = modelLocation)
-  } else if("model.pkl" %in% files){
-    os <- reticulate::import("os")
-    joblib <- reticulate::import("joblib", convert = FALSE)
-    modelLocation <-
-      reticulate::r_to_py(file.path(modelLocation, "model.pkl"))
-    model <- joblib$load(os$path$join(modelLocation))
-  } else{
-    stop('Cannot find python model in model directory')
+  if (dir.exists(modelLocation)) {
+    files <- dir(modelLocation)
+    if ("model.json" %in% files) {
+      chosenFile <- file.path(modelLocation, "model.json")
+      type <- "json"
+    } else if ("model.pkl" %in% files) {
+      chosenFile <- file.path(modelLocation, "model.pkl")
+      type <- "pkl"
+    } else {
+    stop("Cannot find python model in model directory")
+    }
+  } else {
+    chosenFile <- modelLocation
+    type <- tools::file_ext(modelLocation)
   }
-  
+
+  if (type == "json") { 
+    model <- sklearnFromJson(path = chosenFile)
+  } else if (type == "pkl") {
+    joblib <- reticulate::import("joblib")
+    model <- joblib$load(chosenFile)
+  }
   return(model)
 }
-  
-
 
 # ==== VAR IMP ==============
 # TODO- check varImp
@@ -936,10 +936,6 @@ varImpSklearn <- function(
     model,
     covariateMap
     ) {
-  
-  # load the model
-  model <- loadPythonModel(model)
-  
   variableImportance <- tryCatch(
       {
         reticulate::py_to_r(model$feature_importances_)
@@ -952,17 +948,17 @@ varImpSklearn <- function(
   
   # check this is correct columns  
   # think this should work as long as covariateMap columnId is ordered
-  if(!is.null(variableImportance)){
+  if (!is.null(variableImportance)) {
     variableImportance[is.na(variableImportance)] <- 0
     covariateMap$covariateValue <- unlist(variableImportance)
     covariateMap$included <- covariateMap$covariateValue != 0
-  } else{
+  } else {
     covariateMap$covariateValue <- 0
     covariateMap$included <- 1
   }
   
   covariateMap <- covariateMap %>%
-    dplyr::select('covariateId','covariateValue','included')
+    dplyr::select("covariateId", "covariateValue", "included")
   
   return(covariateMap)
 }
@@ -993,61 +989,56 @@ predictSklearn <- function(
   pythonData <- reticulate::r_to_py(newData)
   
   # load model
-  if(inherits(plpModel, 'plpModel')){
-    model <- loadPythonModel(plpModel$model)
-    
+  if (inherits(plpModel, "plpModel")) {
+    if (is.character(plpModel$model)) {
+      model <- loadPythonModel(plpModel$model)
+
+    } else {
+      model <- plpModel$model   
+    }
     # make dense if needed
-    if(!is.null(plpModel$preprocessing$requiresDenseMatrix)){
+    if (!is.null(plpModel$preprocessing$requiresDenseMatrix)) {
       if (plpModel$preprocessing$requiresDenseMatrix) {
         pythonData <- pythonData$toarray()
       }
     }
     
-  } else{
+  } else {
+    model <- plpModel
     
-    model <- loadPythonModel(plpModel)
-    
-    if(attr(plpModel, "requiresDenseMatrix")){
+    if (reticulate::py_to_r(model$dense)) {
       pythonData <- pythonData$toarray()
     }
-    
   }
     
   cohort <- predictValues(
     model = model,
     data = pythonData,
-    cohort = cohort,
-    type = attr(plpModel, "modelType")
+    cohort = cohort
   )
-  
   return(cohort)
 }
 
-predictValues <- function(model, data, cohort, type = "binary") {
+predictValues <- function(model, data, cohort) {
   predictionValue <- model$predict_proba(data)
   cohort$value <- reticulate::py_to_r(predictionValue)[, 2]
-  
   cohort <- cohort %>%
     dplyr::select(-"rowId") %>%
     dplyr::rename(rowId = "originalRowId")
-  
-  attr(cohort, "metaData")$modelType <- type
-  
+  attr(cohort, "metaData")$modelType <- "binary"
   return(cohort)
 }
 
 
 
 # ==== FITTING ==============
-# fits the model and returns the model temp location
+# fits the model and returns the model
 fitSklearn <- function(
     dataMatrix,
     labels,
     hyperParameters,
     settings
 ) {
-  
-  np <- reticulate::import("numpy")
   
   module <- reticulate::import(settings$pythonModule, convert = FALSE)
   classifier <- module[settings$pythonClass]
@@ -1066,29 +1057,10 @@ fitSklearn <- function(
     settings$seed,
     trainX,
     trainY,
-    np,
     settings$pythonClass
   )
-  
-  # save the model
-  joblib <- reticulate::import("joblib")
-  modelLocation <- createTempModelLoc()
-  if (!dir.exists(file.path(modelLocation))) {
-    dir.create(file.path(modelLocation), recursive = TRUE)
-  }
-  if (settings$saveToJson) {
-    sklearnToJson(
-      model = model,
-      path = file.path(modelLocation, "model.json")
-    )
-  } else {
-    joblib$dump(model, file.path(modelLocation, "model.pkl"), compress = TRUE)
-  }
-  
-  # need to pass info about whether predict converts to dense
-  attr(modelLocation, "requiresDenseMatrix") <- settings$requiresDenseMatrix
-  
-  return(modelLocation) # return model or modelLocation?
+  reticulate::py_set_attr(model, "dense", settings$requiresDenseMatrix)
+  model
 }
 
 fitPythonModel <- function(
@@ -1097,9 +1069,9 @@ fitPythonModel <- function(
     seed,
     trainX,
     trainY,
-    np,
     pythonClass
 ) {
+  np <- reticulate::import("numpy")
   ParallelLogger::logInfo(paste0("data X dim: ", trainX$shape[0], "x", trainX$shape[1]))
   ParallelLogger::logInfo(paste0(
     "data Y length: ",
@@ -1146,22 +1118,14 @@ fitPythonModel <- function(
   return(model)
 }
 
-
-
-# OLD HELPER - not used right now
-checkPySettings <- function(settings) {
-  checkIsClass(settings$seed, c("numeric", "integer"))
-  ParallelLogger::logDebug(paste0("classifier seed: ", settings$seed))
-  
-  checkIsClass(settings$requiresDenseMatrix, c("logical"))
-  ParallelLogger::logDebug(paste0("requiresDenseMatrix: ", settings$requiresDenseMatrix))
-  
-  checkIsClass(settings$name, c("character"))
-  ParallelLogger::logDebug(paste0("name: ", settings$name))
-  
-  checkIsClass(settings$pythonModule, c("character"))
-  ParallelLogger::logDebug(paste0("pythonModule: ", settings$pythonModule))
-  
-  checkIsClass(settings$pythonClass, c("character"))
-  ParallelLogger::logDebug(paste0("pythonClass: ", settings$pythonClass))
+saveLoadSklearn <- function() {
+  checkSklearn()
+  list(
+    save = function(model, file) {
+      sklearnToJson(model, file)
+    },
+    load = function(file) {
+      sklearnFromJson(file)
+    }
+  )
 }

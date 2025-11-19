@@ -414,8 +414,8 @@ test_that("message if model is null", {
   skip_if_not_installed(c("ResultModelManager", "Eunomia"))
   skip_if_offline()
   model2 <- list(noModel = TRUE)
-  attr(model2, "predictionFunction") <- "noModel"
-  attr(model2, "saveType") <- "RtoJson"
+  model2$modelDesign$modelSettings$settings$predict <- "noModel"
+  model2$modelDesign$modelSettings$settings$saveType <- "RtoJson"
   class(model2) <- "plpModel"
 
   plpResult2 <- plpResult

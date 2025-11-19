@@ -90,7 +90,7 @@ test_that("move model files when saveType is file", {
   write.csv(data.frame(a = 1, b = 2), file = file.path(saveLoc, "testMoveStart", "file.csv"), row.names = FALSE)
   plpModelTemp <- plpResult$model
   plpModelTemp$model <- file.path(saveLoc, "testMoveStart")
-  attr(plpModelTemp, "saveType") <- "file"
+  plpModelTemp$modelDesign$modelSettings$settings$saveType <- "file"
 
   savePlpModel(plpModel = plpModelTemp, dirPath = file.path(saveLoc, "testMoveEnd"))
 
@@ -118,8 +118,8 @@ test_that("savePlpResultError", {
 
 test_that("savePlpResult", {
   emptyModel <- list()
-  attr(emptyModel, "predictionFunction") <- "none"
-  attr(emptyModel, "saveType") <- "RtoJson"
+  emptyModel$modelDesign$modelSettings$settings$predict <- "none"
+  emptyModel$modelDesign$modelSettings$settings$saveType <- "RtoJson"
   class(emptyModel) <- "plpModel"
   emptyResult <- list(
     model = emptyModel,
@@ -145,8 +145,8 @@ test_that("loadPlpResultError", {
 
 test_that("loadPlpResult", {
   emptyModel <- list()
-  attr(emptyModel, "predictionFunction") <- "none"
-  attr(emptyModel, "saveType") <- "RtoJson"
+  emptyModel$modelDesign$modelSettings$settings$predict <- "none"
+  emptyModel$modelDesign$modelSettings$settings$saveType <- "RtoJson"
   class(emptyModel) <- "plpModel"
   emptyResult <- list(
     model = emptyModel,

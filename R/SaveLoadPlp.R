@@ -203,7 +203,7 @@ savePlpModel <- function(plpModel, dirPath) {
   # save the model part function to file
   saveModelPart(
     model = plpModel$model,
-    savetype = attr(plpModel, "saveType"),
+    savetype = plpModel$modelDesign$modelSettings$settings$saveType,
     dirPath = dirPath
   )
 
@@ -221,21 +221,8 @@ savePlpModel <- function(plpModel, dirPath) {
 
 saveModelPart <- function(model, savetype, dirPath) {
   # save the model based on saveType
-  if (savetype == "xgboost") {
-    xgboost::xgb.save(
-      model = model,
-      fname = file.path(dirPath, "model.json")
-    )
-  } else if (savetype == "lightgbm") {
-    lightgbm::lgb.save(
-      booster = model,
-      filename = file.path(dirPath, "model.json")
-    )
-  } else if (savetype == "RtoJson") {
-    ParallelLogger::saveSettingsToJson(
-      object = model,
-      fileName = file.path(dirPath, "model.json")
-    )
+  if (functionExists(savetype)) {
+    do.call(savetype, args = list())$save(model, file.path(dirPath, "model.json"))
   } else if (savetype == "file") {
     # move the model into model
     if (!dir.exists(file.path(dirPath, "model"))) {
@@ -353,14 +340,10 @@ loadPlpModel <- function(dirPath) {
   }
 
 
-  if (attr(plpModel, "saveType") == "xgboost") {
-    rlang::check_installed("xgboost")
-    plpModel$model <- xgboost::xgb.load(file.path(dirPath, "model.json"))
-  } else if (attr(plpModel, "saveType") == "lightgbm") {
-    rlang::check_installed("lightgbm")
-    plpModel$model <- lightgbm::lgb.load(file.path(dirPath, "model.json"))
-  } else if (attr(plpModel, "saveType") %in% c("RtoJson")) {
-    plpModel$model <- ParallelLogger::loadSettingsFromJson(file.path(dirPath, "model.json"))
+  if (functionExists(plpModel$modelDesign$modelSettings$settings$saveType)) { 
+    plpModel$model <- do.call(
+      plpModel$modelDesign$modelSettings$settings$saveType,
+      args = list())$load(file.path(dirPath, "model.json"))
   } else {
     plpModel$model <- file.path(dirPath, "model")
   }
@@ -909,4 +892,19 @@ applyMinCellCount <- function(
   }
 
   return(result)
+}
+
+
+RtoJson <- function() {
+  list(
+    save = function(model, filePath) {
+      ParallelLogger::saveSettingsToJson(
+        object = model,
+        fileName = filePath
+      )
+    },
+    load = function(filePath) {
+      ParallelLogger::loadSettingsFromJson(fileName = filePath)
+    }
+  )
 }

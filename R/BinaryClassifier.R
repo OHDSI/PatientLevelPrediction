@@ -1,70 +1,76 @@
-fitBinaryClassifier <- function(
-    trainData,
-    modelSettings,
-    hyperparameterSettings = createHyperparameterSettings(),
-    search = NULL, # redundant input - add warning if not null?
-    analysisId,
-    ...) {
-  
+fitClassifier <- function(
+  trainData,
+  modelSettings,
+  hyperparameterSettings = createHyperparameterSettings(),
+  search = NULL, # redundant input - add warning if not null?
+  analysisId,
+  ...
+) {
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)) {
-      stop("Needs correct covariateData")
+    stop("Needs correct covariateData")
   }
-  
+
   # add folds to labels if present:
   if (!is.null(trainData$folds)) {
     trainData$labels <- merge(trainData$labels, trainData$folds, by = "rowId")
   }
-  
-  # get the param 
+
+  # get the param
   param <- modelSettings$param
-  
+
   # get the settings
   settings <- modelSettings$settings
-  # backwards compatible 
-  if(is.null(settings)){
+  # backwards compatible
+  if (is.null(settings)) {
     settings <- attr(param, "settings")
   }
-  
+
   # TODO add a check for the settings?
   # like the old checkPySettings()
 
   ParallelLogger::logInfo(paste0("Training ", settings$modelName))
   start <- Sys.time()
   set.seed(settings$seed)
-  
-  
+
   # make sure the inputs are valid
   #TODO: make this generic
   #checkPySettings(settings)
-  
-  # convert data into sparse Matrix:
-  # TODO: make this a settings functions?
-  mappedData <- toSparseM(
-    trainData,
-    map = NULL
-  )
-  
-  dataMatrix <- mappedData$dataMatrix
-  labels <- mappedData$labels
-  covariateRef <- mappedData$covariateRef
-  
-  # Hyperparameter optimization 
+
+  # prepare data for training (if needed) 
+  if (!is.null(settings$prepareData)) {
+    preparedData <- do.call(
+      settings$prepareData,
+      args = list(
+        trainData,
+        map = NULL
+      )
+    )
+    covariates <- preparedData$dataMatrix
+  } else {
+    preparedData <- trainData
+    covariates <- preparedData$covariateData
+  }
+
+  labels <- preparedData$labels
+  covariateRef <- preparedData$covariateRef
+
+  # Hyperparameter optimization
   # input: matrixData, labels, settings, hyperparamSettings
   # output: model, prediction, finalParam, hyperSummary
   tuneResult <- tuneHyperparameters(
-    dataMatrix,
+    covariates,
     labels,
     param = param,
     settings = settings,
     hyperparamSettings = hyperparameterSettings
   )
-  
+
   # add code for var imp here - model and settings
-  
+
   variableImportance <- tryCatch(
     {
       do.call(
-        settings$varImpRFunction,
+        settings$variableImportance,
         list(model = tuneResult$model, covariateMap = covariateRef)
       )
     },
@@ -74,38 +80,55 @@ fitBinaryClassifier <- function(
       return(NULL)
     }
   )
-  
-  if(!is.null(variableImportance)){
-    covariateRef <- merge(covariateRef, variableImportance, all.x = TRUE,
-                          by = "covariateId")
+
+  if (!is.null(variableImportance)) {
+    covariateRef <- merge(
+      covariateRef,
+      variableImportance,
+      all.x = TRUE,
+      by = "covariateId"
+    )
     covariateRef$covariateValue[is.na(covariateRef$covariateValue)] <- 0
     covariateRef$included[is.na(covariateRef$included)] <- 0
-  } else{
+  } else {
     covariateRef$covariateValue <- 0
-    covariateRef$included <- 0
+    covariateRef$included <- 1
   }
 
-  
   comp <- start - Sys.time()
-  
+
   result <- list(
     model = tuneResult$model,
     preprocessing = list(
-      featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
-      tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings,
+      featureEngineering = attr(
+        trainData$covariateData,
+        "metaData"
+      )$featureEngineering,
+      tidyCovariates = attr(
+        trainData$covariateData,
+        "metaData"
+      )$tidyCovariateDataSettings,
       requiresDenseMatrix = settings$requiresDenseMatrix
     ),
     prediction = tuneResult$prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
       targetId = attr(trainData, "metaData")$targetId,
       outcomeId = attr(trainData, "metaData")$outcomeId,
-      restrictPlpDataSettings = attr(trainData, "metaData")$restrictPlpDataSettings,
-      # ADDING hyperparamSearch
+      restrictPlpDataSettings = attr(
+        trainData,
+        "metaData"
+      )$restrictPlpDataSettings,
       hyperparameterSettings = hyperparameterSettings,
       covariateSettings = attr(trainData, "metaData")$covariateSettings,
       populationSettings = attr(trainData, "metaData")$populationSettings,
-      featureEngineeringSettings = attr(trainData$covariateData, "metaData")$featureEngineeringSettings,
-      preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
+      featureEngineeringSettings = attr(
+        trainData$covariateData,
+        "metaData"
+      )$featureEngineeringSettings,
+      preprocessSettings = attr(
+        trainData$covariateData,
+        "metaData"
+      )$preprocessSettings,
       modelSettings = modelSettings,
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
@@ -122,32 +145,21 @@ fitBinaryClassifier <- function(
       finalModelParameters = tuneResult$finalParam,
       hyperParamSearch = tuneResult$paramSearch
     ),
-    covariateImportance = covariateRef #,
-    #attributes = list(
-    # predictionFunction = settings$predictFunction,
-    # modelType = "binary",
-    # saveType = settings$saveType
-    # saveToJson = settings$saveToJson
-    #)
+    covariateImportance = covariateRef
   )
-  
+
   class(result) <- "plpModel"
-  # remove attr and put this into attributes in result?
-  attr(result, "predictionFunction") <- settings$predictRFunction
-  attr(result, "modelType") <- "binary"
-  attr(result, "saveType") <- settings$saveType
-  attr(result, "saveToJson") <- settings$saveToJson
-  
   return(result)
 }
 
 
-tuneHyperparameters <- function(data, 
-                                labels, 
-                                param, 
-                                settings,
-                                hyperparamSettings) {
-  #settings <- attr(param, "settings")
+tuneHyperparameters <- function(
+  data,
+  labels,
+  param,
+  settings,
+  hyperparamSettings
+) {
   iterator <- prepareHyperparameterGrid(
     paramDefinition = param,
     hyperSettings = hyperparamSettings
@@ -156,17 +168,19 @@ tuneHyperparameters <- function(data,
   metric <- hyperparamSettings$tuningMetric
   bestPerformance <- if (metric$maximize) -Inf else Inf
   bestCvPrediction <- c()
-  
-  repeat  {
+
+  repeat {
     candidate <- iterator$getNext(history)
-    if (is.null(candidate)) break
+    if (is.null(candidate)) {
+      break
+    }
     cvPrediction <- c()
     cvPerformance <- c()
-    
+
     for (i in unique(labels$index)) {
       ind <- labels$index != i
       model <- do.call(
-        settings$trainRFunction,
+        settings$train,
         list(
           dataMatrix = data[ind, , drop = FALSE],
           labels = labels[ind, ],
@@ -175,7 +189,7 @@ tuneHyperparameters <- function(data,
         )
       )
       prediction <- do.call(
-        settings$predictRFunction,
+        settings$predict,
         list(
           plpModel = model,
           data = data[!ind, , drop = FALSE],
@@ -192,31 +206,47 @@ tuneHyperparameters <- function(data,
       param = candidate,
       cvPerformance = meanCvPerformance,
       cvPerformancePerFold = cvPerformance,
-      hyperSummary = makeHyperSummary(metric, meanCvPerformance, cvPerformance, candidate)
+      hyperSummary = makeHyperSummary(
+        metric,
+        meanCvPerformance,
+        cvPerformance,
+        candidate
+      )
     )
     bestPerformance <- if (metric$maximize) {
-      max(bestPerformance, meanCvPerformance, na.rm = TRUE) 
+      max(bestPerformance, meanCvPerformance, na.rm = TRUE)
     } else {
       min(bestPerformance, meanCvPerformance, na.rm = TRUE)
     }
     if (identical(bestPerformance, meanCvPerformance)) {
-      ParallelLogger::logInfo(paste0("New best performance ", round(bestPerformance, 4), " with param: ", paste(names(candidate), candidate, sep = "=", collapse = ", ")))
+      ParallelLogger::logInfo(paste0(
+        "New best performance ",
+        round(bestPerformance, 4),
+        " with param: ",
+        paste(names(candidate), candidate, sep = "=", collapse = ", ")
+      ))
       bestCvPrediction <- cvPrediction
     } else {
-      ParallelLogger::logInfo(paste0("Performance ", round(meanCvPerformance, 4), " with param: ", paste(names(candidate), candidate, sep = "=", collapse = ", ")))
+      ParallelLogger::logInfo(paste0(
+        "Performance ",
+        round(meanCvPerformance, 4),
+        " with param: ",
+        paste(names(candidate), candidate, sep = "=", collapse = ", ")
+      ))
     }
   }
   iterator$finalize(history)
   best <- selectBest(history, metric)
-  
+
   finalParam <- history[[best]]$param
-  
+
   cvPrediction <- bestCvPrediction
   cvPrediction$evaluationType <- "CV"
-  
+
   # fit final model
+  ParallelLogger::logInfo("Fit best model on whole training set")
   finalModel <- do.call(
-    settings$trainRFunction,
+    settings$train,
     list(
       dataMatrix = data,
       labels = labels,
@@ -224,31 +254,29 @@ tuneHyperparameters <- function(data,
       settings = settings
     )
   )
-  
+
   prediction <- do.call(
-    settings$predictRFunction,
+    settings$predict,
     list(
       plpModel = finalModel,
       data = data,
       cohort = labels
     )
   )
-  
+
   prediction$evaluationType <- "Train"
-  
+
   prediction <- rbind(
     prediction,
     cvPrediction
   )
-  
-  result <- list(
+
+  list(
     model = finalModel,
     prediction = prediction,
     finalParam = finalParam,
     paramSearch = history
   )
-  
-  return(result)
 }
 
 selectBest <- function(history, metric) {
@@ -258,24 +286,27 @@ selectBest <- function(history, metric) {
   } else {
     best <- which.min(performances)
   }
-  return(best)
+  best
 }
 
-makeHyperSummary <- function(metric, meanScore, foldScores, param) { 
+makeHyperSummary <- function(metric, meanScore, foldScores, param) {
   perfRows <- data.frame(
     metric = metric$name,
     fold = c("CV", paste0("Fold", seq_along(foldScores))),
     value = c(meanScore, foldScores),
     stringsAsFactors = FALSE
   )
-  paramValues <- lapply(param, function(x) { 
-    if (is.null(x)) "null"
-    else if (length(x) == 1) x
-    else paste(x, collapse = ",")
+  paramValues <- lapply(param, function(x) {
+    if (is.null(x)) {
+      "null"
+    } else if (length(x) == 1) {
+      x
+    } else {
+      paste(x, collapse = ",")
+    }
   })
   paramDf <- as.data.frame(paramValues, stringsAsFactors = FALSE)
   paramDf <- paramDf[rep(1L, nrow(perfRows)), , drop = FALSE]
-  
+
   cbind(perfRows, paramDf, row.names = NULL)
 }
-

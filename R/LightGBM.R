@@ -99,19 +99,18 @@ setLightGBM <- function(nthread = 20,
 
 
   settings <- list(
-    modelType = "LightGBM",
     seed = seed[[1]],
     modelName = "LightGBM",
     threads = nthread[1],
-    varImpRFunction = "varImpLightGBM",
-    trainRFunction = "fitLightGBM",
-    predictRFunction = "predictLightGBM",
-    saveToJson = TRUE,
-    saveType = "lightgbm"
+    variableImportance = "varImpLightGBM",
+    train = "fitLightGBM",
+    predict = "predictLightGBM",
+    prepareData = "toSparseM",
+    saveType = "saveLoadLightGBM",
+    modelType = "binary"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
@@ -230,4 +229,16 @@ fitLightGBM <- function(dataMatrix,
   )
 
   return(model)
+}
+
+saveLoadLightGBM <- function() {
+  rlang::check_installed("lightgbm")
+  list(
+    save = function(model, file) {
+      lightgbm::lgb.save(model, file)
+    },
+    load = function(file) {
+      lightgbm::lgb.load(file)
+    }
+  )
 }

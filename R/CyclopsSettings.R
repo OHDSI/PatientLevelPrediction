@@ -87,12 +87,12 @@ setLassoLogisticRegression <- function(
     seed = seed[1],
     modelName = "Lasso Logistic Regression",
     threads = threads[1],
-    tolerance = tolerance[1], # 2e-06
-    cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1], # 3000
-    saveToJson = TRUE,
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
     saveType = "RtoJson",
-    modelType = "binary"
+    modelType = "binary",
+    predict = "predictCyclops"
   )
 
   result <- list(
@@ -169,11 +169,11 @@ setCoxModel <- function(
     seed = seed[1],
     modelName = "LASSO Cox Regression",
     threads = threads[1],
-    tolerance = tolerance[1], # 2e-07
-    cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1], # 3000
-    saveToJson = TRUE,
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
     saveType = "RtoJson",
+    predict = "predictCyclops",
     modelType = "survival"
   )
 
@@ -267,7 +267,7 @@ setIterativeHardThresholding <- function(
     useControl = FALSE,
     seed = seed[1],
     modelName = "Iterative Hard Thresholding",
-    saveToJson = TRUE,
+    predict = "predictCyclops",
     saveType = "RtoJson",
     modelType = "binary"
   )

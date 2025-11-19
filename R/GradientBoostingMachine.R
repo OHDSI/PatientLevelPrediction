@@ -118,29 +118,24 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
   )
   
   settings <- list(
-    modelType = "Xgboost",
+    modelName = "Xgboost",
+    modelType = "binary",
     seed = seed[[1]],
-    modelName = "Gradient Boosting Machine",
     threads = nthread[1],
-    varImpRFunction = "varImpXgboost",
-    trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost",
-    saveToJson = TRUE,
-    saveType = "xgboost"
-    # add data conversion function?
+    variableImportance = "varImpXgboost",
+    train = "fitXgboost",
+    predict = "predictXgboost",
+    prepareData = "toSparseM",
+    saveType = "saveLoadXgboost"
   )
 
   result <- list(
-    fitFunction = "fitBinaryClassifier",
     param = param,
     settings = settings
   )
-
   class(result) <- "modelSettings"
-
   return(result)
 }
-
 
 
 varImpXgboost <- function(
@@ -260,4 +255,16 @@ fitXgboost <- function(
   model <- do.call(xgboost::xgb.train, trainArgs)
 
   return(model)
+}
+
+saveLoadXgboost <- function() {
+  rlang::check_installed("xgboost")
+  list(
+    save = function(model, file) {
+      xgboost::xgb.save(model, file)
+    },
+    load = function(file) {
+      xgboost::xgb.load(file)
+    }
+  )
 }

@@ -322,3 +322,9 @@ cut2 <- function(x, g, m = 150, digits = 3) {
 
   return(y)
 }
+
+
+functionExists <- function(name, envir = parent.frame()) {
+  is.character(name) && length(name) == 1L && name != "file" &&
+    exists(name, envir = envir, mode = "function", inherits = TRUE)
+}

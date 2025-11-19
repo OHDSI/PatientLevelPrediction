@@ -33,17 +33,16 @@ test_that("GBM settings work", {
   )
 
   expect_s3_class(gbmSet, "modelSettings")
-  expect_equal(gbmSet$fitFunction, "fitBinaryClassifier")
   expect_type(gbmSet$param, "list")
 
-  expect_equal(gbmSet$settings$modelType, "Xgboost")
+  expect_equal(gbmSet$settings$modelType, "binary")
   expect_equal(gbmSet$settings$seed, seed)
-  expect_equal(gbmSet$settings$modelName, "Gradient Boosting Machine")
+  expect_equal(gbmSet$settings$modelName, "Xgboost")
 
   expect_equal(gbmSet$settings$threads, 5)
-  expect_equal(gbmSet$settings$varImpRFunction, "varImpXgboost")
-  expect_equal(gbmSet$settings$trainRFunction, "fitXgboost")
-  expect_equal(gbmSet$settings$predictRFunction, "predictXgboost")
+  expect_equal(gbmSet$settings$variableImportance, "varImpXgboost")
+  expect_equal(gbmSet$settings$train, "fitXgboost")
+  expect_equal(gbmSet$settings$predict, "predictXgboost")
 })
 
 

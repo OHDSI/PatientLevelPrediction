@@ -94,7 +94,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
   # apply prediction function
   prediction <- do.call(
-    eval(parse(text = attr(plpModel, "predictionFunction"))),
+    eval(parse(text = plpModel$modelDesign$modelSettings$settings$predict)),
     list(
       plpModel = plpModel,
       data = plpData,
@@ -109,7 +109,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   # add metaData
-  metaData$modelType <- attr(plpModel, "modelType") # "binary",
+  metaData$modelType <- plpModel$modelDesign$modelSettings$settings$modelType
   metaData$targetId <- attr(population, "metaData")$targetId
   metaData$outcomeId <- attr(population, "metaData")$outcomeId
   metaData$timepoint <- timepoint
