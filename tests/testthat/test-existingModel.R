@@ -241,7 +241,7 @@ test_that("Create existing GLM model works", {
     covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE), 
     populationSettings = createStudyPopulationSettings(), 
     restrictPlpDataSettings = createRestrictPlpDataSettings(),
-    requiresDenseMatrix = TRUE
+    requireDenseMatrix = TRUE
   )
   expect_equal(model$modelDesign$targetId, 33)
   expect_equal(model$modelDesign$outcomeId, 1)
