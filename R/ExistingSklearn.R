@@ -45,7 +45,8 @@
 #'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
-#' @param requiresDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param modelName A name that will show as the model type in the shiny app
 #'
 #' @return
 #' An object of class plpModel, this is a list that contains:
@@ -60,21 +61,22 @@
 #' apply the model and calculate the risk for patients.
 #' @export
 createSklearnModel <- function(
-  modelLocation = "/model", # model needs to be saved here as "model.pkl"
-  covariateMap = data.frame(
-    columnId = 1:2,
-    covariateId = c(1, 2),
-  ),
-  isPickle = TRUE,
-  targetId = NULL,
-  outcomeId = NULL,
-  populationSettings = createStudyPopulationSettings(),
-  restrictPlpDataSettings = createRestrictPlpDataSettings(),
-  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
-  featureEngineering = NULL,
-  tidyCovariates = NULL,
-  requiresDenseMatrix = FALSE
-) {
+    modelLocation = "/model", # model needs to be saved here as "model.pkl"
+    covariateMap = data.frame(
+      columnId = 1:2,
+      covariateId = c(1, 2),
+    ),
+    isPickle = TRUE,
+    targetId = NULL,
+    outcomeId = NULL,
+    populationSettings = createStudyPopulationSettings(),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    featureEngineering = NULL,
+    tidyCovariates = NULL,
+    requireDenseMatrix = FALSE,
+    modelName = "existingSklearn"
+    ) {
   reticulate::py_require("scikit-learn")
   checkSklearn()
   checkFileExists(modelLocation)
@@ -93,16 +95,19 @@ createSklearnModel <- function(
   checkIsClass(restrictPlpDataSettings, c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
 
-  checkIsClass(requiresDenseMatrix, c("logical"))
+  checkIsClass(requireDenseMatrix, c("logical"))
 
   # start to make the plpModel
-  # add param with modelType attribute
-  param <- list()
-  attr(param, "settings") <- list(modelType = "Sklearn")
+  # add param with modelType attribute 
+  param <- list(
+    model = modelLocation
+  )
+
   existingModel <- list(
     model = "existingSklearn",
     param = param,
     settings = list(
+      modelName = modelName,
       predict = "predictSklearn",
       modelType = "binary",
       saveType = "file"
@@ -114,7 +119,7 @@ createSklearnModel <- function(
     preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
-      requiresDenseMatrix = requiresDenseMatrix
+      requiresDenseMatrix = requireDenseMatrix
     ),
     covariateImportance = data.frame(
       columnId = covariateMap$columnId,

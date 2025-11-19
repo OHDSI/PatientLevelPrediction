@@ -39,8 +39,9 @@
 #'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
-#' @param requiresDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
-#'
+#' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param modelName A name that will be used for the model type in the shiny viewer
+#' 
 #' @return A model object containing the model (Coefficients and intercept)
 #' and the prediction function.
 #' @examples
@@ -55,18 +56,18 @@
 #' prediction$value
 #' @export
 createGlmModel <- function(
-  coefficients,
-  intercept = 0,
-  mapping = "logistic",
-  targetId = NULL,
-  outcomeId = NULL,
-  populationSettings = createStudyPopulationSettings(),
-  restrictPlpDataSettings = createRestrictPlpDataSettings(),
-  covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
-  featureEngineering = NULL,
-  tidyCovariates = NULL,
-  requiresDenseMatrix = FALSE
-) {
+    coefficients,
+    intercept = 0,
+    mapping = "logistic",
+    targetId = NULL,
+    outcomeId = NULL,
+    populationSettings = createStudyPopulationSettings(),
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
+    featureEngineering = NULL,
+    tidyCovariates = NULL,
+    requireDenseMatrix = FALSE,
+    modelName = "existingGlm") {
   checkDataframe(
     coefficients,
     c("covariateId", "coefficient"),
@@ -83,7 +84,7 @@ createGlmModel <- function(
   checkIsClass(restrictPlpDataSettings, c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
 
-  checkIsClass(requiresDenseMatrix, c("logical"))
+  checkIsClass(requireDenseMatrix, c("logical"))
 
   model <- list(
     intercept = intercept,
@@ -91,17 +92,18 @@ createGlmModel <- function(
     mapping = mapping,
     predictionFunction = "PatientLevelPrediction::predictGlm"
   )
-  # add param with modelType attribute
-  param <- list()
-  attr(param, "settings") <- list(modelType = "GLM")
+  # create unique model settings per model
+  param <- list(
+    model = model 
+  )
   existingModel <- list(
-    model = "existingGlm",
     param = param,
     settings = list(
-      modelType = "binary",
+      modelName = modelName,
+      predict = "predictGlm",
       saveType = "RtoJson",
-      predict = "predictGlm"
-    )
+      modelType = "binary"
+      )
   )
   class(existingModel) <- "modelSettings"
 
@@ -109,7 +111,7 @@ createGlmModel <- function(
     preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
-      requiresDenseMatrix = requiresDenseMatrix
+      requiresDenseMatrix = requireDenseMatrix
     ),
     covariateImportance = data.frame(
       covariateId = coefficients$covariateId,

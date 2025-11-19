@@ -154,7 +154,7 @@ test_that("Externally trained sklearn model works", {
   createDir(path)
   joblib$dump(classifier, file.path(path, "model.pkl"))
   plpModel <- createSklearnModel(
-    model = path,
+    modelLocation = path,
     covariateMap = matrixData$covariateMap,
     covariateSettings = FeatureExtraction::createCovariateSettings(
       useDemographicsAge = TRUE
