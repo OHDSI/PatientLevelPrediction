@@ -50,15 +50,9 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 
 \item{tidyCovariates}{Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)}
 
-<<<<<<< HEAD
-\item{requiresDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
-||||||| 8a6cb8c8
-\item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
-=======
 \item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
 
 \item{modelName}{A name that will show as the model type in the shiny app}
->>>>>>> develop
 }
 \value{
 An object of class plpModel, this is a list that contains:

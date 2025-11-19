@@ -39,7 +39,7 @@ open a local shiny app for viewing the result of a PLP analyses from a database
 Opens a shiny app for viewing the results of the models from a database
 }
 \examples{
-\dontshow{if (rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  ) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_interactive() && rlang::is_installed("Eunomia") && rlang::is_installed("OhdsiShinyAppBuilder") && rlang::is_installed("curl") && curl::has_internet()  ) withAutoprint(\{ # examplesIf}
 \donttest{  \dontshow{ # takes too long }
 connectionDetails <- Eunomia::getEunomiaConnectionDetails()
 Eunomia::createCohorts(connectionDetails)
