@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RSPM: https://packagemanager.posit.co/cran/latest
-  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}   
+  RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
   R_KEEP_PKG_SOURCE: yes                    
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
         env:
           INPUT_REPOS: ${{ github.event.inputs.repos }}
         run: |
-          Rscript extras/runRevdeps.R
+          Rscript extras/revDeps.R
 
       - name: Upload results
         if: always()
