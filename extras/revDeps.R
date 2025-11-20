@@ -29,7 +29,7 @@ safe <- function(expr, default = NULL) {
   })
 }
 
-runOneRepo <- function(ownerRepo, timeoutMin = 30L) {
+runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
   start <- Sys.time()
   outDir <- file.path(
     "revdep",
