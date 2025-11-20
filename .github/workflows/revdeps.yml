@@ -55,7 +55,7 @@ jobs:
         env:
           INPUT_REPOS: ${{ github.event.inputs.repos }}
         run: |
-          Rscript extras/runRevdeps.R
+          Rscript extras/revDeps.R
 
       - name: Upload results
         if: always()
