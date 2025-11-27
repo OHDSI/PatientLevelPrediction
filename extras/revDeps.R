@@ -292,7 +292,7 @@ main <- function() {
     tryCatch(
       {
         # runOneRepo returns TRUE if tests passed, FALSE otherwise
-        success <- runOneRepo(config)
+        success <- runOneRepo(config, getCurrentPackageName())
         if (!success) ok <- FALSE
       },
       error = function(e) {
