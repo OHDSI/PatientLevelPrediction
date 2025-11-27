@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       repos:
-        description: "owner/repo lines (optional). If empty, uses revdep/github.txt"
+        description: "owner/repo [filter]. Example: 'r-lib/cli test-files'. If empty, uses revdep/github.txt"
         required: false
         default: ""
 
@@ -42,7 +42,7 @@ jobs:
         with:
           extra-packages: |
             any::pak
-            any::rcmdcheck
+            any::testthat
             any::jsonlite
             any::desc
             any::gert
@@ -51,7 +51,7 @@ jobs:
         run: |
           Rscript -e 'pak::pkg_install("local::.", upgrade = FALSE)'
 
-      - name: Run reverse dependency checks
+      - name: Run reverse dependency tests
         env:
           INPUT_REPOS: ${{ github.event.inputs.repos }}
         run: |

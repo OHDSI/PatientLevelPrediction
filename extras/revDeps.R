@@ -1,25 +1,36 @@
 options(crayon.enabled = TRUE)
 dir.create("revdep/results", recursive = TRUE, showWarnings = FALSE)
 
+# Parse inputs: lines can be "owner/repo" or "owner/repo filter_regex"
 readRepoList <- function() {
   x <- Sys.getenv("INPUT_REPOS", "")
   if (nzchar(x)) {
     cat("[config] Taking repo list from workflow input\n")
-    repos <- strsplit(x, "\n", fixed = TRUE)[[1]]
+    lines <- strsplit(x, "\n", fixed = TRUE)[[1]]
   } else if (file.exists("extras/github.txt")) {
     cat("[config] Taking repo list from revdep/github.txt\n")
-    repos <- readLines("extras/github.txt", warn = FALSE)
+    lines <- readLines("extras/github.txt", warn = FALSE)
   } else {
     stop(
       "No reverse-dep list found. Provide workflow input or revdep/github.txt"
     )
   }
-  repos <- trimws(repos)
-  repos <- repos[nzchar(repos) & !startsWith(repos, "#")]
-  if (!length(repos)) {
+  lines <- trimws(lines)
+  lines <- lines[nzchar(lines) & !startsWith(lines, "#")]
+  if (!length(lines)) {
     stop("Reverse-dep list is empty.")
   }
-  unique(repos)
+
+  # Parse lines into a list of list(repo, filter)
+  configs <- lapply(lines, function(line) {
+    parts <- strsplit(line, "\\s+")[[1]]
+    list(
+      repo = parts[1],
+      filter = if (length(parts) > 1) parts[2] else NULL
+    )
+  })
+
+  configs
 }
 
 safe <- function(expr, default = NULL) {
@@ -29,8 +40,13 @@ safe <- function(expr, default = NULL) {
   })
 }
 
-runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
+runOneRepo <- function(config, timeoutMin = 60L) {
+  ownerRepo <- config$repo
+  filterArg <- config$filter
+
   start <- Sys.time()
+
+  # Prepare output directory
   outDir <- file.path(
     "revdep",
     "results",
@@ -38,12 +54,18 @@ runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
   )
   dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
 
-  message("\n==> [", ownerRepo, "] starting at ", format(start), " UTC\n")
+  message("\n==> [", ownerRepo, "] starting at ", format(start), " UTC")
+  if (!is.null(filterArg)) {
+    message("    Filter: '", filterArg, "'")
+  }
+  message("")
+
+  # Clone
   tmp <- tempfile("revdep_repo_")
   dir.create(tmp)
-
   repoUrl <- paste0("https://github.com/", ownerRepo, ".git")
-  message("[", ownerRepo, "] cloning ", repoUrl, "\n")
+
+  message("[", ownerRepo, "] cloning ", repoUrl)
   ok <- safe(
     system2(
       "git",
@@ -53,16 +75,19 @@ runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
     ),
     ""
   )
+
   if (!dir.exists(file.path(tmp, ".git"))) {
     writeLines(as.character(ok), file.path(outDir, "clone.log"))
     stop(sprintf("[%s] clone failed", ownerRepo))
   }
   writeLines(as.character(ok), file.path(outDir, "clone.log"))
 
+  # Read Package Name
   descPath <- file.path(tmp, "DESCRIPTION")
   if (!file.exists(descPath)) {
     stop(sprintf("[%s] DESCRIPTION not found", ownerRepo))
   }
+
   pkg <- safe(
     as.character(read.dcf(descPath, fields = "Package")[1]),
     NA_character_
@@ -70,14 +95,12 @@ runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
   if (is.na(pkg)) {
     stop(sprintf("[%s] Could not read Package field", ownerRepo))
   }
-  message("[", ownerRepo, "] package: ", pkg, "\n")
 
-  # Install dependencies + package into the current library to speed checks
-  message(
-    "[",
-    ownerRepo,
-    "] installing dependencies via pak (this may take a while)\n"
-  )
+  message("[", ownerRepo, "] package: ", pkg)
+
+  # Install dependencies AND the package itself (needed for testthat to run against it)
+  message("[", ownerRepo, "] installing dependencies via pak")
+
   installLog <- safe(
     pak::pkg_install(
       paste0("local::", tmp),
@@ -88,95 +111,110 @@ runOneRepo <- function(ownerRepo, timeoutMin = 90L) {
   )
   capture.output(print(installLog), file = file.path(outDir, "install.log"))
 
-  message("[", ownerRepo, "] running R CMD check\n")
-  checkDir <- file.path(outDir, "check")
-  dir.create(checkDir, showWarnings = FALSE)
+  # Run Tests
+  message(
+    "[",
+    ownerRepo,
+    "] running tests",
+    if (!is.null(filterArg)) paste0(" (filter: ", filterArg, ")") else ""
+  )
 
+  testLogPath <- file.path(outDir, "tests.log")
+
+  # We use capture.output to save the test console output,
+  # but we also assign the result to 'res' to analyze pass/fail programmatically.
   res <- safe(
-    rcmdcheck::rcmdcheck(
-      path = tmp,
-      args = c("--no-manual", "--as-cran"),
-      build_args = c("--no-manual", "--no-build-vignettes"),
-      error_on = "never",
-      check_dir = checkDir,
-      quiet = FALSE,
-      libpath = .libPaths(),
-      timeout = as.numeric(timeoutMin) * 60
-    ),
+    {
+      # Using callr or managing output directly to capture logs
+      sink(testLogPath, split = TRUE)
+      on.exit(sink(), add = TRUE)
+
+      testthat::test_local(
+        path = tmp,
+        filter = if (is.null(filterArg)) NULL else filterArg,
+        stop_on_failure = FALSE,
+        reporter = "summary" # or 'progress', 'location'
+      )
+    },
     default = NULL
   )
 
   if (!is.null(res)) {
+    # test_local returns a data frame with columns: file, context, test, nb, failed, skipped, error, warning
+    # We aggregate these stats
+
+    nFail <- sum(res$failed)
+    nError <- sum(res$error) # In older testthat versions this might be mixed, but modern tibble has it
+    nSkip <- sum(res$skipped)
+    nWarn <- sum(res$warning)
+
     sum <- list(
       owner_repo = ownerRepo,
       package = pkg,
+      filter = filterArg,
       duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
-      errors = length(res$errors),
-      warnings = length(res$warnings),
-      notes = length(res$notes)
+      test_failures = nFail,
+      test_errors = nError,
+      test_warnings = nWarn,
+      test_skipped = nSkip,
+      status = if (nFail > 0 || nError > 0) "failure" else "success"
     )
+
     json <- jsonlite::toJSON(sum, pretty = TRUE, auto_unbox = TRUE)
     writeLines(json, file.path(outDir, "summary.json"))
 
-    # copy log files if present
-    if (length(res$logfile) && file.exists(res$logfile)) {
-      file.copy(res$logfile, file.path(outDir, "00check.log"), overwrite = TRUE)
-    }
-    if (length(res$install_out) && file.exists(res$install_out)) {
-      file.copy(
-        res$install_out,
-        file.path(outDir, "00install.out"),
-        overwrite = TRUE
-      )
-    }
     message(
       "[",
       ownerRepo,
-      "] check complete: E=",
-      length(res$errors),
-      " W=",
-      length(res$warnings),
-      " N=",
-      length(res$notes),
+      "] complete: Fail=",
+      nFail,
+      " Err=",
+      nError,
+      " Warn=",
+      nWarn,
+      " Skip=",
+      nSkip,
       "\n"
     )
+
+    # Return FALSE if there were failures or errors
+    invisible(nFail == 0 && nError == 0)
   } else {
+    # If res is NULL, the test execution crashed entirely
     sum <- list(
       owner_repo = ownerRepo,
       package = pkg,
       duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
-      errors = NA_integer_,
-      warnings = NA_integer_,
-      notes = NA_integer_,
-      status = "rcmdcheck_failed"
+      status = "test_execution_crash"
     )
     writeLines(
       jsonlite::toJSON(sum, pretty = TRUE, auto_unbox = TRUE),
       file.path(outDir, "summary.json")
     )
-    message("[", ownerRepo, "] check failed (see logs)\n")
+    message("[", ownerRepo, "] test execution CRASHED (see tests.log)\n")
+    invisible(FALSE)
   }
-
-  invisible(TRUE)
 }
 
 main <- function() {
-  repos <- readRepoList()
-  message(
-    "[config] Repos to check (",
-    length(repos),
-    "): ",
-    paste(repos, collapse = ", "),
-    "\n"
-  )
+  configs <- readRepoList()
+  message("[config] Checking ", length(configs), " repositories\n")
 
   failures <- 0L
-  for (r in repos) {
+  for (config in configs) {
     ok <- TRUE
-    tryCatch(runOneRepo(r), error = function(e) {
-      message("! ", conditionMessage(e))
-      ok <<- FALSE
-    })
+    tryCatch(
+      {
+        # runOneRepo returns TRUE if tests passed, FALSE otherwise
+        success <- runOneRepo(config)
+        if (!success) ok <- FALSE
+      },
+      error = function(e) {
+        message("! Unhandled error in runOneRepo: ", conditionMessage(e))
+        ok <<- FALSE
+      }
+    )
+
     if (!ok) failures <- failures + 1L
   }
 
@@ -185,7 +223,7 @@ main <- function() {
 }
 
 # Ensure needed packages are present
-for (p in c("pak", "rcmdcheck", "jsonlite")) {
+for (p in c("pak", "testthat", "jsonlite")) {
   if (!requireNamespace(p, quietly = TRUE)) install.packages(p)
 }
 main()
