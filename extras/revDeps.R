@@ -151,13 +151,12 @@ runOneRepo <- function(config, timeoutMin = 60L) {
   )
 
   if (!is.null(res)) {
-    # test_local returns a data frame with columns: file, context, test, nb, failed, skipped, error, warning
-    # We aggregate these stats
+    df <- as.data.frame(res)
 
-    nFail <- sum(res$failed, na.rm = TRUE)
-    nError <- sum(res$error, na.rm = TRUE) 
-    nSkip <- sum(res$skipped, na.rm = TRUE)
-    nWarn <- sum(res$warning, na.rm = TRUE)
+    nFail <- sum(df$failed, na.rm = TRUE)
+    nError <- sum(df$error, na.rm = TRUE) 
+    nSkip <- sum(df$skipped, na.rm = TRUE)
+    nWarn <- sum(df$warning, na.rm = TRUE)
 
     sum <- list(
       owner_repo = ownerRepo,
