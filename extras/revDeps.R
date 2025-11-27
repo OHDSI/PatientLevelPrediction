@@ -78,14 +78,16 @@ runOneRepo <- function(config, timeoutMin = 60L) {
 
   if (!dir.exists(file.path(tmp, ".git"))) {
     writeLines(as.character(ok), file.path(outDir, "clone.log"))
-    stop(sprintf("[%s] clone failed", ownerRepo))
+    message(sprintf("[%s] clone failed", ownerRepo))
+    return(FALSE)
   }
   writeLines(as.character(ok), file.path(outDir, "clone.log"))
 
   # Read Package Name
   descPath <- file.path(tmp, "DESCRIPTION")
   if (!file.exists(descPath)) {
-    stop(sprintf("[%s] DESCRIPTION not found", ownerRepo))
+    message(sprintf("[%s] DESCRIPTION not found", ownerRepo))
+    return(FALSE)
   }
 
   pkg <- safe(
@@ -93,7 +95,8 @@ runOneRepo <- function(config, timeoutMin = 60L) {
     NA_character_
   )
   if (is.na(pkg)) {
-    stop(sprintf("[%s] Could not read Package field", ownerRepo))
+    message(sprintf("[%s] Could not read Package field", ownerRepo))
+    return(FALSE)
   }
 
   message("[", ownerRepo, "] package: ", pkg)
@@ -110,6 +113,14 @@ runOneRepo <- function(config, timeoutMin = 60L) {
     default = NULL
   )
   capture.output(print(installLog), file = file.path(outDir, "install.log"))
+  
+  if (is.null(installLog)) {
+    message(sprintf(
+      "! [%s] installation failed (dependencies or package)",
+      ownerRepo
+    ))
+    return(FALSE)
+  }
 
   # Run Tests
   message(
@@ -143,10 +154,10 @@ runOneRepo <- function(config, timeoutMin = 60L) {
     # test_local returns a data frame with columns: file, context, test, nb, failed, skipped, error, warning
     # We aggregate these stats
 
-    nFail <- sum(res$failed)
-    nError <- sum(res$error) # In older testthat versions this might be mixed, but modern tibble has it
-    nSkip <- sum(res$skipped)
-    nWarn <- sum(res$warning)
+    nFail <- sum(res$failed, na.rm = TRUE)
+    nError <- sum(res$error, na.rm = TRUE) 
+    nSkip <- sum(res$skipped, na.rm = TRUE)
+    nWarn <- sum(res$warning, na.rm = TRUE)
 
     sum <- list(
       owner_repo = ownerRepo,
