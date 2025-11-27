@@ -1,14 +1,30 @@
 options(crayon.enabled = TRUE)
 dir.create("revdep/results", recursive = TRUE, showWarnings = FALSE)
 
+getCurrentPackageName <- function() {
+  if (file.exists("DESCRIPTION")) {
+    name <- trimws(read.dcf("DESCRIPTION", fields = "Package")[1])
+    message(
+      "[config] Current package is: ",
+      name,
+      " (will be protected from updates)"
+    )
+    name
+  } else {
+    stop(
+      "Could not find DESCRIPTION file in root. Ensure you are running from package root."
+    )
+  }
+}
+
 # Parse inputs: lines can be "owner/repo" or "owner/repo filter_regex"
 readRepoList <- function() {
   x <- Sys.getenv("INPUT_REPOS", "")
   if (nzchar(x)) {
-    cat("[config] Taking repo list from workflow input\n")
+    message("[config] Taking repo list from workflow input\n")
     lines <- strsplit(x, "\n", fixed = TRUE)[[1]]
   } else if (file.exists("extras/revDeps.txt")) {
-    cat("[config] Taking repo list from extras/revDeps.txt\n")
+    message("[config] Taking repo list from extras/revDeps.txt\n")
     lines <- readLines("extras/revDeps.txt", warn = FALSE)
   } else {
     stop(
@@ -40,7 +56,7 @@ safe <- function(expr, default = NULL) {
   })
 }
 
-runOneRepo <- function(config, timeoutMin = 60L) {
+runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   ownerRepo <- config$repo
   filterArg <- config$filter
 
@@ -101,20 +117,80 @@ runOneRepo <- function(config, timeoutMin = 60L) {
 
   message("[", ownerRepo, "] package: ", pkg)
 
-  # Install dependencies AND the package itself (needed for testthat to run against it)
-  message("[", ownerRepo, "] installing dependencies via pak")
+  # Symlink inst/ contents to root (if any)
+  instDir <- file.path(tmp, "inst")
+  if (dir.exists(instDir)) {
+    message(sprintf(
+      "    [%s] Symlinking inst/ contents to package root",
+      ownerRepo
+    ))
+    files <- list.files(instDir, full.names = FALSE)
+    for (f in files) {
+      from <- file.path(instDir, f)
+      to <- file.path(tmp, f)
+      if (!file.exists(to)) file.symlink(from, to)
+    }
+  }
 
-  installLog <- safe(
+  # Install dependencies AND the package itself (needed for testthat to run against it)
+  message(sprintf("    [%s] Calculating dependencies...", ownerRepo))
+
+  # 1. Get the full dependency tree
+  depTree <- safe(pak::pkg_deps(paste0("local::", tmp)), default = NULL)
+
+  if (is.null(depTree)) {
+    message(sprintf("! [%s] Failed to calculate dependencies", ownerRepo))
+    return(FALSE)
+  }
+
+  # 2. Filter: Exclude CURRENT_PKG_NAME and the revdep itself
+  # 'ref' contains the package reference/name
+  # 'package' contains the package name
+  refsToInstall <- depTree$ref[
+    depTree$package != currentPkgName & depTree$package != pkg
+  ]
+
+  # 3. Install dependencies (if any)
+  if (length(refsToInstall) > 0) {
+    message(sprintf(
+      "    [%s] Installing %d dependencies (excluding %s)...",
+      ownerRepo,
+      length(refsToInstall),
+      currentPkgName
+    ))
+    installLog <- safe(
+      pak::pkg_install(refsToInstall, upgrade = FALSE),
+      default = NULL
+    )
+
+    if (is.null(installLog)) {
+      message(sprintf("! [%s] Dependency installation failed", ownerRepo))
+      return(FALSE)
+    }
+  } else {
+    message(sprintf("    [%s] No external dependencies to install.", ownerRepo))
+  }
+
+  # 4. Install the RevDep itself (dependencies = FALSE ensures it uses our installed dev version)
+  message(sprintf(
+    "    [%s] Installing package %s (using pre-installed dependencies)...",
+    ownerRepo,
+    pkg
+  ))
+  finalInstallLog <- safe(
     pak::pkg_install(
       paste0("local::", tmp),
-      dependencies = TRUE,
+      dependencies = FALSE,
       upgrade = FALSE
     ),
     default = NULL
   )
-  capture.output(print(installLog), file = file.path(outDir, "install.log"))
-  
-  if (is.null(installLog)) {
+  capture.output(
+    print(finalInstallLog),
+    file = file.path(outDir, "install.log")
+  )
+
+  if (is.null(finalInstallLog)) {
     message(sprintf(
       "! [%s] installation failed (dependencies or package)",
       ownerRepo
@@ -154,7 +230,7 @@ runOneRepo <- function(config, timeoutMin = 60L) {
     df <- as.data.frame(res)
 
     nFail <- sum(df$failed, na.rm = TRUE)
-    nError <- sum(df$error, na.rm = TRUE) 
+    nError <- sum(df$error, na.rm = TRUE)
     nSkip <- sum(df$skipped, na.rm = TRUE)
     nWarn <- sum(df$warning, na.rm = TRUE)
 
