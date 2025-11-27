@@ -8,8 +8,8 @@ readRepoList <- function() {
     cat("[config] Taking repo list from workflow input\n")
     lines <- strsplit(x, "\n", fixed = TRUE)[[1]]
   } else if (file.exists("extras/revDeps.txt")) {
-    cat("[config] Taking repo list from revdep/github.txt\n")
-    lines <- readLines("extras/revDeps", warn = FALSE)
+    cat("[config] Taking repo list from extras/revDeps.txt\n")
+    lines <- readLines("extras/revDeps.txt", warn = FALSE)
   } else {
     stop(
       "No reverse-dep list found. Provide workflow input or extras/revDeps.txt"
