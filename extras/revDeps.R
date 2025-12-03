@@ -1,6 +1,7 @@
 options(crayon.enabled = TRUE)
 dir.create("revdep/results", recursive = TRUE, showWarnings = FALSE)
 
+# --- 1. Helper: Get Current Package Name ---
 getCurrentPackageName <- function() {
   if (file.exists("DESCRIPTION")) {
     name <- trimws(read.dcf("DESCRIPTION", fields = "Package")[1])
@@ -17,7 +18,6 @@ getCurrentPackageName <- function() {
   }
 }
 
-# Parse inputs: lines can be "owner/repo" or "owner/repo filter_regex"
 readRepoList <- function() {
   x <- Sys.getenv("INPUT_REPOS", "")
   if (nzchar(x)) {
@@ -37,16 +37,10 @@ readRepoList <- function() {
     stop("Reverse-dep list is empty.")
   }
 
-  # Parse lines into a list of list(repo, filter)
-  configs <- lapply(lines, function(line) {
+  lapply(lines, function(line) {
     parts <- strsplit(line, "\\s+")[[1]]
-    list(
-      repo = parts[1],
-      filter = if (length(parts) > 1) parts[2] else NULL
-    )
+    list(repo = parts[1], filter = if (length(parts) > 1) parts[2] else NULL)
   })
-
-  configs
 }
 
 safe <- function(expr, default = NULL) {
@@ -56,13 +50,93 @@ safe <- function(expr, default = NULL) {
   })
 }
 
+printSummary <- function(results) {
+  if (length(results) == 0) {
+    return()
+  }
+
+  message(
+    "\n========================================================================="
+  )
+  message(sprintf(
+    "%-30s | %-15s | %4s | %4s | %4s",
+    "Repository",
+    "Status",
+    "Fail",
+    "Err",
+    "Time"
+  ))
+  message(
+    "-------------------------------------------------------------------------"
+  )
+
+  for (r in results) {
+    statusStr <- r$status
+    if (r$fail > 0 || r$err > 0 || !r$status %in% c("SUCCESS")) {
+      statusStr <- paste0("!! ", statusStr)
+    }
+    message(sprintf(
+      "%-30s | %-15s | %4d | %4d | %4.0fs",
+      substring(r$repo, 1, 30),
+      statusStr,
+      r$fail,
+      r$err,
+      r$time
+    ))
+  }
+  message(
+    "=========================================================================\n"
+  )
+
+  ghSummaryFile <- Sys.getenv("GITHUB_STEP_SUMMARY")
+  if (nzchar(ghSummaryFile)) {
+    sink(ghSummaryFile, append = TRUE)
+    cat("## Reverse Dependency Results\n\n")
+    cat("| Repository | Status | Fail | Error | Warn | Skip | Duration |\n")
+    cat("| :--- | :--- | :---: | :---: | :---: | :---: | ---: |\n")
+
+    for (r in results) {
+      icon <- if (r$status == "SUCCESS") "✅" else "❌"
+      statusFmt <- if (r$status == "SUCCESS") {
+        "SUCCESS"
+      } else {
+        paste0("**", r$status, "**")
+      }
+
+      cat(sprintf(
+        "| %s | %s %s | %d | %d | %d | %d | %.0fs |\n",
+        r$repo,
+        icon,
+        statusFmt,
+        r$fail,
+        r$err,
+        r$warn,
+        r$skip,
+        r$time
+      ))
+    }
+    cat("\n")
+    sink()
+  }
+}
+
 runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   ownerRepo <- config$repo
   filterArg <- config$filter
-
   start <- Sys.time()
 
-  # Prepare output directory
+  mkResult <- function(status, fail = 0, err = 0, warn = 0, skip = 0) {
+    list(
+      repo = ownerRepo,
+      status = status,
+      fail = fail,
+      err = err,
+      warn = warn,
+      skip = skip,
+      time = as.numeric(difftime(Sys.time(), start, units = "secs"))
+    )
+  }
+
   outDir <- file.path(
     "revdep",
     "results",
@@ -76,7 +150,6 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   }
   message("")
 
-  # Clone
   tmp <- tempfile("revdep_repo_")
   dir.create(tmp)
   repoUrl <- paste0("https://github.com/", ownerRepo, ".git")
@@ -94,16 +167,15 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
 
   if (!dir.exists(file.path(tmp, ".git"))) {
     writeLines(as.character(ok), file.path(outDir, "clone.log"))
-    message(sprintf("[%s] clone failed", ownerRepo))
-    return(FALSE)
+    message(sprintf("! [%s] clone failed", ownerRepo))
+    return(mkResult("CLONE_FAILED"))
   }
   writeLines(as.character(ok), file.path(outDir, "clone.log"))
 
-  # Read Package Name
   descPath <- file.path(tmp, "DESCRIPTION")
   if (!file.exists(descPath)) {
-    message(sprintf("[%s] DESCRIPTION not found", ownerRepo))
-    return(FALSE)
+    message(sprintf("! [%s] DESCRIPTION not found", ownerRepo))
+    return(mkResult("NO_DESC"))
   }
 
   pkg <- safe(
@@ -111,13 +183,11 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
     NA_character_
   )
   if (is.na(pkg)) {
-    message(sprintf("[%s] Could not read Package field", ownerRepo))
-    return(FALSE)
+    message(sprintf("! [%s] Could not read Package field", ownerRepo))
+    return(mkResult("BAD_DESC"))
   }
-
   message("[", ownerRepo, "] package: ", pkg)
 
-  # Symlink inst/ contents to root (if any)
   instDir <- file.path(tmp, "inst")
   if (dir.exists(instDir)) {
     message(sprintf(
@@ -126,31 +196,23 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
     ))
     files <- list.files(instDir, full.names = FALSE)
     for (f in files) {
-      from <- file.path(instDir, f)
       to <- file.path(tmp, f)
-      if (!file.exists(to)) file.symlink(from, to)
+      if (!file.exists(to)) file.symlink(file.path(instDir, f), to)
     }
   }
 
-  # Install dependencies AND the package itself (needed for testthat to run against it)
   message(sprintf("    [%s] Calculating dependencies...", ownerRepo))
-
-  # 1. Get the full dependency tree
   depTree <- safe(pak::pkg_deps(paste0("local::", tmp)), default = NULL)
 
   if (is.null(depTree)) {
     message(sprintf("! [%s] Failed to calculate dependencies", ownerRepo))
-    return(FALSE)
+    return(mkResult("DEPS_FAILED"))
   }
 
-  # 2. Filter: Exclude CURRENT_PKG_NAME and the revdep itself
-  # 'ref' contains the package reference/name
-  # 'package' contains the package name
   refsToInstall <- depTree$ref[
     depTree$package != currentPkgName & depTree$package != pkg
   ]
 
-  # 3. Install dependencies (if any)
   if (length(refsToInstall) > 0) {
     message(sprintf(
       "    [%s] Installing %d dependencies (excluding %s)...",
@@ -165,18 +227,13 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
 
     if (is.null(installLog)) {
       message(sprintf("! [%s] Dependency installation failed", ownerRepo))
-      return(FALSE)
+      return(mkResult("INSTALL_DEPS_FAIL"))
     }
   } else {
     message(sprintf("    [%s] No external dependencies to install.", ownerRepo))
   }
 
-  # 4. Install the RevDep itself (dependencies = FALSE ensures it uses our installed dev version)
-  message(sprintf(
-    "    [%s] Installing package %s (using pre-installed dependencies)...",
-    ownerRepo,
-    pkg
-  ))
+  message(sprintf("    [%s] Installing package %s...", ownerRepo, pkg))
   finalInstallLog <- safe(
     pak::pkg_install(
       paste0("local::", tmp),
@@ -191,36 +248,27 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   )
 
   if (is.null(finalInstallLog)) {
-    message(sprintf(
-      "! [%s] installation failed (dependencies or package)",
-      ownerRepo
-    ))
-    return(FALSE)
+    message(sprintf("! [%s] installation failed", ownerRepo))
+    return(mkResult("INSTALL_PKG_FAIL"))
   }
 
-  # Run Tests
   message(
     "[",
     ownerRepo,
     "] running tests",
     if (!is.null(filterArg)) paste0(" (filter: ", filterArg, ")") else ""
   )
-
   testLogPath <- file.path(outDir, "tests.log")
 
-  # We use capture.output to save the test console output,
-  # but we also assign the result to 'res' to analyze pass/fail programmatically.
   res <- safe(
     {
-      # Using callr or managing output directly to capture logs
       sink(testLogPath, split = TRUE)
       on.exit(sink(), add = TRUE)
-
       testthat::test_local(
         path = tmp,
         filter = if (is.null(filterArg)) NULL else filterArg,
         stop_on_failure = FALSE,
-        reporter = "summary" # or 'progress', 'location'
+        reporter = "summary"
       )
     },
     default = NULL
@@ -228,13 +276,14 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
 
   if (!is.null(res)) {
     df <- as.data.frame(res)
-
     nFail <- sum(df$failed, na.rm = TRUE)
     nError <- sum(df$error, na.rm = TRUE)
     nSkip <- sum(df$skipped, na.rm = TRUE)
     nWarn <- sum(df$warning, na.rm = TRUE)
 
-    sum <- list(
+    status <- if (nFail > 0 || nError > 0) "FAILURE" else "SUCCESS"
+
+    sumJson <- list(
       owner_repo = ownerRepo,
       package = pkg,
       filter = filterArg,
@@ -243,72 +292,69 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
       test_errors = nError,
       test_warnings = nWarn,
       test_skipped = nSkip,
-      status = if (nFail > 0 || nError > 0) "failure" else "success"
-    )
-
-    json <- jsonlite::toJSON(sum, pretty = TRUE, auto_unbox = TRUE)
-    writeLines(json, file.path(outDir, "summary.json"))
-
-    message(
-      "[",
-      ownerRepo,
-      "] complete: Fail=",
-      nFail,
-      " Err=",
-      nError,
-      " Warn=",
-      nWarn,
-      " Skip=",
-      nSkip,
-      "\n"
-    )
-
-    # Return FALSE if there were failures or errors
-    invisible(nFail == 0 && nError == 0)
-  } else {
-    # If res is NULL, the test execution crashed entirely
-    sum <- list(
-      owner_repo = ownerRepo,
-      package = pkg,
-      duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
-      status = "test_execution_crash"
+      status = status
     )
     writeLines(
-      jsonlite::toJSON(sum, pretty = TRUE, auto_unbox = TRUE),
+      jsonlite::toJSON(sumJson, pretty = TRUE, auto_unbox = TRUE),
       file.path(outDir, "summary.json")
     )
+
+    message(sprintf(
+      "[%s] complete: Fail=%d Err=%d Warn=%d Skip=%d\n",
+      ownerRepo,
+      nFail,
+      nError,
+      nWarn,
+      nSkip
+    ))
+
+    return(mkResult(status, nFail, nError, nWarn, nSkip))
+  } else {
     message("[", ownerRepo, "] test execution CRASHED (see tests.log)\n")
-    invisible(FALSE)
+    return(mkResult("CRASHED"))
   }
 }
 
 main <- function() {
+  pkgName <- getCurrentPackageName()
   configs <- readRepoList()
   message("[config] Checking ", length(configs), " repositories\n")
 
+  allResults <- list()
   failures <- 0L
+
   for (config in configs) {
-    ok <- TRUE
-    tryCatch(
+    res <- tryCatch(
       {
-        # runOneRepo returns TRUE if tests passed, FALSE otherwise
-        success <- runOneRepo(config, getCurrentPackageName())
-        if (!success) ok <- FALSE
+        runOneRepo(config, currentPkgName = pkgName)
       },
       error = function(e) {
-        message("! Unhandled error in runOneRepo: ", conditionMessage(e))
-        ok <<- FALSE
+        message("! Unhandled critical error: ", conditionMessage(e))
+        list(
+          repo = config$repo,
+          status = "SCRIPT_ERROR",
+          fail = 0,
+          err = 0,
+          warn = 0,
+          skip = 0,
+          time = 0
+        )
       }
     )
 
-    if (!ok) failures <- failures + 1L
+    allResults[[config$repo]] <- res
+
+    if (res$fail > 0 || res$err > 0 || !res$status %in% c("SUCCESS")) {
+      failures <- failures + 1L
+    }
   }
+
+  printSummary(allResults)
 
   message("\n[summary] completed with ", failures, " failures\n")
   if (failures > 0L) quit(status = 1L) else invisible(TRUE)
 }
 
-# Ensure needed packages are present
 for (p in c("pak", "testthat", "jsonlite")) {
   if (!requireNamespace(p, quietly = TRUE)) install.packages(p)
 }
