@@ -202,7 +202,10 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   }
 
   message(sprintf("    [%s] Calculating dependencies...", ownerRepo))
-  depTree <- safe(pak::pkg_deps(paste0("local::", tmp)), default = NULL)
+  depTree <- safe(
+    pak::pkg_deps(paste0("local::", tmp), dependencies = TRUE),
+    default = NULL
+  )
 
   if (is.null(depTree)) {
     message(sprintf("! [%s] Failed to calculate dependencies", ownerRepo))
