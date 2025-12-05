@@ -49,6 +49,10 @@ safe <- function(expr, default = NULL) {
   })
 }
 
+stripAnsi <- function(text) {
+  gsub("\033\\[[0-9;]*m", "", text)
+}
+
 printSummary <- function(results) {
   if (length(results) == 0) {
     return()
@@ -115,6 +119,53 @@ printSummary <- function(results) {
       ))
     }
     cat("\n")
+
+    failures <- Filter(function(x) x$status != "SUCCESS", results)
+
+    if (length(failures) > 0) {
+      cat("### 🔍 Failure Details\n\n")
+
+      for (f in failures) {
+        safeName <- gsub("/", "_", f$repo, fixed = TRUE)
+        # Try finding the most relevant log: tests > install > clone
+        logFiles <- file.path(
+          "revdep",
+          "results",
+          safeName,
+          c("tests.log", "install.log", "clone.log")
+        )
+        logFile <- logFiles[file.exists(logFiles)][1]
+
+        logContent <- "No log file found."
+        if (!is.na(logFile)) {
+          lines <- readLines(logFile, warn = FALSE)
+          lines <- stripAnsi(lines)
+          # Truncate to last 300 lines to avoid size limits
+          if (length(lines) > 300) {
+            lines <- c(
+              paste0(
+                "... [Truncated: showing last 300 of ",
+                length(lines),
+                " lines] ..."
+              ),
+              tail(lines, 300)
+            )
+          }
+          logContent <- paste(lines, collapse = "\n")
+        }
+
+        # Collapsible HTML details tag
+        cat(sprintf(
+          "<details><summary><strong>%s</strong> (Click to expand logs)</summary>\n\n",
+          f$repo
+        ))
+        cat("```text\n")
+        cat(logContent)
+        cat("\n```\n")
+        cat("</details>\n\n")
+      }
+    }
+
     sink()
   }
 }
