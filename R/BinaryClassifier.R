@@ -280,6 +280,9 @@ tuneHyperparameters <- function(
     prediction,
     cvPrediction
   )
+  attr(prediction, "metaData") <- list(
+    modelType = settings$modelType %||% attr(data, "modelType")
+  )
 
   list(
     model = finalModel,

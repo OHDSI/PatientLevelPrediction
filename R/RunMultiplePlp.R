@@ -343,7 +343,9 @@ createModelDesign <- function(
   checkIsClass(restrictPlpDataSettings, c("restrictPlpDataSettings", "NULL"))
   checkIsClass(covariateSettings, c("covariateSettings", "list", "NULL"))
   checkIsClass(splitSettings, c("splitSettings", "NULL"))
-  checkIsClass(hyperparameterSettings, "hyperparameterSettings")
+  if (is.null(hyperparameterSettings)) {
+    hyperparameterSettings <- createHyperparameterSettings()
+  }
 
   useFE <- FALSE
   if (!is.null(featureEngineeringSettings)) {
