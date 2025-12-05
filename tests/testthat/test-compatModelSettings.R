@@ -104,7 +104,7 @@ test_that("predictPlp falls back to predictionFunction attribute", {
     )
   )
   class(plpModel) <- "plpModel"
-  attr(plpModel, "predictionFunction") <- "dummyPredict"
+  attr(plpModel, "predictionFunction") <- dummyPredict
   attr(plpModel, "modelType") <- "binary"
 
   population <- data.frame(rowId = 1:2, outcomeCount = c(0, 1))
@@ -161,11 +161,11 @@ test_that("tuneHyperparameters defaults tuning metric when missing", {
     )
   }
 
-  data <- matrix(c(1, 2, 3, 4), nrow = 2)
+  data <- matrix(1:8, nrow = 4)
   labels <- data.frame(
-    rowId = 1:2,
-    outcomeCount = c(0, 1),
-    index = c(1, 2)
+    rowId = 1:4,
+    outcomeCount = c(0, 1, 0, 1),
+    index = c(1, 1, 2, 2)
   )
   settings <- list(
     train = dummyTrain,
