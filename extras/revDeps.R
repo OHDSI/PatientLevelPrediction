@@ -1,7 +1,6 @@
 options(crayon.enabled = TRUE)
 dir.create("revdep/results", recursive = TRUE, showWarnings = FALSE)
 
-# --- 1. Helper: Get Current Package Name ---
 getCurrentPackageName <- function() {
   if (file.exists("DESCRIPTION")) {
     name <- trimws(read.dcf("DESCRIPTION", fields = "Package")[1])
@@ -202,7 +201,10 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   }
 
   message(sprintf("    [%s] Calculating dependencies...", ownerRepo))
-  depTree <- safe(pak::pkg_deps(paste0("local::", tmp)), default = NULL)
+  depTree <- safe(
+    pak::pkg_deps(paste0("local::", tmp), dependencies = TRUE),
+    default = NULL
+  )
 
   if (is.null(depTree)) {
     message(sprintf("! [%s] Failed to calculate dependencies", ownerRepo))
