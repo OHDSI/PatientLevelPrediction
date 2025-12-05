@@ -185,3 +185,82 @@ listCartesian <- function(allList) {
                     function(i) lapply(combinations, function(x) x[i][[1]]))
   return(results)
 }
+
+#' Computes grid performance for a hyperparameter combination (backwards compatible)
+#'
+#' @param prediction A data.frame with predictions and an `index` column for folds.
+#' @param param A list of hyperparameters (values may include `NULL`).
+#' @param performanceFunct String or function to compute performance on a prediction data.frame.
+#'   Default is `"computeAuc"`.
+#' @return A list with overall and per-fold performance plus the parameter summary.
+#' @examples
+#' prediction <- data.frame(
+#'   rowId = c(1, 2, 3, 4, 5),
+#'   outcomeCount = c(0, 1, 0, 1, 0),
+#'   value = c(0.1, 0.9, 0.2, 0.8, 0.3),
+#'   index = c(1, 1, 1, 1, 1)
+#' )
+#' param <- list(hyperParam1 = 5, hyperParam2 = 100)
+#' computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
+#' @export
+computeGridPerformance <- function(
+    prediction,
+    param,
+    performanceFunct = "computeAuc") {
+  perfFun <- performanceFunct
+  if (is.character(performanceFunct)) {
+    perfFun <- get(performanceFunct, envir = parent.frame())
+  }
+  if (!is.function(perfFun)) {
+    stop("performanceFunct must be a function or a function name")
+  }
+
+  computeMetric <- function(pred) {
+    perfFun(prediction = pred)
+  }
+
+  performance <- computeMetric(prediction)
+
+  if (!"index" %in% colnames(prediction)) {
+    prediction$index <- 1
+  }
+
+  performanceFold <- vapply(
+    unique(prediction$index),
+    function(i) computeMetric(prediction[prediction$index == i, ]),
+    numeric(1)
+  )
+
+  paramString <- param
+  for (ind in seq_along(paramString)) {
+    if (is.null(paramString[[ind]])) {
+      paramString[[ind]] <- "null"
+    }
+  }
+
+  paramValues <- unlist(paramString)
+  names(paramValues) <- names(param)
+
+  metricName <- if (is.character(performanceFunct)) {
+    performanceFunct
+  } else {
+    deparse(substitute(performanceFunct))
+  }
+
+  hyperSummary <- as.data.frame(c(
+    data.frame(
+      metric = metricName,
+      fold = c("CV", as.character(seq_along(performanceFold))),
+      value = c(performance, performanceFold)
+    ),
+    paramValues
+  ))
+
+  list(
+    metric = metricName,
+    cvPerformance = performance,
+    cvPerformancePerFold = performanceFold,
+    param = param,
+    hyperSummary = hyperSummary
+  )
+}

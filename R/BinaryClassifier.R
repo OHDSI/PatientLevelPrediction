@@ -167,6 +167,9 @@ tuneHyperparameters <- function(
   settings,
   hyperparamSettings
 ) {
+  if (is.null(hyperparamSettings) || is.null(hyperparamSettings$tuningMetric)) {
+    hyperparamSettings <- createHyperparameterSettings()
+  }
   iterator <- prepareHyperparameterGrid(
     paramDefinition = param,
     hyperSettings = hyperparamSettings

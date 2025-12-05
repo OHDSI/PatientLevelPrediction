@@ -156,6 +156,17 @@ savePlpModel <- function(plpModel, dirPath) {
     dir.create(dirPath, recursive = TRUE)
   }
 
+  if (!is.null(plpModel$modelDesign$modelSettings)) {
+    plpModel$modelDesign$modelSettings <- tryCatch(
+      normalizeModelSettings(plpModel$modelDesign$modelSettings),
+      error = function(e) plpModel$modelDesign$modelSettings
+    )
+  }
+
+  if (is.null(plpModel$modelDesign$modelSettings$settings$saveType)) {
+    plpModel$modelDesign$modelSettings$settings$saveType <- attr(plpModel, "saveType")
+  }
+
   # save the covariateImportance
   utils::write.csv(
     x = plpModel$covariateImportance,
