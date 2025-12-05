@@ -61,6 +61,70 @@
 #' unlink(saveLoc, recursive = TRUE)
 #' }
 #' @export
+normalizeModelSettings <- function(modelSettings) {
+  param <- modelSettings$param
+
+  # pull settings from old-style attributes when missing
+  settings <- modelSettings$settings
+  if (is.null(settings) && !is.null(param)) {
+    settings <- attr(param, "settings")
+  }
+  if (is.null(settings$saveType) && !is.null(attr(param, "saveType"))) {
+    settings$saveType <- attr(param, "saveType")
+  }
+  if (is.null(settings)) {
+    settings <- list()
+  }
+
+  # map legacy field names to the new ones
+  if (is.null(settings$modelName) && !is.null(settings$name)) {
+    settings$modelName <- settings$name
+  }
+  if (is.null(settings$requiresDenseMatrix) && !is.null(settings$requireDenseMatrix)) {
+    settings$requiresDenseMatrix <- settings$requireDenseMatrix
+  }
+  if (is.null(settings$train) && !is.null(settings$trainRFunction)) {
+    settings$train <- settings$trainRFunction
+  }
+  if (is.null(settings$predict) && !is.null(settings$predictRFunction)) {
+    settings$predict <- settings$predictRFunction
+  }
+  if (is.null(settings$variableImportance) && !is.null(settings$varImpRFunction)) {
+    settings$variableImportance <- settings$varImpRFunction
+  }
+
+  # defaults for python-based sklearn models
+  if (!is.null(settings$pythonModule)) {
+    if (is.null(settings$modelType)) settings$modelType <- "binary"
+    if (is.null(settings$train)) settings$train <- "fitSklearn"
+    if (is.null(settings$predict)) settings$predict <- "predictSklearn"
+    if (is.null(settings$variableImportance)) settings$variableImportance <- "varImpSklearn"
+    if (is.null(settings$prepareData)) settings$prepareData <- "toSparseM"
+    if (is.null(settings$saveType)) settings$saveType <- "saveLoadSklearn"
+    if (is.null(settings$requiresDenseMatrix)) settings$requiresDenseMatrix <- FALSE
+  }
+
+  # defaults for R-based classifiers that relied on RClassifier.R
+  if (is.null(settings$prepareData) &&
+      (!is.null(settings$train) || !is.null(settings$variableImportance))) {
+    settings$prepareData <- "toSparseM"
+  }
+  if (is.null(settings$modelType)) {
+    settings$modelType <- "binary"
+  }
+  if (is.null(settings$requiresDenseMatrix)) {
+    settings$requiresDenseMatrix <- FALSE
+  }
+
+  modelSettings$settings <- settings
+
+  if (is.null(modelSettings$modelName) && !is.null(settings$modelName)) {
+    modelSettings$modelName <- settings$modelName
+  }
+
+  modelSettings
+}
+
 fitPlp <- function(
     trainData,
     modelSettings,
@@ -77,6 +141,7 @@ fitPlp <- function(
   }
   checkIsClass(trainData$covariateData, "CovariateData")
   checkIsClass(modelSettings, "modelSettings")
+  modelSettings <- normalizeModelSettings(modelSettings)
 
   # =========================================================
   # run through pipeline list and apply:

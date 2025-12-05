@@ -205,6 +205,28 @@ test_that("prepareHyperparameterGrid handles generator objects with lifecycle ho
   expect_identical(events$finalized, history)
 })
 
+test_that("prepareHyperparameterGrid accepts legacy expanded grids", {
+  expanded <- list(
+    list(alpha = 0.1, lambda = 1L),
+    list(alpha = 0.2, lambda = 2L)
+  )
+
+  iterator <- prepareHyperparameterGrid(
+    paramDefinition = expanded,
+    createHyperparameterSettings(search = "grid")
+  )
+
+  combo1 <- iterator$getNext(NULL)
+  combo2 <- iterator$getNext(NULL)
+  combo3 <- iterator$getNext(NULL)
+
+  expect_equal(combo1$alpha, 0.1)
+  expect_equal(combo1$lambda, 1L)
+  expect_equal(combo2$alpha, 0.2)
+  expect_equal(combo2$lambda, 2L)
+  expect_null(combo3)
+})
+
 test_that("listCartesian works", {
   allList <- list(a = list(1, 2), b = list(NULL, "auto"), c = list(-1))
   

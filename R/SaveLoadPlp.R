@@ -319,6 +319,12 @@ loadPlpModel <- function(dirPath) {
       NULL
     }
   )
+  if (!is.null(plpModel$modelDesign$modelSettings)) {
+    plpModel$modelDesign$modelSettings <- tryCatch(
+      normalizeModelSettings(plpModel$modelDesign$modelSettings),
+      error = function(e) plpModel$modelDesign$modelSettings
+    )
+  }
 
   # we don't use "preprocess" anymore, should be "preprocessing",
   # but leave this here if loading an older model

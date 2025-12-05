@@ -59,6 +59,15 @@ prepareHyperparameterGrid <- function(paramDefinition,
           empty <- list(list())
           return(makeSequentialIterator(empty))
       }
+
+      # Backwards compatibility: already-expanded grids stored as a list of
+      # parameter combinations (outer list unnamed, inner lists named)
+      if (is.null(names(paramDefinition)) &&
+          length(paramDefinition) > 0 &&
+          is.list(paramDefinition[[1]]) &&
+          !is.null(names(paramDefinition[[1]]))) {
+        return(makeSequentialIterator(paramDefinition))
+      }
       expanded <- listCartesian(paramDefinition)
 
       if (identical(settings$search, "grid")) {

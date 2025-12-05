@@ -6,6 +6,7 @@ fitClassifier <- function(
   analysisId,
   ...
 ) {
+  modelSettings <- normalizeModelSettings(modelSettings)
   if (!FeatureExtraction::isCovariateData(trainData$covariateData)) {
     stop("Needs correct covariateData")
   }
@@ -141,7 +142,13 @@ fitClassifier <- function(
       attrition = attr(trainData, "metaData")$attrition,
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
-      modelName = modelSettings$modelName,
+      modelName = {
+        modelNameValue <- modelSettings$modelName
+        if (is.null(modelNameValue)) {
+          modelNameValue <- settings$modelName
+        }
+        modelNameValue
+      },
       finalModelParameters = tuneResult$finalParam,
       hyperParamSearch = tuneResult$paramSearch
     ),
