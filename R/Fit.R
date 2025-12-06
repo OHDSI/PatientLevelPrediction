@@ -61,6 +61,57 @@
 #' unlink(saveLoc, recursive = TRUE)
 #' }
 #' @export
+fitPlp <- function(
+    trainData,
+    modelSettings,
+    hyperparameterSettings = createHyperparameterSettings(),
+    search = "grid",
+    analysisId,
+    analysisPath) {
+  start <- Sys.time()
+  if (is.null(trainData)) {
+    stop("trainData is NULL")
+  }
+  if (is.null(trainData$covariateData)) {
+    stop("covariateData is NULL")
+  }
+  checkIsClass(trainData$covariateData, "CovariateData")
+  checkIsClass(modelSettings, "modelSettings")
+  modelSettings <- normalizeModelSettings(modelSettings)
+
+  # =========================================================
+  # run through pipeline list and apply:
+  # =========================================================
+
+  # Now apply the classifier:
+  if (!is.null(modelSettings$fitFunction)) {
+    fun <- modelSettings$fitFunction
+  } else {
+    fun <- "fitClassifier"
+  }
+  fun <- eval(parse(text = fun))
+  args <- list(
+    trainData = trainData,
+    modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
+    hyperparameterSettings = hyperparameterSettings,
+    search = search,
+    analysisId = analysisId,
+    analysisPath = analysisPath
+  )
+  plpModel <- do.call(fun, args)
+  ParallelLogger::logTrace("Returned from classifier function")
+
+  # adding trainDetails databaseId to all classifiers
+  # TODO - move other details into fit
+  plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
+  class(plpModel) <- "plpModel"
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Time to fit model: ", 
+    signif(delta, 3), " ", attr(delta, "units"))
+
+  return(plpModel)
+}
+
 normalizeModelSettings <- function(modelSettings) {
   param <- modelSettings$param
 
@@ -125,53 +176,3 @@ normalizeModelSettings <- function(modelSettings) {
   modelSettings
 }
 
-fitPlp <- function(
-    trainData,
-    modelSettings,
-    hyperparameterSettings = createHyperparameterSettings(),
-    search = "grid",
-    analysisId,
-    analysisPath) {
-  start <- Sys.time()
-  if (is.null(trainData)) {
-    stop("trainData is NULL")
-  }
-  if (is.null(trainData$covariateData)) {
-    stop("covariateData is NULL")
-  }
-  checkIsClass(trainData$covariateData, "CovariateData")
-  checkIsClass(modelSettings, "modelSettings")
-  modelSettings <- normalizeModelSettings(modelSettings)
-
-  # =========================================================
-  # run through pipeline list and apply:
-  # =========================================================
-
-  # Now apply the classifier:
-  if (!is.null(modelSettings$fitFunction)) {
-    fun <- modelSettings$fitFunction
-  } else {
-    fun <- "fitClassifier"
-  }
-  fun <- eval(parse(text = fun))
-  args <- list(
-    trainData = trainData,
-    modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
-    hyperparameterSettings = hyperparameterSettings,
-    search = search,
-    analysisId = analysisId,
-    analysisPath = analysisPath
-  )
-  plpModel <- do.call(fun, args)
-  ParallelLogger::logTrace("Returned from classifier function")
-
-  # adding trainDetails databaseId to all classifiers
-  # TODO - move other details into fit
-  plpModel$trainDetails$developmentDatabaseId <- attr(trainData, "metaData")$cdmDatabaseId
-  class(plpModel) <- "plpModel"
-  delta <- Sys.time() - start
-  ParallelLogger::logInfo("Time to fit model: ", 
-    signif(delta, 3), " ", attr(delta, "units"))
-
-  return(plpModel)
-}
