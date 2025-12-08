@@ -30,11 +30,12 @@ test_that("set LR inputs", {
   expect_equal(model_set$param$priorParams$priorType, "laplace")
 
   expect_equal(model_set$settings$cyclopsModelType, "logistic")
-  expect_equal(model_set$settings$modelType, "binary")
+  expect_equal(model_set$settings$predictionType, "binary")
+  expect_equal(model_set$settings$modelType, "lassoLogisticRegression")
+  expect_equal(model_set$settings$modelName, "Lasso Logistic Regression")
   expect_equal(model_set$settings$priorfunction, "Cyclops::createPrior")
   expect_equal(model_set$settings$addIntercept, TRUE)
   expect_equal(model_set$settings$useControl, TRUE)
-  expect_equal(model_set$settings$modelName, "Lasso Logistic Regression")
   expect_equal(model_set$settings$cvRepetitions, 1)
 
 
@@ -105,11 +106,12 @@ test_that("set cox regression inputs", {
   expect_equal(modelSet$param$priorParams$priorType, "laplace")
 
   expect_equal(modelSet$settings$cyclopsModelType, "cox")
-  expect_equal(modelSet$settings$modelType, "survival")
+  expect_equal(modelSet$settings$predictionType, "survival")
+  expect_equal(modelSet$settings$modelType, "coxLasso")
+  expect_equal(modelSet$settings$modelName, "LASSO Cox Regression")
   expect_equal(modelSet$settings$priorfunction, "Cyclops::createPrior")
   expect_equal(modelSet$settings$addIntercept, FALSE)
   expect_equal(modelSet$settings$useControl, TRUE)
-  expect_equal(modelSet$settings$modelName, "LASSO Cox Regression")
   expect_equal(modelSet$settings$cvRepetitions, 1)
 
   variance <- runif(1)
@@ -175,12 +177,13 @@ test_that("set IHT inputs", {
   expect_equal(modelSet$fitFunction, "fitCyclopsModel")
   expect_type(modelSet$param, "list")
 
+  expect_equal(modelSet$settings$modelName, "Iterative Hard Thresholding")
+  expect_equal(modelSet$settings$modelType, "iterativeHardThresholding")
   expect_equal(modelSet$settings$cyclopsModelType, "logistic")
-  expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$predictionType, "binary")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
   expect_equal(modelSet$settings$addIntercept, FALSE)
   expect_equal(modelSet$settings$useControl, FALSE)
-  expect_equal(modelSet$settings$modelName, "Iterative Hard Thresholding")
   expect_equal(modelSet$settings$crossValidationInPrior, FALSE)
 
   k <- sample(100, 1)
@@ -201,12 +204,21 @@ test_that("set IHT inputs", {
   modelSet <- setIterativeHardThresholding(fitBestSubset = TRUE)
   expect_equal(modelSet$param$priorParams$fitBestSubset, TRUE)
 
-  # add other parameter checks
-  ## initialRidgeVariance
-  ## tolerance
-  ## maxIterations
-  ## threshold
-  ## delta
+  modelSet <- setIterativeHardThresholding(initialRidgeVariance = 0.5)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
+
+  modelSet <- setIterativeHardThresholding(tolerance = 0.01)
+  expect_equal(modelSet$param$priorParams$tolerance, 0.01)
+  
+  modelSet <- setIterativeHardThresholding(maxIterations = 200)
+  expect_equal(modelSet$param$priorParams$maxIterations, 200)
+
+  modelSetg <- setIterativeHardThresholding(threshold = 0.1) 
+  expect_equal(modelSetg$param$priorParams$threshold, 0.1)
+
+  modelSet <- setIterativeHardThresholding(delta = 0.01)
+  expect_equal(modelSet$param$priorParams$delta, 0.01)
+
 
   seed <- sample(10, 1)
   modelSet <- setIterativeHardThresholding(seed = seed)

@@ -142,13 +142,7 @@ fitClassifier <- function(
       attrition = attr(trainData, "metaData")$attrition,
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
-      modelName = {
-        modelNameValue <- modelSettings$modelName
-        if (is.null(modelNameValue)) {
-          modelNameValue <- settings$modelName
-        }
-        modelNameValue
-      },
+      modelName = settings$modelName,
       finalModelParameters = tuneResult$finalParam,
       hyperParamSearch = tuneResult$paramSearch
     ),
@@ -281,7 +275,7 @@ tuneHyperparameters <- function(
     cvPrediction
   )
   attr(prediction, "metaData") <- list(
-    modelType = settings$modelType %||% attr(data, "modelType")
+    predictionType = settings$predictionType %||% attr(data, "modelType")
   )
 
   list(

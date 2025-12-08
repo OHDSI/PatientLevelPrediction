@@ -78,20 +78,21 @@ setLassoLogisticRegression <- function(
   )
 
   settings <- list(
+    modelName = "Lasso Logistic Regression",
+    modelType = "lassoLogisticRegression",
+    predictionType = "binary",
+    cyclopsModelType = "logistic",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byPid", # is this correct?
     crossValidationInPrior = TRUE,
-    cyclopsModelType = "logistic",
     addIntercept = TRUE,
     useControl = TRUE,
     seed = seed[1],
-    modelName = "Lasso Logistic Regression",
     threads = threads[1],
     tolerance = tolerance[1],
     cvRepetitions = 1,
     maxIterations = maxIterations[1],
     saveType = "RtoJson",
-    modelType = "binary",
     predict = "predictCyclops"
   )
 
@@ -160,21 +161,22 @@ setCoxModel <- function(
   )
 
   settings <- list(
+    modelName = "LASSO Cox Regression",
+    cyclopsModelType = "cox",
+    predictionType = "survival",
+    modelType = "coxLasso",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byRow",
     crossValidationInPrior = TRUE,
-    cyclopsModelType = "cox",
     addIntercept = FALSE,
     useControl = TRUE,
     seed = seed[1],
-    modelName = "LASSO Cox Regression",
     threads = threads[1],
     tolerance = tolerance[1],
     cvRepetitions = 1,
     maxIterations = maxIterations[1],
     saveType = "RtoJson",
-    predict = "predictCyclops",
-    modelType = "survival"
+    predict = "predictCyclops"
   )
 
   result <- list(
@@ -259,17 +261,18 @@ setIterativeHardThresholding <- function(
   )
 
   settings <- list(
+    modelName = "Iterative Hard Thresholding",
+    predictionType = "binary",
+    modelType = "iterativeHardThresholding",
+    cyclopsModelType = "logistic",
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
     crossValidationInPrior = FALSE,
-    cyclopsModelType = "logistic",
     addIntercept = FALSE,
     useControl = FALSE,
     seed = seed[1],
-    modelName = "Iterative Hard Thresholding",
     predict = "predictCyclops",
-    saveType = "RtoJson",
-    modelType = "binary"
+    saveType = "RtoJson"
   )
 
   result <- list(

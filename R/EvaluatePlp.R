@@ -51,12 +51,12 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   start <- Sys.time()
   # checking inputs
   # ========================================
-  modelType <- attr(prediction, "metaData")$modelType
+  predictionType <- attr(prediction, "metaData")$predictionType
 
   # could remove the bit below to let people add custom types (but currently
   # we are thinking this should be set - so people should add a new type
   # evaluation into the package rather than use custom
-  if (!modelType %in% c("binary", "survival")) {
+  if (!predictionType %in% c("binary", "survival")) {
     stop("Currently only support binary or survival classification models")
   }
 
@@ -71,7 +71,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   ParallelLogger::logTrace(paste0("Calulating evaluation summary Started @ ", Sys.time()))
   evaluationStatistics <- getEvaluationStatistics(
     prediction = prediction,
-    predictionType = modelType,
+    predictionType = predictionType,
     typeColumn = typeColumn
   )
 
@@ -82,7 +82,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
     {
       getThresholdSummary(
         prediction = prediction,
-        predictionType = modelType,
+        predictionType = predictionType,
         typeColumn = typeColumn
       )
     },
@@ -99,7 +99,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
     {
       getDemographicSummary(
         prediction = prediction,
-        predictionType = modelType,
+        predictionType = predictionType,
         typeColumn = typeColumn
       )
     },
@@ -116,7 +116,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
     {
       getCalibrationSummary(
         prediction = prediction,
-        predictionType = modelType,
+        predictionType = predictionType,
         typeColumn = typeColumn,
         numberOfStrata = 100,
         truncateFraction = 0.01
@@ -136,7 +136,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
     {
       getPredictionDistribution(
         prediction = prediction,
-        predictionType = modelType,
+        predictionType = predictionType,
         typeColumn = typeColumn
       )
     },

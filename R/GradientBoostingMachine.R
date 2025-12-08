@@ -118,8 +118,9 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
   )
   
   settings <- list(
-    modelName = "Xgboost",
-    modelType = "binary",
+    modelName = "Gradient Boosting Machine - XGBoost",
+    predictionType = "binary",
+    modelType = "xgboost",
     seed = seed[[1]],
     threads = nthread[1],
     variableImportance = "varImpXgboost",

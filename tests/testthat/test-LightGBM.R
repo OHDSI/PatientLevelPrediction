@@ -38,9 +38,10 @@ test_that("LightGBM settings work", {
   expect_s3_class(lgbmSet, "modelSettings")
   expect_type(lgbmSet$param, "list")
 
-  expect_equal(lgbmSet$settings$modelType, "binary")
+  expect_equal(lgbmSet$settings$predictionType, "binary")
   expect_equal(lgbmSet$settings$seed, seed)
-  expect_equal(lgbmSet$settings$modelName, "LightGBM")
+  expect_equal(lgbmSet$settings$modelName, "Gradient Boosting Machine - LightGBM")
+  expect_equal(lgbmSet$settings$modelType, "lightGBM")
 
   expect_equal(lgbmSet$settings$threads, 5)
   expect_equal(lgbmSet$settings$variableImportance, "varImpLightGBM")

@@ -100,14 +100,15 @@ setLightGBM <- function(nthread = 20,
 
   settings <- list(
     seed = seed[[1]],
-    modelName = "LightGBM",
+    modelName = "Gradient Boosting Machine - LightGBM",
+    predictionType = "binary",
+    modelType = "lightGBM",
     threads = nthread[1],
     variableImportance = "varImpLightGBM",
     train = "fitLightGBM",
     predict = "predictLightGBM",
     prepareData = "toSparseM",
-    saveType = "saveLoadLightGBM",
-    modelType = "binary"
+    saveType = "saveLoadLightGBM"
   )
 
   result <- list(

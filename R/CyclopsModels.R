@@ -161,7 +161,7 @@ fitCyclopsModel <- function(
   # get prediction on test set:
   ParallelLogger::logTrace("Getting predictions on train set")
   tempModel <- list(model = modelTrained)
-  attr(tempModel, "modelType") <- settings$modelType
+  attr(tempModel, "predictionType") <- settings$predictionType
   prediction <- predictCyclops(
     plpModel = tempModel,
     cohort = trainData$labels,
@@ -243,7 +243,7 @@ fitCyclopsModel <- function(
 
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictCyclops"
-  attr(result, "modelType") <- settings$modelType
+  attr(result, "predictionType") <- settings$predictionType
   attr(result, "saveType") <- settings$saveType
   return(result)
 }
@@ -289,7 +289,7 @@ predictCyclops <- function(plpModel, data, cohort) {
   )
 
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
-  if (attr(plpModel, "modelType") == "survival") {
+  if (attr(plpModel, "predictionType") == "survival") {
     if (!is.null(plpModel$model$baselineSurvival)) {
       if (is.null(attr(cohort, "timepoint"))) {
         timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
@@ -356,12 +356,12 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
       return(1 / (1 + exp(0 - x)))
     }
     prediction$value <- link(prediction$value)
-    attr(prediction, "metaData")$modelType <- "binary"
+    attr(prediction, "metaData")$predictionType <- "binary"
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     # add baseline hazard stuff
 
     prediction$value <- exp(prediction$value)
-    attr(prediction, "metaData")$modelType <- "survival"
+    attr(prediction, "metaData")$predictionType <- "survival"
     if (modelType == "survival") { # is this needed?
       attr(prediction, "metaData")$timepoint <- max(population$survivalTime, na.rm = TRUE)
     }

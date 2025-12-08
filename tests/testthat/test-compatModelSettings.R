@@ -119,7 +119,7 @@ test_that("predictPlp falls back to predictionFunction attribute", {
   pred <- predictPlp(plpModel, plpData, population)
   expect_s3_class(pred, "data.frame")
   expect_equal(nrow(pred), 2)
-  expect_equal(attr(pred, "metaData")$modelType, "binary")
+  expect_equal(attr(pred, "metaData")$predictionType, "binary")
 })
 
 test_that("savePlpModel falls back to saveType attribute", {

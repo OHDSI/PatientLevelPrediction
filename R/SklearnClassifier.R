@@ -74,13 +74,13 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
   )
 
   settings <- list(
-    modelType = "binary",
-
+    predictionType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "adaboost",
+    modelName = "Adaboost",
+    modelType = "adaboost",
     pythonModule = "sklearn.ensemble",
     pythonClass = "AdaBoostClassifier",
     variableImportance = "varImpSklearn",
@@ -313,7 +313,9 @@ setDecisionTree <- function(criterion = list("gini"),
   )
 
   settings <- list(
-    modelName = "decisionTree",
+    modelName = "Decision Tree",
+    modelType = "decisionTree",
+    predictionType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     requiresDenseMatrix = FALSE,
@@ -323,8 +325,7 @@ setDecisionTree <- function(criterion = list("gini"),
     train = "fitSklearn",
     predict = "predictSklearn",
     prepareData = "toSparseM",
-    saveType = "saveLoadSklearn",
-    modelType = "binary"
+    saveType = "saveLoadSklearn"
   )
 
   result <- list(
@@ -491,12 +492,13 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
   )
 
   settings <- list(
-    modelType = "binary",
+    modelName = "Multi-Layer Perceptron",
+    modelType = "mlp",
+    predictionType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "mlp",
     pythonModule = "sklearn.neural_network",
     pythonClass = "MLPClassifier",
     variableImportance = "varImpSklearn",
@@ -568,12 +570,13 @@ setNaiveBayes <- function() {
   param <- list(none = "true")
 
   settings <- list(
-    modelType = "binary",
+    modelName = "Naive Bayes",
+    modelType = "naiveBayes",
+    predictionType = "binary",
     seed = as.integer(0),
     paramNames = c(),
     # use this for logging params
     requiresDenseMatrix = TRUE,
-    modelName = "naiveBayes",
     pythonModule = "sklearn.naive_bayes",
     pythonClass = "GaussianNB",
     variableImportance = "varImpSklearn",
@@ -737,12 +740,13 @@ setRandomForest <- function(ntrees = list(100, 500),
   )
 
   settings <- list(
-    modelType = "binary",
+    modelName = "Random Forest",
+    modelType = "randomForest",
+    predictionType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "randomForest",
     pythonModule = "sklearn.ensemble",
     pythonClass = "RandomForestClassifier",
     variableImportance = "varImpSklearn",
@@ -854,12 +858,13 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
   )
 
   settings <- list(
-    modelType = "binary",
+    modelName = "Support Vector Machine",
+    modelType = "svm",
+    predictionType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "svm",
     pythonModule = "sklearn.svm",
     pythonClass = "SVC",
     variableImportance = "varImpSklearn",
