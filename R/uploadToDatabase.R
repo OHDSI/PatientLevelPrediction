@@ -734,7 +734,13 @@ insertModelInDatabase <- function(
   # need hyperParamSearch for shiny app but the other parts
   # are too large to store into the database
   trainDetails <- list(hyperParamSearch = model$trainDetails$hyperParamSearch)
-
+  notXgboost <- (model$modelDesign$modelSettings$settings$modelType != "xgboost") %||%
+    (attr(model, "saveType") != "xgboost")
+  intercept <- ifelse(
+    is.list(model$model) & notXgboost,
+    model$model$coefficients$betas[1],
+    0
+  )
   # create this function
   modelId <- addModel(
     conn = conn,
@@ -754,7 +760,7 @@ insertModelInDatabase <- function(
 
     executionDateTime = format(model$trainDetails$trainingDate, format = "%Y-%m-%d"),
     trainingTime = model$trainDetails$trainingTime,
-    intercept = ifelse(is.list(model$model) & attr(model, "saveType") != "xgboost", model$model$coefficients$betas[1], 0), # using the param useIntercept?
+    intercept = intercept, # using the param useIntercept?
 
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
