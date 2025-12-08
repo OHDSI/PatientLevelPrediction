@@ -289,7 +289,16 @@ predictCyclops <- function(plpModel, data, cohort) {
   )
 
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
-  if (attr(plpModel, "predictionType") == "survival") {
+  predictionType <- if (!is.null(attr(plpModel, "predictionType"))) {
+    attr(plpModel, "predictionType")
+  } else if (!is.null(attr(plpModel, "modelType"))) {
+    attr(plpModel, "modelType")
+  } else {
+    stop(
+      "No non-null prediction type found in model in either predictionType or modelType attribute"
+      )
+  }
+  if (predictionType == "survival") {
     if (!is.null(plpModel$model$baselineSurvival)) {
       if (is.null(attr(cohort, "timepoint"))) {
         timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
