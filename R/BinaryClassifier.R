@@ -150,6 +150,7 @@ fitClassifier <- function(
   )
 
   class(result) <- "plpModel"
+  attr(result, "modelType") <- settings$modelType
   return(result)
 }
 
@@ -275,7 +276,7 @@ tuneHyperparameters <- function(
     cvPrediction
   )
   attr(prediction, "metaData") <- list(
-    predictionType = settings$predictionType %||% attr(data, "modelType")
+    modelType = settings$modelType %||% attr(data, "modelType")
   )
 
   list(

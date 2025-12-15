@@ -78,9 +78,8 @@ setLassoLogisticRegression <- function(
   )
 
   settings <- list(
-    modelName = "Lasso Logistic Regression",
-    modelType = "lassoLogisticRegression",
-    predictionType = "binary",
+    modelName = "lassoLogisticRegression",
+    modelType = "binary",
     cyclopsModelType = "logistic",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byPid", # is this correct?
@@ -161,10 +160,9 @@ setCoxModel <- function(
   )
 
   settings <- list(
-    modelName = "LASSO Cox Regression",
     cyclopsModelType = "cox",
-    predictionType = "survival",
-    modelType = "coxLasso",
+    modelType = "survival",
+    modelName = "coxLasso",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byRow",
     crossValidationInPrior = TRUE,
@@ -261,9 +259,8 @@ setIterativeHardThresholding <- function(
   )
 
   settings <- list(
-    modelName = "Iterative Hard Thresholding",
-    predictionType = "binary",
-    modelType = "iterativeHardThresholding",
+    modelType = "binary",
+    modelName = "iterativeHardThresholding",
     cyclopsModelType = "logistic",
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",

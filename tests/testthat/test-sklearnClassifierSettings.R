@@ -20,14 +20,12 @@ test_that("setAdaBoost settings work checks", {
   adset <- setAdaBoost(
     nEstimators = list(10, 50, 200),
     learningRate = list(1, 0.5, 0.1),
-    algorithm = list("SAMME"),
     seed = sample(1000000, 1)
   )
 
   expect_false(adset$settings$requiresDenseMatrix)
-  expect_equal(adset$settings$modelName, "Adaboost")
-  expect_equal(adset$settings$modelType, "adaboost")
-  expect_equal(adset$settings$predictionType, "binary")
+  expect_equal(adset$settings$modelName, "adaboost")
+  expect_equal(adset$settings$modelType, "binary")
 
   expect_equal(adset$settings$pythonModule, "sklearn.ensemble")
   expect_equal(adset$settings$pythonClass, "AdaBoostClassifier")
@@ -39,7 +37,6 @@ test_that("setAdaBoost errors as expected", {
   skip_on_cran()
   expect_error(setAdaBoost(nEstimators = list(-1)))
   expect_error(setAdaBoost(learningRate = list(-1)))
-  expect_error(setAdaBoost(algorithm = list(-1)))
   expect_error(setAdaBoost(seed = list("seed")))
 })
 
@@ -72,9 +69,8 @@ test_that("setMLP settings work checks", {
   )
 
   expect_false(mlpset$settings$requiresDenseMatrix)
-  expect_equal(mlpset$settings$modelName, "Multi-Layer Perceptron")
-  expect_equal(mlpset$settings$modelType, "mlp")
-  expect_equal(mlpset$settings$predictionType, "binary")
+  expect_equal(mlpset$settings$modelName, "multiLayerPerceptron")
+  expect_equal(mlpset$settings$modelType, "binary")
   expect_equal(mlpset$settings$pythonModule, "sklearn.neural_network")
   expect_equal(mlpset$settings$pythonClass, "MLPClassifier")
 })
@@ -86,9 +82,8 @@ test_that("setNaiveBayes settings work checks", {
   nbset <- setNaiveBayes()
 
   expect_true(nbset$settings$requiresDenseMatrix)
-  expect_equal(nbset$settings$modelName, "Naive Bayes")
-  expect_equal(nbset$settings$modelType, "naiveBayes")
-  expect_equal(nbset$settings$predictionType, "binary")
+  expect_equal(nbset$settings$modelName, "naiveBayes")
+  expect_equal(nbset$settings$modelType, "binary")
   expect_equal(nbset$settings$pythonModule, "sklearn.naive_bayes")
   expect_equal(nbset$settings$pythonClass, "GaussianNB")
 })
@@ -115,9 +110,8 @@ test_that("setRandomForest settings work checks", {
     seed = sample(100000, 1)
   )
   expect_false(rfset$settings$requiresDenseMatrix)
-  expect_equal(rfset$settings$modelName, "Random Forest")
-  expect_equal(rfset$settings$modelType, "randomForest")
-  expect_equal(rfset$settings$predictionType, "binary")
+  expect_equal(rfset$settings$modelName, "randomForest")
+  expect_equal(rfset$settings$modelType, "binary")
   expect_equal(rfset$settings$pythonModule, "sklearn.ensemble")
   expect_equal(rfset$settings$pythonClass, "RandomForestClassifier")
 })
@@ -139,9 +133,8 @@ test_that("setSVM  settings work checks", {
     seed = sample(100000, 1)
   )
   expect_false(svmset$settings$requiresDenseMatrix)
-  expect_equal(svmset$settings$modelName, "Support Vector Machine")
-  expect_equal(svmset$settings$modelType, "svm")
-  expect_equal(svmset$settings$predictionType, "binary")
+  expect_equal(svmset$settings$modelName, "supportVectorMachine")
+  expect_equal(svmset$settings$modelType, "binary")
   expect_equal(svmset$settings$pythonModule, "sklearn.svm")
   expect_equal(svmset$settings$pythonClass, "SVC")
 })

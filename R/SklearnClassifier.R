@@ -20,7 +20,6 @@
 #' @param nEstimators    (list) The maximum number of estimators at which boosting is terminated. In case of perfect fit, the learning procedure is stopped early.
 #' @param learningRate   (list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 #'                       There is a trade-off between learningRate and nEstimators.
-#' @param algorithm      Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.
 #' @param seed           A seed for the model
 #' @return a modelSettings object
 #' @examples
@@ -33,13 +32,11 @@
 #' @export
 setAdaBoost <- function(nEstimators = list(10, 50, 200),
                         learningRate = list(1, 0.5, 0.1),
-                        algorithm = list("SAMME"),
                         seed = sample(1000000, 1)) {
   checkSklearn()
   checkIsClass(seed[[1]], c("numeric", "integer"))
   checkIsClass(nEstimators, "list")
   checkIsClass(learningRate, "list")
-  checkIsClass(algorithm, "list")
 
   lapply(1:length(nEstimators), function(i) {
     checkIsClass(nEstimators[[i]], c("integer", "numeric"))
@@ -61,26 +58,19 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
     checkHigher(learningRate[[i]], 0)
   })
 
-  lapply(1:length(algorithm), function(i) {
-    checkIsClass(algorithm[[i]], c("character"))
-    checkIsEqual(algorithm[[i]], "SAMME")
-  })
-
   param <- list(
     nEstimators = nEstimators,
     learningRate = learningRate,
-    algorithm = algorithm,
     seed = list(as.integer(seed[[1]]))
   )
 
   settings <- list(
-    predictionType = "binary",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
     requiresDenseMatrix = FALSE,
-    modelName = "Adaboost",
-    modelType = "adaboost",
+    modelName = "adaboost",
     pythonModule = "sklearn.ensemble",
     pythonClass = "AdaBoostClassifier",
     variableImportance = "varImpSklearn",
@@ -105,7 +95,6 @@ AdaBoostClassifierInputs <- function(classifier, param) {
   model <- classifier(
     n_estimators = param[[which.max(names(param) == "nEstimators")]],
     learning_rate = param[[which.max(names(param) == "learningRate")]],
-    algorithm = param[[which.max(names(param) == "algorithm")]],
     random_state = param[[which.max(names(param) == "seed")]]
   )
 
@@ -313,9 +302,8 @@ setDecisionTree <- function(criterion = list("gini"),
   )
 
   settings <- list(
-    modelName = "Decision Tree",
-    modelType = "decisionTree",
-    predictionType = "binary",
+    modelName = "decisionTree",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     requiresDenseMatrix = FALSE,
@@ -492,9 +480,8 @@ setMLP <- function(hiddenLayerSizes = list(c(100), c(20)),
   )
 
   settings <- list(
-    modelName = "Multi-Layer Perceptron",
-    modelType = "mlp",
-    predictionType = "binary",
+    modelName = "multiLayerPerceptron",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
@@ -570,9 +557,8 @@ setNaiveBayes <- function() {
   param <- list(none = "true")
 
   settings <- list(
-    modelName = "Naive Bayes",
-    modelType = "naiveBayes",
-    predictionType = "binary",
+    modelName = "naiveBayes",
+    modelType = "binary",
     seed = as.integer(0),
     paramNames = c(),
     # use this for logging params
@@ -740,9 +726,8 @@ setRandomForest <- function(ntrees = list(100, 500),
   )
 
   settings <- list(
-    modelName = "Random Forest",
-    modelType = "randomForest",
-    predictionType = "binary",
+    modelName = "randomForest",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params
@@ -858,9 +843,8 @@ setSVM <- function(C = list(1, 0.9, 2, 0.1),
   )
 
   settings <- list(
-    modelName = "Support Vector Machine",
-    modelType = "svm",
-    predictionType = "binary",
+    modelName = "supportVectorMachine",
+    modelType = "binary",
     seed = seed[[1]],
     paramNames = names(param),
     # use this for logging params

@@ -42,7 +42,7 @@ test_that("evaluatePlp_survival", {
     evaluationType = rep("Train", n),
     survivalTime = sample(2000, n, replace = TRUE)
   )
-  attr(plpResultSurvivalPred, "metaData")$predictionType <- "survival"
+  attr(plpResultSurvivalPred, "metaData")$modelType <- "survival"
   attr(plpResultSurvivalPred, "metaData")$timepoint <- 365
 
   eval <- evaluatePlp(

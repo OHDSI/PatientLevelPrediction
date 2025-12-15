@@ -117,11 +117,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   # add metaData
-  if (!is.null(plpModel$modelDesign$modelSettings$settings$predictionType)) {
-    metaData$predictionType <- plpModel$modelDesign$modelSettings$settings$predictionType
-  } else {
-    metaData$predictionType <- attr(plpModel, "modelType")
-  }
+  metaData$modelType <- attr(plpModel, "modelType")
   metaData$targetId <- attr(population, "metaData")$targetId
   metaData$outcomeId <- attr(population, "metaData")$outcomeId
   metaData$timepoint <- timepoint

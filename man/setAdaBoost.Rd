@@ -7,7 +7,6 @@
 setAdaBoost(
   nEstimators = list(10, 50, 200),
   learningRate = list(1, 0.5, 0.1),
-  algorithm = list("SAMME"),
   seed = sample(1e+06, 1)
 )
 }
@@ -16,8 +15,6 @@ setAdaBoost(
 
 \item{learningRate}{(list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 There is a trade-off between learningRate and nEstimators.}
-
-\item{algorithm}{Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.}
 
 \item{seed}{A seed for the model}
 }
