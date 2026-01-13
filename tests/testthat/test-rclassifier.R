@@ -98,6 +98,22 @@ test_that("GBM working checks", {
   # test that at least some features have importances that are not zero
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
 
+  # test save and load
+  savePath <- tempfile("xgboostTest_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(fitModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+  expect_equal(class(loadModel$model), "xgb.Booster")
+
+  predFit <- predictPlp(fitModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
+
   oneModel <- fitPlp(
     trainData = oneTrainData,
     modelSettings = modelSettings,

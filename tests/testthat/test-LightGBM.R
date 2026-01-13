@@ -74,7 +74,15 @@ test_that("LightGBM working checks", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
   skip_if_offline()
-  modelSettings <- setLightGBM(numIterations = 10, maxDepth = 3, learningRate = 0.1, numLeaves = 31, minDataInLeaf = 10, lambdaL1 = 0, lambdaL2 = 0)
+  modelSettings <- setLightGBM(
+    numIterations = 10, 
+    maxDepth = 3, 
+    learningRate = 0.1, 
+    numLeaves = 31, 
+    minDataInLeaf = 10, 
+    lambdaL1 = 0, 
+    lambdaL2 = 0
+  )
 
   fitModel <- fitPlp(
     trainData = trainData,
@@ -92,7 +100,10 @@ test_that("LightGBM working checks", {
 
   expect_equal(class(fitModel$model), c("lgb.Booster", "R6"))
 
-  expect_lte(nrow(fitModel$covariateImportance), trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  expect_lte(
+    nrow(fitModel$covariateImportance), 
+    trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()
+  )
 
   expect_equal(fitModel$modelDesign$outcomeId, outcomeId)
   expect_equal(fitModel$modelDesign$targetId, 1)
@@ -100,4 +111,28 @@ test_that("LightGBM working checks", {
 
   # test that at least some features have importances that are not zero
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
+
+  # test save and load
+  savePath <- tempfile("lgbmTest_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(fitModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+  expect_equal(class(loadModel$model), c("lgb.Booster", "R6"))
+  expect_equal(loadModel$model$num_trees(), fitModel$model$num_trees())
+
+  predFit <- predictPlp(
+    plpModel = fitModel,
+    plpData = testData,
+    population = testData$labels
+  )
+  predLoad <- predictPlp(
+    plpModel = loadModel,
+    plpData = testData,
+    population = testData$labels
+  )
+  expect_equal(predLoad$value, predFit$value, tolerance = 0e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
 })

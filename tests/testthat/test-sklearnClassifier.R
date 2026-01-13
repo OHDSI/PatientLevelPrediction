@@ -80,6 +80,22 @@ test_that("check fit of DecisionTree", {
   expect_equal(mean(predictions$value), mean(trainPredictions))
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
   # add check for other model design settings
+
+  # test save and load
+  savePath <- tempfile("decisionTree_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(plpModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+
+  predFit <- predictPlp(plpModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
+
   # test with one feature
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -96,7 +112,7 @@ test_that("check fit of DecisionTree", {
 
 })
 
-test_that("fitBinaryClassifier errors with wrong covariateData", {
+test_that("fitClassifier errors with wrong covariateData", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
   newTrainData <- copyTrainData(trainData)
@@ -104,7 +120,7 @@ test_that("fitBinaryClassifier errors with wrong covariateData", {
   modelSettings <- setAdaBoost()
   analysisId <- 42
 
-  expect_error(fitBinaryClassifier(newTrainData,
+  expect_error(fitClassifier(newTrainData,
     modelSettings,
     search = "grid",
     analysisId = analysisId
@@ -230,6 +246,21 @@ test_that("Naive bayes fit works", {
   )
 
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
+
+  # test save and load
+  savePath <- tempfile("naiveBayes_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(plpModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+
+  predFit <- predictPlp(plpModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
   
   oneModel <- fitPlp(
     trainData = oneTrainData,
