@@ -122,7 +122,6 @@ test_that("fitClassifier errors with wrong covariateData", {
 
   expect_error(fitClassifier(newTrainData,
     modelSettings,
-    search = "grid",
     analysisId = analysisId
   ))
 })

@@ -30,7 +30,6 @@
 #' @param modelSettings An object of class \code{modelSettings} created using 
 #' one of the \code{createModelSettings} functions
 #' @param hyperparameterSettings An object of class \code{hyperparameterSettings}'
-#' @param search The search strategy for the hyper-parameter selection (currently not used)
 #' @param analysisId                       The id of the analysis
 #' @param analysisPath                     The path of the analysis
 #' @return
@@ -65,7 +64,6 @@ fitPlp <- function(
     trainData,
     modelSettings,
     hyperparameterSettings = createHyperparameterSettings(),
-    search = "grid",
     analysisId,
     analysisPath) {
   start <- Sys.time()
@@ -94,7 +92,6 @@ fitPlp <- function(
     trainData = trainData,
     modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
     hyperparameterSettings = hyperparameterSettings,
-    search = search,
     analysisId = analysisId,
     analysisPath = analysisPath
   )
@@ -180,7 +177,6 @@ fitClassifier <- function(
   trainData,
   modelSettings,
   hyperparameterSettings = createHyperparameterSettings(),
-  search = NULL, # redundant input - add warning if not null?
   analysisId,
   ...
 ) {

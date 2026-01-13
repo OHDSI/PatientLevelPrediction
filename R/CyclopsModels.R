@@ -21,7 +21,6 @@ fitCyclopsModel <- function(
     trainData,
     modelSettings, # old:param,
     hyperparameterSettings = NULL,
-    search = "adaptive",
     analysisId,
     ...) {
   

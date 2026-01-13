@@ -8,7 +8,6 @@ fitPlp(
   trainData,
   modelSettings,
   hyperparameterSettings = createHyperparameterSettings(),
-  search = "grid",
   analysisId,
   analysisPath
 )
@@ -21,8 +20,6 @@ data extracted from the CDM.}
 one of the \code{createModelSettings} functions}
 
 \item{hyperparameterSettings}{An object of class \code{hyperparameterSettings}'}
-
-\item{search}{The search strategy for the hyper-parameter selection (currently not used)}
 
 \item{analysisId}{The id of the analysis}
 

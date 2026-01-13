@@ -243,7 +243,6 @@ test_that("test logistic regression runs", {
   fitModel <- fitPlp(
     trainData = trainData,
     modelSettings = modelSettings,
-    search = "grid",
     analysisId = "lrTest",
     analysisPath = tempdir()
   )
