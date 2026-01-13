@@ -53,7 +53,7 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   # ========================================
   modelType <- attr(prediction, "metaData")$modelType 
   if (is.null(modelType)) {
-    stop("No predictionType found in prediction object in either metaData$predictionType or metaData$modelType attribute")
+    stop("No modelType found in prediction object in metaData$modelType attribute")
   }
 
   # could remove the bit below to let people add custom types (but currently
