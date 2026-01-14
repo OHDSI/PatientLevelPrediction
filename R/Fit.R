@@ -166,6 +166,18 @@ normalizeModelSettings <- function(modelSettings) {
 
   modelSettings$settings <- settings
 
+  # Backwards compatibility:
+  # Historically fitPlp used modelSettings$fitFunction values like "fitRclassifier"
+  # or "fitSklearn". Those are no longer valid entry points. For legacy objects,
+  # the intended behavior is to route through fitClassifier using the mapped
+  # settings$train/predict/variableImportance interface.
+  if (!is.null(modelSettings$fitFunction) && is.character(modelSettings$fitFunction)) {
+    legacyFitFunctions <- c("fitRclassifier", "fitSklearn")
+    if (modelSettings$fitFunction %in% legacyFitFunctions) {
+      modelSettings$fitFunction <- NULL
+    }
+  }
+
   if (is.null(modelSettings$modelName) && !is.null(settings$modelName)) {
     modelSettings$modelName <- settings$modelName
   }

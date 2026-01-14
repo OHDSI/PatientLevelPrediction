@@ -185,3 +185,182 @@ test_that("tuneHyperparameters defaults tuning metric when missing", {
   expect_true(is.list(res))
   expect_true("finalParam" %in% names(res))
 })
+
+
+test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClassifier", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
+  skip_on_cran()
+
+  dummyTrain <- function(dataMatrix, labels, hyperParameters, settings) {
+    list(hyperParameters = hyperParameters)
+  }
+  dummyPredict <- function(plpModel, data, cohort) {
+    prediction <- cohort
+    prediction$value <- rep(0.5, nrow(cohort))
+    if (is.null(prediction$originalRowId)) {
+      prediction$originalRowId <- prediction$rowId
+    }
+    prediction
+  }
+  dummyVarImp <- function(model, covariateMap) {
+    NULL
+  }
+
+  oldParam <- list(list(dummy = 1))
+  attr(oldParam, "settings") <- list(
+    modelName = "LegacyDummy",
+    trainRFunction = dummyTrain,
+    predictRFunction = dummyPredict,
+    varImpRFunction = dummyVarImp,
+    seed = 1
+  )
+
+  hyperparameterSettings <- createHyperparameterSettings(
+    tuningMetric = createTuningMetric(
+      fun = function(prediction) 0.5,
+      name = "constant"
+    )
+  )
+
+  for (legacyFitFunction in c("fitRclassifier", "fitSklearn")) {
+    modelSettings <- list(
+      fitFunction = legacyFitFunction,
+      param = oldParam
+    )
+    class(modelSettings) <- "modelSettings"
+
+    expect_no_error({
+      plpModel <- fitPlp(
+        trainData = tinyTrainData,
+        modelSettings = modelSettings,
+        hyperparameterSettings = hyperparameterSettings,
+        analysisId = paste0("compat_", legacyFitFunction),
+        analysisPath = tempdir()
+      )
+    })
+  }
+})
+
+test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitRclassifier modelSettings", {
+  skip_if_not_installed(c("Eunomia", "xgboost"))
+  skip_if_offline()
+  skip_on_cran()
+
+  paramGrid <- list(
+    ntrees = list(2L),
+    earlyStopRound = list(25L),
+    maxDepth = list(3L),
+    minChildWeight = list(1),
+    learnRate = list(0.1),
+    scalePosWeight = list(1),
+    lambda = list(1),
+    alpha = list(0)
+  )
+  param <- listCartesian(paramGrid)
+  attr(param, "settings") <- list(
+    modelType = "Xgboost",
+    seed = 1,
+    modelName = "Gradient Boosting Machine",
+    threads = 1,
+    varImpRFunction = "varImpXgboost",
+    trainRFunction = "fitXgboost",
+    predictRFunction = "predictXgboost"
+  )
+  attr(param, "saveType") <- "xgboost"
+
+  legacyModelSettings <- structure(
+    list(
+      fitFunction = "fitRclassifier",
+      param = param
+    ),
+    class = "modelSettings"
+  )
+
+  jsonFile <- tempfile("legacy_fitRclassifier_", fileext = ".json")
+  ParallelLogger::saveSettingsToJson(
+    object = legacyModelSettings,
+    fileName = jsonFile
+  )
+  reloaded <- ParallelLogger::loadSettingsFromJson(fileName = jsonFile)
+
+  expect_s3_class(reloaded, "modelSettings")
+  expect_true(!is.null(attr(reloaded$param, "settings")))
+  expect_true(!is.null(attr(reloaded$param, "settings")$trainRFunction))
+
+  hyperparameterSettings <- createHyperparameterSettings(
+    tuningMetric = createTuningMetric(
+      fun = function(prediction) 0.5,
+      name = "constant"
+    )
+  )
+
+  expect_no_error({
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = reloaded,
+      hyperparameterSettings = hyperparameterSettings,
+      analysisId = "compat_json_fitRclassifier",
+      analysisPath = tempdir()
+    )
+  })
+})
+
+test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitSklearn modelSettings", {
+  skip_if_not_installed(c("Eunomia", "reticulate"))
+  skip_if_offline()
+  skip_on_cran()
+
+  paramGrid <- list(
+    nEstimators = list(10L),
+    learningRate = list(0.1),
+    seed = list(1L)
+  )
+  param <- listCartesian(paramGrid)
+  attr(param, "settings") <- list(
+    modelType = "adaBoost",
+    seed = 1,
+    paramNames = names(paramGrid),
+    requiresDenseMatrix = FALSE,
+    name = "AdaBoost",
+    pythonModule = "sklearn.ensemble",
+    pythonClass = "AdaBoostClassifier"
+  )
+  attr(param, "saveType") <- "file"
+
+  legacyModelSettings <- structure(
+    list(
+      fitFunction = "fitSklearn",
+      param = param
+    ),
+    class = "modelSettings"
+  )
+
+  jsonFile <- tempfile("legacy_fitSklearn_", fileext = ".json")
+  ParallelLogger::saveSettingsToJson(
+    object = legacyModelSettings,
+    fileName = jsonFile
+  )
+  reloaded <- ParallelLogger::loadSettingsFromJson(fileName = jsonFile)
+
+  expect_s3_class(reloaded, "modelSettings")
+  expect_true(!is.null(attr(reloaded$param, "settings")))
+  expect_true(!is.null(attr(reloaded$param, "settings")$pythonModule))
+
+  hyperparameterSettings <- createHyperparameterSettings(
+    tuningMetric = createTuningMetric(
+      fun = function(prediction) 0.5,
+      name = "constant"
+    )
+  )
+
+  expect_no_error({
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = reloaded,
+      hyperparameterSettings = hyperparameterSettings,
+      analysisId = "compat_json_fitSklearn",
+      analysisPath = tempdir()
+    )
+  })
+})

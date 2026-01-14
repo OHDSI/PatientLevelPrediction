@@ -294,7 +294,7 @@ runPlp <- function(
     )
     
     ParallelLogger::logInfo(sprintf("Training %s model",
-      settings$modelSettings$name))  
+      settings$modelSettings$modelName %||% settings$modelSettings$name))  
 
     model <- tryCatch(
       {

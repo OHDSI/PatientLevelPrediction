@@ -62,7 +62,8 @@ prepareHyperparameterGrid <- function(paramDefinition,
 
       # Backwards compatibility: already-expanded grids stored as a list of
       # parameter combinations (outer list unnamed, inner lists named)
-      if (is.null(names(paramDefinition)) &&
+      # and special case after json roundtrip: outer list with names "1", "2", ..., like in strategus specs
+      if (is.list(paramDefinition) &&
           length(paramDefinition) > 0 &&
           is.list(paramDefinition[[1]]) &&
           !is.null(names(paramDefinition[[1]]))) {
