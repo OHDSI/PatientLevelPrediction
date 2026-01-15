@@ -192,7 +192,7 @@ listCartesian <- function(allList) {
 #' @param prediction A data.frame with predictions and an `index` column for folds.
 #' @param param A list of hyperparameters (values may include `NULL`).
 #' @param performanceFunct String or function to compute performance on a prediction data.frame.
-#'   Default is `"computeAuc"`.
+#'   Default is `PatientLevelPrediction::computeAuc`.
 #' @return A list with overall and per-fold performance plus the parameter summary.
 #' @examples
 #' prediction <- data.frame(
@@ -202,7 +202,7 @@ listCartesian <- function(allList) {
 #'   index = c(1, 1, 1, 1, 1)
 #' )
 #' param <- list(hyperParam1 = 5, hyperParam2 = 100)
-#' computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
+#' computeGridPerformance(prediction, param, performanceFunct = PatientLevelPrediction::computeAuc)
 #' @export
 computeGridPerformance <- function(
     prediction,
@@ -210,10 +210,17 @@ computeGridPerformance <- function(
     performanceFunct = "computeAuc") {
   perfFun <- performanceFunct
   if (is.character(performanceFunct)) {
-    perfFun <- get(performanceFunct, envir = parent.frame())
+    perfFun <- get0(performanceFunct, envir = parent.frame(), inherits = TRUE)
+  }
+  if (is.null(perfFun)) {
+    perfFun <- get0(
+      performanceFunct, 
+      envir = asNamespace("PatientLevelPrediction"), 
+      inherits = FALSE
+    ) 
   }
   if (!is.function(perfFun)) {
-    stop("performanceFunct must be a function or a function name")
+    stop("performanceFunct must be a function or a function name. Fun: ", perfFun)
   }
 
   computeMetric <- function(pred) {

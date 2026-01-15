@@ -12,7 +12,7 @@ computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
 \item{param}{A list of hyperparameters (values may include \code{NULL}).}
 
 \item{performanceFunct}{String or function to compute performance on a prediction data.frame.
-Default is \code{"computeAuc"}.}
+Default is \code{PatientLevelPrediction::computeAuc}.}
 }
 \value{
 A list with overall and per-fold performance plus the parameter summary.
@@ -28,5 +28,5 @@ prediction <- data.frame(
   index = c(1, 1, 1, 1, 1)
 )
 param <- list(hyperParam1 = 5, hyperParam2 = 100)
-computeGridPerformance(prediction, param, performanceFunct = "computeAuc")
+computeGridPerformance(prediction, param, performanceFunct = PatientLevelPrediction::computeAuc)
 }

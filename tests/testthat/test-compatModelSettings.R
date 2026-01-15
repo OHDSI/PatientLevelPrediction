@@ -82,6 +82,62 @@ test_that("computeGridPerformance remains exported and works", {
   expect_true("hyperSummary" %in% names(result))
 })
 
+test_that("computeGridPerformance resolves metric name in PatientLevelPrediction namespace", {
+  prediction <- data.frame(
+    rowId = 1:4,
+    outcomeCount = c(0, 1, 0, 1),
+    value = c(0.2, 0.8, 0.3, 0.7),
+    index = c(1, 1, 2, 2)
+  )
+  param <- list(alpha = 1, lambda = NULL)
+
+  # Evaluate in an environment with no access to PatientLevelPrediction symbols
+  # via parent.frame() inheritance, to ensure the function can resolve its own
+  # metric by name.
+  isolated <- new.env(parent = baseenv())
+  isolated$computeGridPerformance <- PatientLevelPrediction::computeGridPerformance
+  isolated$prediction <- prediction
+  isolated$param <- param
+  res <- evalq(
+    computeGridPerformance(
+      prediction = prediction,
+      param = param,
+      performanceFunct = "computeAuc"
+    ),
+    envir = isolated
+  )
+
+  expect_true(is.list(res))
+  expect_equal(res$metric, "computeAuc")
+})
+
+test_that("computeGridPerformance resolves metric name in caller environment first", {
+  prediction <- data.frame(
+    rowId = 1:4,
+    outcomeCount = c(0, 1, 0, 1),
+    value = c(0.2, 0.8, 0.3, 0.7),
+    index = c(1, 1, 2, 2)
+  )
+  param <- list(alpha = 1, lambda = NULL)
+
+  isolated <- new.env(parent = baseenv())
+  isolated$computeGridPerformance <- PatientLevelPrediction::computeGridPerformance
+  isolated$prediction <- prediction
+  isolated$param <- param
+  isolated$myMetric <- function(prediction) 0.123
+  res <- evalq(
+    computeGridPerformance(
+      prediction = prediction,
+      param = param,
+      performanceFunct = "myMetric"
+    ),
+    envir = isolated
+  )
+
+  expect_equal(res$metric, "myMetric")
+  expect_equal(res$cvPerformance, 0.123)
+})
+
 test_that("predictPlp falls back to predictionFunction attribute", {
   dummyPredict <- function(plpModel, data, cohort) {
     data.frame(
