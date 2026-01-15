@@ -58,32 +58,39 @@ runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
   # (e.g., packages left attached on the search path).
   filterArg <- filterArg %||% ""
 
-  code <- paste(
-    "args <- commandArgs(trailingOnly = TRUE)",
-    "pkgPath <- args[[1]]",
-    "filterArg <- args[[2]]",
-    "countsPath <- args[[3]]",
-    "if (!requireNamespace('testthat', quietly = TRUE)) stop('testthat not installed')",
-    "if (!requireNamespace('jsonlite', quietly = TRUE)) stop('jsonlite not installed')",
-    "res <- testthat::test_local(",
-    "  path = pkgPath,",
-    "  filter = if (nzchar(filterArg)) filterArg else NULL,",
-    "  stop_on_failure = FALSE,",
-    "  reporter = 'summary'",
-    ")",
-    "df <- as.data.frame(res)",
-    "counts <- list(",
-    "  fail = sum(df$failed, na.rm = TRUE),",
-    "  err = sum(df$error, na.rm = TRUE),",
-    "  warn = sum(df$warning, na.rm = TRUE),",
-    "  skip = sum(df$skipped, na.rm = TRUE)",
-    ")",
-    "jsonlite::write_json(counts, countsPath, pretty = TRUE, auto_unbox = TRUE)",
-    "invisible(counts)",
-    sep = "\n"
+  runner <- tempfile("revdep_run_tests_", fileext = ".R")
+  writeLines(
+    c(
+      "args <- commandArgs(trailingOnly = TRUE)",
+      "pkgPath <- args[[1]]",
+      "filterArg <- args[[2]]",
+      "countsPath <- args[[3]]",
+      "",
+      "if (!requireNamespace('testthat', quietly = TRUE)) stop('testthat not installed')",
+      "if (!requireNamespace('jsonlite', quietly = TRUE)) stop('jsonlite not installed')",
+      "",
+      "res <- testthat::test_local(",
+      "  path = pkgPath,",
+      "  filter = if (nzchar(filterArg)) filterArg else NULL,",
+      "  stop_on_failure = FALSE,",
+      "  reporter = 'summary'",
+      ")",
+      "",
+      "df <- as.data.frame(res)",
+      "counts <- list(",
+      "  fail = sum(df$failed, na.rm = TRUE),",
+      "  err = sum(df$error, na.rm = TRUE),",
+      "  warn = sum(df$warning, na.rm = TRUE),",
+      "  skip = sum(df$skipped, na.rm = TRUE)",
+      ")",
+      "jsonlite::write_json(counts, countsPath, pretty = TRUE, auto_unbox = TRUE)",
+      "invisible(counts)"
+    ),
+    runner
   )
+  on.exit(unlink(runner), add = TRUE)
 
-  args <- c("--vanilla", "-e", code, pkgPath, filterArg, countsJsonPath)
+  args <- c("--vanilla", runner, pkgPath, filterArg, countsJsonPath)
   system2("Rscript", args, stdout = testLogPath, stderr = testLogPath)
 }
 
