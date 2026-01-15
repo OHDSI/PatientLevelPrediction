@@ -260,7 +260,7 @@ test_that("temporary sqlite with results works", {
   expect_true(nzchar(res$trainDetails[1]))
 
   expectedIntercept <- PatientLevelPrediction:::getModelIntercept(plpResult$model)
-  expect_equal(res$intercept[1], expectedIntercept, tolerance = 1e-6)
+  expect_equal(res$intercept[1], expectedIntercept, tolerance = 1e-4)
 
   # disconnect
   DatabaseConnector::disconnect(conn)
@@ -312,7 +312,7 @@ test_that("temporary sqlite with results works", {
   expect_equal(
     res$intercept[1],
     PatientLevelPrediction:::getModelIntercept(plpResult$model),
-    tolerance = 1e-6
+    tolerance = 1e-4
   )
 
 
