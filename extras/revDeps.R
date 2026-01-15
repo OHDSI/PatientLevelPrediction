@@ -62,9 +62,10 @@ runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
   writeLines(
     c(
       "args <- commandArgs(trailingOnly = TRUE)",
+      "if (length(args) < 2) stop('Expected 2 args: <pkgPath> <countsPath>')",
       "pkgPath <- args[[1]]",
-      "filterArg <- args[[2]]",
-      "countsPath <- args[[3]]",
+      "countsPath <- args[[2]]",
+      "filterArg <- Sys.getenv('REVDEP_FILTER', unset = '')",
       "",
       "if (!requireNamespace('testthat', quietly = TRUE)) stop('testthat not installed')",
       "if (!requireNamespace('jsonlite', quietly = TRUE)) stop('jsonlite not installed')",
@@ -90,8 +91,14 @@ runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
   )
   on.exit(unlink(runner), add = TRUE)
 
-  args <- c("--vanilla", runner, pkgPath, filterArg, countsJsonPath)
-  system2("Rscript", args, stdout = testLogPath, stderr = testLogPath)
+  args <- c("--vanilla", runner, pkgPath, countsJsonPath)
+  system2(
+    "Rscript",
+    args,
+    env = c(paste0("REVDEP_FILTER=", filterArg)),
+    stdout = testLogPath,
+    stderr = testLogPath
+  )
 }
 
 stripAnsi <- function(text) {
