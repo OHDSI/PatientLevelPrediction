@@ -754,7 +754,7 @@ insertModelInDatabase <- function(
 
     executionDateTime = format(model$trainDetails$trainingDate, format = "%Y-%m-%d"),
     trainingTime = model$trainDetails$trainingTime,
-    intercept = getModelIntercept(model$model), 
+    intercept = getModelIntercept(model), 
 
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema

@@ -242,6 +242,26 @@ test_that("temporary sqlite with results works", {
   res <- DatabaseConnector::querySql(conn, sql)
   expect_true(res$N[1] > 0)
 
+  # check the models table is populated and intercept is stored correctly
+  sql <- paste(
+    "select",
+    "  model_type as modelType,",
+    "  intercept as intercept,",
+    "  plp_model_file as plpModelFile,",
+    "  train_details as trainDetails",
+    "from main.models;"
+  )
+  res <- DatabaseConnector::querySql(conn, sql)
+  expect_true(nrow(res) > 0)
+  expect_true(all(!is.na(res$plpModelFile)))
+  expect_true(dir.exists(res$plpModelFile[1]))
+  expect_true(length(list.files(res$plpModelFile[1], all.files = TRUE, recursive = TRUE)) > 0)
+  expect_true(nzchar(res$modelType[1]))
+  expect_true(nzchar(res$trainDetails[1]))
+
+  expectedIntercept <- PatientLevelPrediction:::getModelIntercept(plpResult$model)
+  expect_equal(res$intercept[1], expectedIntercept, tolerance = 1e-6)
+
   # disconnect
   DatabaseConnector::disconnect(conn)
 })
@@ -283,6 +303,17 @@ test_that("temporary sqlite with results works", {
   sql <- "select count(*) as N from main.performances;"
   res <- DatabaseConnector::querySql(conn, sql)
   expect_true(res$N[1] > 0)
+
+  # models table exists and has expected intercept
+  sql <- "select intercept as intercept, plp_model_file as plpModelFile from main.models;"
+  res <- DatabaseConnector::querySql(conn, sql)
+  expect_true(nrow(res) > 0)
+  expect_true(dir.exists(res$plpModelFile[1]))
+  expect_equal(
+    res$intercept[1],
+    PatientLevelPrediction:::getModelIntercept(plpResult$model),
+    tolerance = 1e-6
+  )
 
 
   # check export to csv
