@@ -1,0 +1,75 @@
+# Create setting for the python sklearn SVM (SVC function)
+
+Create setting for the python sklearn SVM (SVC function)
+
+## Usage
+
+``` r
+setSVM(
+  C = list(1, 0.9, 2, 0.1),
+  kernel = list("rbf"),
+  degree = list(1, 3, 5),
+  gamma = list("scale", 1e-04, 3e-05, 0.001, 0.01, 0.25),
+  coef0 = list(0),
+  shrinking = list(TRUE),
+  tol = list(0.001),
+  classWeight = list(NULL),
+  cacheSize = 500,
+  seed = sample(1e+05, 1)
+)
+```
+
+## Arguments
+
+- C:
+
+  (list) Regularization parameter. The strength of the regularization is
+  inversely proportional to C. Must be strictly positive. The penalty is
+  a squared l2 penalty.
+
+- kernel:
+
+  (list) Specifies the kernel type to be used in the algorithm. one of
+  ‘linear’, ‘poly’, ‘rbf’, ‘sigmoid’, ‘precomputed’. If none is given
+  ‘rbf’ will be used.
+
+- degree:
+
+  (list) degree of kernel function is significant only in poly, rbf,
+  sigmoid
+
+- gamma:
+
+  (list) kernel coefficient for rbf and poly, by default 1/n_features
+  will be taken. ‘scale’, ‘auto’ or float, default=’scale’
+
+- coef0:
+
+  (list) independent term in kernel function. It is only significant in
+  poly/sigmoid.
+
+- shrinking:
+
+  (list) whether to use the shrinking heuristic.
+
+- tol:
+
+  (list) Tolerance for stopping criterion.
+
+- classWeight:
+
+  (list) Class weight based on imbalance either 'balanced' or NULL
+
+- cacheSize:
+
+  Specify the size of the kernel cache (in MB).
+
+- seed:
+
+  A seed for the model
+
+## Value
+
+a modelSettings object
+
+## Examples

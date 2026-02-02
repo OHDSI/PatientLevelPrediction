@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Create setting for AdaBoost with python DecisionTreeClassifier base estimator</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SklearnClassifierSettings.R" class="external-link"><code>R/SklearnClassifierSettings.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SklearnClassifier.R" class="external-link"><code>R/SklearnClassifier.R</code></a></small>
       <div class="d-none name"><code>setAdaBoost.Rd</code></div>
     </div>
 
@@ -67,7 +67,6 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">setAdaBoost</span><span class="op">(</span></span>
 <span>  nEstimators <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">50</span>, <span class="fl">200</span><span class="op">)</span>,</span>
 <span>  learningRate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.5</span>, <span class="fl">0.1</span><span class="op">)</span>,</span>
-<span>  algorithm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"SAMME"</span><span class="op">)</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1e+06</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -83,10 +82,6 @@
 <dt id="arg-learningrate">learningRate<a class="anchor" aria-label="anchor" href="#arg-learningrate"></a></dt>
 <dd><p>(list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 There is a trade-off between learningRate and nEstimators.</p></dd>
-
-
-<dt id="arg-algorithm">algorithm<a class="anchor" aria-label="anchor" href="#arg-algorithm"></a></dt>
-<dd><p>Only ‘SAMME’ can be provided. The 'algorithm' argument will be deprecated in scikit-learn 1.8.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -111,7 +106,7 @@ There is a trade-off between learningRate and nEstimators.</p></dd>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

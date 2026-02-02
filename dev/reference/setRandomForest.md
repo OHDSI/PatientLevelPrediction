@@ -1,0 +1,123 @@
+# Create setting for random forest model using sklearn
+
+Create setting for random forest model using sklearn
+
+## Usage
+
+``` r
+setRandomForest(
+  ntrees = list(100, 500),
+  criterion = list("gini"),
+  maxDepth = list(4, 10, 17),
+  minSamplesSplit = list(2, 5),
+  minSamplesLeaf = list(1, 10),
+  minWeightFractionLeaf = list(0),
+  mtries = list("sqrt", "log2"),
+  maxLeafNodes = list(NULL),
+  minImpurityDecrease = list(0),
+  bootstrap = list(TRUE),
+  maxSamples = list(NULL, 0.9),
+  oobScore = list(FALSE),
+  nJobs = list(NULL),
+  classWeight = list(NULL),
+  seed = sample(1e+05, 1)
+)
+```
+
+## Arguments
+
+- ntrees:
+
+  (list) The number of trees to build
+
+- criterion:
+
+  (list) The function to measure the quality of a split. Supported
+  criteria are “gini” for the Gini impurity and “entropy” for the
+  information gain. Note: this parameter is tree-specific.
+
+- maxDepth:
+
+  (list) The maximum depth of the tree. If NULL, then nodes are expanded
+  until all leaves are pure or until all leaves contain less than
+  minSamplesSplit samples.
+
+- minSamplesSplit:
+
+  (list) The minimum number of samples required to split an internal
+  node
+
+- minSamplesLeaf:
+
+  (list) The minimum number of samples required to be at a leaf node. A
+  split point at any depth will only be considered if it leaves at least
+  minSamplesLeaf training samples in each of the left and right
+  branches. This may have the effect of smoothing the model, especially
+  in regression.
+
+- minWeightFractionLeaf:
+
+  (list) The minimum weighted fraction of the sum total of weights (of
+  all the input samples) required to be at a leaf node. Samples have
+  equal weight when sampleWeight is not provided.
+
+- mtries:
+
+  (list) The number of features to consider when looking for the best
+  split:
+
+  - int then consider max_features features at each split.
+
+  - float then max_features is a fraction and round(max_features \*
+    n_features) features are considered at each split
+
+  - 'sqrt' then max_features=sqrt(n_features)
+
+  - 'log2' then max_features=log2(n_features)
+
+  - NULL then max_features=n_features
+
+- maxLeafNodes:
+
+  (list) Grow trees with max_leaf_nodes in best-first fashion. Best
+  nodes are defined as relative reduction in impurity. If None then
+  unlimited number of leaf nodes.
+
+- minImpurityDecrease:
+
+  (list) A node will be split if this split induces a decrease of the
+  impurity greater than or equal to this value.
+
+- bootstrap:
+
+  (list) Whether bootstrap samples are used when building trees. If
+  False, the whole dataset is used to build each tree.
+
+- maxSamples:
+
+  (list) If bootstrap is True, the number of samples to draw from X to
+  train each base estimator.
+
+- oobScore:
+
+  (list) Whether to use out-of-bag samples to estimate the
+  generalization score. Only available if bootstrap=True.
+
+- nJobs:
+
+  The number of jobs to run in parallel.
+
+- classWeight:
+
+  (list) Weights associated with classes. If not given, all classes are
+  supposed to have weight one. NULL, “balanced”, “balanced_subsample”
+
+- seed:
+
+  A seed when training the final model
+
+## Value
+
+a modelSettings object
+
+## Examples

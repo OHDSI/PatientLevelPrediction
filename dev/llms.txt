@@ -1,0 +1,622 @@
+# PatientLevelPrediction
+
+[![Build
+status](https://github.com/OHDSI/PatientLevelPrediction/actions/workflows/R_CMD_check_Hades.yaml/badge.svg?branch=main)](https://github.com/OHDSI/PatientLevelPrediction/actions/workflows/R_CMD_check_Hades.yaml)
+[![codecov.io](https://codecov.io/github/OHDSI/PatientLevelPrediction/coverage.svg?branch=main)](https://app.codecov.io/github/OHDSI/PatientLevelPrediction?branch=main)
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/PatientLevelPrediction)](https://cran.r-project.org/package=PatientLevelPrediction)
+[![CRAN_Status_Badge](https://cranlogs.r-pkg.org/badges/PatientLevelPrediction)](https://cran.r-project.org/package=PatientLevelPrediction)
+
+PatientLevelPrediction is part of
+[HADES](https://ohdsi.github.io/Hades/).
+
+# Introduction
+
+PatientLevelPrediction is an R package for building and validating
+patient-level predictive models using data in the OMOP Common Data Model
+format.
+
+Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. [Design and
+implementation of a standardized framework to generate and evaluate
+patient-level prediction models using observational healthcare
+data.](https://doi.org/10.1093/jamia/ocy032) J Am Med Inform Assoc.
+2018;25(8):969-975.
+
+The figure below illustrates the prediction problem we address. Among a
+population at risk, we aim to predict which patients at a defined moment
+in time (t = 0) will experience some outcome during a time-at-risk.
+Prediction is done using only information about the patients in an
+observation window prior to that moment in time.
+
+![](articles/images/Figure1.avif)
+
+To define a prediction problem we have to define t=0 by a Target Cohort
+(T), the outcome we like to predict by an outcome cohort (O), and the
+time-at-risk (TAR). Furthermore, we have to make design choices for the
+model we like to develop, and determine the observational datasets to
+perform internal and external validation. This conceptual framework
+works for all type of prediction problems, for example those presented
+below (T=green, O=red).
+
+![](articles/images/problems.avif)
+
+# Features
+
+- Takes one or more target cohorts (Ts) and one or more outcome cohorts
+  (Os) and develops and validates models for all T and O combinations.
+- Allows for multiple prediction design options.
+- Extracts the necessary data from a database in OMOP Common Data Model
+  format for multiple covariate settings.
+- Uses a large set of covariates including for example all drugs,
+  diagnoses, procedures, as well as age, comorbidity indexes, and custom
+  covariates.
+- Allows you to add custom covariates or cohort covariates.
+- Includes a large number of state-of-the-art machine learning
+  algorithms that can be used to develop predictive models, including
+  Regularized logistic regression, Random forest, Gradient boosting
+  machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural
+  network, AdaBoost and Support vector machines.
+- Allows you to add custom algorithms.
+- Allows you to add custom feature engineering
+- Allows you to add custom under/over sampling (or any other sampling)
+  \[note: based on existing research this is not recommended\]
+- Contains functionality to externally validate models.
+- Includes functions to plot and explore model performance (ROC +
+  Calibration).
+- Build ensemble models using EnsemblePatientLevelPrediction.
+- Build Deep Learning models using DeepPatientLevelPrediction.
+- Generates learning curves.
+- Includes a shiny app to interactively view and explore results.
+- In the shiny app you can create a html file document (report or
+  protocol) containing all the study results.
+
+# Screenshots
+
+|                                                                                |                                                        |
+|--------------------------------------------------------------------------------|--------------------------------------------------------|
+| ![Calibration plot](articles/images/sparseCalibration.avif "Calibration plot") | ![ROC plot](articles/images/sparseRoc.avif "ROC plot") |
+| Calibration Plot                                                               | ROC Plot                                               |
+
+Demo of the Shiny Apps can be found here:
+
+- [Multiple Prediction Viewer Shiny
+  App](https://data.ohdsi.org/smokingPhenotypeExplorer/)
+
+# Technology
+
+PatientLevelPrediction is an R package, with some functions using python
+through reticulate.
+
+# System Requirements
+
+Requires R (version 4.0 or higher). Installation on Windows requires
+[RTools](https://cran.r-project.org/bin/windows/Rtools/). Libraries used
+in PatientLevelPrediction require Java and Python.
+
+Some machine learning algorithms require python. Reticulate will manage
+python automatically using uv
+(<https://docs.astral.sh/uv/getting-started/>). If you’re in an offline
+environment you can manage python in any way you want and set the
+`RETICULATE_PYTYHON` environment variable to the python binary. You will
+only need to install `scikit-learn` into that environment.
+
+# Getting Started
+
+- To install the package please read the [Package Installation
+  guide](https://ohdsi.github.io/PatientLevelPrediction/articles/InstallationGuide.html)
+
+- Have a look at the video below for an extensive demo of the package.
+
+[![Video Vignette PLP
+Package](https://img.youtube.com/vi/BEukCbT8UoA/0.jpg)](https://www.youtube.com/watch?feature=player_embedded&v=BEukCbT8UoA%0A)
+
+Please read the main vignette for the package:
+
+- [Building Single Patient-Level Predictive
+  Models](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingPredictiveModels.html)
+
+In addition we have created vignettes that describe advanced
+functionality in more detail:
+
+- [Building Multiple Patient-Level Predictive
+  Models](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingMultiplePredictiveModels.html)
+- [Adding Custom Machine Learning
+  Algorithms](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomModels.html)
+- [Building Deep Learning
+  Models](https://github.com/OHDSI/DeepPatientLevelPrediction)
+- [Building Ensemble
+  Models](https://github.com/OHDSI/EnsemblePatientLevelPrediction)
+- [Creating Learning
+  Curves](https://ohdsi.github.io/PatientLevelPrediction/articles/CreatingLearningCurves.html)
+
+Package function reference:
+[Reference](https://ohdsi.github.io/PatientLevelPrediction/reference/index.html)
+
+# User Documentation
+
+Documentation can be found on the [package
+website](https://ohdsi.github.io/PatientLevelPrediction/).
+
+# Support
+
+- Developer questions/comments/feedback: [OHDSI
+  Forum](https://forums.ohdsi.org/c/developers/7)
+- We use the [GitHub issue
+  tracker](https://github.com/OHDSI/PatientLevelPrediction/issues) for
+  all bugs/issues/enhancements
+
+# Contributing
+
+Read [here](https://ohdsi.github.io/Hades/contribute.html) how you can
+contribute to this package.
+
+# License
+
+PatientLevelPrediction is licensed under Apache License 2.0
+
+# Development
+
+PatientLevelPrediction is being developed in R Studio.
+
+# Acknowledgements
+
+- The package is maintained by Egill Fridgeirsson and Jenna Reps and has
+  been developed with major contributions from Peter Rijnbeek, Martijn
+  Schuemie, Patrick Ryan, and Marc Suchard.
+- We like to thank the following persons for their contributions to the
+  package: Seng Chan You, Ross Williams, Henrik John, Xiaoyong Pan,
+  James Wiggins, Alexandros Rekkas
+- This project is supported in part through the National Science
+  Foundation grant IIS 1251151.
+
+# Package index
+
+## Extracting data from the OMOP CDM database
+
+Functions for getting the necessary data from the database in Common
+Data Model and saving/loading.
+
+- [`createDatabaseDetails()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createDatabaseDetails.md)
+  : Create a setting that holds the details about the cdmDatabase
+  connection for data extraction
+- [`createRestrictPlpDataSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createRestrictPlpDataSettings.md)
+  : createRestrictPlpDataSettings define extra restriction settings when
+  calling getPlpData
+- [`getPlpData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getPlpData.md)
+  : Extract the patient level prediction data from the server
+- [`getEunomiaPlpData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getEunomiaPlpData.md)
+  : Create a plpData object from the Eunomia database'
+- [`savePlpData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePlpData.md)
+  : Save the plpData to folder
+- [`loadPlpData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPlpData.md)
+  : Load the plpData from a folder
+- [`getCohortCovariateData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getCohortCovariateData.md)
+  : Extracts covariates based on cohorts
+- [`print(`*`<plpData>`*`)`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/print.plpData.md)
+  : Print a plpData object
+- [`print(`*`<summary.plpData>`*`)`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/print.summary.plpData.md)
+  : Print a summary.plpData object
+- [`summary(`*`<plpData>`*`)`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/summary.plpData.md)
+  : Summarize a plpData object
+
+## Settings for designing a prediction models
+
+Design settings required when developing a model.
+
+- [`createStudyPopulationSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStudyPopulationSettings.md)
+  : create the study population settings
+
+- [`createDefaultSplitSetting()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createDefaultSplitSetting.md)
+  : Create the settings for defining how the plpData are split into
+  test/validation/train sets using default splitting functions (either
+  random stratified by outcome, time or subject splitting)
+
+- [`createExistingSplitSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createExistingSplitSettings.md)
+  : Create the settings for defining how the plpData are split into
+  test/validation/train sets using an existing split - good to use for
+  reproducing results from a different run
+
+- [`createSampleSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSampleSettings.md)
+  :
+
+  Create the settings for defining how the trainData from `splitData`
+  are sampled using default sample functions.
+
+- [`createFeatureEngineeringSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createFeatureEngineeringSettings.md)
+  : Create the settings for defining any feature engineering that will
+  be done
+
+- [`createPreprocessSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createPreprocessSettings.md)
+  : Create the settings for preprocessing the trainData.
+
+- [`createHyperparameterSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createHyperparameterSettings.md)
+  : Create Hyperparameter Settings
+
+- [`createTuningMetric()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createTuningMetric.md)
+  : Create a tuning metric descriptor
+
+## Optional design settings
+
+Settings for optional steps that can be used in the PLP pipeline
+
+- [`createCohortCovariateSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createCohortCovariateSettings.md)
+  : Extracts covariates based on cohorts
+- [`createRandomForestFeatureSelection()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createRandomForestFeatureSelection.md)
+  : Create the settings for random foreat based feature selection
+- [`createUnivariateFeatureSelection()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createUnivariateFeatureSelection.md)
+  : Create the settings for defining any feature selection that will be
+  done
+- [`createSplineSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSplineSettings.md)
+  : Create the settings for adding a spline for continuous variables
+- [`createStratifiedImputationSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStratifiedImputationSettings.md)
+  : Create the settings for using stratified imputation.
+- [`createNormalizer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createNormalizer.md)
+  : Create the settings for normalizing the data @param type The type of
+  normalization to use, either "minmax" or "robust"
+- [`createSimpleImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSimpleImputer.md)
+  : Create Simple Imputer settings
+- [`createIterativeImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createIterativeImputer.md)
+  : Create Iterative Imputer settings
+- [`createRareFeatureRemover()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createRareFeatureRemover.md)
+  : Create the settings for removing rare features
+
+## External validation
+
+- [`createValidationDesign()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createValidationDesign.md)
+  : createValidationDesign - Define the validation design for external
+  validation
+- [`validateExternal()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/validateExternal.md)
+  : validateExternal - Validate model performance on new data
+- [`createValidationSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createValidationSettings.md)
+  : createValidationSettings define optional settings for performing
+  external validation
+- [`recalibratePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/recalibratePlp.md)
+  : recalibratePlp
+- [`recalibratePlpRefit()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/recalibratePlpRefit.md)
+  : recalibratePlpRefit
+
+## Execution settings when developing a model
+
+Execution settings required when developing a model.
+
+- [`createLogSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createLogSettings.md)
+  : Create the settings for logging the progression of the analysis
+- [`createExecuteSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createExecuteSettings.md)
+  : Creates list of settings specifying what parts of runPlp to execute
+- [`createDefaultExecuteSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createDefaultExecuteSettings.md)
+  : Creates default list of settings specifying what parts of runPlp to
+  execute
+
+## Binary Classification Models
+
+Functions for creating binary models
+
+- [`setAdaBoost()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setAdaBoost.md)
+  : Create setting for AdaBoost with python DecisionTreeClassifier base
+  estimator
+
+- [`setDecisionTree()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setDecisionTree.md)
+  : Create setting for the scikit-learn DecisionTree with python
+
+- [`setGradientBoostingMachine()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setGradientBoostingMachine.md)
+  : Create setting for gradient boosting machine model using gbm_xgboost
+  implementation
+
+- [`setLassoLogisticRegression()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setLassoLogisticRegression.md)
+  : Create modelSettings for lasso logistic regression
+
+- [`setMLP()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setMLP.md)
+  :
+
+  Create setting for neural network model with python's scikit-learn.
+  For bigger models, consider using `DeepPatientLevelPrediction`
+  package.
+
+- [`setNaiveBayes()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setNaiveBayes.md)
+  : Create setting for naive bayes model with python
+
+- [`setRandomForest()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setRandomForest.md)
+  : Create setting for random forest model using sklearn
+
+- [`setSVM()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setSVM.md)
+  : Create setting for the python sklearn SVM (SVC function)
+
+- [`setIterativeHardThresholding()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setIterativeHardThresholding.md)
+  : Create setting for Iterative Hard Thresholding model
+
+- [`setLightGBM()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setLightGBM.md)
+  : Create setting for gradient boosting machine model using lightGBM
+  (https://github.com/microsoft/LightGBM/tree/master/R-package).
+
+## Survival Models
+
+Functions for creating survival models
+
+- [`setCoxModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setCoxModel.md)
+  : Create setting for lasso Cox model
+
+## Single Patient-Level Prediction Model
+
+Functions for training/evaluating/applying a single
+patient-level-prediction model
+
+- [`runPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/runPlp.md)
+  : runPlp - Develop and internally evaluate a model using specified
+  settings
+- [`externalValidateDbPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/externalValidateDbPlp.md)
+  : externalValidateDbPlp - Validate a model on new databases
+- [`savePlpModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePlpModel.md)
+  : Saves the plp model
+- [`loadPlpModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPlpModel.md)
+  : loads the plp model
+- [`savePlpResult()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePlpResult.md)
+  : Saves the result from runPlp into the location directory
+- [`loadPlpResult()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPlpResult.md)
+  : Loads the evalaution dataframe
+- [`diagnosePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/diagnosePlp.md)
+  : diagnostic - Investigates the prediction problem settings - use
+  before training a model
+
+## Multiple Patient-Level Prediction Models
+
+Functions for training multiple patient-level-prediction model in an
+efficient way.
+
+- [`createModelDesign()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createModelDesign.md)
+  : Specify settings for developing a single model
+- [`runMultiplePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/runMultiplePlp.md)
+  : Run a list of predictions analyses
+- [`validateMultiplePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/validateMultiplePlp.md)
+  : externally validate the multiple plp models across new datasets
+- [`savePlpAnalysesJson()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePlpAnalysesJson.md)
+  : Save the modelDesignList to a json file
+- [`loadPlpAnalysesJson()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPlpAnalysesJson.md)
+  : Load the multiple prediction json settings from a file
+- [`diagnoseMultiplePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/diagnoseMultiplePlp.md)
+  : Run a list of predictions diagnoses
+
+## Individual pipeline functions
+
+Functions for running parts of the PLP workflow
+
+- [`createStudyPopulation()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStudyPopulation.md)
+  : Create a study population
+
+- [`splitData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/splitData.md)
+  :
+
+  Split the plpData into test/train sets using a splitting settings of
+  class `splitSettings`
+
+- [`preprocessData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/preprocessData.md)
+  : A function that wraps around FeatureExtraction::tidyCovariateData to
+  normalise the data and remove rare or redundant features
+
+- [`fitPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/fitPlp.md)
+  : fitPlp
+
+- [`predictPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictPlp.md)
+  : predictPlp
+
+- [`evaluatePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/evaluatePlp.md)
+  : evaluatePlp
+
+- [`covariateSummary()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/covariateSummary.md)
+  : covariateSummary
+
+## Saving results into database
+
+Functions for saving the prediction model and performances into a
+database.
+
+- [`insertResultsToSqlite()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/insertResultsToSqlite.md)
+  : Create sqlite database with the results
+- [`createPlpResultTables()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createPlpResultTables.md)
+  : Create the results tables to store PatientLevelPrediction models and
+  results into a database
+- [`createDatabaseSchemaSettings()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createDatabaseSchemaSettings.md)
+  : Create the PatientLevelPrediction database result schema settings
+- [`extractDatabaseToCsv()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/extractDatabaseToCsv.md)
+  : Exports all the results from a database into csv files
+- [`insertCsvToDatabase()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/insertCsvToDatabase.md)
+  : Function to insert results into a database from csvs
+- [`migrateDataModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/migrateDataModel.md)
+  : Migrate Data model
+
+## Shiny Viewers
+
+Functions for viewing results via a shiny app
+
+- [`viewPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/viewPlp.md)
+  : viewPlp - Interactively view the performance and model settings
+- [`viewMultiplePlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/viewMultiplePlp.md)
+  : open a local shiny app for viewing the result of a multiple PLP
+  analyses
+- [`viewDatabaseResultPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/viewDatabaseResultPlp.md)
+  : open a local shiny app for viewing the result of a PLP analyses from
+  a database
+
+## Plotting
+
+Functions for various performance plots
+
+- [`plotPlp()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotPlp.md)
+  : Plot all the PatientLevelPrediction plots
+- [`plotSparseRoc()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotSparseRoc.md)
+  : Plot the ROC curve using the sparse thresholdSummary data frame
+- [`plotSmoothCalibration()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotSmoothCalibration.md)
+  : Plot the smooth calibration as detailed in Calster et al. "A
+  calibration heirarchy for risk models was defined: from utopia to
+  empirical data" (2016)
+- [`plotSparseCalibration()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotSparseCalibration.md)
+  : Plot the calibration
+- [`plotSparseCalibration2()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotSparseCalibration2.md)
+  : Plot the conventional calibration
+- [`plotNetBenefit()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotNetBenefit.md)
+  : Plot the net benefit
+- [`plotDemographicSummary()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotDemographicSummary.md)
+  : Plot the Observed vs. expected incidence, by age and gender
+- [`plotF1Measure()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotF1Measure.md)
+  : Plot the F1 measure efficiency frontier using the sparse
+  thresholdSummary data frame
+- [`plotGeneralizability()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotGeneralizability.md)
+  : Plot the train/test generalizability diagnostic
+- [`plotPrecisionRecall()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotPrecisionRecall.md)
+  : Plot the precision-recall curve using the sparse thresholdSummary
+  data frame
+- [`plotPredictedPDF()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotPredictedPDF.md)
+  : Plot the Predicted probability density function, showing prediction
+  overlap between true and false cases
+- [`plotPreferencePDF()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotPreferencePDF.md)
+  : Plot the preference score probability density function, showing
+  prediction overlap between true and false cases \#'
+- [`plotPredictionDistribution()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotPredictionDistribution.md)
+  : Plot the side-by-side boxplots of prediction distribution, by class
+- [`plotVariableScatterplot()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotVariableScatterplot.md)
+  : Plot the variable importance scatterplot
+- [`outcomeSurvivalPlot()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/outcomeSurvivalPlot.md)
+  : Plot the outcome incidence over time
+
+## Learning Curves
+
+Functions for creating and plotting learning curves
+
+- [`createLearningCurve()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createLearningCurve.md)
+  : createLearningCurve
+- [`plotLearningCurve()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/plotLearningCurve.md)
+  : plotLearningCurve
+
+## Simulation
+
+Functions for simulating PLP data objects.
+
+- [`simulatePlpData()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/simulatePlpData.md)
+  : Generate simulated data
+- [`simulationProfile`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/simulationProfile.md)
+  : A simulation profile for generating synthetic patient level
+  prediction data
+
+## Data manipulation functions
+
+Functions for manipulating data
+
+- [`toSparseM()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/toSparseM.md)
+  : Convert the plpData in COO format into a sparse R matrix
+- [`MapIds()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/MapIds.md)
+  : Map covariate and row Ids so they start from 1
+
+## Helper/utility functions
+
+- [`listAppend()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/listAppend.md)
+  : join two lists
+- [`listCartesian()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/listCartesian.md)
+  : Cartesian product
+- [`createTempModelLoc()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createTempModelLoc.md)
+  : Create a temporary model location
+- [`configurePython()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/configurePython.md)
+  : Sets up a python environment to use for PLP (can be conda or venv)
+- [`setPythonEnvironment()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setPythonEnvironment.md)
+  : Use the python environment created using configurePython()
+
+## Evaluation measures
+
+- [`averagePrecision()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/averagePrecision.md)
+  : Calculate the average precision
+- [`brierScore()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/brierScore.md)
+  : brierScore
+- [`calibrationLine()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/calibrationLine.md)
+  : calibrationLine
+- [`computeAuc()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeAuc.md)
+  : Compute the area under the ROC curve
+- [`ici()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/ici.md)
+  : Calculate the Integrated Calibration Index from Austin and
+  Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281
+- [`modelBasedConcordance()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/modelBasedConcordance.md)
+  : Calculate the model-based concordance, which is a calculation of the
+  expected discrimination performance of a model under the assumption
+  the model predicts the "TRUE" outcome as detailed in van Klaveren et
+  al. https://pubmed.ncbi.nlm.nih.gov/27251001/
+- [`computeGridPerformance()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeGridPerformance.md)
+  : Computes grid performance for a hyperparameter combination
+  (backwards compatible)
+- [`getCalibrationSummary()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getCalibrationSummary.md)
+  : Get a sparse summary of the calibration
+- [`getDemographicSummary()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getDemographicSummary.md)
+  : Get a demographic summary
+- [`getThresholdSummary()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getThresholdSummary.md)
+  : Calculate all measures for sparse ROC
+- [`getPredictionDistribution()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/getPredictionDistribution.md)
+  : Calculates the prediction distribution
+
+## Saving/loading models as json
+
+Functions for saving or loading models as json
+
+- [`sklearnFromJson()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/sklearnFromJson.md)
+  : Loads sklearn python model from json
+- [`sklearnToJson()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/sklearnToJson.md)
+  : Saves sklearn python model object to json in path
+
+## Load/save for sharing
+
+Functions for loading/saving objects for sharing
+
+- [`savePlpShareable()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePlpShareable.md)
+  : Save the plp result as json files and csv files for transparent
+  sharing
+- [`loadPlpShareable()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPlpShareable.md)
+  : Loads the plp result saved as json/csv files for transparent sharing
+- [`loadPrediction()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/loadPrediction.md)
+  : Loads the prediction dataframe to json
+- [`savePrediction()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/savePrediction.md)
+  : Saves the prediction dataframe to a json file
+
+## Feature importance
+
+- [`pfi()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/pfi.md)
+  : Permutation Feature Importance
+
+## Other functions
+
+- [`predictCyclops()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictCyclops.md)
+  : Create predictive probabilities
+- [`predictGlm()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictGlm.md)
+  : predict using a logistic regression model
+- [`createGlmModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createGlmModel.md)
+  : createGlmModel
+- [`createSklearnModel()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSklearnModel.md)
+  : Plug an existing scikit learn python model into the PLP framework
+
+# Articles
+
+### Articles
+
+- [Adding Custom Feature Engineering
+  Functions](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/AddingCustomFeatureEngineering.md):
+- [Adding Custom Patient-Level Prediction
+  Algorithms](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/AddingCustomModels.md):
+- [Adding Custom Sampling
+  Functions](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/AddingCustomSamples.md):
+- [Adding Custom Data
+  Splitting](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/AddingCustomSplitting.md):
+- [Benchmark
+  Tasks](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/BenchmarkTasks.md):
+- [Best Practice
+  Research](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/BestPractices.md):
+- [Automatically Build Multiple Patient-Level Predictive
+  Models](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/BuildingMultiplePredictiveModels.md):
+- [Building patient-level predictive
+  models](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/BuildingPredictiveModels.md):
+- [Clinical
+  Models](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/ClinicalModels.md):
+- [Constrained
+  Predictors](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/ConstrainedPredictors.md):
+- [Creating Learning
+  Curves](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/CreatingLearningCurves.md):
+- [Making patient-level predictive network study
+  packages](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/CreatingNetworkStudies.md):
+- [Integration of GIS Data Into OHDSI Model
+  Building](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/GISExample.md):
+- [Patient-Level Prediction Installation
+  Guide](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/InstallationGuide.md):
+- [Demo
+  Videos](https://ohdsi.github.io/PatientLevelPrediction/dev/articles/Videos.md):

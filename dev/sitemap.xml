@@ -38,6 +38,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createExistingSplitSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createFeatureEngineeringSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createGlmModel.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createHyperparameterSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createIterativeImputer.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createLearningCurve.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createLogSettings.html</loc></url>
@@ -56,6 +57,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStudyPopulation.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStudyPopulationSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createTempModelLoc.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createTuningMetric.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createUnivariateFeatureSelection.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createValidationDesign.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createValidationSettings.html</loc></url>
@@ -110,6 +112,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictCyclops.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictGlm.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/predictPlp.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/prepareHyperparameterGrid.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/preprocessData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/print.plpData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/print.summary.plpData.html</loc></url>

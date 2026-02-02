@@ -1,0 +1,88 @@
+# Create setting for the scikit-learn DecisionTree with python
+
+Create setting for the scikit-learn DecisionTree with python
+
+## Usage
+
+``` r
+setDecisionTree(
+  criterion = list("gini"),
+  splitter = list("best"),
+  maxDepth = list(as.integer(4), as.integer(10), NULL),
+  minSamplesSplit = list(2, 10),
+  minSamplesLeaf = list(10, 50),
+  minWeightFractionLeaf = list(0),
+  maxFeatures = list(100, "sqrt", NULL),
+  maxLeafNodes = list(NULL),
+  minImpurityDecrease = list(10^-7),
+  classWeight = list(NULL),
+  seed = sample(1e+06, 1)
+)
+```
+
+## Arguments
+
+- criterion:
+
+  The function to measure the quality of a split. Supported criteria are
+  “gini” for the Gini impurity and “entropy” for the information gain.
+
+- splitter:
+
+  The strategy used to choose the split at each node. Supported
+  strategies are “best” to choose the best split and “random” to choose
+  the best random split.
+
+- maxDepth:
+
+  (list) The maximum depth of the tree. If NULL, then nodes are expanded
+  until all leaves are pure or until all leaves contain less than
+  min_samples_split samples.
+
+- minSamplesSplit:
+
+  The minimum number of samples required to split an internal node
+
+- minSamplesLeaf:
+
+  The minimum number of samples required to be at a leaf node. A split
+  point at any depth will only be considered if it leaves at least
+  minSamplesLeaf training samples in each of the left and right
+  branches. This may have the effect of smoothing the model, especially
+  in regression.
+
+- minWeightFractionLeaf:
+
+  The minimum weighted fraction of the sum total of weights (of all the
+  input samples) required to be at a leaf node. Samples have equal
+  weight when sampleWeight is not provided.
+
+- maxFeatures:
+
+  (list) The number of features to consider when looking for the best
+  split (int/'sqrt'/NULL)
+
+- maxLeafNodes:
+
+  (list) Grow a tree with max_leaf_nodes in best-first fashion. Best
+  nodes are defined as relative reduction in impurity. If None then
+  unlimited number of leaf nodes. (int/NULL)
+
+- minImpurityDecrease:
+
+  Threshold for early stopping in tree growth. A node will split if its
+  impurity is above the threshold, otherwise it is a leaf.
+
+- classWeight:
+
+  (list) Weights associated with classes 'balance' or NULL
+
+- seed:
+
+  The random state seed
+
+## Value
+
+a modelSettings object
+
+## Examples
