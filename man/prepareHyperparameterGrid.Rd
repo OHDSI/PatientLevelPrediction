@@ -17,3 +17,4 @@ An iterator object with methods to get the next hyperparameter combination and f
 \description{
 Prepare Hyperparameter
 }
+\keyword{internal}

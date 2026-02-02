@@ -40,6 +40,7 @@ createHyperparameterSettings <- function(
 #' @param paramDefinition A list defining the hyperparameters and their possible values.
 #' @param hyperSettings An object of class \code{hyperparameterSettings} created using \code{createHyperparameterSettings}.
 #' @return An iterator object with methods to get the next hyperparameter combination and finalize the search.
+#' @keywords internal
 prepareHyperparameterGrid <- function(paramDefinition, 
                                       hyperSettings) {
       settings <- hyperSettings %||% createHyperparameterSettings()
