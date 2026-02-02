@@ -21,7 +21,6 @@ test_that("fitPlp", {
   plpModel <- fitPlp(
     trainData = trainData,
     modelSettings = modelSettings,
-    search = "grid",
     analysisId = "fitting",
     analysisPath = tempdir()
   )

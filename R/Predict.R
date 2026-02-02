@@ -93,8 +93,16 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   # apply prediction function
+  settings <- plpModel$modelDesign$modelSettings$settings
+  predictFun <- settings$predict
+  if (is.null(predictFun)) {
+    predictFun <- attr(plpModel, "predictionFunction")
+  }
+  if (is.null(predictFun)) {
+    stop("No prediction function available for this model.")
+  }
   prediction <- do.call(
-    eval(parse(text = attr(plpModel, "predictionFunction"))),
+    if (is.character(predictFun)) eval(parse(text = predictFun)) else predictFun,
     list(
       plpModel = plpModel,
       data = plpData,
@@ -109,7 +117,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   # add metaData
-  metaData$modelType <- attr(plpModel, "modelType") # "binary",
+  metaData$modelType <- attr(plpModel, "modelType")
   metaData$targetId <- attr(population, "metaData")$targetId
   metaData$outcomeId <- attr(population, "metaData")$outcomeId
   metaData$timepoint <- timepoint

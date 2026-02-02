@@ -33,27 +33,16 @@ test_that("GBM settings work", {
   )
 
   expect_s3_class(gbmSet, "modelSettings")
-  expect_equal(gbmSet$fitFunction, "fitRclassifier")
   expect_type(gbmSet$param, "list")
 
-  expect_equal(attr(gbmSet$param, "settings")$modelType, "Xgboost")
-  expect_equal(attr(gbmSet$param, "settings")$seed, seed)
-  expect_equal(attr(gbmSet$param, "settings")$modelName, "Gradient Boosting Machine")
+  expect_equal(gbmSet$settings$modelType, "binary")
+  expect_equal(gbmSet$settings$seed, seed)
+  expect_equal(gbmSet$settings$modelName, "xgboost")
 
-  expect_equal(attr(gbmSet$param, "settings")$threads, 5)
-  expect_equal(attr(gbmSet$param, "settings")$varImpRFunction, "varImpXgboost")
-  expect_equal(attr(gbmSet$param, "settings")$trainRFunction, "fitXgboost")
-  expect_equal(attr(gbmSet$param, "settings")$predictRFunction, "predictXgboost")
-
-  expect_equal(length(gbmSet$param), 2)
-
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$ntrees)))), 2)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$earlyStopRound)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$maxDepth)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$minChildWeight)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$learnRate)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$lambda)))), 1)
-  expect_equal(length(unique(unlist(lapply(gbmSet$param, function(x) x$alpha)))), 1)
+  expect_equal(gbmSet$settings$threads, 5)
+  expect_equal(gbmSet$settings$variableImportance, "varImpXgboost")
+  expect_equal(gbmSet$settings$train, "fitXgboost")
+  expect_equal(gbmSet$settings$predict, "predictXgboost")
 })
 
 
@@ -108,6 +97,22 @@ test_that("GBM working checks", {
 
   # test that at least some features have importances that are not zero
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
+
+  # test save and load
+  savePath <- tempfile("xgboostTest_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(fitModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+  expect_equal(class(loadModel$model), "xgb.Booster")
+
+  predFit <- predictPlp(fitModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
 
   oneModel <- fitPlp(
     trainData = oneTrainData,

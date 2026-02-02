@@ -77,27 +77,28 @@ setLassoLogisticRegression <- function(
     priorCoefs = priorCoefs
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
+    modelName = "lassoLogisticRegression",
+    modelType = "binary",
+    cyclopsModelType = "logistic",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byPid", # is this correct?
     crossValidationInPrior = TRUE,
-    modelType = "logistic",
     addIntercept = TRUE,
     useControl = TRUE,
     seed = seed[1],
-    name = "Lasso Logistic Regression",
     threads = threads[1],
-    tolerance = tolerance[1], # 2e-06
-    cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1] # 3000
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
+    saveType = "RtoJson",
+    predict = "predictCyclops"
   )
-
-  attr(param, "modelType") <- "binary"
-  attr(param, "saveType") <- "RtoJson"
 
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings
   )
   class(result) <- "modelSettings"
 
@@ -158,27 +159,28 @@ setCoxModel <- function(
     lowerLimit = lowerLimit
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
+    cyclopsModelType = "cox",
+    modelType = "survival",
+    modelName = "coxLasso",
     priorfunction = "Cyclops::createPrior",
     selectorType = "byRow",
     crossValidationInPrior = TRUE,
-    modelType = "cox",
     addIntercept = FALSE,
     useControl = TRUE,
     seed = seed[1],
-    name = "LASSO Cox Regression",
     threads = threads[1],
-    tolerance = tolerance[1], # 2e-07
-    cvRepetitions = 1, # 1
-    maxIterations = maxIterations[1] # 3000
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
+    saveType = "RtoJson",
+    predict = "predictCyclops"
   )
-
-  attr(param, "modelType") <- "survival"
-  attr(param, "saveType") <- "RtoJson"
 
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings
   )
   class(result) <- "modelSettings"
 
@@ -256,23 +258,24 @@ setIterativeHardThresholding <- function(
     )
   )
 
-  attr(param, "settings") <- list(
+  settings <- list(
+    modelType = "binary",
+    modelName = "iterativeHardThresholding",
+    cyclopsModelType = "logistic",
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
     crossValidationInPrior = FALSE,
-    modelType = "logistic",
     addIntercept = FALSE,
     useControl = FALSE,
     seed = seed[1],
-    name = "Iterative Hard Thresholding"
+    predict = "predictCyclops",
+    saveType = "RtoJson"
   )
-
-  attr(param, "modelType") <- "binary"
-  attr(param, "saveType") <- "RtoJson"
 
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param
+    param = param,
+    settings = settings
   )
   class(result) <- "modelSettings"
 
