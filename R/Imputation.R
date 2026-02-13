@@ -237,31 +237,22 @@ appendMissingIndicatorMetadata <- function(outputData, indicatorInfo) {
   return(outputData)
 }
 
-appendMissingIndicatorValues <- function(outputData, indicatorMap) {
+appendMissingIndicatorValues <- function(outputData, missingIndex, indicatorMap) {
   if (nrow(indicatorMap) == 0) {
     return(outputData)
   }
-
-  outputData$covariateData$allRows <- outputData$labels %>%
-    dplyr::select("rowId")
-  on.exit(outputData$covariateData$allRows <- NULL, add = TRUE)
-
-  for (i in seq_len(nrow(indicatorMap))) {
-    sourceCovariateId <- indicatorMap$sourceCovariateId[i]
-    indicatorCovariateId <- indicatorMap$indicatorCovariateId[i]
-    missingRows <- outputData$covariateData$allRows %>%
-      dplyr::anti_join(
-        outputData$covariateData$covariates %>%
-          dplyr::filter(.data$covariateId == sourceCovariateId) %>%
-          dplyr::select("rowId"),
-        by = "rowId"
-      ) %>%
-      dplyr::mutate(
-        covariateId = indicatorCovariateId,
-        covariateValue = 1
-      )
-    Andromeda::appendToTable(outputData$covariateData$covariates, missingRows)
-  }
+  indicatorRows <- missingIndex %>%
+    dplyr::inner_join(
+      indicatorMap,
+      by = c("covariateId" = "sourceCovariateId"),
+      copy = TRUE
+    ) %>%
+    dplyr::transmute(
+      rowId = .data$rowId,
+      covariateId = .data$indicatorCovariateId,
+      covariateValue = 1
+    )
+  Andromeda::appendToTable(outputData$covariateData$covariates, indicatorRows)
   return(outputData)
 }
 
@@ -282,7 +273,6 @@ addMissingIndicators <- function(outputData,
       unique()
     indicatorInfo <- createMissingIndicatorInfo(outputData, sourceCovariateIds)
     outputData <- appendMissingIndicatorMetadata(outputData, indicatorInfo)
-    outputData <- appendMissingIndicatorValues(outputData, indicatorInfo$map)
     attr(featureEngineeringSettings, "missingIndicatorInfo") <- indicatorInfo
   } else {
     indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
@@ -295,7 +285,6 @@ addMissingIndicators <- function(outputData,
       ))
     }
     outputData <- appendMissingIndicatorMetadata(outputData, indicatorInfo)
-    outputData <- appendMissingIndicatorValues(outputData, indicatorInfo$map)
   }
 
   return(list(
@@ -355,6 +344,22 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     numericData$covariates <- merge(completeIds, numericData$covariates,
       all.x = TRUE
     )
+    numericData$missingIndex <- numericData$covariates %>%
+      dplyr::filter(is.na(.data$covariateValue)) %>%
+      dplyr::select("rowId", "covariateId")
+
+    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+      if (!is.null(indicatorInfo) &&
+        !is.null(indicatorInfo$map) &&
+        nrow(indicatorInfo$map) > 0) {
+        outputData <- appendMissingIndicatorValues(
+          outputData = outputData,
+          missingIndex = numericData$missingIndex,
+          indicatorMap = indicatorInfo$map
+        )
+      }
+    }
 
     if (featureEngineeringSettings$method == "mean") {
       numericData$imputedValues <- numericData$covariates %>%
@@ -446,6 +451,22 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     numericData$covariates <- merge(completeIds, numericData$covariates,
       all.x = TRUE
     )
+    numericData$missingIndex <- numericData$covariates %>%
+      dplyr::filter(is.na(.data$covariateValue)) %>%
+      dplyr::select("rowId", "covariateId")
+
+    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+      if (!is.null(indicatorInfo) &&
+        !is.null(indicatorInfo$map) &&
+        nrow(indicatorInfo$map) > 0) {
+        outputData <- appendMissingIndicatorValues(
+          outputData = outputData,
+          missingIndex = numericData$missingIndex,
+          indicatorMap = indicatorInfo$map
+        )
+      }
+    }
     numericData$imputedValues <- attr(featureEngineeringSettings, "imputer")
     numericData$imputedCovariates <- numericData$covariates %>%
       dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
@@ -527,6 +548,18 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     numericData <- initializeImputation(numericData, "mean",
       labels = outputData$labels
     )
+    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+      if (!is.null(indicatorInfo) &&
+        !is.null(indicatorInfo$map) &&
+        nrow(indicatorInfo$map) > 0) {
+        outputData <- appendMissingIndicatorValues(
+          outputData = outputData,
+          missingIndex = numericData$missingIndex,
+          indicatorMap = indicatorInfo$map
+        )
+      }
+    }
     # add imputed values in data
     iterativeImputeResults <- iterativeChainedImpute(numericData,
       binary,
@@ -620,6 +653,18 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::filter(is.na(.data$covariateValue)) %>%
       dplyr::select(-c("covariateValue"))
     on.exit(numericData$missingIndex <- NULL, add = TRUE)
+    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+      if (!is.null(indicatorInfo) &&
+        !is.null(indicatorInfo$map) &&
+        nrow(indicatorInfo$map) > 0) {
+        outputData <- appendMissingIndicatorValues(
+          outputData = outputData,
+          missingIndex = numericData$missingIndex,
+          indicatorMap = indicatorInfo$map
+        )
+      }
+    }
 
     numericData$imputedCovariates <- numericData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
