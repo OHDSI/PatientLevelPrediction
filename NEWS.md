@@ -3,6 +3,9 @@ PatientLevelPrediction 6.5.1.9999
 
 PatientLevelPrediction 6.5.1
 ======================
+- [Feature] Added optional missingness indicators for features imputed with
+  `createSimpleImputer()` and `createIterativeImputer()` via
+  `addMissingIndicator` (default `FALSE` for backward compatibility)
 - [Bug] Remove old R condition from Rd files throug new roxygen2 (PR #603)
 - [Internal] Use reticulate's `py_require` for stating python dependencies (PR #600)
 - [Bug] use `closeConnection` instead of `finalize` for RMM (PR #599)

@@ -51,15 +51,18 @@ test_that("createSimpleImputer works", {
 
   expect_equal(imputer$method, "mean")
   expect_equal(imputer$missingThreshold, 0.3)
+  expect_false(imputer$addMissingIndicator)
   expect_equal(attr(imputer, "fun"), "simpleImpute")
   expect_s3_class(imputer, "featureEngineeringSettings")
 
   imputer <- createSimpleImputer(
     method = "median",
-    missingThreshold = 0.5
+    missingThreshold = 0.5,
+    addMissingIndicator = TRUE
   )
   expect_equal(imputer$method, "median")
   expect_equal(imputer$missingThreshold, 0.5)
+  expect_true(imputer$addMissingIndicator)
   expect_s3_class(imputer, "featureEngineeringSettings")
 
   expect_s3_class(imputer, "featureEngineeringSettings")
@@ -67,6 +70,7 @@ test_that("createSimpleImputer works", {
   expect_error(createSimpleImputer(method = "mean", missingThreshold = "0.5"))
   expect_error(createSimpleImputer(method = "mean", missingThreshold = 1))
   expect_error(createSimpleImputer(method = "notMean"))
+  expect_error(createSimpleImputer(addMissingIndicator = "true"))
 })
 
 test_that("createIterativeImputer works", {
@@ -74,6 +78,7 @@ test_that("createIterativeImputer works", {
   imputer <- createIterativeImputer()
 
   expect_equal(imputer$method, "pmm")
+  expect_false(imputer$addMissingIndicator)
   expect_error(createIterativeImputer(method = "notPmm"))
   expect_equal(attr(imputer, "fun"), "iterativeImpute")
   expect_s3_class(imputer, "featureEngineeringSettings")
@@ -83,10 +88,13 @@ test_that("createIterativeImputer works", {
 
   imputer <- createIterativeImputer(
     method = "pmm",
-    missingThreshold = 0.5
+    missingThreshold = 0.5,
+    addMissingIndicator = TRUE
   )
   expect_equal(imputer$missingThreshold, 0.5)
+  expect_true(imputer$addMissingIndicator)
   expect_s3_class(imputer, "featureEngineeringSettings")
+  expect_error(createIterativeImputer(addMissingIndicator = "true"))
 })
 
 test_that("simpleImpute works", {
@@ -237,4 +245,81 @@ test_that("IterativeImputer works", {
 
   expect_true(length(newFeatureTest) > length(originalFeatureTest))
   expect_equal(length(newFeatureTest), nrow(imputedTestData$labels))
+})
+
+test_that("SimpleImputer can add missing indicators for imputed features", {
+  skip_if_offline()
+  missingData <- createMissingData(tinyTrainData, 0.2)
+  imputer <- createSimpleImputer(
+    method = "mean",
+    missingThreshold = 0.3,
+    addMissingIndicator = TRUE
+  )
+  imputedData <- simpleImpute(missingData, imputer, done = FALSE)
+
+  metaData <- attr(imputedData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
+  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
+  expect_true(nrow(indicatorInfo$map) > 0)
+
+  fakeVariableMap <- indicatorInfo$map %>%
+    dplyr::filter(.data$sourceCovariateId == 666)
+  expect_equal(nrow(fakeVariableMap), 1)
+  indicatorId <- fakeVariableMap$indicatorCovariateId
+
+  expect_true(indicatorId %in% (imputedData$covariateData$covariateRef %>%
+    dplyr::pull(.data$covariateId)))
+  expect_true(any(imputedData$covariateData$analysisRef %>%
+    dplyr::pull(.data$isBinary) == "Y"))
+
+  observedRows <- missingData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::pull(.data$rowId)
+  expectedMissingRows <- setdiff(missingData$labels$rowId, observedRows)
+  indicatorRows <- imputedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$rowId)
+  indicatorValues <- imputedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_setequal(indicatorRows, expectedMissingRows)
+  expect_true(all(indicatorValues == 1))
+
+  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  imputedTestData <- simpleImpute(missingTestData, testSettings, done = TRUE)
+  indicatorRowsTest <- imputedTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$rowId)
+  observedRowsTest <- missingTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::pull(.data$rowId)
+  expectedMissingRowsTest <- setdiff(missingTestData$labels$rowId, observedRowsTest)
+  expect_setequal(indicatorRowsTest, expectedMissingRowsTest)
+})
+
+test_that("IterativeImputer can add missing indicators for imputed features", {
+  skip_if_offline()
+  skip_if_not_installed("glmnet")
+  missingData <- createMissingData(tinyTrainData, 0.2)
+  imputer <- createIterativeImputer(
+    method = "pmm",
+    missingThreshold = 0.3,
+    methodSettings = list(pmm = list(k = 1, iterations = 1)),
+    addMissingIndicator = TRUE
+  )
+  imputedData <- iterativeImpute(missingData, imputer, done = FALSE)
+
+  metaData <- attr(imputedData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings
+  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
+  expect_true(nrow(indicatorInfo$map) > 0)
+
+  fakeVariableMap <- indicatorInfo$map %>%
+    dplyr::filter(.data$sourceCovariateId == 666)
+  expect_equal(nrow(fakeVariableMap), 1)
+  indicatorId <- fakeVariableMap$indicatorCovariateId
+  indicatorRows <- imputedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$rowId)
+  expect_true(length(indicatorRows) > 0)
 })

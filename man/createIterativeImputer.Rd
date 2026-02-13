@@ -7,7 +7,8 @@
 createIterativeImputer(
   missingThreshold = 0.3,
   method = "pmm",
-  methodSettings = list(pmm = list(k = 5, iterations = 5))
+  methodSettings = list(pmm = list(k = 5, iterations = 5)),
+  addMissingIndicator = FALSE
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ Currently only "pmm" is supported with the following settings:
 \item k: The number of donors to use for matching
 \item iterations: The number of iterations to use for imputation
 }}
+
+\item{addMissingIndicator}{Add a binary missingness indicator per feature that
+passes the imputation missingness threshold.}
 }
 \value{
 The settings for the iterative imputer of class \code{featureEngineeringSettings}

@@ -25,6 +25,8 @@
 #' Currently only "pmm" is supported with the following settings:
 #' - k: The number of donors to use for matching
 #' - iterations: The number of iterations to use for imputation
+#' @param addMissingIndicator Add a binary missingness indicator per feature that
+#' passes the imputation missingness threshold.
 #' @return The settings for the iterative imputer of class `featureEngineeringSettings`
 #' @examples
 #' # create imputer to impute values with missingness less than 30% using 
@@ -39,12 +41,17 @@ createIterativeImputer <- function(missingThreshold = 0.3,
                                         k = 5,
                                         iterations = 5
                                       )
-                                   )) {
+                                   ),
+                                   addMissingIndicator = FALSE) {
   ParallelLogger::logWarn("Imputation is experimental and may have bugs. 
     Please report any issues on the GitHub repository.")
   checkIsClass(missingThreshold, "numeric")
   checkInStringVector(method, c("pmm"))
   checkIsClass(methodSettings, "list")
+  checkIsClass(addMissingIndicator, "logical")
+  if (length(addMissingIndicator) != 1) {
+    stop("addMissingIndicator should be a logical value")
+  }
   if (method == "pmm") {
     checkIsClass(methodSettings$pmm$k, "numeric")
     checkHigher(methodSettings$pmm$k, 0)
@@ -56,7 +63,8 @@ createIterativeImputer <- function(missingThreshold = 0.3,
   featureEngineeringSettings <- list(
     missingThreshold = missingThreshold,
     method = method,
-    methodSettings = methodSettings[[method]]
+    methodSettings = methodSettings[[method]],
+    addMissingIndicator = addMissingIndicator
   )
   if (method == "pmm") {
     # at the moment this requires glmnet
@@ -73,6 +81,8 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' which imputes missing values with the mean or median
 #' @param method The method to use for imputation, either "mean" or "median"
 #' @param missingThreshold The threshold for missing values to be imputed vs removed
+#' @param addMissingIndicator Add a binary missingness indicator per feature that
+#' passes the imputation missingness threshold.
 #' @return The settings for the single imputer of class `featureEngineeringSettings`
 #' @examples
 #' # create imputer to impute values with missingness less than 10% using the median
@@ -80,22 +90,218 @@ createIterativeImputer <- function(missingThreshold = 0.3,
 #' createSimpleImputer(method = "median", missingThreshold = 0.10)
 #' @export
 createSimpleImputer <- function(method = "mean",
-                                missingThreshold = 0.3) {
+                                missingThreshold = 0.3,
+                                addMissingIndicator = FALSE) {
   ParallelLogger::logWarn("Imputation is experimental and may have bugs,
     please report any issues on the GitHub repository.")
   checkIsClass(method, "character")
   checkInStringVector(method, c("mean", "median"))
   checkIsClass(missingThreshold, "numeric")
+  checkIsClass(addMissingIndicator, "logical")
+  if (length(addMissingIndicator) != 1) {
+    stop("addMissingIndicator should be a logical value")
+  }
   checkHigher(missingThreshold, 0)
   checkLower(missingThreshold, 1)
   featureEngineeringSettings <- list(
     method = method,
-    missingThreshold = missingThreshold
+    missingThreshold = missingThreshold,
+    addMissingIndicator = addMissingIndicator
   )
   attr(featureEngineeringSettings, "fun") <- "simpleImpute"
 
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   return(featureEngineeringSettings)
+}
+
+createMissingIndicatorInfo <- function(outputData, sourceCovariateIds) {
+  sourceCovariateIds <- unique(sourceCovariateIds)
+  if (length(sourceCovariateIds) == 0) {
+    return(list(
+      map = data.frame(),
+      covariateRef = data.frame(),
+      analysisRef = data.frame()
+    ))
+  }
+
+  sourceCovariateRef <- outputData$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId %in% !!sourceCovariateIds) %>%
+    dplyr::select("covariateId", "covariateName", "analysisId", "conceptId") %>%
+    dplyr::collect()
+
+  if (nrow(sourceCovariateRef) == 0) {
+    return(list(
+      map = data.frame(),
+      covariateRef = data.frame(),
+      analysisRef = data.frame()
+    ))
+  }
+
+  sourceAnalysisIds <- unique(sourceCovariateRef$analysisId)
+  sourceAnalysisRef <- outputData$covariateData$analysisRef %>%
+    dplyr::filter(.data$analysisId %in% !!sourceAnalysisIds) %>%
+    dplyr::select("analysisId", "analysisName", "domainId", "startDay", "endDay") %>%
+    dplyr::collect()
+
+  analysisMap <- data.frame(
+    sourceAnalysisId = sourceAnalysisIds,
+    indicatorAnalysisId = NA_real_
+  )
+  usedAnalysisIds <- outputData$covariateData$analysisRef %>%
+    dplyr::pull(.data$analysisId) %>%
+    unique()
+
+  for (i in seq_len(nrow(analysisMap))) {
+    candidate <- analysisMap$sourceAnalysisId[i] + 1000
+    while (candidate %in% usedAnalysisIds) {
+      candidate <- candidate + 1000
+    }
+    analysisMap$indicatorAnalysisId[i] <- candidate
+    usedAnalysisIds <- c(usedAnalysisIds, candidate)
+  }
+
+  map <- sourceCovariateRef %>%
+    dplyr::inner_join(
+      analysisMap,
+      by = c("analysisId" = "sourceAnalysisId")
+    ) %>%
+    dplyr::mutate(indicatorCovariateId = .data$covariateId -
+      .data$analysisId + .data$indicatorAnalysisId)
+
+  indicatorCovariateRef <- map %>%
+    dplyr::transmute(
+      covariateId = .data$indicatorCovariateId,
+      covariateName = paste0(.data$covariateName, " missing indicator"),
+      conceptId = .data$conceptId,
+      analysisId = .data$indicatorAnalysisId
+    ) %>%
+    dplyr::distinct()
+
+  indicatorAnalysisRef <- analysisMap %>%
+    dplyr::left_join(
+      sourceAnalysisRef,
+      by = c("sourceAnalysisId" = "analysisId")
+    ) %>%
+    dplyr::transmute(
+      analysisId = .data$indicatorAnalysisId,
+      analysisName = paste0(.data$analysisName, " missing indicator"),
+      domainId = dplyr::if_else(
+        is.na(.data$domainId),
+        "feature engineering",
+        .data$domainId
+      ),
+      startDay = .data$startDay,
+      endDay = .data$endDay,
+      isBinary = "Y",
+      missingMeansZero = "Y"
+    ) %>%
+    dplyr::distinct()
+
+  map <- map %>%
+    dplyr::transmute(
+      sourceCovariateId = .data$covariateId,
+      indicatorCovariateId = .data$indicatorCovariateId
+    ) %>%
+    dplyr::distinct()
+
+  return(list(
+    map = map,
+    covariateRef = indicatorCovariateRef,
+    analysisRef = indicatorAnalysisRef
+  ))
+}
+
+appendMissingIndicatorMetadata <- function(outputData, indicatorInfo) {
+  if (nrow(indicatorInfo$map) == 0) {
+    return(outputData)
+  }
+
+  existingAnalysisIds <- outputData$covariateData$analysisRef %>%
+    dplyr::pull(.data$analysisId) %>%
+    unique()
+  analysisRefToAdd <- indicatorInfo$analysisRef %>%
+    dplyr::filter(!.data$analysisId %in% !!existingAnalysisIds)
+  if (nrow(analysisRefToAdd) > 0) {
+    Andromeda::appendToTable(outputData$covariateData$analysisRef, analysisRefToAdd)
+  }
+
+  existingCovariateIds <- outputData$covariateData$covariateRef %>%
+    dplyr::pull(.data$covariateId) %>%
+    unique()
+  covariateRefToAdd <- indicatorInfo$covariateRef %>%
+    dplyr::filter(!.data$covariateId %in% !!existingCovariateIds)
+  if (nrow(covariateRefToAdd) > 0) {
+    Andromeda::appendToTable(outputData$covariateData$covariateRef, covariateRefToAdd)
+  }
+
+  return(outputData)
+}
+
+appendMissingIndicatorValues <- function(outputData, indicatorMap) {
+  if (nrow(indicatorMap) == 0) {
+    return(outputData)
+  }
+
+  outputData$covariateData$allRows <- outputData$labels %>%
+    dplyr::select("rowId")
+  on.exit(outputData$covariateData$allRows <- NULL, add = TRUE)
+
+  for (i in seq_len(nrow(indicatorMap))) {
+    sourceCovariateId <- indicatorMap$sourceCovariateId[i]
+    indicatorCovariateId <- indicatorMap$indicatorCovariateId[i]
+    missingRows <- outputData$covariateData$allRows %>%
+      dplyr::anti_join(
+        outputData$covariateData$covariates %>%
+          dplyr::filter(.data$covariateId == sourceCovariateId) %>%
+          dplyr::select("rowId"),
+        by = "rowId"
+      ) %>%
+      dplyr::mutate(
+        covariateId = indicatorCovariateId,
+        covariateValue = 1
+      )
+    Andromeda::appendToTable(outputData$covariateData$covariates, missingRows)
+  }
+  return(outputData)
+}
+
+addMissingIndicators <- function(outputData,
+                                 featureEngineeringSettings,
+                                 done = FALSE) {
+  if (!isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+    return(list(
+      outputData = outputData,
+      featureEngineeringSettings = featureEngineeringSettings
+    ))
+  }
+
+  if (!done) {
+    sourceCovariateIds <- outputData$covariateData$missingInfo %>%
+      dplyr::filter(.data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique()
+    indicatorInfo <- createMissingIndicatorInfo(outputData, sourceCovariateIds)
+    outputData <- appendMissingIndicatorMetadata(outputData, indicatorInfo)
+    outputData <- appendMissingIndicatorValues(outputData, indicatorInfo$map)
+    attr(featureEngineeringSettings, "missingIndicatorInfo") <- indicatorInfo
+  } else {
+    indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+    if (is.null(indicatorInfo) ||
+      is.null(indicatorInfo$map) ||
+      nrow(indicatorInfo$map) == 0) {
+      return(list(
+        outputData = outputData,
+        featureEngineeringSettings = featureEngineeringSettings
+      ))
+    }
+    outputData <- appendMissingIndicatorMetadata(outputData, indicatorInfo)
+    outputData <- appendMissingIndicatorValues(outputData, indicatorInfo$map)
+  }
+
+  return(list(
+    outputData = outputData,
+    featureEngineeringSettings = featureEngineeringSettings
+  ))
 }
 
 #' @title Simple Imputation
@@ -131,6 +337,9 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       dplyr::filter(is.na(.data$missing) |
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
 
     # separate the continuous and binary features
     featureData <- separateFeatures(outputData, continuousFeatures)
@@ -212,6 +421,9 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       dplyr::filter(is.na(.data$missing) ||
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
 
     continuousFeatures <- outputData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -301,6 +513,9 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::filter(is.na(.data$missing) ||
         .data$missing <= featureEngineeringSettings$missingThreshold) %>%
       dplyr::select(-"missing")
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
 
     # separate the continuous and binary features
     featureData <- separateFeatures(outputData, continuousFeatures)
@@ -374,6 +589,9 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
           (is.na(.data$missing) && .data$isBinary)
       ) %>%
       dplyr::select(-"missing", -"isBinary")
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
 
     continuousFeatures <- outputData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -563,6 +781,7 @@ pmmFit <- function(data, k = 5) {
   data$xMiss <- data$xMiss %>%
     dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId")) %>%
     dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId")) %>%
+    dplyr::filter(!is.na(.data$newCovariateId), !is.na(.data$newRowId)) %>%
     dplyr::select(
       rowId = "newRowId",
       covariateId = "newCovariateId",

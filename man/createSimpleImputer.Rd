@@ -4,12 +4,19 @@
 \alias{createSimpleImputer}
 \title{Create Simple Imputer settings}
 \usage{
-createSimpleImputer(method = "mean", missingThreshold = 0.3)
+createSimpleImputer(
+  method = "mean",
+  missingThreshold = 0.3,
+  addMissingIndicator = FALSE
+)
 }
 \arguments{
 \item{method}{The method to use for imputation, either "mean" or "median"}
 
 \item{missingThreshold}{The threshold for missing values to be imputed vs removed}
+
+\item{addMissingIndicator}{Add a binary missingness indicator per feature that
+passes the imputation missingness threshold.}
 }
 \value{
 The settings for the single imputer of class \code{featureEngineeringSettings}
