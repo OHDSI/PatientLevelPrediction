@@ -730,7 +730,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       ) %>%
       dplyr::mutate(isBinary = .data$isBinary == "Y") %>%
       dplyr::select("covariateId", "isBinary") %>%
-      dplyr::compute()
+      dplyr::compute(name = "covariateIsBinary", temporary = FALSE)
     on.exit(outputData$covariateData$covariateIsBinary <- NULL, add = TRUE)
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%

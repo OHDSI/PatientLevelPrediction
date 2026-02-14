@@ -390,6 +390,43 @@ makeApplyImputeDataForKTest <- function() {
   trainData
 }
 
+makeApplyImputerSettingsForKTest <- function(k = 3) {
+  settings <- createIterativeImputer(
+    missingThreshold = 0.8,
+    method = "pmm",
+    methodSettings = list(
+      pmm = list(
+        k = k,
+        iterations = 1
+      )
+    )
+  )
+  attr(settings, "missingInfo") <- data.frame(covariateId = 100, missing = 0.5)
+  attr(settings, "imputer") <- list(
+    "100" = list(
+      intercept = 0,
+      coefficients = data.frame(covariateId = 200, values = 1),
+      predictions = data.frame(rowId = c(1, 3), prediction = c(0.2, 0.4))
+    )
+  )
+  settings
+}
+
+test_that("iterativeImpute apply path leaves copyable covariateData (no dbplyr temp artifacts)", {
+  skip_if_not_installed("glmnet")
+  trainData <- makeApplyImputeDataForKTest()
+  settings <- makeApplyImputerSettingsForKTest(k = 3)
+
+  out <- PatientLevelPrediction:::iterativeImpute(
+    trainData = trainData,
+    featureEngineeringSettings = settings,
+    done = TRUE
+  )
+
+  expect_false(any(grepl("^dbplyr_", names(out$covariateData))))
+  expect_no_error(Andromeda::copyAndromeda(out$covariateData))
+})
+
 test_that("findNearestSortedIndices matches full-distance ranking", {
   predsObs <- c(-3.2, -0.6, 0.4, 2.3, 5.9, 8.1)
   targets <- c(-1.7, 0.9, 4.8)
@@ -432,24 +469,7 @@ test_that("samplePmmDonors with k=1 matches nearest donor deterministically", {
 test_that("iterativeImpute done=TRUE uses configured PMM k", {
   skip_if_not_installed("glmnet")
   trainData <- makeApplyImputeDataForKTest()
-  settings <- createIterativeImputer(
-    missingThreshold = 0.8,
-    method = "pmm",
-    methodSettings = list(
-      pmm = list(
-        k = 3,
-        iterations = 1
-      )
-    )
-  )
-  attr(settings, "missingInfo") <- data.frame(covariateId = 100, missing = 0.5)
-  attr(settings, "imputer") <- list(
-    "100" = list(
-      intercept = 0,
-      coefficients = data.frame(covariateId = 200, values = 1),
-      predictions = data.frame(rowId = c(1, 3), prediction = c(0.2, 0.4))
-    )
-  )
+  settings <- makeApplyImputerSettingsForKTest(k = 3)
 
   observed <- new.env(parent = emptyenv())
   observed$k <- NULL
