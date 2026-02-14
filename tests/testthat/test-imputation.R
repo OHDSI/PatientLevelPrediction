@@ -351,6 +351,130 @@ makePmmData <- function(nObs = 6, nMiss = 3) {
   )
 }
 
+makeApplyImputeDataForKTest <- function() {
+  covariates <- data.frame(
+    rowId = c(1, 3, 1, 2, 3, 4),
+    covariateId = c(100, 100, 200, 200, 200, 200),
+    covariateValue = c(10, 30, 1, 0, 1, 0)
+  )
+  covariateRef <- data.frame(
+    covariateId = c(100, 200),
+    covariateName = c("bmi", "binary feature"),
+    analysisId = c(10, 20),
+    conceptId = c(1, 2)
+  )
+  analysisRef <- data.frame(
+    analysisId = c(10, 20),
+    analysisName = c("continuous", "binary"),
+    domainId = c("measurement", "feature engineering"),
+    startDay = c(NA_real_, NA_real_),
+    endDay = c(NA_real_, NA_real_),
+    isBinary = c("N", "Y"),
+    missingMeansZero = c("N", "Y")
+  )
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = covariateRef,
+    analysisRef = analysisRef
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list()
+
+  trainData <- list(
+    labels = data.frame(rowId = 1:4),
+    covariateData = covariateData
+  )
+  class(trainData) <- "plpData"
+  attr(trainData, "metaData") <- list()
+
+  trainData
+}
+
+test_that("findNearestSortedIndices matches full-distance ranking", {
+  predsObs <- c(-3.2, -0.6, 0.4, 2.3, 5.9, 8.1)
+  targets <- c(-1.7, 0.9, 4.8)
+  sortedOrder <- order(predsObs)
+  sortedPreds <- predsObs[sortedOrder]
+
+  for (target in targets) {
+    for (k in c(1, 2, 3, 4)) {
+      nearestSorted <- PatientLevelPrediction:::findNearestSortedIndices(
+        sortedPredictions = sortedPreds,
+        prediction = target,
+        k = k
+      )
+      nearest <- sortedOrder[nearestSorted]
+      baseline <- order(abs(predsObs - target))[seq_len(k)]
+      expect_setequal(nearest, baseline)
+    }
+  }
+})
+
+test_that("samplePmmDonors with k=1 matches nearest donor deterministically", {
+  predsObs <- c(0.1, 1.4, 2.2, 4.9)
+  donorMapping <- c(10, 20, 30, 40)
+  predsTarget <- c(0.2, 2.6, 4.2)
+
+  expected <- vapply(predsTarget, function(target) {
+    donorMapping[order(abs(predsObs - target))[1]]
+  }, numeric(1))
+
+  actual <- PatientLevelPrediction:::samplePmmDonors(
+    predsObs = predsObs,
+    donorMapping = donorMapping,
+    predsTarget = predsTarget,
+    k = 1
+  )
+
+  expect_equal(actual, expected)
+})
+
+test_that("iterativeImpute done=TRUE uses configured PMM k", {
+  skip_if_not_installed("glmnet")
+  trainData <- makeApplyImputeDataForKTest()
+  settings <- createIterativeImputer(
+    missingThreshold = 0.8,
+    method = "pmm",
+    methodSettings = list(
+      pmm = list(
+        k = 3,
+        iterations = 1
+      )
+    )
+  )
+  attr(settings, "missingInfo") <- data.frame(covariateId = 100, missing = 0.5)
+  attr(settings, "imputer") <- list(
+    "100" = list(
+      intercept = 0,
+      coefficients = data.frame(covariateId = 200, values = 1),
+      predictions = data.frame(rowId = c(1, 3), prediction = c(0.2, 0.4))
+    )
+  )
+
+  observed <- new.env(parent = emptyenv())
+  observed$k <- NULL
+
+  testthat::local_mocked_bindings(
+    pmmPredict = function(data, k = 5, imputer) {
+      observed$k <- k
+      rows <- data$xMiss %>%
+        dplyr::pull(.data$rowId) %>%
+        unique()
+      list(imputedValues = data.frame(rowId = rows, imputedValue = 0))
+    },
+    .package = "PatientLevelPrediction"
+  )
+
+  expect_no_error(
+    PatientLevelPrediction:::iterativeImpute(
+      trainData = trainData,
+      featureEngineeringSettings = settings,
+      done = TRUE
+    )
+  )
+  expect_equal(observed$k, 3)
+})
+
 test_that("pmmFit runs on a minimal valid dataset", {
   skip_if_not_installed("glmnet")
   pmmData <- makePmmData(nObs = 12, nMiss = 4)

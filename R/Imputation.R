@@ -268,6 +268,70 @@ validatePmmK <- function(k) {
   as.integer(k)
 }
 
+findNearestSortedIndices <- function(sortedPredictions, prediction, k) {
+  n <- length(sortedPredictions)
+  if (n == 0) {
+    return(integer(0))
+  }
+  if (k >= n) {
+    return(seq_len(n))
+  }
+  right <- findInterval(prediction, sortedPredictions) + 1L
+  left <- right - 1L
+  nearest <- integer(k)
+  nextPos <- 1L
+
+  while (nextPos <= k) {
+    if (left < 1L) {
+      nearest[nextPos] <- right
+      right <- right + 1L
+    } else if (right > n) {
+      nearest[nextPos] <- left
+      left <- left - 1L
+    } else {
+      dLeft <- abs(prediction - sortedPredictions[left])
+      dRight <- abs(sortedPredictions[right] - prediction)
+      if (dLeft <= dRight) {
+        nearest[nextPos] <- left
+        left <- left - 1L
+      } else {
+        nearest[nextPos] <- right
+        right <- right + 1L
+      }
+    }
+    nextPos <- nextPos + 1L
+  }
+
+  nearest
+}
+
+samplePmmDonors <- function(predsObs, donorMapping, predsTarget, k) {
+  nDonors <- length(donorMapping)
+  if (nDonors == 0) {
+    stop("No observed donors available for PMM imputation")
+  }
+  kEff <- min(k, nDonors)
+
+  predsObs <- as.numeric(predsObs)
+  predsTarget <- as.numeric(predsTarget)
+  donorOrder <- order(predsObs)
+  predsObsSorted <- predsObs[donorOrder]
+  donorMappingSorted <- donorMapping[donorOrder]
+
+  imputedValues <- numeric(length(predsTarget))
+  for (j in seq_along(predsTarget)) {
+    donorIndices <- findNearestSortedIndices(predsObsSorted, predsTarget[j], kEff)
+    donorValues <- donorMappingSorted[donorIndices]
+    donorValues <- donorValues[!is.na(donorValues)]
+    if (length(donorValues) == 0) {
+      stop("No non-missing donors available for PMM imputation")
+    }
+    imputedValues[j] <- donorValues[sample.int(length(donorValues), 1)]
+  }
+
+  imputedValues
+}
+
 scalePmmCovariates <- function(xMiss) {
   xMiss %>%
     dplyr::left_join(
@@ -750,7 +814,22 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 
       imputer <-
         attr(featureEngineeringSettings, "imputer")[[as.character(varId)]]
-      pmmResults <- pmmPredict(numericData, k = 5, imputer)
+      varStart <- Sys.time()
+      kPmm <- featureEngineeringSettings$methodSettings$k
+      if (is.null(kPmm)) {
+        kPmm <- 5
+      }
+      nMissRows <- length(missIdx)
+      nDonors <- if (!is.null(imputer$predictions)) nrow(imputer$predictions) else 0
+      pmmResults <- pmmPredict(numericData, k = kPmm, imputer)
+      varDelta <- Sys.time() - varStart
+      varNameSafe <- if (length(varName) == 0 || is.na(varName[1])) as.character(varId) else varName[1]
+      ParallelLogger::logInfo(
+        "PMM predict for variable ", varNameSafe,
+        " (covariateId=", varId, "): missing=", nMissRows,
+        ", donors=", nDonors, ", k=", kPmm,
+        ", time=", signif(varDelta, 3), " ", attr(varDelta, "units")
+      )
 
       # update imputations in data
       numericData$imputedValues <- pmmResults$imputedValues
@@ -874,11 +953,6 @@ pmmFit <- function(data, k = 5) {
   donorMapping <- data$rowMap %>%
     dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
     dplyr::pull(.data$y)
-  nDonors <- length(donorMapping)
-  if (nDonors == 0) {
-    stop("No observed donors available for PMM imputation")
-  }
-  kEff <- min(k, nDonors)
   nMissRows <- data$xMiss %>%
     dplyr::pull(.data$rowId) %>%
     unique() %>%
@@ -897,19 +971,7 @@ pmmFit <- function(data, k = 5) {
       dims = c(nMissRows, nCols)
     )
     predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
-
-    # for each missing value, find the k closest observed values
-    imputedValues <- numeric(nrow(xMiss))
-    for (j in seq_len(nrow(xMiss))) {
-      distances <- abs(predsObs - predsMiss[j])
-      donorIndices <- order(distances)[seq_len(kEff)]
-      donorValues <- donorMapping[donorIndices]
-      donorValues <- donorValues[!is.na(donorValues)]
-      if (length(donorValues) == 0) {
-        stop("No non-missing donors available for PMM imputation")
-      }
-      imputedValues[j] <- sample(donorValues, 1)
-    }
+    imputedValues <- samplePmmDonors(predsObs, donorMapping, predsMiss, k)
   }
 
   results <- list()
@@ -971,27 +1033,21 @@ pmmPredict <- function(data, k = 5, imputer) {
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- imputer$predictions %>% dplyr::pull(.data$prediction)
-  nDonors <- length(donorMapping)
-  if (nDonors == 0) {
-    stop("No observed donors available for PMM imputation")
-  }
-  kEff <- min(k, nDonors)
 
   # for each missing value, find the k closest observed values
   nRows <- data$xMiss %>%
     dplyr::pull(.data$rowId) %>%
     dplyr::n_distinct()
-  imputedValues <- numeric(nRows)
   predsObs <- imputer$predictions$prediction
-  for (j in seq_len(nRows)) {
-    distances <- abs(predsObs - predictionMissing$value[j])
-    donorIndices <- order(distances)[seq_len(kEff)]
-    donorValues <- donorMapping[donorIndices]
-    donorValues <- donorValues[!is.na(donorValues)]
-    if (length(donorValues) == 0) {
-      stop("No non-missing donors available for PMM imputation")
-    }
-    imputedValues[j] <- sample(donorValues, 1)
+  if (nRows == 0) {
+    imputedValues <- numeric(0)
+  } else {
+    imputedValues <- samplePmmDonors(
+      predsObs = predsObs,
+      donorMapping = donorMapping,
+      predsTarget = predictionMissing$value,
+      k = k
+    )
   }
 
   results <- list()
