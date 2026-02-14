@@ -114,6 +114,10 @@ createSimpleImputer <- function(method = "mean",
   return(featureEngineeringSettings)
 }
 
+normalizeIdKey <- function(x) {
+  trimws(as.character(x))
+}
+
 createMissingIndicatorInfo <- function(outputData, sourceCovariateIds) {
   sourceCovariateIds <- unique(sourceCovariateIds)
   if (length(sourceCovariateIds) == 0) {
@@ -150,14 +154,18 @@ createMissingIndicatorInfo <- function(outputData, sourceCovariateIds) {
   usedAnalysisIds <- outputData$covariateData$analysisRef %>%
     dplyr::pull(.data$analysisId) %>%
     unique()
+  usedAnalysisIdKeys <- normalizeIdKey(usedAnalysisIds)
 
   for (i in seq_len(nrow(analysisMap))) {
     candidate <- analysisMap$sourceAnalysisId[i] + 1000
-    while (candidate %in% usedAnalysisIds) {
+    candidateKey <- normalizeIdKey(candidate)
+    while (candidateKey %in% usedAnalysisIdKeys) {
       candidate <- candidate + 1000
+      candidateKey <- normalizeIdKey(candidate)
     }
     analysisMap$indicatorAnalysisId[i] <- candidate
     usedAnalysisIds <- c(usedAnalysisIds, candidate)
+    usedAnalysisIdKeys <- c(usedAnalysisIdKeys, candidateKey)
   }
 
   map <- sourceCovariateRef %>%
@@ -219,8 +227,14 @@ appendMissingIndicatorMetadata <- function(outputData, indicatorInfo) {
   existingAnalysisIds <- outputData$covariateData$analysisRef %>%
     dplyr::pull(.data$analysisId) %>%
     unique()
-  analysisRefToAdd <- indicatorInfo$analysisRef %>%
-    dplyr::filter(!.data$analysisId %in% !!existingAnalysisIds)
+  existingAnalysisIdKeys <- normalizeIdKey(existingAnalysisIds)
+  analysisRefToAdd <- indicatorInfo$analysisRef
+  if (nrow(analysisRefToAdd) > 0) {
+    analysisRefToAdd$.analysisIdKey <- normalizeIdKey(analysisRefToAdd$analysisId)
+    analysisRefToAdd <- analysisRefToAdd %>%
+      dplyr::filter(!.data$.analysisIdKey %in% !!existingAnalysisIdKeys) %>%
+      dplyr::select(-".analysisIdKey")
+  }
   if (nrow(analysisRefToAdd) > 0) {
     Andromeda::appendToTable(outputData$covariateData$analysisRef, analysisRefToAdd)
   }
@@ -228,13 +242,53 @@ appendMissingIndicatorMetadata <- function(outputData, indicatorInfo) {
   existingCovariateIds <- outputData$covariateData$covariateRef %>%
     dplyr::pull(.data$covariateId) %>%
     unique()
-  covariateRefToAdd <- indicatorInfo$covariateRef %>%
-    dplyr::filter(!.data$covariateId %in% !!existingCovariateIds)
+  existingCovariateIdKeys <- normalizeIdKey(existingCovariateIds)
+  covariateRefToAdd <- indicatorInfo$covariateRef
+  if (nrow(covariateRefToAdd) > 0) {
+    covariateRefToAdd$.covariateIdKey <- normalizeIdKey(covariateRefToAdd$covariateId)
+    covariateRefToAdd <- covariateRefToAdd %>%
+      dplyr::filter(!.data$.covariateIdKey %in% !!existingCovariateIdKeys) %>%
+      dplyr::select(-".covariateIdKey")
+  }
   if (nrow(covariateRefToAdd) > 0) {
     Andromeda::appendToTable(outputData$covariateData$covariateRef, covariateRefToAdd)
   }
 
   return(outputData)
+}
+
+validatePmmK <- function(k) {
+  if (!(is.numeric(k) &&
+      length(k) == 1 &&
+      is.finite(k) &&
+      (k == as.integer(k)) &&
+      k >= 1)) {
+    stop("k must be a single positive integer")
+  }
+  as.integer(k)
+}
+
+scalePmmCovariates <- function(xMiss) {
+  xMiss %>%
+    dplyr::left_join(
+      xMiss %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(
+          n_unique = dplyr::n_distinct(.data$covariateValue),
+          max = max(.data$covariateValue, na.rm = TRUE),
+          min = min(.data$covariateValue, na.rm = TRUE)
+        ),
+      by = "covariateId"
+    ) %>%
+    dplyr::group_by(.data$covariateId) %>%
+    dplyr::mutate(
+      covariateValue = ifelse(.data$n_unique > 2 & (.data$max - .data$min) > 0,
+        (.data$covariateValue - .data$min) / (.data$max - .data$min),
+        .data$covariateValue
+      )
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-c("n_unique", "min", "max"))
 }
 
 appendMissingIndicatorValues <- function(outputData, missingIndex, indicatorMap) {
@@ -749,6 +803,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @keywords internal
 pmmFit <- function(data, k = 5) {
   rlang::check_installed("glmnet")
+  k <- validatePmmK(k)
   data$rowMap <- data$xObs %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise() %>%
@@ -793,26 +848,7 @@ pmmFit <- function(data, k = 5) {
 
   # predict on both XObs and XMiss
   predsObs <- stats::predict(fit, xObs, fit$lambda.min)
-  data$xMiss <- data$xMiss %>%
-    dplyr::left_join(
-      data$xMiss %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::summarise(
-          n_unique = dplyr::n_distinct(.data$covariateValue),
-          max = max(.data$covariateValue, na.rm = TRUE),
-          min = min(.data$covariateValue, na.rm = TRUE),
-        ),
-      by = "covariateId"
-    ) %>%
-    dplyr::group_by(.data$covariateId) %>%
-    dplyr::mutate(
-      covariateValue = ifelse(.data$n_unique > 2 & (.data$max - .data$max) > 0,
-        (.data$covariateValue - .data$min) / (.data$max - .data$min),
-        .data$covariateValue
-      )
-    ) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-c("n_unique", "min", "max"))
+  data$xMiss <- scalePmmCovariates(data$xMiss)
   data$rowMapMiss <- data$xMiss %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise() %>%
@@ -833,30 +869,47 @@ pmmFit <- function(data, k = 5) {
       covariateValue = "covariateValue"
     )
 
-  xMiss <- Matrix::sparseMatrix(
-    i = data$xMiss %>% dplyr::pull(.data$rowId),
-    j = data$xMiss %>% dplyr::pull(.data$covariateId),
-    x = data$xMiss %>% dplyr::pull(.data$covariateValue),
-    dims = c(
-      data$xMiss %>% dplyr::pull(.data$rowId) %>% max(),
-      data$xMiss %>% dplyr::pull(.data$covariateId) %>% max()
-    )
-  )
-
-  predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
-
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- data$rowMap %>%
     dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
     dplyr::pull(.data$y)
-  # for each missing value, find the k closest observed values
-  imputedValues <- numeric(nrow(xMiss))
-  for (j in 1:nrow(xMiss)) {
-    distances <- abs(predsObs - predsMiss[j])
-    donorIndices <- order(distances)[1:k]
-    donorValues <- donorMapping[donorIndices]
-    imputedValues[j] <- sample(donorValues, 1)
+  nDonors <- length(donorMapping)
+  if (nDonors == 0) {
+    stop("No observed donors available for PMM imputation")
+  }
+  kEff <- min(k, nDonors)
+  nMissRows <- data$xMiss %>%
+    dplyr::pull(.data$rowId) %>%
+    unique() %>%
+    length()
+  nCols <- data$colMap %>%
+    dplyr::pull(.data$newCovariateId) %>%
+    max()
+
+  if (nMissRows == 0) {
+    imputedValues <- numeric(0)
+  } else {
+    xMiss <- Matrix::sparseMatrix(
+      i = data$xMiss %>% dplyr::pull(.data$rowId),
+      j = data$xMiss %>% dplyr::pull(.data$covariateId),
+      x = data$xMiss %>% dplyr::pull(.data$covariateValue),
+      dims = c(nMissRows, nCols)
+    )
+    predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
+
+    # for each missing value, find the k closest observed values
+    imputedValues <- numeric(nrow(xMiss))
+    for (j in seq_len(nrow(xMiss))) {
+      distances <- abs(predsObs - predsMiss[j])
+      donorIndices <- order(distances)[seq_len(kEff)]
+      donorValues <- donorMapping[donorIndices]
+      donorValues <- donorValues[!is.na(donorValues)]
+      if (length(donorValues) == 0) {
+        stop("No non-missing donors available for PMM imputation")
+      }
+      imputedValues[j] <- sample(donorValues, 1)
+    }
   }
 
   results <- list()
@@ -889,6 +942,7 @@ pmmFit <- function(data, k = 5) {
 }
 
 pmmPredict <- function(data, k = 5, imputer) {
+  k <- validatePmmK(k)
   data$coefficients <- imputer$coefficients
   predictionMissing <- data$xMiss %>%
     dplyr::left_join(data$coefficients, by = "covariateId") %>%
@@ -917,6 +971,11 @@ pmmPredict <- function(data, k = 5, imputer) {
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- imputer$predictions %>% dplyr::pull(.data$prediction)
+  nDonors <- length(donorMapping)
+  if (nDonors == 0) {
+    stop("No observed donors available for PMM imputation")
+  }
+  kEff <- min(k, nDonors)
 
   # for each missing value, find the k closest observed values
   nRows <- data$xMiss %>%
@@ -924,10 +983,14 @@ pmmPredict <- function(data, k = 5, imputer) {
     dplyr::n_distinct()
   imputedValues <- numeric(nRows)
   predsObs <- imputer$predictions$prediction
-  for (j in 1:nRows) {
+  for (j in seq_len(nRows)) {
     distances <- abs(predsObs - predictionMissing$value[j])
-    donorIndices <- order(distances)[1:k]
+    donorIndices <- order(distances)[seq_len(kEff)]
     donorValues <- donorMapping[donorIndices]
+    donorValues <- donorValues[!is.na(donorValues)]
+    if (length(donorValues) == 0) {
+      stop("No non-missing donors available for PMM imputation")
+    }
     imputedValues[j] <- sample(donorValues, 1)
   }
 

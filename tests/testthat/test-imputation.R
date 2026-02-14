@@ -323,3 +323,162 @@ test_that("IterativeImputer can add missing indicators for imputed features", {
     dplyr::pull(.data$rowId)
   expect_true(length(indicatorRows) > 0)
 })
+
+makePmmData <- function(nObs = 6, nMiss = 3) {
+  stopifnot(nObs >= 3)
+  covariateId <- 101
+  xObs <- data.frame(
+    rowId = rep(seq_len(nObs), each = 2),
+    covariateId = rep(c(covariateId, covariateId + 1), times = nObs),
+    covariateValue = c(
+      seq_len(nObs),
+      seq(from = 10, by = 2, length.out = nObs)
+    )
+  )
+  xMiss <- data.frame(
+    rowId = nObs + seq_len(nMiss),
+    covariateId = covariateId,
+    covariateValue = seq(from = 2, by = 1, length.out = nMiss)
+  )
+  yObs <- data.frame(
+    rowId = seq_len(nObs),
+    y = seq(from = 0.1, by = 0.2, length.out = nObs)
+  )
+  Andromeda::andromeda(
+    xObs = xObs,
+    xMiss = xMiss,
+    yObs = yObs
+  )
+}
+
+test_that("pmmFit runs on a minimal valid dataset", {
+  skip_if_not_installed("glmnet")
+  pmmData <- makePmmData(nObs = 12, nMiss = 4)
+
+  expect_no_error(
+    PatientLevelPrediction:::pmmFit(pmmData, k = 1)
+  )
+})
+
+test_that("scalePmmCovariates normalizes continuous values", {
+  xMiss <- dplyr::tibble(
+    rowId = c(1, 2, 3, 4, 5, 6),
+    covariateId = c(11, 11, 11, 22, 22, 22),
+    covariateValue = c(2, 4, 6, 0, 1, 0)
+  )
+
+  scaled <- PatientLevelPrediction:::scalePmmCovariates(xMiss) %>%
+    dplyr::collect()
+
+  continuous <- scaled %>%
+    dplyr::filter(.data$covariateId == 11) %>%
+    dplyr::pull(.data$covariateValue)
+  binary <- scaled %>%
+    dplyr::filter(.data$covariateId == 22) %>%
+    dplyr::pull(.data$covariateValue)
+
+  expect_equal(min(continuous), 0)
+  expect_equal(max(continuous), 1)
+  expect_equal(binary, c(0, 1, 0))
+})
+
+test_that("pmmFit clamps k to available donors", {
+  skip_if_not_installed("glmnet")
+  pmmData <- makePmmData(nObs = 12, nMiss = 6)
+
+  withr::with_seed(
+    42,
+    results <- PatientLevelPrediction:::pmmFit(pmmData, k = 50)
+  )
+
+  expect_equal(nrow(results$imputedValues), 6)
+  expect_false(anyNA(results$imputedValues$imputedValue))
+})
+
+test_that("pmmFit handles empty xMiss without failing", {
+  skip_if_not_installed("glmnet")
+  pmmData <- makePmmData(nObs = 12, nMiss = 1)
+  pmmData$xMiss <- pmmData$xMiss %>%
+    dplyr::filter(FALSE)
+
+  results <- PatientLevelPrediction:::pmmFit(pmmData, k = 1)
+
+  expect_equal(nrow(results$imputedValues), 0)
+  expect_true(all(c("intercept", "coefficients", "predictions") %in% names(results$model)))
+})
+
+test_that("pmmFit and pmmPredict validate k", {
+  skip_if_not_installed("glmnet")
+  pmmData <- makePmmData(nObs = 12, nMiss = 2)
+
+  invalidK <- list(0, -1, 2.5, NA_real_, c(1, 2))
+  for (k in invalidK) {
+    expect_error(
+      PatientLevelPrediction:::pmmFit(pmmData, k = k),
+      "k must be a single positive integer"
+    )
+  }
+
+  predictData <- list(
+    xMiss = dplyr::tibble(
+      rowId = c(1001, 1002),
+      covariateId = c(11, 11),
+      covariateValue = c(0.1, 0.2)
+    )
+  )
+  imputer <- list(
+    intercept = 0,
+    coefficients = data.frame(covariateId = 11, values = 1),
+    predictions = data.frame(rowId = 1:3, prediction = c(0.2, 0.5, 0.8))
+  )
+  for (k in invalidK) {
+    expect_error(
+      PatientLevelPrediction:::pmmPredict(predictData, k = k, imputer = imputer),
+      "k must be a single positive integer"
+    )
+  }
+})
+
+test_that("appendMissingIndicatorMetadata normalizes IDs before duplicate checks", {
+  outputData <- list(covariateData = Andromeda::andromeda())
+
+  outputData$covariateData$analysisRef <- dplyr::tibble(
+    analysisId = "1666 ",
+    analysisName = "existing",
+    domainId = "feature engineering",
+    startDay = NA_real_,
+    endDay = NA_real_,
+    isBinary = "Y",
+    missingMeansZero = "Y"
+  )
+  outputData$covariateData$covariateRef <- dplyr::tibble(
+    covariateId = "2666 ",
+    covariateName = "existing covariate",
+    analysisId = "1666 ",
+    conceptId = 1
+  )
+
+  indicatorInfo <- list(
+    map = data.frame(sourceCovariateId = 666, indicatorCovariateId = 2666),
+    analysisRef = data.frame(
+      analysisId = 1666,
+      analysisName = "existing",
+      domainId = "feature engineering",
+      startDay = NA_real_,
+      endDay = NA_real_,
+      isBinary = "Y",
+      missingMeansZero = "Y"
+    ),
+    covariateRef = data.frame(
+      covariateId = 2666,
+      covariateName = "existing covariate",
+      analysisId = 1666,
+      conceptId = 1
+    )
+  )
+
+  updated <- PatientLevelPrediction:::appendMissingIndicatorMetadata(outputData, indicatorInfo)
+
+  expect_equal(nrow(dplyr::collect(updated$covariateData$analysisRef)), 1)
+  expect_equal(nrow(dplyr::collect(updated$covariateData$covariateRef)), 1)
+})
