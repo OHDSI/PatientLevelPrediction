@@ -87,6 +87,71 @@ test_that("set LR incorrect inputs", {
 })
 
 
+test_that("set ridge regression inputs", {
+  modelSet <- setRidgeRegression()
+  expect_s3_class(modelSet, "modelSettings")
+
+  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
+  expect_type(modelSet$param, "list")
+  expect_equal(modelSet$param$priorParams$priorType, "normal")
+
+  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
+  expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$modelName, "ridgeLogisticRegression")
+  expect_equal(modelSet$settings$priorfunction, "Cyclops::createPrior")
+  expect_equal(modelSet$settings$addIntercept, TRUE)
+  expect_equal(modelSet$settings$useControl, TRUE)
+  expect_equal(modelSet$settings$cvRepetitions, 1)
+
+  variance <- runif(1)
+  modelSet <- setRidgeRegression(variance = variance)
+  expect_equal(modelSet$param$priorParams$variance, variance)
+
+  seed <- sample(10, 1)
+  modelSet <- setRidgeRegression(seed = seed)
+  expect_equal(modelSet$settings$seed, seed)
+
+  modelSet <- setRidgeRegression(includeCovariateIds = c(1, 2))
+  expect_equal(modelSet$param$includeCovariateIds, c(1, 2))
+
+  modelSet <- setRidgeRegression(noShrinkage = c(1, 3))
+  expect_equal(modelSet$param$priorParams$exclude, c(1, 3))
+
+  threads <- sample(10, 1)
+  modelSet <- setRidgeRegression(threads = threads)
+  expect_equal(modelSet$settings$threads, threads)
+
+  modelSet <- setRidgeRegression(forceIntercept = TRUE)
+  expect_equal(modelSet$param$priorParams$forceIntercept, TRUE)
+
+  modelSet <- setRidgeRegression(upperLimit = 1)
+  expect_equal(modelSet$param$upperLimit, 1)
+
+  modelSet <- setRidgeRegression(lowerLimit = 1)
+  expect_equal(modelSet$param$lowerLimit, 1)
+
+  tolerance <- runif(1)
+  modelSet <- setRidgeRegression(tolerance = tolerance)
+  expect_equal(modelSet$settings$tolerance, tolerance)
+
+  maxIterations <- sample(100, 1)
+  modelSet <- setRidgeRegression(maxIterations = maxIterations)
+  expect_equal(modelSet$settings$maxIterations, maxIterations)
+})
+
+
+test_that("set ridge regression incorrect inputs", {
+  expect_error(setRidgeRegression(variance = -0.01))
+  expect_error(setRidgeRegression(variance = "variance"))
+  expect_error(setRidgeRegression(seed = "seed"))
+  expect_error(setRidgeRegression(threads = "threads"))
+
+  expect_error(setRidgeRegression(lowerLimit = "lowerLimit"))
+  expect_error(setRidgeRegression(upperLimit = "upperLimit"))
+  expect_error(setRidgeRegression(lowerLimit = 3, upperLimit = 1))
+})
+
+
 
 
 test_that("set cox regression inputs", {
@@ -264,6 +329,26 @@ test_that("test logistic regression runs", {
 
   expect_true("covariateValue" %in% colnames(fitModel$covariateImportance))
 
+  expect_equal(fitModel$modelDesign$outcomeId, attr(trainData, "metaData")$outcomeId)
+  expect_equal(fitModel$modelDesign$targetId, attr(trainData, "metaData")$targetId)
+})
+
+
+test_that("test ridge regression runs", {
+  skip_if_offline()
+  modelSettings <- setRidgeRegression()
+
+  fitModel <- fitPlp(
+    trainData = trainData,
+    modelSettings = modelSettings,
+    analysisId = "ridgeLrTest",
+    analysisPath = tempdir()
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
+  expect_true(!is.null(fitModel$trainDetails$trainingTime))
+  expect_equal(fitModel$trainDetails$trainingDate, Sys.Date())
   expect_equal(fitModel$modelDesign$outcomeId, attr(trainData, "metaData")$outcomeId)
   expect_equal(fitModel$modelDesign$targetId, attr(trainData, "metaData")$targetId)
 })
