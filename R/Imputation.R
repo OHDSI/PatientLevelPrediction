@@ -25,6 +25,7 @@
 #' Currently only "pmm" is supported with the following settings:
 #' - k: The number of donors to use for matching
 #' - iterations: The number of iterations to use for imputation
+#' - alpha: Elastic-net mixing parameter for PMM fit (`1` = lasso, `0` = ridge)
 #' @param addMissingIndicator Add a binary missingness indicator per feature that
 #' passes the imputation missingness threshold.
 #' @return The settings for the iterative imputer of class `featureEngineeringSettings`
@@ -32,14 +33,17 @@
 #' # create imputer to impute values with missingness less than 30% using 
 #' # predictive mean matching in 5 iterations with 5 donors
 #' createIterativeImputer(missingThreshold = 0.3, method = "pmm",
-#'                        methodSettings = list(pmm = list(k = 5, iterations = 5)))
+#'                        methodSettings = list(
+#'                          pmm = list(k = 5, iterations = 5, alpha = 0.5)
+#'                        ))
 #' @export
 createIterativeImputer <- function(missingThreshold = 0.3,
                                    method = "pmm",
                                    methodSettings = list(
                                       pmm = list(
                                         k = 5,
-                                        iterations = 5
+                                        iterations = 5,
+                                        alpha = 1
                                       )
                                    ),
                                    addMissingIndicator = FALSE) {
@@ -57,6 +61,15 @@ createIterativeImputer <- function(missingThreshold = 0.3,
     checkHigher(methodSettings$pmm$k, 0)
     checkIsClass(methodSettings$pmm$iterations, "numeric")
     checkHigher(methodSettings$pmm$iterations, 0)
+    if (is.null(methodSettings$pmm$alpha)) {
+      methodSettings$pmm$alpha <- 1
+    }
+    checkIsClass(methodSettings$pmm$alpha, "numeric")
+    if (length(methodSettings$pmm$alpha) != 1 ||
+      methodSettings$pmm$alpha < 0 ||
+      methodSettings$pmm$alpha > 1) {
+      stop("methodSettings$pmm$alpha should be a single numeric value in [0, 1]")
+    }
   }
   checkHigher(missingThreshold, 0)
   checkLower(missingThreshold, 1)
@@ -113,6 +126,7 @@ createSimpleImputer <- function(method = "mean",
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   return(featureEngineeringSettings)
 }
+
 
 normalizeIdKey <- function(x) {
   trimws(as.character(x))
@@ -411,6 +425,7 @@ addMissingIndicators <- function(outputData,
   ))
 }
 
+
 #' @title Simple Imputation
 #' @description This function does single imputation with the mean or median
 #' @param trainData The data to be imputed
@@ -666,6 +681,10 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     numericData <- initializeImputation(numericData, "mean",
       labels = outputData$labels
     )
+    attr(featureEngineeringSettings, "initialValues") <- numericData$covariates %>%
+      dplyr::group_by(.data$covariateId) %>%
+      dplyr::summarise(initialValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+      dplyr::collect()
     if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
       indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
       if (!is.null(indicatorInfo) &&
@@ -721,25 +740,13 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       "missingInfo"
     )
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
-    outputData$covariateData$covariateIsBinary <- outputData$covariateData$covariateRef %>%
-      dplyr::select("covariateId", "analysisId") %>%
-      dplyr::inner_join(
-        outputData$covariateData$analysisRef %>%
-          dplyr::select("analysisId", "isBinary"),
-        by = "analysisId"
-      ) %>%
-      dplyr::mutate(isBinary = .data$isBinary == "Y") %>%
-      dplyr::select("covariateId", "isBinary") %>%
-      dplyr::compute(name = "covariateIsBinary", temporary = FALSE)
-    on.exit(outputData$covariateData$covariateIsBinary <- NULL, add = TRUE)
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::left_join(outputData$covariateData$covariateIsBinary, by = "covariateId") %>%
-      dplyr::filter(
-        (!is.na(.data$missing) && .data$missing <= featureEngineeringSettings$missingThreshold) ||
-          (is.na(.data$missing) && .data$isBinary)
-      ) %>%
-      dplyr::select(-"missing", -"isBinary")
+      # Keep test-path covariates with the same missing-threshold rule as training.
+      # This preserves non-imputed feature parity between train and test.
+      dplyr::filter(is.na(.data$missing) ||
+        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::select(-"missing")
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
     outputData <- missingIndicatorResults$outputData
     featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
@@ -784,9 +791,23 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       }
     }
 
+    initValues <- attr(featureEngineeringSettings, "initialValues")
+    if (is.null(initValues)) {
+      initValues <- numericData$covariates %>%
+        dplyr::group_by(.data$covariateId) %>%
+        dplyr::summarise(initialValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+        dplyr::collect()
+    }
     numericData$imputedCovariates <- numericData$covariates %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::mutate(imputedValue = .data$covariateValue)
+      dplyr::left_join(initValues, by = "covariateId", copy = TRUE) %>%
+      dplyr::mutate(
+        imputedValue = ifelse(
+          is.na(.data$covariateValue),
+          .data$initialValue,
+          .data$covariateValue
+        )
+      ) %>%
+      dplyr::select(-"initialValue")
     on.exit(numericData$imputedCovariates <- NULL, add = TRUE)
 
 
@@ -804,8 +825,10 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
         dplyr::select("y", "rowId")
       on.exit(numericData$y <- NULL, add = TRUE)
       missIdx <- which(is.na(numericData$y %>% dplyr::pull(.data$y)))
-      numericData$X <- numericData$covariates %>%
-        dplyr::filter(.data$covariateId != varId)
+      numericData$X <- numericData$imputedCovariates %>%
+        dplyr::filter(.data$covariateId != varId) %>%
+        dplyr::mutate(covariateValue = .data$imputedValue) %>%
+        dplyr::select(-"imputedValue")
       on.exit(numericData$X <- NULL, add = TRUE)
       Andromeda::appendToTable(numericData$X, binary$covariates)
       numericData$xMiss <- numericData$X %>%
@@ -873,6 +896,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
   return(outputData)
 }
 
+
 #' @title Predictive mean matching using lasso
 #' @param data An andromeda object with the following fields:
 #'      xObs: covariates table for observed data
@@ -880,22 +904,28 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 #'      yObs: outcome variable that we want to impute
 #' @param k The number of donors to use for matching (default 5)
 #' @keywords internal
-pmmFit <- function(data, k = 5) {
+pmmFit <- function(data, k = 5, alpha = 1) {
   rlang::check_installed("glmnet")
   k <- validatePmmK(k)
+  if (!is.numeric(alpha) || length(alpha) != 1 || alpha < 0 || alpha > 1) {
+    stop("alpha should be a single numeric value in [0, 1]")
+  }
   data$rowMap <- data$xObs %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise() %>%
+    dplyr::collect() %>%
+    dplyr::arrange(.data$rowId) %>%
     dplyr::mutate(
       oldRowId = .data$rowId,
       newRowId = dplyr::row_number()
     ) %>%
-    dplyr::select(c("newRowId", "oldRowId")) %>%
-    dplyr::compute()
+    dplyr::select(c("newRowId", "oldRowId"))
   on.exit(data$rowMap <- NULL, add = TRUE)
   data$colMap <- data$xObs %>%
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarise() %>%
+    dplyr::collect() %>%
+    dplyr::arrange(.data$covariateId) %>%
     dplyr::mutate(
       oldCovariateId = .data$covariateId,
       newCovariateId = dplyr::row_number()
@@ -904,8 +934,8 @@ pmmFit <- function(data, k = 5) {
   on.exit(data$colMap <- NULL, add = TRUE)
 
   data$xObs <- data$xObs %>%
-    dplyr::left_join(data$rowMap, by = c("rowId" = "oldRowId")) %>%
-    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId")) %>%
+    dplyr::left_join(data$rowMap, by = c("rowId" = "oldRowId"), copy = TRUE) %>%
+    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId"), copy = TRUE) %>%
     dplyr::select(
       rowId = "newRowId",
       covariateId = "newCovariateId",
@@ -922,25 +952,44 @@ pmmFit <- function(data, k = 5) {
     )
   )
 
-  fit <- glmnet::cv.glmnet(xObs, data$yObs %>%
-    dplyr::pull(.data$y), alpha = 1, nfolds = 3)
+  # Align y to xObs row index (newRowId) explicitly.
+  yObsAligned <- data$rowMap %>%
+    dplyr::left_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
+    dplyr::arrange(.data$newRowId) %>%
+    dplyr::select(c("newRowId", "oldRowId", "y")) %>%
+    dplyr::collect()
+  if (nrow(yObsAligned) != nrow(xObs)) {
+    stop("xObs/yObs row count mismatch in pmmFit")
+  }
+  if (any(is.na(yObsAligned$y))) {
+    stop("Missing y values after xObs/yObs alignment in pmmFit")
+  }
+
+  fit <- glmnet::cv.glmnet(
+    xObs,
+    yObsAligned$y,
+    alpha = alpha,
+    nfolds = 3
+  )
 
   # predict on both XObs and XMiss
   predsObs <- stats::predict(fit, xObs, fit$lambda.min)
-  data$xMiss <- scalePmmCovariates(data$xMiss)
+  # Keep xMiss on the same scale representation as xObs.
+  # Applying an xMiss-only scaling step can distort PMM donor matching.
   data$rowMapMiss <- data$xMiss %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise() %>%
+    dplyr::collect() %>%
+    dplyr::arrange(.data$rowId) %>%
     dplyr::mutate(
       oldRowId = .data$rowId,
       newRowId = dplyr::row_number()
     ) %>%
-    dplyr::select(c("newRowId", "oldRowId")) %>%
-    dplyr::compute()
+    dplyr::select(c("newRowId", "oldRowId"))
   on.exit(data$rowMapMiss <- NULL, add = TRUE)
   data$xMiss <- data$xMiss %>%
-    dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId")) %>%
-    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId")) %>%
+    dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId"), copy = TRUE) %>%
+    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId"), copy = TRUE) %>%
     dplyr::filter(!is.na(.data$newCovariateId), !is.na(.data$newRowId)) %>%
     dplyr::select(
       rowId = "newRowId",
@@ -950,9 +999,7 @@ pmmFit <- function(data, k = 5) {
 
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
-  donorMapping <- data$rowMap %>%
-    dplyr::inner_join(data$yObs, by = c("oldRowId" = "rowId")) %>%
-    dplyr::pull(.data$y)
+  donorMapping <- yObsAligned$y
   nMissRows <- data$xMiss %>%
     dplyr::pull(.data$rowId) %>%
     unique() %>%
@@ -995,9 +1042,9 @@ pmmFit <- function(data, k = 5) {
       values = as.numeric(fit$glmnet.fit$beta[nonZero, bestIndex])
     ),
     predictions = data.frame(
-      rowId = data$rowMap %>%
-        dplyr::pull(.data$oldRowId),
-      prediction = as.numeric(predsObs)
+      rowId = yObsAligned$oldRowId,
+      prediction = as.numeric(predsObs),
+      observedValue = yObsAligned$y
     )
   )
   return(results)
@@ -1032,7 +1079,12 @@ pmmPredict <- function(data, k = 5, imputer) {
 
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
-  donorMapping <- imputer$predictions %>% dplyr::pull(.data$prediction)
+  if ("observedValue" %in% names(imputer$predictions)) {
+    donorMapping <- imputer$predictions %>% dplyr::pull(.data$observedValue)
+  } else {
+    # Backward compatibility for older saved imputers without observed donors.
+    donorMapping <- imputer$predictions %>% dplyr::pull(.data$prediction)
+  }
 
   # for each missing value, find the k closest observed values
   nRows <- data$xMiss %>%
@@ -1182,7 +1234,11 @@ iterativeChainedImpute <- function(numericData,
       numericData$xMiss <- numericData$X %>% dplyr::filter(.data$rowId %in% !!allRowIds[missIdx])
       on.exit(numericData$xMiss <- NULL, add = TRUE)
 
-      pmmResults <- pmmFit(numericData, k = featureEngineeringSettings$methodSettings$k)
+      pmmResults <- pmmFit(
+        numericData,
+        k = featureEngineeringSettings$methodSettings$k,
+        alpha = featureEngineeringSettings$methodSettings$alpha
+      )
 
       # update imputations in data
       numericData$imputedValues <- pmmResults$imputedValues

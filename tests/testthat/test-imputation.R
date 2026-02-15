@@ -46,6 +46,7 @@ createMissingData <- function(trainData, missingness, test = FALSE) {
   missingData
 }
 
+
 test_that("createSimpleImputer works", {
   imputer <- createSimpleImputer()
 
@@ -96,6 +97,7 @@ test_that("createIterativeImputer works", {
   expect_s3_class(imputer, "featureEngineeringSettings")
   expect_error(createIterativeImputer(addMissingIndicator = "true"))
 })
+
 
 test_that("simpleImpute works", {
   skip_if_offline()
@@ -390,6 +392,45 @@ makeApplyImputeDataForKTest <- function() {
   trainData
 }
 
+makeApplyImputeDataForParityTest <- function() {
+  covariates <- data.frame(
+    rowId = c(1, 2, 3, 4, 1, 2, 3, 4),
+    covariateId = c(300, 300, 300, 300, 200, 200, 200, 200),
+    covariateValue = c(10, 20, 30, 40, 1, 0, 1, 0)
+  )
+  covariateRef <- data.frame(
+    covariateId = c(300, 200),
+    covariateName = c("continuous missingMeansZero", "binary feature"),
+    analysisId = c(30, 20),
+    conceptId = c(3, 2)
+  )
+  analysisRef <- data.frame(
+    analysisId = c(30, 20),
+    analysisName = c("continuous", "binary"),
+    domainId = c("measurement", "feature engineering"),
+    startDay = c(NA_real_, NA_real_),
+    endDay = c(NA_real_, NA_real_),
+    isBinary = c("N", "Y"),
+    missingMeansZero = c("Y", "Y")
+  )
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = covariateRef,
+    analysisRef = analysisRef
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list()
+
+  trainData <- list(
+    labels = data.frame(rowId = 1:4),
+    covariateData = covariateData
+  )
+  class(trainData) <- "plpData"
+  attr(trainData, "metaData") <- list()
+
+  trainData
+}
+
 makeApplyImputerSettingsForKTest <- function(k = 3) {
   settings <- createIterativeImputer(
     missingThreshold = 0.8,
@@ -411,6 +452,38 @@ makeApplyImputerSettingsForKTest <- function(k = 3) {
   )
   settings
 }
+
+test_that("iterativeImpute apply path preserves non-imputed continuous covariates", {
+  skip_if_not_installed("glmnet")
+  trainData <- makeApplyImputeDataForParityTest()
+  settings <- createIterativeImputer(
+    missingThreshold = 0.3,
+    method = "pmm",
+    methodSettings = list(
+      pmm = list(
+        k = 1,
+        iterations = 1
+      )
+    )
+  )
+  attr(settings, "missingInfo") <- data.frame(
+    covariateId = integer(0),
+    missing = numeric(0)
+  )
+
+  out <- PatientLevelPrediction:::iterativeImpute(
+    trainData = trainData,
+    featureEngineeringSettings = settings,
+    done = TRUE
+  )
+
+  preservedRows <- out$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 300) %>%
+    dplyr::select("rowId") %>%
+    dplyr::distinct() %>%
+    dplyr::collect()
+  expect_equal(nrow(preservedRows), nrow(trainData$labels))
+})
 
 test_that("iterativeImpute apply path leaves copyable covariateData (no dbplyr temp artifacts)", {
   skip_if_not_installed("glmnet")
@@ -549,6 +622,79 @@ test_that("pmmFit handles empty xMiss without failing", {
 
   expect_equal(nrow(results$imputedValues), 0)
   expect_true(all(c("intercept", "coefficients", "predictions") %in% names(results$model)))
+})
+
+test_that("PMM train/test imputations stay in observed range and preserve variance", {
+  skip_if_not_installed("glmnet")
+  pmmData <- withr::with_seed(1, {
+    nObs <- 200
+    nMissTrain <- 80
+
+    x1 <- runif(nObs, min = -2, max = 2)
+    x2 <- rnorm(nObs)
+    y <- 1 + 2 * x1 - 1.5 * x2 + rnorm(nObs, sd = 0.5)
+
+    xObs <- data.frame(
+      rowId = rep(seq_len(nObs), each = 2),
+      covariateId = rep(c(101, 102), times = nObs),
+      covariateValue = c(x1, x2)
+    )
+    yObs <- data.frame(rowId = seq_len(nObs), y = y)
+
+    xMissTrain <- data.frame(
+      rowId = rep(1000 + seq_len(nMissTrain), each = 2),
+      covariateId = rep(c(101, 102), times = nMissTrain),
+      covariateValue = c(
+        runif(nMissTrain, min = -2, max = 2),
+        rnorm(nMissTrain)
+      )
+    )
+    Andromeda::andromeda(xObs = xObs, xMiss = xMissTrain, yObs = yObs)
+  })
+
+  fitResults <- withr::with_seed(111, PatientLevelPrediction:::pmmFit(pmmData, k = 5))
+
+  nMissTest <- 90
+  testXMiss <- withr::with_seed(222, data.frame(
+    rowId = rep(2000 + seq_len(nMissTest), each = 2),
+    covariateId = rep(c(101, 102), times = nMissTest),
+    covariateValue = c(
+      runif(nMissTest, min = -2, max = 2),
+      rnorm(nMissTest)
+    )
+  ))
+
+  testResults <- withr::with_seed(333, {
+    PatientLevelPrediction:::pmmPredict(
+      data = list(xMiss = testXMiss),
+      k = 5,
+      imputer = fitResults$model
+    )
+  })
+
+  observedY <- pmmData$yObs %>% dplyr::pull(.data$y)
+  observedRange <- range(observedY)
+  trainImputed <- fitResults$imputedValues$imputedValue
+  testImputed <- testResults$imputedValues$imputedValue
+
+  # PMM draws donor values from observed y-values.
+  expect_true(all(trainImputed %in% observedY))
+  expect_true(all(testImputed %in% observedY))
+
+  # Imputed values should remain within plausible observed range.
+  expect_gte(min(testImputed), observedRange[1])
+  expect_lte(max(testImputed), observedRange[2])
+
+  # Train vs test imputed distributions should both retain non-trivial variance.
+  trainVar <- stats::var(trainImputed)
+  testVar <- stats::var(testImputed)
+  expect_gt(trainVar, 0)
+  expect_gt(testVar, 0)
+
+  # Keep a loose variance-ratio bound to catch severe shrinkage/explosion.
+  varRatio <- testVar / trainVar
+  expect_gt(varRatio, 0.5)
+  expect_lt(varRatio, 2)
 })
 
 test_that("pmmFit and pmmPredict validate k", {
