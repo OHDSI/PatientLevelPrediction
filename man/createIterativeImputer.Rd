@@ -7,7 +7,7 @@
 createIterativeImputer(
   missingThreshold = 0.3,
   method = "pmm",
-  methodSettings = list(pmm = list(k = 5, iterations = 5)),
+  methodSettings = list(pmm = list(k = 5, iterations = 5, alpha = 1)),
   addMissingIndicator = FALSE
 )
 }
@@ -21,6 +21,7 @@ Currently only "pmm" is supported with the following settings:
 \itemize{
 \item k: The number of donors to use for matching
 \item iterations: The number of iterations to use for imputation
+\item alpha: Elastic-net mixing parameter for PMM fit (\code{1} = lasso, \code{0} = ridge)
 }}
 
 \item{addMissingIndicator}{Add a binary missingness indicator per feature that
@@ -38,5 +39,5 @@ and then imputes the missing values iteratively using chained equations
 # create imputer to impute values with missingness less than 30\% using 
 # predictive mean matching in 5 iterations with 5 donors
 createIterativeImputer(missingThreshold = 0.3, method = "pmm",
-                       methodSettings = list(pmm = list(k = 5, iterations = 5)))
+                       methodSettings = list(pmm = list(k = 5, iterations = 5, alpha = 0.5)))
 }
