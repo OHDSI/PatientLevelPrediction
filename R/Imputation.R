@@ -127,6 +127,217 @@ createSimpleImputer <- function(method = "mean",
   return(featureEngineeringSettings)
 }
 
+defaultSklearnIterativeMethodSettings <- function() {
+  list(
+    maxIter = 10,
+    tol = 1e-3,
+    samplePosterior = FALSE,
+    nNearestFeatures = NULL,
+    initialStrategy = "mean",
+    imputationOrder = "ascending",
+    skipComplete = FALSE,
+    randomState = 42,
+    minValue = -Inf,
+    maxValue = Inf
+  )
+}
+
+normalizeSklearnIterativeMethodSettings <- function(methodSettings = list()) {
+  if (is.null(methodSettings)) {
+    methodSettings <- list()
+  }
+  checkIsClass(methodSettings, "list")
+  defaults <- defaultSklearnIterativeMethodSettings()
+  unknown <- setdiff(names(methodSettings), names(defaults))
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown methodSettings for sklearn iterative imputer: ",
+      paste(unknown, collapse = ", ")
+    )
+  }
+  settings <- utils::modifyList(defaults, methodSettings)
+
+  checkIsClass(settings$maxIter, "numeric")
+  if (length(settings$maxIter) != 1 || settings$maxIter < 1 ||
+    settings$maxIter != as.integer(settings$maxIter)) {
+    stop("methodSettings$maxIter should be a single integer >= 1")
+  }
+  settings$maxIter <- as.integer(settings$maxIter)
+
+  checkIsClass(settings$tol, "numeric")
+  if (length(settings$tol) != 1 || settings$tol <= 0 || !is.finite(settings$tol)) {
+    stop("methodSettings$tol should be a single positive finite numeric value")
+  }
+
+  checkIsClass(settings$samplePosterior, "logical")
+  if (length(settings$samplePosterior) != 1) {
+    stop("methodSettings$samplePosterior should be a logical value")
+  }
+
+  if (!is.null(settings$nNearestFeatures)) {
+    checkIsClass(settings$nNearestFeatures, "numeric")
+    if (length(settings$nNearestFeatures) != 1 ||
+      settings$nNearestFeatures < 1 ||
+      settings$nNearestFeatures != as.integer(settings$nNearestFeatures)) {
+      stop("methodSettings$nNearestFeatures should be NULL or a single integer >= 1")
+    }
+    settings$nNearestFeatures <- as.integer(settings$nNearestFeatures)
+  }
+
+  checkIsClass(settings$initialStrategy, "character")
+  checkInStringVector(
+    settings$initialStrategy,
+    c("mean", "median", "most_frequent", "constant")
+  )
+  checkIsClass(settings$imputationOrder, "character")
+  checkInStringVector(
+    settings$imputationOrder,
+    c("ascending", "descending", "roman", "arabic", "random")
+  )
+
+  checkIsClass(settings$skipComplete, "logical")
+  if (length(settings$skipComplete) != 1) {
+    stop("methodSettings$skipComplete should be a logical value")
+  }
+
+  if (!is.null(settings$randomState)) {
+    checkIsClass(settings$randomState, "numeric")
+    if (length(settings$randomState) != 1 ||
+      settings$randomState != as.integer(settings$randomState)) {
+      stop("methodSettings$randomState should be NULL or a single integer")
+    }
+    settings$randomState <- as.integer(settings$randomState)
+  }
+
+  checkIsClass(settings$minValue, "numeric")
+  if (length(settings$minValue) != 1) {
+    stop("methodSettings$minValue should be a single numeric value")
+  }
+  checkIsClass(settings$maxValue, "numeric")
+  if (length(settings$maxValue) != 1) {
+    stop("methodSettings$maxValue should be a single numeric value")
+  }
+  if (settings$minValue > settings$maxValue) {
+    stop("methodSettings$minValue cannot be greater than methodSettings$maxValue")
+  }
+
+  settings
+}
+
+checkSklearnIterativeImputerDependencies <- function() {
+  checkSklearn()
+  tryCatch(
+    {
+      reticulate::import("sklearn.experimental.enable_iterative_imputer")
+    },
+    error = function(e) {
+      stop(
+        "This function requires sklearn.experimental.enable_iterative_imputer: ",
+        conditionMessage(e)
+      )
+    }
+  )
+}
+
+createSklearnIterativeImputerObject <- function(methodSettings) {
+  checkSklearnIterativeImputerDependencies()
+  sklearn <- reticulate::import("sklearn", convert = FALSE)
+
+  args <- list(
+    max_iter = as.integer(methodSettings$maxIter),
+    tol = methodSettings$tol,
+    sample_posterior = methodSettings$samplePosterior,
+    n_nearest_features = if (is.null(methodSettings$nNearestFeatures)) NULL else as.integer(methodSettings$nNearestFeatures),
+    initial_strategy = methodSettings$initialStrategy,
+    imputation_order = methodSettings$imputationOrder,
+    skip_complete = methodSettings$skipComplete,
+    random_state = if (is.null(methodSettings$randomState)) NULL else as.integer(methodSettings$randomState),
+    min_value = methodSettings$minValue,
+    max_value = methodSettings$maxValue
+  )
+
+  do.call(sklearn$impute$IterativeImputer, args)
+}
+
+#' @title Create scikit-learn Iterative Imputer settings
+#' @description This function creates settings for a dense iterative imputer
+#' powered by scikit-learn's `IterativeImputer` through `reticulate`.
+#' @param missingThreshold The threshold for missing values to remove a feature
+#' @param methodSettings A list of settings for sklearn `IterativeImputer`.
+#' Supported settings are:
+#' - maxIter
+#' - tol
+#' - samplePosterior
+#' - nNearestFeatures
+#' - initialStrategy
+#' - imputationOrder
+#' - skipComplete
+#' - randomState
+#' - minValue
+#' - maxValue
+#' @param addMissingIndicator Add a binary missingness indicator per feature that
+#' passes the imputation missingness threshold.
+#' @return The settings for the sklearn iterative imputer of class `featureEngineeringSettings`
+#' @examples
+#' \dontshow{ # dontrun reason: requires python and scikit-learn }
+#' \dontrun{
+#' createSklearnIterativeImputer(
+#'   missingThreshold = 0.3,
+#'   methodSettings = list(maxIter = 5, nNearestFeatures = 20)
+#' )
+#' }
+#' @export
+createSklearnIterativeImputer <- function(
+    missingThreshold = 0.3,
+    methodSettings = list(),
+    addMissingIndicator = FALSE) {
+  ParallelLogger::logWarn("Imputation is experimental and may have bugs. 
+    Please report any issues on the GitHub repository.")
+
+  checkIsClass(missingThreshold, "numeric")
+  checkHigher(missingThreshold, 0)
+  checkLower(missingThreshold, 1)
+  checkIsClass(addMissingIndicator, "logical")
+  if (length(addMissingIndicator) != 1) {
+    stop("addMissingIndicator should be a logical value")
+  }
+
+  methodSettings <- normalizeSklearnIterativeMethodSettings(methodSettings)
+  checkSklearnIterativeImputerDependencies()
+
+  featureEngineeringSettings <- list(
+    missingThreshold = missingThreshold,
+    method = "sklearnIterative",
+    methodSettings = methodSettings,
+    addMissingIndicator = addMissingIndicator
+  )
+  attr(featureEngineeringSettings, "fun") <- "sklearnIterativeImpute"
+  class(featureEngineeringSettings) <- "featureEngineeringSettings"
+  featureEngineeringSettings
+}
+
+sklearnIterativeImputerRuntime <- new.env(parent = emptyenv())
+
+registerSklearnIterativeImputerRuntime <- function(imputer) {
+  key <- paste0(
+    "sklearn_iterative_",
+    format(Sys.time(), "%Y%m%d%H%M%OS6"),
+    "_",
+    sample.int(1000000, 1)
+  )
+  assign(key, imputer, envir = sklearnIterativeImputerRuntime)
+  key
+}
+
+getSklearnIterativeImputerRuntime <- function(key) {
+  if (!(is.character(key) && length(key) == 1 && nzchar(key))) {
+    return(NULL)
+  }
+  if (!exists(key, envir = sklearnIterativeImputerRuntime, inherits = FALSE)) {
+    return(NULL)
+  }
+  get(key, envir = sklearnIterativeImputerRuntime, inherits = FALSE)
+}
 
 normalizeIdKey <- function(x) {
   trimws(as.character(x))
@@ -425,6 +636,119 @@ addMissingIndicators <- function(outputData,
   ))
 }
 
+buildSklearnDenseMatrix <- function(outputData, rowIds, covariateIds) {
+  if (length(rowIds) == 0 || length(covariateIds) == 0) {
+    return(matrix(numeric(0), nrow = length(rowIds), ncol = length(covariateIds)))
+  }
+
+  covariateMissingMeansZero <- outputData$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId %in% !!covariateIds) %>%
+    dplyr::select("covariateId", "analysisId") %>%
+    dplyr::inner_join(
+      outputData$covariateData$analysisRef %>%
+        dplyr::select("analysisId", "missingMeansZero"),
+      by = "analysisId"
+    ) %>%
+    dplyr::collect()
+
+  defaultValues <- rep(NA_real_, length(covariateIds))
+  names(defaultValues) <- as.character(covariateIds)
+  if (nrow(covariateMissingMeansZero) > 0) {
+    zeroIds <- covariateMissingMeansZero %>%
+      dplyr::filter(.data$missingMeansZero == "Y") %>%
+      dplyr::pull(.data$covariateId)
+    defaultValues[as.character(zeroIds)] <- 0
+  }
+
+  matrixData <- matrix(
+    rep(defaultValues, each = length(rowIds)),
+    nrow = length(rowIds),
+    ncol = length(covariateIds)
+  )
+  colnames(matrixData) <- as.character(covariateIds)
+  rownames(matrixData) <- as.character(rowIds)
+
+  observedValues <- outputData$covariateData$covariates %>%
+    dplyr::filter(
+      .data$rowId %in% !!rowIds,
+      .data$covariateId %in% !!covariateIds
+    ) %>%
+    dplyr::select("rowId", "covariateId", "covariateValue") %>%
+    dplyr::collect()
+
+  if (nrow(observedValues) > 0) {
+    rowIndex <- match(observedValues$rowId, rowIds)
+    colIndex <- match(observedValues$covariateId, covariateIds)
+    valid <- !is.na(rowIndex) & !is.na(colIndex)
+    matrixData[cbind(rowIndex[valid], colIndex[valid])] <- observedValues$covariateValue[valid]
+  }
+
+  matrixData
+}
+
+extractSklearnMissingIndex <- function(
+    originalMatrix,
+    rowIds,
+    targetCovariateIds,
+    predictorCovariateIds) {
+  if (length(targetCovariateIds) == 0 || length(predictorCovariateIds) == 0) {
+    return(data.frame(rowId = numeric(0), covariateId = numeric(0)))
+  }
+
+  targetPositions <- match(targetCovariateIds, predictorCovariateIds)
+  keep <- !is.na(targetPositions)
+  targetCovariateIds <- targetCovariateIds[keep]
+  targetPositions <- targetPositions[keep]
+  if (length(targetPositions) == 0) {
+    return(data.frame(rowId = numeric(0), covariateId = numeric(0)))
+  }
+
+  missingMask <- is.na(originalMatrix[, targetPositions, drop = FALSE])
+  if (!any(missingMask)) {
+    return(data.frame(rowId = numeric(0), covariateId = numeric(0)))
+  }
+  missingLocations <- which(missingMask, arr.ind = TRUE)
+  data.frame(
+    rowId = rowIds[missingLocations[, 1]],
+    covariateId = targetCovariateIds[missingLocations[, 2]]
+  )
+}
+
+extractSklearnImputedRows <- function(
+    originalMatrix,
+    imputedMatrix,
+    rowIds,
+    targetCovariateIds,
+    predictorCovariateIds) {
+  missingIndex <- extractSklearnMissingIndex(
+    originalMatrix = originalMatrix,
+    rowIds = rowIds,
+    targetCovariateIds = targetCovariateIds,
+    predictorCovariateIds = predictorCovariateIds
+  )
+  if (nrow(missingIndex) == 0) {
+    return(data.frame(rowId = numeric(0), covariateId = numeric(0), covariateValue = numeric(0)))
+  }
+
+  targetPositions <- match(missingIndex$covariateId, predictorCovariateIds)
+  rowPositions <- match(missingIndex$rowId, rowIds)
+  imputedValues <- imputedMatrix[cbind(rowPositions, targetPositions)]
+
+  data.frame(
+    rowId = missingIndex$rowId,
+    covariateId = missingIndex$covariateId,
+    covariateValue = imputedValues
+  ) %>%
+    dplyr::filter(!is.na(.data$covariateValue))
+}
+
+asSklearnImputedMatrix <- function(imputedData, nRows, nCols) {
+  matrixData <- as.matrix(imputedData)
+  if (nrow(matrixData) != nRows || ncol(matrixData) != nCols) {
+    stop("Unexpected transformed matrix shape from sklearn IterativeImputer")
+  }
+  matrixData
+}
 
 #' @title Simple Imputation
 #' @description This function does single imputation with the mean or median
@@ -896,6 +1220,233 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
   return(outputData)
 }
 
+#' @title scikit-learn Iterative Imputation
+#' @description This function imputes missing values using
+#' scikit-learn `IterativeImputer` through `reticulate`.
+#' @param trainData The data to be imputed
+#' @param featureEngineeringSettings The settings for the imputation
+#' @param done Whether the imputation has already been done (bool)
+#' @return The imputed data
+#' @keywords internal
+sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
+  start <- Sys.time()
+  checkSklearnIterativeImputerDependencies()
+
+  if (!done) {
+    ParallelLogger::logInfo(
+      "Imputing missing values with sklearn IterativeImputer, missing threshold: ",
+      featureEngineeringSettings$missingThreshold
+    )
+    outputData <- list(
+      labels = trainData$labels,
+      folds = trainData$folds,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
+    class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <-
+      attr(trainData$covariateData, "metaData")
+
+    missingInfo <- extractMissingInfo(outputData)
+    outputData$covariateData$missingInfo <- missingInfo$missingInfo
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
+      dplyr::filter(
+        is.na(.data$missing) ||
+          .data$missing <= featureEngineeringSettings$missingThreshold
+      ) %>%
+      dplyr::select(-"missing")
+
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
+
+    predictorCovariateIds <- outputData$covariateData$covariates %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique() %>%
+      sort()
+    targetCovariateIds <- outputData$covariateData$missingInfo %>%
+      dplyr::filter(.data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::pull(.data$covariateId) %>%
+      unique()
+    targetCovariateIds <- targetCovariateIds[targetCovariateIds %in% predictorCovariateIds]
+    allRowIds <- outputData$labels$rowId
+
+    if (length(predictorCovariateIds) > 0) {
+      denseMatrix <- buildSklearnDenseMatrix(
+        outputData = outputData,
+        rowIds = allRowIds,
+        covariateIds = predictorCovariateIds
+      )
+      missingIndex <- extractSklearnMissingIndex(
+        originalMatrix = denseMatrix,
+        rowIds = allRowIds,
+        targetCovariateIds = targetCovariateIds,
+        predictorCovariateIds = predictorCovariateIds
+      )
+
+      if (isTRUE(featureEngineeringSettings$addMissingIndicator) && nrow(missingIndex) > 0) {
+        indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+        if (!is.null(indicatorInfo) &&
+          !is.null(indicatorInfo$map) &&
+          nrow(indicatorInfo$map) > 0) {
+          outputData <- appendMissingIndicatorValues(
+            outputData = outputData,
+            missingIndex = missingIndex,
+            indicatorMap = indicatorInfo$map
+          )
+        }
+      }
+
+      imputer <- createSklearnIterativeImputerObject(featureEngineeringSettings$methodSettings)
+      imputedMatrix <- asSklearnImputedMatrix(
+        reticulate::py_to_r(imputer$fit_transform(denseMatrix)),
+        nRows = nrow(denseMatrix),
+        nCols = ncol(denseMatrix)
+      )
+      imputedRows <- extractSklearnImputedRows(
+        originalMatrix = denseMatrix,
+        imputedMatrix = imputedMatrix,
+        rowIds = allRowIds,
+        targetCovariateIds = targetCovariateIds,
+        predictorCovariateIds = predictorCovariateIds
+      )
+      if (nrow(imputedRows) > 0) {
+        Andromeda::appendToTable(outputData$covariateData$covariates, imputedRows)
+      }
+      featureEngineeringSettings$sklearnImputerKey <- registerSklearnIterativeImputerRuntime(imputer)
+    } else {
+      featureEngineeringSettings$sklearnImputerKey <- NULL
+    }
+
+    missingInfoValue <- outputData$covariateData$missingInfo %>%
+      dplyr::collect()
+    attr(featureEngineeringSettings, "missingInfo") <- missingInfoValue
+    attr(featureEngineeringSettings, "sklearnPredictorCovariateIds") <- predictorCovariateIds
+    attr(featureEngineeringSettings, "sklearnTargetCovariateIds") <- targetCovariateIds
+    featureEngineeringSettings$sklearnMissingInfo <- missingInfoValue
+    featureEngineeringSettings$sklearnPredictorCovariateIds <- predictorCovariateIds
+    featureEngineeringSettings$sklearnTargetCovariateIds <- targetCovariateIds
+
+    done <- TRUE
+  } else {
+    ParallelLogger::logInfo(
+      "Applying sklearn IterativeImputer to test data, missing threshold: ",
+      featureEngineeringSettings$missingThreshold
+    )
+    outputData <- list(
+      labels = trainData$labels,
+      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
+    )
+    class(outputData) <- "plpData"
+    attributes(outputData) <- attributes(trainData)
+    class(outputData$covariateData) <- "CovariateData"
+    attr(outputData$covariateData, "metaData") <-
+      attr(trainData$covariateData, "metaData")
+
+    missingInfoValue <- attr(featureEngineeringSettings, "missingInfo")
+    if (is.null(missingInfoValue)) {
+      missingInfoValue <- featureEngineeringSettings$sklearnMissingInfo
+    }
+    if (is.null(missingInfoValue)) {
+      stop("sklearn iterative imputer settings are incomplete; refit model in current session.")
+    }
+    outputData$covariateData$missingInfo <- missingInfoValue
+    on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+
+    predictorCovariateIds <- attr(featureEngineeringSettings, "sklearnPredictorCovariateIds")
+    if (is.null(predictorCovariateIds)) {
+      predictorCovariateIds <- featureEngineeringSettings$sklearnPredictorCovariateIds
+    }
+    if (is.null(predictorCovariateIds)) {
+      stop("sklearn iterative imputer settings are incomplete; refit model in current session.")
+    }
+    targetCovariateIds <- attr(featureEngineeringSettings, "sklearnTargetCovariateIds")
+    if (is.null(targetCovariateIds)) {
+      targetCovariateIds <- featureEngineeringSettings$sklearnTargetCovariateIds
+    }
+    if (is.null(targetCovariateIds)) {
+      targetCovariateIds <- numeric(0)
+    }
+
+    outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
+      dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
+      dplyr::filter(
+        (is.na(.data$missing) ||
+          .data$missing <= featureEngineeringSettings$missingThreshold) &&
+          .data$covariateId %in% !!predictorCovariateIds
+      ) %>%
+      dplyr::select(-"missing")
+
+    missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
+    outputData <- missingIndicatorResults$outputData
+    featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
+
+    if (length(predictorCovariateIds) > 0) {
+      allRowIds <- outputData$labels$rowId
+      denseMatrix <- buildSklearnDenseMatrix(
+        outputData = outputData,
+        rowIds = allRowIds,
+        covariateIds = predictorCovariateIds
+      )
+      missingIndex <- extractSklearnMissingIndex(
+        originalMatrix = denseMatrix,
+        rowIds = allRowIds,
+        targetCovariateIds = targetCovariateIds,
+        predictorCovariateIds = predictorCovariateIds
+      )
+      if (isTRUE(featureEngineeringSettings$addMissingIndicator) && nrow(missingIndex) > 0) {
+        indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+        if (!is.null(indicatorInfo) &&
+          !is.null(indicatorInfo$map) &&
+          nrow(indicatorInfo$map) > 0) {
+          outputData <- appendMissingIndicatorValues(
+            outputData = outputData,
+            missingIndex = missingIndex,
+            indicatorMap = indicatorInfo$map
+          )
+        }
+      }
+
+      imputer <- getSklearnIterativeImputerRuntime(featureEngineeringSettings$sklearnImputerKey)
+      if (is.null(imputer)) {
+        stop("sklearn iterative imputer runtime state not available; refit model in current session.")
+      }
+      imputedMatrix <- asSklearnImputedMatrix(
+        reticulate::py_to_r(imputer$transform(denseMatrix)),
+        nRows = nrow(denseMatrix),
+        nCols = ncol(denseMatrix)
+      )
+      imputedRows <- extractSklearnImputedRows(
+        originalMatrix = denseMatrix,
+        imputedMatrix = imputedMatrix,
+        rowIds = allRowIds,
+        targetCovariateIds = targetCovariateIds,
+        predictorCovariateIds = predictorCovariateIds
+      )
+      if (nrow(imputedRows) > 0) {
+        Andromeda::appendToTable(outputData$covariateData$covariates, imputedRows)
+      }
+    }
+  }
+
+  featureEngineering <- list(
+    funct = "sklearnIterativeImpute",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      done = done
+    )
+  )
+  attr(outputData$covariateData, "metaData")$featureEngineering[["sklearnIterativeImputer"]] <-
+    featureEngineering
+  delta <- Sys.time() - start
+  ParallelLogger::logInfo("Imputation done in time: ", signif(delta, 3), " ",
+  attr(delta, "units"))
+  outputData
+}
 
 #' @title Predictive mean matching using lasso
 #' @param data An andromeda object with the following fields:

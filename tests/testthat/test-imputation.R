@@ -46,6 +46,20 @@ createMissingData <- function(trainData, missingness, test = FALSE) {
   missingData
 }
 
+skip_if_no_sklearn_iterative <- function() {
+  skip_if_not_installed("reticulate")
+  available <- tryCatch(
+    {
+      reticulate::import("sklearn.experimental.enable_iterative_imputer")
+      reticulate::import("sklearn")
+      TRUE
+    },
+    error = function(e) FALSE
+  )
+  if (!available) {
+    skip("scikit-learn IterativeImputer not available")
+  }
+}
 
 test_that("createSimpleImputer works", {
   imputer <- createSimpleImputer()
@@ -98,6 +112,91 @@ test_that("createIterativeImputer works", {
   expect_error(createIterativeImputer(addMissingIndicator = "true"))
 })
 
+test_that("createSklearnIterativeImputer works", {
+  skip_on_cran()
+  skip_if_no_sklearn_iterative()
+  imputer <- createSklearnIterativeImputer()
+
+  expect_equal(imputer$method, "sklearnIterative")
+  expect_equal(imputer$missingThreshold, 0.3)
+  expect_false(imputer$addMissingIndicator)
+  expect_equal(attr(imputer, "fun"), "sklearnIterativeImpute")
+  expect_s3_class(imputer, "featureEngineeringSettings")
+
+  expect_error(createSklearnIterativeImputer(missingThreshold = -1))
+  expect_error(createSklearnIterativeImputer(addMissingIndicator = "true"))
+  expect_error(createSklearnIterativeImputer(methodSettings = "bad"))
+  expect_error(createSklearnIterativeImputer(methodSettings = list(maxIter = 0)))
+  expect_error(createSklearnIterativeImputer(methodSettings = list(tol = 0)))
+  expect_error(createSklearnIterativeImputer(methodSettings = list(nNearestFeatures = 0)))
+  expect_error(createSklearnIterativeImputer(methodSettings = list(initialStrategy = "bad")))
+  expect_error(createSklearnIterativeImputer(methodSettings = list(imputationOrder = "bad")))
+})
+
+test_that("sklearnIterativeImpute works and reuses binary predictors", {
+  skip_if_offline()
+  skip_on_cran()
+  skip_if_no_sklearn_iterative()
+  missingData <- createMissingData(tinyTrainData, 0.2)
+  imputer <- createSklearnIterativeImputer(
+    missingThreshold = 0.3,
+    methodSettings = list(
+      maxIter = 2,
+      nNearestFeatures = 20,
+      randomState = 11
+    ),
+    addMissingIndicator = TRUE
+  )
+
+  imputedData <- sklearnIterativeImpute(missingData, imputer, done = FALSE)
+
+  newFeature <- imputedData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_equal(length(newFeature), nrow(imputedData$labels))
+
+  metaData <- attr(imputedData$covariateData, "metaData")
+  testSettings <- metaData$featureEngineering$sklearnIterativeImputer$settings$featureEngineeringSettings
+  predictorIds <- attr(testSettings, "sklearnPredictorCovariateIds")
+  predictorInfo <- imputedData$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId %in% !!predictorIds) %>%
+    dplyr::select("covariateId", "analysisId") %>%
+    dplyr::inner_join(
+      imputedData$covariateData$analysisRef %>%
+        dplyr::select("analysisId", "missingMeansZero"),
+      by = "analysisId"
+    ) %>%
+    dplyr::collect()
+  expect_true(any(predictorInfo$missingMeansZero == "Y"))
+
+  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  imputedTestData <- sklearnIterativeImpute(missingTestData, testSettings, done = TRUE)
+  newFeatureTest <- imputedTestData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_equal(length(newFeatureTest), nrow(imputedTestData$labels))
+  expect_no_error(Andromeda::copyAndromeda(imputedTestData$covariateData))
+})
+
+test_that("sklearnIterativeImpute errors when runtime imputer state is missing", {
+  skip_if_offline()
+  skip_on_cran()
+  skip_if_no_sklearn_iterative()
+  missingData <- createMissingData(tinyTrainData, 0.2)
+  imputer <- createSklearnIterativeImputer(
+    missingThreshold = 0.3,
+    methodSettings = list(maxIter = 1, randomState = 123)
+  )
+  imputedData <- sklearnIterativeImpute(missingData, imputer, done = FALSE)
+  settings <- attr(imputedData$covariateData, "metaData")$featureEngineering$sklearnIterativeImputer$settings$featureEngineeringSettings
+  settings$sklearnImputerKey <- "missing-key"
+
+  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  expect_error(
+    sklearnIterativeImpute(missingTestData, settings, done = TRUE),
+    "runtime state not available"
+  )
+})
 
 test_that("simpleImpute works", {
   skip_if_offline()
