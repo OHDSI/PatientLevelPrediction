@@ -44,14 +44,14 @@ prediction <- data.frame(rowId = 1:100,
                          evaluation = rep("Train", 100))
 getPredictionDistribution(prediction)
 #>   class PersonCount averagePredictedProbability StDevPredictedProbability
-#> 1     0          55                   0.4121088                 0.3074000
-#> 2     1          45                   0.5370691                 0.3030384
+#> 1     0          54                   0.4002458                 0.3123997
+#> 2     1          46                   0.5153511                 0.2969872
 #>   MinPredictedProbability P05PredictedProbability P25PredictedProbability
-#> 1              0.01699869              0.03523575               0.1617706
-#> 2              0.03819018              0.10522076               0.3164229
+#> 1              0.01699869              0.03513347               0.1453738
+#> 2              0.03819018              0.10698287               0.2387856
 #>   MedianPredictedProbability P75PredictedProbability P95PredictedProbability
-#> 1                  0.2999095               0.6587862               0.9383479
-#> 2                  0.5173045               0.8868419               0.9549556
+#> 1                  0.2899180               0.6630212               0.9406494
+#> 2                  0.4543858               0.8312385               0.9198616
 #>   MaxPredictedProbability evaluation
 #> 1               0.9887700      Train
 #> 2               0.9868817      Train

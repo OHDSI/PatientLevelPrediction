@@ -111,8 +111,8 @@ data extracted from the CDM.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">predictPlp</span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.156 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.162 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.17 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.176 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd</span>
@@ -122,13 +122,13 @@ data extracted from the CDM.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2007-10-18              301             176</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2011-06-30              256             587</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2008-03-12              126             141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1553      35   8507 0.3208213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1311      38   8532 0.3543437</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3          827      36   8532 0.3318122</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1003      33   8507 0.2994329</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1217      39   8532 0.3658644</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          414      38   8532 0.3543437</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value rawValue</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1553      35   8507 0.3208213    -0.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1311      38   8532 0.3543437    -0.60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          827      36   8532 0.3318122    -0.70</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1003      33   8507 0.2994329    -0.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1217      39   8532 0.3658644    -0.55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          414      38   8532 0.3543437    -0.60</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

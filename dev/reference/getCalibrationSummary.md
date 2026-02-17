@@ -78,7 +78,7 @@ population <- createStudyPopulation(plpData, outcomeId = 3)
 #> Removing non outcome subjects with insufficient time at risk (if any)
 #> Outcome is 0 or 1
 #> Population created with: 477 observations, 477 unique subjects and 235 outcomes
-#> Population created in 0.0538 secs
+#> Population created in 0.0557 secs
 data <- splitData(plpData, population, createDefaultSplitSetting())
 #> test: 0.25
 #> train: 0.75
@@ -90,7 +90,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> Finished limiting covariate data to population...
 #> Starting to limit covariate data to population...
 #> Finished limiting covariate data to population...
-#> Data split in 1.37 secs
+#> Data split in 1.45 secs
 data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> minFraction: 0.001
 #> normalize: TRUE
@@ -98,7 +98,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> Removing 1 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.61 secs
+#> Tidying covariates took 1.73 secs
 saveLoc <- file.path(tempdir(), "calibrationSummary")
 # fit a lasso logistic regression model using the training data
 plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
@@ -106,14 +106,16 @@ plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42)
 #> Running Cyclops
 #> Done.
 #> GLM fit status:  OK
+#> Warning: Model had no non-zero coefficients so predicted same for all population...
+#> Warning: Model had no non-zero coefficients so predicted same for all population...
 #> Returned from fitting Cyclops model
 #> Getting variable importance
 #> Creating variable importance data frame
 #> Getting predictions on train set
 #> predictProbabilities - predictAndromeda start
-#> Prediction took 0.196 secs
+#> Prediction took 0.171 secs
 #> Returned from classifier function
-#> Time to fit model: 0.373 secs
+#> Time to fit model: 0.552 secs
 calibrationSummary <- getCalibrationSummary(plpModel$prediction, 
                                             "binary", 
                                             numberOfStrata = 10,

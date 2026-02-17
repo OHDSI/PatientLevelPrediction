@@ -362,6 +362,8 @@ Functions for manipulating data
   : calibrationLine
 - [`computeAuc()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeAuc.md)
   : Compute the area under the ROC curve
+- [`computeAuprc()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeAuprc.md)
+  : Compute the area under the Precision-Recall curve
 - [`ici()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/ici.md)
   : Calculate the Integrated Calibration Index from Austin and
   Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281

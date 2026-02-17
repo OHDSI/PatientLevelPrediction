@@ -26,6 +26,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/calibrationInLarge.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/calibrationLine.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeAuc.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeAuprc.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/computeGridPerformance.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/configurePython.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/covariateSummary.html</loc></url>
