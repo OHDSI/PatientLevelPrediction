@@ -6,6 +6,12 @@
 
 CRAN release: 2025-10-15
 
+- \[Feature\] Added optional missingness indicators for features imputed
+  with
+  [`createSimpleImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSimpleImputer.md)
+  and
+  [`createIterativeImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createIterativeImputer.md)
+  via `addMissingIndicator` (default `FALSE` for backward compatibility)
 - \[Bug\] Remove old R condition from Rd files throug new roxygen2 (PR
   [\#603](https://github.com/OHDSI/PatientLevelPrediction/issues/603))
 - \[Internal\] Use reticulate’s `py_require` for stating python

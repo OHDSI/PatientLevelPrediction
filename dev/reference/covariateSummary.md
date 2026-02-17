@@ -68,14 +68,14 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> Generating cohorts
 #> Generating outcomes
 covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
-#> Calculating covariate summary @ 2026-02-02 09:00:01.413666
+#> Calculating covariate summary @ 2026-02-17 08:58:45.120522
 #> This can take a while...
 #> calculating subset of strata 1
 #> Restricting to subgroup
 #> Calculating summary for subgroup 
 #> Aggregating with no labels or strata
-#> Finished covariate summary @ 2026-02-02 09:00:01.969434
-#> Time to calculate covariate summary: 0.556 secs
+#> Finished covariate summary @ 2026-02-17 08:58:45.656518
+#> Time to calculate covariate summary: 0.536 secs
 head(covariateSummary)
 #> # A tibble: 6 × 9
 #>   covariateId covariateName     analysisId conceptId valueAsConceptId collisions

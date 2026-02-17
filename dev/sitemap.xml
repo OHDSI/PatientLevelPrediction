@@ -51,6 +51,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createRestrictPlpDataSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSampleSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSimpleImputer.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSklearnIterativeImputer.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSklearnModel.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSplineSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createStratifiedImputationSettings.html</loc></url>
@@ -139,6 +140,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setNaiveBayes.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setPythonEnvironment.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setRandomForest.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setRidgeRegression.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setSVM.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/simpleImpute.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/dev/reference/simulatePlpData.html</loc></url>

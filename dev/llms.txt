@@ -256,6 +256,8 @@ Settings for optional steps that can be used in the PLP pipeline
   : Create Simple Imputer settings
 - [`createIterativeImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createIterativeImputer.md)
   : Create Iterative Imputer settings
+- [`createSklearnIterativeImputer()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createSklearnIterativeImputer.md)
+  : Create scikit-learn Iterative Imputer settings
 - [`createRareFeatureRemover()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/createRareFeatureRemover.md)
   : Create the settings for removing rare features
 
@@ -303,6 +305,9 @@ Functions for creating binary models
 
 - [`setLassoLogisticRegression()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setLassoLogisticRegression.md)
   : Create modelSettings for lasso logistic regression
+
+- [`setRidgeRegression()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setRidgeRegression.md)
+  : Create modelSettings for ridge logistic regression
 
 - [`setMLP()`](https://ohdsi.github.io/PatientLevelPrediction/dev/reference/setMLP.md)
   :

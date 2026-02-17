@@ -10,7 +10,8 @@ then imputes the missing values iteratively using chained equations
 createIterativeImputer(
   missingThreshold = 0.3,
   method = "pmm",
-  methodSettings = list(pmm = list(k = 5, iterations = 5))
+  methodSettings = list(pmm = list(k = 5, iterations = 5, alpha = 1)),
+  addMissingIndicator = FALSE
 )
 ```
 
@@ -33,6 +34,14 @@ createIterativeImputer(
 
   - iterations: The number of iterations to use for imputation
 
+  - alpha: Elastic-net mixing parameter for PMM fit (`1` = lasso, `0` =
+    ridge)
+
+- addMissingIndicator:
+
+  Add a binary missingness indicator per feature that passes the
+  imputation missingness threshold.
+
 ## Value
 
 The settings for the iterative imputer of class
@@ -44,7 +53,7 @@ The settings for the iterative imputer of class
 # create imputer to impute values with missingness less than 30% using 
 # predictive mean matching in 5 iterations with 5 donors
 createIterativeImputer(missingThreshold = 0.3, method = "pmm",
-                       methodSettings = list(pmm = list(k = 5, iterations = 5)))
+                       methodSettings = list(pmm = list(k = 5, iterations = 5, alpha = 0.5)))
 #> $missingThreshold
 #> [1] 0.3
 #> 
@@ -58,6 +67,12 @@ createIterativeImputer(missingThreshold = 0.3, method = "pmm",
 #> $methodSettings$iterations
 #> [1] 5
 #> 
+#> $methodSettings$alpha
+#> [1] 0.5
+#> 
+#> 
+#> $addMissingIndicator
+#> [1] FALSE
 #> 
 #> attr(,"fun")
 #> [1] "iterativeImpute"

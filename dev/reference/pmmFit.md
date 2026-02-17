@@ -5,7 +5,7 @@ Predictive mean matching using lasso
 ## Usage
 
 ``` r
-pmmFit(data, k = 5)
+pmmFit(data, k = 5, alpha = 1)
 ```
 
 ## Arguments
@@ -19,3 +19,7 @@ pmmFit(data, k = 5)
 - k:
 
   The number of donors to use for matching (default 5)
+
+- alpha:
+
+  Elastic-net mixing parameter (`1` = lasso, `0` = ridge)

@@ -6,7 +6,11 @@ missing values with the mean or median
 ## Usage
 
 ``` r
-createSimpleImputer(method = "mean", missingThreshold = 0.3)
+createSimpleImputer(
+  method = "mean",
+  missingThreshold = 0.3,
+  addMissingIndicator = FALSE
+)
 ```
 
 ## Arguments
@@ -18,6 +22,11 @@ createSimpleImputer(method = "mean", missingThreshold = 0.3)
 - missingThreshold:
 
   The threshold for missing values to be imputed vs removed
+
+- addMissingIndicator:
+
+  Add a binary missingness indicator per feature that passes the
+  imputation missingness threshold.
 
 ## Value
 
@@ -35,6 +44,9 @@ createSimpleImputer(method = "median", missingThreshold = 0.10)
 #> 
 #> $missingThreshold
 #> [1] 0.1
+#> 
+#> $addMissingIndicator
+#> [1] FALSE
 #> 
 #> attr(,"fun")
 #> [1] "simpleImpute"
