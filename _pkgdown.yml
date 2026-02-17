@@ -251,6 +251,7 @@ reference:
       - brierScore
       - calibrationLine
       - computeAuc
+      - computeAuprc
       - ici
       - modelBasedConcordance
       - computeGridPerformance
@@ -281,4 +282,3 @@ reference:
       - predictGlm
       - createGlmModel
       - createSklearnModel
-    
