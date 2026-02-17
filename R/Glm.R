@@ -192,7 +192,8 @@ predictGlm <- function(plpModel, data, cohort) {
   prediction <- merge(cohort, prediction, by = "rowId", all.x = TRUE, fill = 0)
   prediction$value[is.na(prediction$value)] <- 0
   prediction$value <- prediction$value + plpModel$model$intercept
-
+  prediction$rawValue <- prediction$value
+  
   if (plpModel$model$mapping == "linear") {
     prediction$value <- prediction$value
   } else if (plpModel$model$mapping == "logistic") {
