@@ -106,6 +106,96 @@ setLassoLogisticRegression <- function(
 }
 
 
+#' Create modelSettings for ridge logistic regression
+#'
+#' @param variance   	Numeric: prior distribution starting variance
+#' @param seed       An option to add a seed when training the model
+#' @param includeCovariateIds a set of covariateIds to limit the analysis to
+#' @param noShrinkage a set of covariates whcih are to be forced to be included in
+#' in the final model. Default is the intercept
+#' @param threads    An option to set number of threads when training model.
+#' @param forceIntercept  	Logical: Force intercept coefficient into prior
+#' @param upperLimit  	Numeric: Upper prior variance limit for grid-search
+#' @param lowerLimit  	Numeric: Lower prior variance limit for grid-search
+#' @param tolerance   Numeric: maximum relative change in convergence criterion from
+#' from successive iterations to achieve convergence
+#' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt
+#' before returning a failed-to-converge error
+#' @param priorCoefs    Use coefficients from a previous model as starting
+#' points for model fit (transfer learning)
+#'
+#' @return `modelSettings` object
+#'
+#' @examples
+#' modelRidge <- setRidgeRegression(seed = 42)
+#' @export
+setRidgeRegression <- function(
+    variance = 0.01,
+    seed = NULL,
+    includeCovariateIds = c(),
+    noShrinkage = c(0),
+    threads = -1,
+    forceIntercept = FALSE,
+    upperLimit = 20,
+    lowerLimit = 0.01,
+    tolerance = 2e-06,
+    maxIterations = 3000,
+    priorCoefs = NULL) {
+  checkIsClass(seed, c("numeric", "NULL", "integer"))
+  if (is.null(seed[1])) {
+    seed <- as.integer(sample(100000000, 1))
+  }
+  checkIsClass(threads, c("numeric", "integer"))
+  checkIsClass(variance, c("numeric", "integer"))
+  checkHigherEqual(variance, 0)
+
+  checkIsClass(lowerLimit, c("numeric", "integer"))
+  checkIsClass(upperLimit, c("numeric", "integer"))
+
+  checkHigherEqual(upperLimit, lowerLimit)
+
+  param <- list(
+    priorParams = list(
+      priorType = "normal",
+      forceIntercept = forceIntercept,
+      variance = variance,
+      exclude = noShrinkage
+    ),
+    includeCovariateIds = includeCovariateIds,
+    upperLimit = upperLimit,
+    lowerLimit = lowerLimit,
+    priorCoefs = priorCoefs
+  )
+
+  settings <- list(
+    modelName = "ridgeLogisticRegression",
+    modelType = "binary",
+    cyclopsModelType = "logistic",
+    priorfunction = "Cyclops::createPrior",
+    selectorType = "byPid", # is this correct?
+    crossValidationInPrior = TRUE,
+    addIntercept = TRUE,
+    useControl = TRUE,
+    seed = seed[1],
+    threads = threads[1],
+    tolerance = tolerance[1],
+    cvRepetitions = 1,
+    maxIterations = maxIterations[1],
+    saveType = "RtoJson",
+    predict = "predictCyclops"
+  )
+
+  result <- list(
+    fitFunction = "fitCyclopsModel",
+    param = param,
+    settings = settings
+  )
+  class(result) <- "modelSettings"
+
+  return(result)
+}
+
+
 
 #' Create setting for lasso Cox model
 #'

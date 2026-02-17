@@ -151,7 +151,7 @@ fitCyclopsModel <- function(
   }
 
   # TODO get optimal lambda value
-  ParallelLogger::logTrace("Returned from fitting to LassoLogisticRegression")
+  ParallelLogger::logTrace("Returned from fitting Cyclops model")
   comp <- Sys.time() - start
 
   ParallelLogger::logTrace("Getting variable importance")
