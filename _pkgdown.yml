@@ -116,6 +116,7 @@ reference:
       - createNormalizer
       - createSimpleImputer
       - createIterativeImputer
+      - createSklearnIterativeImputer
       - createRareFeatureRemover
   - title: "External validation"
     contents:
@@ -139,6 +140,7 @@ reference:
       - setDecisionTree
       - setGradientBoostingMachine
       - setLassoLogisticRegression
+      - setRidgeRegression
       - setMLP
       - setNaiveBayes
       - setRandomForest
@@ -280,4 +282,3 @@ reference:
       - createGlmModel
       - createSklearnModel
     
-
