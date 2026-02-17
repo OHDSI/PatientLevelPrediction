@@ -30,19 +30,11 @@ test_that("DecisionTree settings work checks", {
     classWeight = list(NULL),
     seed = sample(1000000, 1)
   )
-
-  expect_equal(dtset$fitFunction, "fitSklearn")
-
-  expect_equal(length(dtset$param), 3 * 2 * 2 * 3 * 1)
-
-  expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[1]]))), "gini")
-  expect_equal(unique(unlist(lapply(dtset$param, function(x) x[[2]]))), "best")
-  expect_equal(length(unique(lapply(dtset$param, function(x) x[[3]]))), 3)
-
-  expect_false(attr(dtset$param, "settings")$requiresDenseMatrix)
-  expect_equal(attr(dtset$param, "settings")$name, "Decision Tree")
-  expect_equal(attr(dtset$param, "settings")$pythonModule, "sklearn.tree")
-  expect_equal(attr(dtset$param, "settings")$pythonClass, "DecisionTreeClassifier")
+  expect_false(dtset$settings$requiresDenseMatrix)
+  expect_equal(dtset$settings$modelName, "decisionTree")
+  expect_equal(dtset$settings$modelType, "binary")
+  expect_equal(dtset$settings$pythonModule, "sklearn.tree")
+  expect_equal(dtset$settings$pythonClass, "DecisionTreeClassifier")
 })
 
 
@@ -86,8 +78,24 @@ test_that("check fit of DecisionTree", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(predictions$value), mean(trainPredictions))
-  expect_correct_fitPlp(plpModel, trainData)
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
   # add check for other model design settings
+
+  # test save and load
+  savePath <- tempfile("decisionTree_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(plpModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+
+  predFit <- predictPlp(plpModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
+
   # test with one feature
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -100,11 +108,11 @@ test_that("check fit of DecisionTree", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 
 })
 
-test_that("fitSklearn errors with wrong covariateData", {
+test_that("fitClassifier errors with wrong covariateData", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
   newTrainData <- copyTrainData(trainData)
@@ -112,10 +120,9 @@ test_that("fitSklearn errors with wrong covariateData", {
   modelSettings <- setAdaBoost()
   analysisId <- 42
 
-  expect_error(fitSklearn(newTrainData,
+  expect_error(fitClassifier(newTrainData,
     modelSettings,
-    search = "grid",
-    analysisId
+    analysisId = analysisId
   ))
 })
 
@@ -135,8 +142,7 @@ test_that("AdaBoost fit works", {
     analysisPath = tempdir()
   )
 
-  expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model), "model.json")
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
 
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -149,7 +155,7 @@ test_that("AdaBoost fit works", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
@@ -173,8 +179,7 @@ test_that("RandomForest fit works", {
     analysisPath = tempdir()
   )
 
-  expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model), "model.json")
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
 
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -187,7 +192,7 @@ test_that("RandomForest fit works", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
@@ -210,8 +215,7 @@ test_that("MLP fit works", {
     analysisPath = tempdir()
   )
 
-  expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model), "model.json")
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
   
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -224,7 +228,7 @@ test_that("MLP fit works", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
@@ -240,8 +244,22 @@ test_that("Naive bayes fit works", {
     analysisPath = tempdir()
   )
 
-  expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model), "model.json")
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
+
+  # test save and load
+  savePath <- tempfile("naiveBayes_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(plpModel, savePath)
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+
+  predFit <- predictPlp(plpModel, testData, testData$labels)
+  predLoad <- predictPlp(loadModel, testData, testData$labels)
+
+  expect_equal(predLoad$value, predFit$value, tolerance = 1e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
   
   oneModel <- fitPlp(
     trainData = oneTrainData,
@@ -254,7 +272,7 @@ test_that("Naive bayes fit works", {
     dplyr::filter(.data$evaluationType == "Train") %>%
     dplyr::pull(.data$value)
   expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData)
+  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
@@ -275,8 +293,7 @@ test_that("Support vector machine fit works", {
     analysisPath = tempdir()
   )
 
-  expect_correct_fitPlp(plpModel, trainData)
-  expect_equal(dir(plpModel$model), "model.json")
+  expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
 })
 
 test_that("Sklearn predict works", {
@@ -294,7 +311,7 @@ test_that("Sklearn predict works", {
     analysisPath = tempdir()
   )
 
-  predictions <- predictPythonSklearn(
+  predictions <- predictSklearn(
     plpModel,
     testData,
     population

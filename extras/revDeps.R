@@ -1,7 +1,10 @@
 options(crayon.enabled = TRUE)
 dir.create("revdep/results", recursive = TRUE, showWarnings = FALSE)
 
-# --- 1. Helper: Get Current Package Name ---
+`%||%` <- function(a, b) {
+  if (!is.null(a)) a else b
+}
+
 getCurrentPackageName <- function() {
   if (file.exists("DESCRIPTION")) {
     name <- trimws(read.dcf("DESCRIPTION", fields = "Package")[1])
@@ -48,6 +51,58 @@ safe <- function(expr, default = NULL) {
     message("! ", conditionMessage(e))
     default
   })
+}
+
+runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
+  # Run tests in a fresh R session to avoid cross-repo contamination
+  # (e.g., packages left attached on the search path).
+  filterArg <- filterArg %||% ""
+
+  runner <- tempfile("revdep_run_tests_", fileext = ".R")
+  writeLines(
+    c(
+      "args <- commandArgs(trailingOnly = TRUE)",
+      "if (length(args) < 2) stop('Expected 2 args: <pkgPath> <countsPath>')",
+      "pkgPath <- args[[1]]",
+      "countsPath <- args[[2]]",
+      "filterArg <- Sys.getenv('REVDEP_FILTER', unset = '')",
+      "",
+      "if (!requireNamespace('testthat', quietly = TRUE)) stop('testthat not installed')",
+      "if (!requireNamespace('jsonlite', quietly = TRUE)) stop('jsonlite not installed')",
+      "",
+      "res <- testthat::test_local(",
+      "  path = pkgPath,",
+      "  filter = if (nzchar(filterArg)) filterArg else NULL,",
+      "  stop_on_failure = FALSE,",
+      "  reporter = 'summary'",
+      ")",
+      "",
+      "df <- as.data.frame(res)",
+      "counts <- list(",
+      "  fail = sum(df$failed, na.rm = TRUE),",
+      "  err = sum(df$error, na.rm = TRUE),",
+      "  warn = sum(df$warning, na.rm = TRUE),",
+      "  skip = sum(df$skipped, na.rm = TRUE)",
+      ")",
+      "jsonlite::write_json(counts, countsPath, pretty = TRUE, auto_unbox = TRUE)",
+      "invisible(counts)"
+    ),
+    runner
+  )
+  on.exit(unlink(runner), add = TRUE)
+
+  args <- c("--vanilla", runner, pkgPath, countsJsonPath)
+  system2(
+    "Rscript",
+    args,
+    env = c(paste0("REVDEP_FILTER=", filterArg)),
+    stdout = testLogPath,
+    stderr = testLogPath
+  )
+}
+
+stripAnsi <- function(text) {
+  gsub("\033\\[[0-9;]*m", "", text)
 }
 
 printSummary <- function(results) {
@@ -116,6 +171,53 @@ printSummary <- function(results) {
       ))
     }
     cat("\n")
+
+    failures <- Filter(function(x) x$status != "SUCCESS", results)
+
+    if (length(failures) > 0) {
+      cat("### 🔍 Failure Details\n\n")
+
+      for (f in failures) {
+        safeName <- gsub("/", "_", f$repo, fixed = TRUE)
+        # Try finding the most relevant log: tests > install > clone
+        logFiles <- file.path(
+          "revdep",
+          "results",
+          safeName,
+          c("tests.log", "install.log", "clone.log")
+        )
+        logFile <- logFiles[file.exists(logFiles)][1]
+
+        logContent <- "No log file found."
+        if (!is.na(logFile)) {
+          lines <- readLines(logFile, warn = FALSE)
+          lines <- stripAnsi(lines)
+          # Truncate to last 300 lines to avoid size limits
+          if (length(lines) > 300) {
+            lines <- c(
+              paste0(
+                "... [Truncated: showing last 300 of ",
+                length(lines),
+                " lines] ..."
+              ),
+              tail(lines, 300)
+            )
+          }
+          logContent <- paste(lines, collapse = "\n")
+        }
+
+        # Collapsible HTML details tag
+        cat(sprintf(
+          "<details><summary><strong>%s</strong> (Click to expand logs)</summary>\n\n",
+          f$repo
+        ))
+        cat("```text\n")
+        cat(logContent)
+        cat("\n```\n")
+        cat("</details>\n\n")
+      }
+    }
+
     sink()
   }
 }
@@ -263,59 +365,56 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   )
   testLogPath <- file.path(outDir, "tests.log")
 
-  res <- safe(
-    {
-      sink(testLogPath, split = TRUE)
-      on.exit(sink(), add = TRUE)
-      testthat::test_local(
-        path = tmp,
-        filter = if (is.null(filterArg)) NULL else filterArg,
-        stop_on_failure = FALSE,
-        reporter = "summary"
-      )
-    },
-    default = NULL
+  countsPath <- file.path(outDir, "test-counts.json")
+  exitCode <- safe(
+    runTestsIsolated(tmp, filterArg, testLogPath, countsPath),
+    default = 1L
   )
 
-  if (!is.null(res)) {
-    df <- as.data.frame(res)
-    nFail <- sum(df$failed, na.rm = TRUE)
-    nError <- sum(df$error, na.rm = TRUE)
-    nSkip <- sum(df$skipped, na.rm = TRUE)
-    nWarn <- sum(df$warning, na.rm = TRUE)
-
-    status <- if (nFail > 0 || nError > 0) "FAILURE" else "SUCCESS"
-
-    sumJson <- list(
-      owner_repo = ownerRepo,
-      package = pkg,
-      filter = filterArg,
-      duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
-      test_failures = nFail,
-      test_errors = nError,
-      test_warnings = nWarn,
-      test_skipped = nSkip,
-      status = status
-    )
-    writeLines(
-      jsonlite::toJSON(sumJson, pretty = TRUE, auto_unbox = TRUE),
-      file.path(outDir, "summary.json")
-    )
-
-    message(sprintf(
-      "[%s] complete: Fail=%d Err=%d Warn=%d Skip=%d\n",
-      ownerRepo,
-      nFail,
-      nError,
-      nWarn,
-      nSkip
-    ))
-
-    return(mkResult(status, nFail, nError, nWarn, nSkip))
-  } else {
+  if (!file.exists(countsPath) || !identical(exitCode, 0L)) {
     message("[", ownerRepo, "] test execution CRASHED (see tests.log)\n")
     return(mkResult("CRASHED"))
   }
+
+  counts <- safe(jsonlite::fromJSON(countsPath), default = NULL)
+  if (is.null(counts)) {
+    message("[", ownerRepo, "] test results unreadable (see tests.log)\n")
+    return(mkResult("CRASHED"))
+  }
+
+  nFail <- counts$fail %||% 0
+  nError <- counts$err %||% 0
+  nWarn <- counts$warn %||% 0
+  nSkip <- counts$skip %||% 0
+
+  status <- if (nFail > 0 || nError > 0) "FAILURE" else "SUCCESS"
+
+  sumJson <- list(
+    owner_repo = ownerRepo,
+    package = pkg,
+    filter = filterArg,
+    duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
+    test_failures = nFail,
+    test_errors = nError,
+    test_warnings = nWarn,
+    test_skipped = nSkip,
+    status = status
+  )
+  writeLines(
+    jsonlite::toJSON(sumJson, pretty = TRUE, auto_unbox = TRUE),
+    file.path(outDir, "summary.json")
+  )
+
+  message(sprintf(
+    "[%s] complete: Fail=%d Err=%d Warn=%d Skip=%d\n",
+    ownerRepo,
+    nFail,
+    nError,
+    nWarn,
+    nSkip
+  ))
+
+  return(mkResult(status, nFail, nError, nWarn, nSkip))
 }
 
 main <- function() {

@@ -106,7 +106,7 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     stop("scalePosWeight must be 0 or greater")
   }
 
-  paramGrid <- list(
+  param <- list(
     ntrees = ntrees,
     earlyStopRound = earlyStopRound,
     maxDepth = maxDepth,
@@ -116,31 +116,26 @@ setGradientBoostingMachine <- function(ntrees = c(100, 300),
     alpha = alpha,
     scalePosWeight = scalePosWeight
   )
-
-  param <- listCartesian(paramGrid)
-
-  attr(param, "settings") <- list(
-    modelType = "Xgboost",
+  
+  settings <- list(
+    modelName = "xgboost",
+    modelType = "binary",
     seed = seed[[1]],
-    modelName = "Gradient Boosting Machine",
     threads = nthread[1],
-    varImpRFunction = "varImpXgboost",
-    trainRFunction = "fitXgboost",
-    predictRFunction = "predictXgboost"
+    variableImportance = "varImpXgboost",
+    train = "fitXgboost",
+    predict = "predictXgboost",
+    prepareData = "toSparseM",
+    saveType = "saveLoadXgboost"
   )
-
-  attr(param, "saveType") <- "xgboost"
 
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    param = param,
+    settings = settings
   )
-
   class(result) <- "modelSettings"
-
   return(result)
 }
-
 
 
 varImpXgboost <- function(
@@ -202,7 +197,12 @@ fitXgboost <- function(
     dataMatrix,
     labels,
     hyperParameters,
-    settings) {
+    settings
+    ) {
+  
+  # this function will just fit the parameters for given hyperparam
+  # values and data 
+  
   set.seed(settings$seed)
   if (!is.null(hyperParameters$earlyStopRound)) {
     trainInd <- sample(nrow(dataMatrix), nrow(dataMatrix) * 0.9)
@@ -243,7 +243,7 @@ fitXgboost <- function(
       alpha = hyperParameters$alpha,
       objective = "binary:logistic",
       base_score = outcomeProportion,
-      eval_metric = "auc",
+      eval_metric = "auc", # TODO make this flexible?
       nthread = settings$threads
     ),
     nrounds = hyperParameters$ntrees,
@@ -255,4 +255,16 @@ fitXgboost <- function(
   model <- do.call(xgboost::xgb.train, trainArgs)
 
   return(model)
+}
+
+saveLoadXgboost <- function() {
+  rlang::check_installed("xgboost")
+  list(
+    save = function(model, file) {
+      xgboost::xgb.save(model, file)
+    },
+    load = function(file) {
+      xgboost::xgb.load(file)
+    }
+  )
 }

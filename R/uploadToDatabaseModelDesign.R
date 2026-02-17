@@ -141,7 +141,6 @@ insertModelDesignSettings <- function(
     conn = conn,
     resultSchema = databaseSchemaSettings$resultSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
-    modelType = ifelse(is.null(attr(object$modelSettings$param, "settings")$modelType), 'NULL', attr(object$modelSettings$param, "settings")$modelType), # make this the same as model$trainDetails$modelName?
     json = object$modelSettings,
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -607,8 +606,11 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
 
 addModelSetting <- function(conn, resultSchema, targetDialect,
                             tablePrefix = "",
-                            modelType, json,
+                            json,
                             tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
+  modelType <- json$settings$modelType %||% 
+    attr(json$param, "settings")$modelType %||%
+    "unknown"
   # process json to make it ordered...
   # make sure the json has been converted
   if (!inherits(x = json, what = "character")) {

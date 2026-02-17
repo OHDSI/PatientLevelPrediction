@@ -102,6 +102,8 @@ reference:
       - createSampleSettings
       - createFeatureEngineeringSettings
       - createPreprocessSettings
+      - createHyperparameterSettings
+      - createTuningMetric
   - title: "Optional design settings"
     desc: >
       Settings for optional steps that can be used in the PLP pipeline
@@ -114,6 +116,7 @@ reference:
       - createNormalizer
       - createSimpleImputer
       - createIterativeImputer
+      - createSklearnIterativeImputer
       - createRareFeatureRemover
   - title: "External validation"
     contents:
@@ -137,6 +140,7 @@ reference:
       - setDecisionTree
       - setGradientBoostingMachine
       - setLassoLogisticRegression
+      - setRidgeRegression
       - setMLP
       - setNaiveBayes
       - setRandomForest
@@ -278,4 +282,3 @@ reference:
       - createGlmModel
       - createSklearnModel
     
-
