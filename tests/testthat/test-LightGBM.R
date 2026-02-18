@@ -116,6 +116,11 @@ test_that("LightGBM working checks", {
   savePath <- tempfile("lgbmTest_")
   unlink(savePath, recursive = TRUE)
   savePlpModel(fitModel, savePath)
+
+  # current format should be JSON:
+  expect_true(file.exists(file.path(savePath, "model.json")))
+  expect_silent(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")))
+
   loadModel <- loadPlpModel(savePath)
 
   expect_s3_class(loadModel, "plpModel")
@@ -135,4 +140,11 @@ test_that("LightGBM working checks", {
   expect_equal(predLoad$value, predFit$value, tolerance = 0e-10)
   expect_true(all(predLoad$value >= 0))
   expect_true(all(predLoad$value <= 1))
+
+  # backwards compatibility: old LightGBM serialization (raw text in model.json)
+  lightgbm::lgb.save(fitModel$model, file.path(savePath, "model.json"))
+  expect_error(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")))
+  loadModelOld <- loadPlpModel(savePath)
+  expect_s3_class(loadModelOld, "plpModel")
+  expect_equal(class(loadModelOld$model), c("lgb.Booster", "R6"))
 })
