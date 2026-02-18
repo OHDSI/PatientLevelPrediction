@@ -61,14 +61,14 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 population <- createStudyPopulation(plpData)
 #> Outcome is 0 or 1
 #> Population created with: 954 observations, 954 unique subjects and 434 outcomes
-#> Population created in 0.0548 secs
+#> Population created in 0.056 secs
 splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
                                            trainFraction = 0.50, nfold = 5)
 data = splitData(plpData, population, splitSettings)
 #> seed: 15827
 #> Creating a 50% test and 50% train (into 5 folds) random stratified split by class
 #> Data split into 477 test cases and 477 train cases (96, 96, 95, 95, 95)
-#> Data split in 1.38 secs
+#> Data split in 1.29 secs
 # test data should be ~500 rows (changes because of study population)
 nrow(data$Test$labels)
 #> [1] 477
