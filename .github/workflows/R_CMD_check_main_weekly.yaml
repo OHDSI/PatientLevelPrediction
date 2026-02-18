@@ -22,8 +22,8 @@ jobs:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       RSPM: ${{ matrix.config.rspm }}
-      EUNOMIA_DATA_FOLDER: ${{ runner.temp }}/eunomia
-      UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
+      EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
+      UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
       CDM5_ORACLE_CDM_SCHEMA: ${{ secrets.CDM5_ORACLE_CDM_SCHEMA }}
       CDM5_ORACLE_OHDSI_SCHEMA: ${{ secrets.CDM5_ORACLE_OHDSI_SCHEMA }}
       CDM5_ORACLE_PASSWORD: ${{ secrets.CDM5_ORACLE_PASSWORD }}
