@@ -22,6 +22,7 @@ standalone/build/*
 /plpmodels/*
 /python_models/*
 /mycache/*
+/.cache/*
 /inst/shiny/DiagnosticsExplorer/rsconnect/*
 /doc/
 /Meta/
