@@ -358,6 +358,15 @@ computeAuc <- function(
     prediction,
     confidenceInterval = FALSE) {
   checkDataframe(prediction, c("value", "outcomeCount"), c("numeric", "numeric"))
+  truth <- ifelse(prediction$outcomeCount > 0, 1, 0)
+  truth <- truth[is.finite(truth)]
+  if (length(unique(truth)) < 2) {
+    ParallelLogger::logWarn("Cannot compute AUC: outcomeCount has only one class")
+    if (confidenceInterval) {
+      return(data.frame(auc = NA_real_, auc_lb95ci = NA_real_, auc_ub95ci = NA_real_))
+    }
+    return(NA_real_)
+  }
   if ("rawValue" %in% colnames(prediction)) {
     checkDataframe(prediction, c("rawValue"), c("numeric"))
     scores <- prediction$rawValue
@@ -366,9 +375,9 @@ computeAuc <- function(
   }
 
   if (confidenceInterval) {
-    return(aucWithCi(prediction = scores, truth = prediction$outcomeCount))
+    return(aucWithCi(prediction = scores, truth = ifelse(prediction$outcomeCount > 0, 1, 0)))
   } else {
-    return(aucWithoutCi(prediction = scores, truth = prediction$outcomeCount))
+    return(aucWithoutCi(prediction = scores, truth = ifelse(prediction$outcomeCount > 0, 1, 0)))
   }
 }
 
@@ -397,8 +406,13 @@ computeAuprc <- function(prediction) {
     prediction$value
   }
 
-  positives <- scores[prediction$outcomeCount == 1]
-  negatives <- scores[prediction$outcomeCount == 0]
+  truth <- ifelse(prediction$outcomeCount > 0, 1, 0)
+  positives <- scores[truth == 1]
+  negatives <- scores[truth == 0]
+  if (length(positives) == 0 || length(negatives) == 0) {
+    ParallelLogger::logWarn("Cannot compute AUPRC: outcomeCount has only one class")
+    return(NA_real_)
+  }
   pr <- PRROC::pr.curve(scores.class0 = positives, scores.class1 = negatives)
   return(as.double(pr$auc.integral))
 }
@@ -433,7 +447,7 @@ aucWithoutCi <- function(prediction, truth) {
 brierScore <- function(prediction) {
   brier <- sum((prediction$outcomeCount - prediction$value)^2) / nrow(prediction)
   brierMax <- mean(prediction$value) * (1 - mean(prediction$value))
-  brierScaled <- 1 - brier / brierMax
+  brierScaled <- ifelse(is.finite(brierMax) && brierMax > 0, 1 - brier / brierMax, NA_real_)
   return(list(brier = brier, brierScaled = brierScaled))
 }
 
@@ -527,6 +541,10 @@ averagePrecision <- function(prediction) {
   lab.order <- prediction$outcomeCount[order(-prediction$value)]
   n <- nrow(prediction)
   P <- sum(prediction$outcomeCount > 0)
+  if (P == 0) {
+    ParallelLogger::logWarn("Cannot compute Average Precision: outcomeCount has no positive class")
+    return(NA_real_)
+  }
   val <- rep(0, n)
   val[lab.order > 0] <- 1:P
   return(sum(val / (1:n)) / P)
