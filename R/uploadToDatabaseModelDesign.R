@@ -608,9 +608,32 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
                             tablePrefix = "",
                             json,
                             tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
-  modelType <- json$settings$modelType %||% 
-    attr(json$param, "settings")$modelType %||%
-    "unknown"
+  modelType <- "NULL"
+  if (is.list(json)) {
+    modelTypeCandidate <- NULL
+
+    if (!is.null(json$settings) && is.list(json$settings)) {
+      modelTypeCandidate <- json$settings$modelType
+    }
+
+    if (is.null(modelTypeCandidate) && !is.null(json$param)) {
+      paramSettings <- attr(json$param, "settings")
+      if (is.list(paramSettings)) {
+        modelTypeCandidate <- paramSettings$modelType
+      }
+    }
+
+    if (!is.null(modelTypeCandidate)) {
+      if (is.list(modelTypeCandidate) || length(modelTypeCandidate) == 0) {
+        modelType <- "NULL"
+      } else {
+        modelType <- as.character(modelTypeCandidate)[1]
+        if (is.na(modelType) || !nzchar(modelType)) {
+          modelType <- "NULL"
+        }
+      }
+    }
+  }
   # process json to make it ordered...
   # make sure the json has been converted
   if (!inherits(x = json, what = "character")) {
