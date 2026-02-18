@@ -22,6 +22,8 @@ jobs:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
       RSPM: ${{ matrix.config.rspm }}
+      EUNOMIA_DATA_FOLDER: ${{ runner.temp }}/eunomia
+      UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
       CDM5_ORACLE_CDM_SCHEMA: ${{ secrets.CDM5_ORACLE_CDM_SCHEMA }}
       CDM5_ORACLE_OHDSI_SCHEMA: ${{ secrets.CDM5_ORACLE_OHDSI_SCHEMA }}
       CDM5_ORACLE_PASSWORD: ${{ secrets.CDM5_ORACLE_PASSWORD }}
@@ -63,6 +65,28 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
           
+      - name: Prepare Eunomia dataset cache
+        run: |
+          dir.create(Sys.getenv("EUNOMIA_DATA_FOLDER"), recursive = TRUE, showWarnings = FALSE)
+        shell: Rscript {0}
+
+      - name: Cache Eunomia datasets
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.EUNOMIA_DATA_FOLDER }}
+          key: eunomia-v1-${{ runner.os }}-GiBleed_5.3
+
+      - name: Prepare uv cache
+        run: |
+          dir.create(Sys.getenv("UV_CACHE_DIR"), recursive = TRUE, showWarnings = FALSE)
+        shell: Rscript {0}
+
+      - name: Cache uv (reticulate::py_require)
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-v1-${{ runner.os }}-py${{ env.RETICULATE_PY_VERSION }}
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran")'
