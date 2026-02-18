@@ -331,6 +331,59 @@ test_that("temporary sqlite with results works", {
   DatabaseConnector::disconnect(conn)
 })
 
+test_that("external validation with no outcomes uploads to sqlite", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
+  validationPopulation <- population
+  validationPopulation$outcomeCount <- 0
+
+  externalVal <- externalValidatePlp(
+    plpModel = plpResult$model,
+    plpData = plpData,
+    population = validationPopulation,
+    settings = createValidationSettings(
+      recalibrate = NULL,
+      runCovariateSummary = FALSE
+    )
+  )
+
+  sqliteLocation <- insertRunPlpToSqlite(
+    runPlp = plpResult,
+    externalValidatePlp = list(externalVal),
+    diagnosePlp = NULL
+  )
+
+  expect_true(file.exists(sqliteLocation))
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteLocation
+  )
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  res <- DatabaseConnector::querySql(conn, "select count(*) as N from main.performances;")
+  expect_gte(res$N[1], 2)
+
+  expect_true(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = "main",
+    tableName = "evaluation_statistics"
+  ))
+
+  perf <- DatabaseConnector::querySql(conn, "select max(performance_id) as performanceId from main.performances;")
+  evalRows <- DatabaseConnector::querySql(
+    conn,
+    paste0(
+      "select count(*) as N from main.evaluation_statistics where performance_id = ",
+      perf$performanceId[1],
+      ";"
+    )
+  )
+  expect_gt(evalRows$N[1], 0)
+})
+
 # importFromCsv test here as can use previous csv saving
 test_that("import from csv", {
   # TODO remove dependancy on previous test
