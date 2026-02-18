@@ -76,7 +76,7 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...) {
 
     # do input checks
     if (nrow(predictionOfInterest) < 1) {
-      warning("sparse threshold summary not calculated due to empty dataset")
+      ParallelLogger::logWarn("Sparse threshold summary not calculated due to empty dataset")
       return(NULL)
     }
 
@@ -85,11 +85,11 @@ getThresholdSummary_binary <- function(prediction, evalColumn, ...) {
     N <- n - P
 
     if (N == 0) {
-      warning("Number of negatives is zero")
+      ParallelLogger::logWarn("Number of negatives is zero")
       return(NULL)
     }
     if (P == 0) {
-      warning("Number of positives is zero")
+      ParallelLogger::logWarn("Number of positives is zero")
       return(NULL)
     }
 

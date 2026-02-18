@@ -112,6 +112,31 @@ test_that("Average precision", {
   expect_equal(as.double(avePMetrics), avePPlp)
 })
 
+test_that("Evaluation metrics handle no outcome patients", {
+  ePrediction <- data.frame(
+    rowId = 1:100,
+    ageYear = sample(18:90, 100, replace = TRUE),
+    gender = sample(c(8507, 8532), 100, replace = TRUE),
+    outcomeCount = rep(0, 100),
+    value = runif(100, min = 0.0001, max = 0.9999),
+    evaluationType = rep("Validation", 100)
+  )
+  attr(ePrediction, "metaData") <- list(modelType = "binary")
+
+  expect_true(is.na(computeAuc(ePrediction, confidenceInterval = FALSE)))
+  aucCi <- computeAuc(ePrediction, confidenceInterval = TRUE)
+  expect_true(is.data.frame(aucCi))
+  expect_true(all(is.na(aucCi)))
+  expect_true(is.na(computeAuprc(ePrediction)))
+  expect_true(is.na(averagePrecision(ePrediction)))
+
+  eval <- evaluatePlp(ePrediction, typeColumn = "evaluationType")
+  expect_equal(class(eval), "plpEvaluation")
+  aurocRow <- eval$evaluationStatistics[eval$evaluationStatistics$metric == "AUROC", , drop = FALSE]
+  expect_true(nrow(aurocRow) == 1)
+  expect_true(is.na(as.numeric(aurocRow$value[1])))
+})
+
 
 test_that("Calibration metrics", {
   skip_if_not_installed("ResourceSelection")
