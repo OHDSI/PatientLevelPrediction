@@ -105,8 +105,8 @@ prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> did FE
 #> did tidy
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.156 secs
-#> Prediction done in: 0.163 secs
+#> Prediction took 0.145 secs
+#> Prediction done in: 0.151 secs
 # see the predicted risk values
 prediction$value
 #>  [1] 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644 0.3543437 0.3318122
