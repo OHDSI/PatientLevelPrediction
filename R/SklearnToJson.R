@@ -292,9 +292,10 @@ serializeAdaboost <- function(model) {
 deSerializeAdaboost <- function(model_dict) {
   np <- reticulate::import("numpy", convert = FALSE)
   sklearn <- reticulate::import("sklearn", convert = FALSE)
+  params <- sanitizeSklearnAdaBoostParams(reticulate::py_to_r(model_dict["params"]))
   model <- do.call(
     sklearn$ensemble$AdaBoostClassifier,
-    reticulate::py_to_r(model_dict["params"])
+    params
   )
   estimators <- list()
   for (i in 1:length(model_dict$estimators_)) {
@@ -308,6 +309,23 @@ deSerializeAdaboost <- function(model_dict) {
   model$estimator_weights_ <- np$array(model_dict["estimator_weights_"])
 
   return(model)
+}
+
+sanitizeSklearnAdaBoostParams <- function(params) {
+  if (!is.list(params)) {
+    return(params)
+  }
+
+  # scikit-learn 1.8 deprecates `algorithm` for AdaBoostClassifier.
+  params$algorithm <- NULL
+
+  # scikit-learn renamed `base_estimator` -> `estimator` (keep backwards compatibility).
+  if (!is.null(params$base_estimator) && is.null(params$estimator)) {
+    params$estimator <- params$base_estimator
+  }
+  params$base_estimator <- NULL
+
+  return(params)
 }
 
 serializeNaiveBayes <- function(model) {
