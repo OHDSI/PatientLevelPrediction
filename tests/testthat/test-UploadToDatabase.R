@@ -271,6 +271,65 @@ test_that("temporary sqlite with results works", {
   DatabaseConnector::disconnect(conn)
 })
 
+test_that("list hyperParamSearch is flattened for sqlite uploads", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
+  runPlpListHyper <- plpResult
+  runPlpListHyper$model$trainDetails$hyperParamSearch <- list(
+    list(
+      metric = "AUC",
+      param = list(numIterations = 30, learningRate = 0.1),
+      cvPerformance = 0.60,
+      cvPerformancePerFold = c(0.59, 0.61),
+      hyperSummary = data.frame(
+        metric = "AUC",
+        fold = c("CV", "Fold1", "Fold2"),
+        value = c(0.60, 0.59, 0.61),
+        numIterations = c(30, 30, 30),
+        learningRate = c(0.1, 0.1, 0.1),
+        stringsAsFactors = FALSE
+      )
+    ),
+    list(
+      metric = "AUC",
+      param = list(numIterations = 50, learningRate = 0.05),
+      cvPerformance = 0.58,
+      cvPerformancePerFold = c(0.57, 0.59),
+      hyperSummary = data.frame(
+        metric = "AUC",
+        fold = c("CV", "Fold1", "Fold2"),
+        value = c(0.58, 0.57, 0.59),
+        numIterations = c(50, 50, 50),
+        learningRate = c(0.05, 0.05, 0.05),
+        stringsAsFactors = FALSE
+      )
+    )
+  )
+
+  sqliteLocation <- insertRunPlpToSqlite(
+    runPlp = runPlpListHyper,
+    externalValidatePlp = NULL
+  )
+  expect_true(file.exists(sqliteLocation))
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteLocation
+  )
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  res <- DatabaseConnector::querySql(conn, "select train_details as trainDetails from main.models;")
+  expect_true(nrow(res) > 0)
+  trainDetails <- ParallelLogger::convertJsonToSettings(res$trainDetails[1])
+
+  expect_true("hyperParamSearch" %in% names(trainDetails))
+  expect_true(is.data.frame(trainDetails$hyperParamSearch))
+  expect_true(nrow(trainDetails$hyperParamSearch) >= 6)
+  expect_true(all(c("metric", "fold", "value") %in% colnames(trainDetails$hyperParamSearch)))
+})
+
 # SQL lite test
 test_that("temporary sqlite with results works", {
   skip_if_not_installed(c("ResultModelManager", "Eunomia"))

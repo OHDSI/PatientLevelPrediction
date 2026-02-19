@@ -733,12 +733,15 @@ insertModelInDatabase <- function(
 
   # need hyperParamSearch for shiny app but the other parts
   # are too large to store into the database
+  hyperParamSearch <- normalizeHyperParamSearchForDatabase(
+    model$trainDetails$hyperParamSearch
+  )
   hyperparameterSettings <- NULL
   if (!is.null(model$modelDesign) && is.list(model$modelDesign)) {
     hyperparameterSettings <- model$modelDesign$hyperparameterSettings
   }
   trainDetails <- list(
-    hyperParamSearch = model$trainDetails$hyperParamSearch,
+    hyperParamSearch = hyperParamSearch,
     hyperparameterSettings = hyperparameterSettings
   )
 
@@ -775,6 +778,39 @@ insertModelInDatabase <- function(
   )
 
   return(invisible(modelId))
+}
+
+normalizeHyperParamSearchForDatabase <- function(hyperParamSearch) {
+  if (is.null(hyperParamSearch)) {
+    return(data.frame())
+  }
+
+  if (is.data.frame(hyperParamSearch)) {
+    return(hyperParamSearch)
+  }
+
+  if (is.list(hyperParamSearch)) {
+    fromSummary <- lapply(hyperParamSearch, function(entry) {
+      if (is.list(entry) && is.data.frame(entry$hyperSummary)) {
+        return(entry$hyperSummary)
+      }
+      NULL
+    })
+    fromSummary <- Filter(Negate(is.null), fromSummary)
+    if (length(fromSummary) > 0) {
+      return(dplyr::bind_rows(fromSummary))
+    }
+
+    directDataFrames <- Filter(is.data.frame, hyperParamSearch)
+    if (length(directDataFrames) > 0) {
+      return(dplyr::bind_rows(directDataFrames))
+    }
+  }
+
+  ParallelLogger::logWarn(
+    "Unable to coerce hyperParamSearch to data.frame; storing empty table for compatibility."
+  )
+  data.frame()
 }
 
 addModel <- function(
