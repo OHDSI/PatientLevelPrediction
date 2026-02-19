@@ -37,6 +37,8 @@ test_that("createModelDesign - test working", {
   expect_equal(analysis1$sampleSettings, list(createSampleSettings(type = "none")))
   expect_equal(analysis1$preprocessSettings, createPreprocessSettings())
   expect_equal(analysis1$splitSettings, createDefaultSplitSetting(splitSeed = 1))
+  expect_equal(analysis1$hyperparameterSettings$search, "grid")
+  expect_equal(analysis1$hyperparameterSettings$tuningMetric$name, "AUC")
   expect_equal(analysis1$modelSettings, setLassoLogisticRegression(seed = 12))
   expect_equal(
     analysis1$executeSettings,
@@ -74,6 +76,8 @@ test_that("loading analyses settings", {
   expect_equal(analysis1$preprocessSettings, analysisSetting$analyses[[1]]$preprocessSettings)
   expect_equal(analysis1$modelSettings, analysisSetting$analyses[[1]]$modelSettings)
   expect_equal(analysis1$splitSettings, analysisSetting$analyses[[1]]$splitSettings)
+  expect_equal(analysisSetting$analyses[[1]]$hyperparameterSettings$search, "grid")
+  expect_equal(analysisSetting$analyses[[1]]$hyperparameterSettings$tuningMetric$name, "AUC")
   expect_equal(analysis1$executeSettings, analysisSetting$analyses[[1]]$executeSettings)
 })
 

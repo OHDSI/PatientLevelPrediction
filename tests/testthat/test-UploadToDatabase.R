@@ -258,6 +258,11 @@ test_that("temporary sqlite with results works", {
   expect_true(length(list.files(res$plpModelFile[1], all.files = TRUE, recursive = TRUE)) > 0)
   expect_true(nzchar(res$modelType[1]))
   expect_true(nzchar(res$trainDetails[1]))
+  trainDetails <- ParallelLogger::convertJsonToSettings(res$trainDetails[1])
+  expect_true("hyperParamSearch" %in% names(trainDetails))
+  expect_true("hyperparameterSettings" %in% names(trainDetails))
+  expect_equal(trainDetails$hyperparameterSettings$search, "grid")
+  expect_equal(trainDetails$hyperparameterSettings$tuningMetric$name, "AUC")
 
   expectedIntercept <- PatientLevelPrediction:::getModelIntercept(plpResult$model)
   expect_equal(res$intercept[1], expectedIntercept, tolerance = 1e-4)
