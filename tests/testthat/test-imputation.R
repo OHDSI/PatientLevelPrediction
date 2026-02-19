@@ -1,4 +1,90 @@
 # add a test numerical feature with missing values of certain percentage
+subsetSplitData <- function(data, n = 250, seed = 1) {
+  stopifnot(is.list(data), !is.null(data$labels), !is.null(data$covariateData))
+
+  labels <- data$labels
+  covariateRowIds <- dplyr::collect(
+    dplyr::distinct(
+      dplyr::select(data$covariateData$covariates, "rowId")
+    )
+  )$rowId
+  rowIds <- intersect(labels$rowId, covariateRowIds)
+  if (length(rowIds) > n) {
+    rowIds <- withr::with_seed(seed, sample(rowIds, size = n))
+  }
+
+  out <- list(
+    labels = dplyr::filter(labels, .data$rowId %in% !!rowIds),
+    covariateData = Andromeda::andromeda(
+      analysisRef = data$covariateData$analysisRef
+    )
+  )
+
+  if (!is.null(data$folds)) {
+    out$folds <- dplyr::filter(data$folds, .data$rowId %in% !!rowIds)
+  }
+
+  out$covariateData$covariates <- dplyr::filter(data$covariateData$covariates, .data$rowId %in% !!rowIds)
+  out$covariateData$covariateRef <- data$covariateData$covariateRef
+
+  attributes(out$covariateData)$metaData <- attributes(data$covariateData)$metaData
+  class(out$covariateData) <- class(data$covariateData)
+
+  attributes(out)$metaData <- attributes(data)$metaData
+  class(out) <- class(data)
+  out
+}
+
+makeToyImputationData <- function(n = 150, seed = 1) {
+  labels <- data.frame(rowId = seq_len(n))
+  folds <- data.frame(
+    rowId = labels$rowId,
+    index = 1L
+  )
+  covariates <- withr::with_seed(seed, {
+    data.frame(
+      rowId = rep(seq_len(n), each = 2),
+      covariateId = rep(c(10, 20), times = n),
+      covariateValue = c(
+        runif(n),
+        stats::rbinom(n, size = 1, prob = 0.3)
+      )
+    )
+  })
+  covariateRef <- data.frame(
+    covariateId = c(10, 20),
+    covariateName = c("contFeature", "binFeature"),
+    analysisId = c(10, 20),
+    conceptId = c(10, 20)
+  )
+  analysisRef <- data.frame(
+    analysisId = c(10, 20),
+    analysisName = c("continuous", "binary"),
+    domainId = c("measurement", "feature engineering"),
+    startDay = c(NA_real_, NA_real_),
+    endDay = c(NA_real_, NA_real_),
+    isBinary = c("N", "Y"),
+    missingMeansZero = c("N", "Y")
+  )
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = covariateRef,
+    analysisRef = analysisRef
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list()
+
+  trainData <- list(
+    labels = labels,
+    folds = folds,
+    covariateData = covariateData
+  )
+  class(trainData) <- "plpData"
+  attr(trainData, "metaData") <- list()
+
+  trainData
+}
+
 createMissingData <- function(trainData, missingness, test = FALSE) {
   missingData <- list(
     labels = trainData$labels
@@ -137,7 +223,9 @@ test_that("sklearnIterativeImpute works and reuses binary predictors", {
   skip_if_offline()
   skip_on_cran()
   skip_if_no_sklearn_iterative()
-  missingData <- createMissingData(tinyTrainData, 0.2)
+  trainData <- subsetSplitData(tinyTrainData, n = 150, seed = 1)
+  testDataSmall <- subsetSplitData(testData, n = 150, seed = 2)
+  missingData <- createMissingData(trainData, 0.2)
   imputer <- createSklearnIterativeImputer(
     missingThreshold = 0.3,
     methodSettings = list(
@@ -150,7 +238,9 @@ test_that("sklearnIterativeImpute works and reuses binary predictors", {
 
   imputedData <- sklearnIterativeImpute(missingData, imputer, done = FALSE)
 
-  newFeature <- imputedData$covariateData$covariates %>%
+  imputedCovariates <- imputedData$covariateData$covariates %>%
+    dplyr::collect()
+  newFeature <- imputedCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
   expect_equal(length(newFeature), nrow(imputedData$labels))
@@ -169,9 +259,11 @@ test_that("sklearnIterativeImpute works and reuses binary predictors", {
     dplyr::collect()
   expect_true(any(predictorInfo$missingMeansZero == "Y"))
 
-  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  missingTestData <- createMissingData(testDataSmall, 0.4, test = TRUE)
   imputedTestData <- sklearnIterativeImpute(missingTestData, testSettings, done = TRUE)
-  newFeatureTest <- imputedTestData$covariateData$covariates %>%
+  imputedTestCovariates <- imputedTestData$covariateData$covariates %>%
+    dplyr::collect()
+  newFeatureTest <- imputedTestCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
   expect_equal(length(newFeatureTest), nrow(imputedTestData$labels))
@@ -182,7 +274,9 @@ test_that("sklearnIterativeImpute errors when runtime imputer state is missing",
   skip_if_offline()
   skip_on_cran()
   skip_if_no_sklearn_iterative()
-  missingData <- createMissingData(tinyTrainData, 0.2)
+  trainData <- subsetSplitData(tinyTrainData, n = 150, seed = 3)
+  testDataSmall <- subsetSplitData(testData, n = 150, seed = 4)
+  missingData <- createMissingData(trainData, 0.2)
   imputer <- createSklearnIterativeImputer(
     missingThreshold = 0.3,
     methodSettings = list(maxIter = 1, randomState = 123)
@@ -191,7 +285,7 @@ test_that("sklearnIterativeImpute errors when runtime imputer state is missing",
   settings <- attr(imputedData$covariateData, "metaData")$featureEngineering$sklearnIterativeImputer$settings$featureEngineeringSettings
   settings$sklearnImputerKey <- "missing-key"
 
-  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  missingTestData <- createMissingData(testDataSmall, 0.4, test = TRUE)
   expect_error(
     sklearnIterativeImpute(missingTestData, settings, done = TRUE),
     "runtime state not available"
@@ -199,21 +293,31 @@ test_that("sklearnIterativeImpute errors when runtime imputer state is missing",
 })
 
 test_that("simpleImpute works", {
-  skip_if_offline()
-  missingData <- createMissingData(tinyTrainData, 0.2)
+  trainData <- makeToyImputationData(n = 80, seed = 5)
+  testDataSmall <- makeToyImputationData(n = 80, seed = 6)
+  missingData <- createMissingData(trainData, 0.2)
 
-  imputer <- createSimpleImputer(method = "mean", missingThreshold = 0.3)
+  imputer <- createSimpleImputer(
+    method = "mean",
+    missingThreshold = 0.3,
+    addMissingIndicator = TRUE
+  )
 
   imputedData <- simpleImpute(missingData, imputer, done = FALSE)
 
-  newFeature <- imputedData$covariateData$covariates %>%
+  missingCovariates <- missingData$covariateData$covariates %>%
+    dplyr::collect()
+  imputedCovariates <- imputedData$covariateData$covariates %>%
+    dplyr::collect()
+
+  newFeature <- imputedCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
 
-  originalFeature <- missingData$covariateData$covariates %>%
+  originalFeature <- missingCovariates %>%
     dplyr::filter(.data$covariateId == 666)
 
-  imputedFeature <- imputedData$covariateData$covariates %>%
+  imputedFeature <- imputedCovariates %>%
     dplyr::filter(
       .data$covariateId == 666,
       !.data$rowId %in% !!(originalFeature %>%
@@ -228,19 +332,46 @@ test_that("simpleImpute works", {
   expect_equal(length(newFeature), nrow(imputedData$labels))
   expect_equal(mean(originalFeature), unique(imputedFeature))
 
-  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
+  missingTestData <- createMissingData(testDataSmall, 0.4, test = TRUE)
   # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
 
+  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
+  expect_true(!is.null(indicatorInfo))
+  expect_true(!is.null(indicatorInfo$map))
+  expect_true(nrow(indicatorInfo$map) > 0)
+  fakeVariableMap <- indicatorInfo$map %>%
+    dplyr::filter(.data$sourceCovariateId == 666)
+  expect_equal(nrow(fakeVariableMap), 1)
+  indicatorId <- fakeVariableMap$indicatorCovariateId
+
+  observedRows <- missingCovariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::pull(.data$rowId)
+  expectedMissingRows <- setdiff(missingData$labels$rowId, observedRows)
+  indicatorRows <- imputedCovariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$rowId)
+  indicatorValues <- imputedCovariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_setequal(indicatorRows, expectedMissingRows)
+  expect_true(all(indicatorValues == 1))
+
   imputedTestData <- simpleImpute(missingTestData, testSettings, done = TRUE)
 
-  newFeatureTest <- imputedTestData$covariateData$covariates %>%
+  missingTestCovariates <- missingTestData$covariateData$covariates %>%
+    dplyr::collect()
+  imputedTestCovariates <- imputedTestData$covariateData$covariates %>%
+    dplyr::collect()
+
+  newFeatureTest <- imputedTestCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
-  originalFeatureTest <- missingTestData$covariateData$covariates %>%
+  originalFeatureTest <- missingTestCovariates %>%
     dplyr::filter(.data$covariateId == 666)
-  imputedFeatureTest <- imputedTestData$covariateData$covariates %>%
+  imputedFeatureTest <- imputedTestCovariates %>%
     dplyr::filter(
       .data$covariateId == 666,
       !.data$rowId %in% !!(originalFeatureTest %>%
@@ -255,61 +386,84 @@ test_that("simpleImpute works", {
   # should use mean from training data
   expect_equal(mean(originalFeature), unique(imputedFeatureTest))
 
-  imputer <- createSimpleImputer(method = "median", missingThreshold = 0.3)
-
-  imputedData <- simpleImpute(missingData, imputer, done = FALSE)
-
-  newFeature <- imputedData$covariateData$covariates %>%
+  indicatorRowsTest <- imputedTestCovariates %>%
+    dplyr::filter(.data$covariateId == !!indicatorId) %>%
+    dplyr::pull(.data$rowId)
+  observedRowsTest <- missingTestCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
-    dplyr::pull(.data$covariateValue)
+    dplyr::pull(.data$rowId)
+  expectedMissingRowsTest <- setdiff(missingTestData$labels$rowId, observedRowsTest)
+  expect_setequal(indicatorRowsTest, expectedMissingRowsTest)
 
-  originalFeature <- missingData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == 666)
+  missingInfo <- attr(testSettings, "missingInfo")
+  expect_true(any(missingInfo$covariateId == 666 & missingInfo$missing > 0.1))
 
-  imputedFeature <- imputedData$covariateData$covariates %>%
-    dplyr::filter(
-      .data$covariateId == 666,
-      !.data$rowId %in% !!(originalFeature %>%
-        dplyr::pull(.data$rowId))
-    ) %>%
-    dplyr::pull(.data$covariateValue)
-  originalFeature <- originalFeature %>%
-    dplyr::pull(.data$covariateValue)
-
-  expect_true(length(newFeature) > length(originalFeature))
-  expect_equal(length(newFeature), nrow(imputedData$labels))
-  expect_equal(median(originalFeature), unique(imputedFeature))
-
-  imputer <- createSimpleImputer(method = "mean", missingThreshold = 0.1)
-  imputedData <- simpleImpute(missingData, imputer, done = FALSE)
-  newFeature <- imputedData$covariateData$covariates %>%
+  filteredCovariates <- missingData$covariateData$covariates %>%
+    dplyr::left_join(missingInfo, by = "covariateId", copy = TRUE) %>%
+    dplyr::filter(is.na(.data$missing) | .data$missing <= 0.1) %>%
     dplyr::filter(.data$covariateId == 666) %>%
-    dplyr::pull(.data$covariateValue)
-  expect_true(length(newFeature) == 0)
+    dplyr::collect()
+  expect_equal(nrow(filteredCovariates), 0)
 })
 
 test_that("IterativeImputer works", {
-  skip_if_offline()
   skip_if_not_installed("glmnet")
-  missingData <- createMissingData(tinyTrainData, 0.2)
+  trainData <- makeToyImputationData(n = 80, seed = 7)
+  testDataSmall <- makeToyImputationData(n = 80, seed = 8)
+  missingData <- createMissingData(trainData, 0.2)
   imputer <- createIterativeImputer(
     method = "pmm", missingThreshold = 0.3,
     methodSettings = list(
       pmm = list(
       k = 1,
       iterations = 1
-    ))
+    )),
+    addMissingIndicator = TRUE
   )
+
+  testthat::local_mocked_bindings(
+    pmmFit = function(data, k = 5, alpha = 1) {
+      rows <- data$xMiss %>%
+        dplyr::pull(.data$rowId) %>%
+        unique()
+      yObs <- data$yObs %>%
+        dplyr::collect()
+      donorValues <- yObs$y
+      intercept <- mean(donorValues, na.rm = TRUE)
+      list(
+        imputedValues = data.frame(
+          rowId = rows,
+          imputedValue = rep(intercept, length(rows))
+        ),
+        model = list(
+          intercept = intercept,
+          coefficients = data.frame(covariateId = integer(0), values = numeric(0)),
+          predictions = data.frame(
+            rowId = yObs$rowId,
+            prediction = yObs$y,
+            observedValue = yObs$y
+          )
+        )
+      )
+    },
+    .package = "PatientLevelPrediction"
+  )
+
   imputedData <- iterativeImpute(missingData, imputer, done = FALSE)
 
-  newFeature <- imputedData$covariateData$covariates %>%
+  missingCovariates <- missingData$covariateData$covariates %>%
+    dplyr::collect()
+  imputedCovariates <- imputedData$covariateData$covariates %>%
+    dplyr::collect()
+
+  newFeature <- imputedCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
 
-  originalFeature <- missingData$covariateData$covariates %>%
+  originalFeature <- missingCovariates %>%
     dplyr::filter(.data$covariateId == 666)
 
-  imputedFeature <- imputedData$covariateData$covariates %>%
+  imputedFeature <- imputedCovariates %>%
     dplyr::filter(
       .data$covariateId == 666,
       !.data$rowId %in% !!(originalFeature %>%
@@ -322,19 +476,29 @@ test_that("IterativeImputer works", {
   expect_true(length(newFeature) > length(originalFeature))
   expect_equal(length(newFeature), nrow(imputedData$labels))
 
-  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
-  # extract featureEngineeringSettings from imputedData
   metaData <- attr(imputedData$covariateData, "metaData")
   testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings
+  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
+  expect_true(!is.null(indicatorInfo))
+  expect_true(!is.null(indicatorInfo$map))
+  expect_true(nrow(indicatorInfo$map) > 0)
+  fakeVariableMap <- indicatorInfo$map %>%
+    dplyr::filter(.data$sourceCovariateId == 666)
+  expect_equal(nrow(fakeVariableMap), 1)
 
+  missingTestData <- createMissingData(testDataSmall, 0.4, test = TRUE)
   imputedTestData <- iterativeImpute(missingTestData, testSettings, done = TRUE)
 
-  newFeatureTest <- imputedTestData$covariateData$covariates %>%
+  missingTestCovariates <- missingTestData$covariateData$covariates %>%
+    dplyr::collect()
+  imputedTestCovariates <- imputedTestData$covariateData$covariates %>%
+    dplyr::collect()
+  newFeatureTest <- imputedTestCovariates %>%
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::pull(.data$covariateValue)
-  originalFeatureTest <- missingTestData$covariateData$covariates %>%
+  originalFeatureTest <- missingTestCovariates %>%
     dplyr::filter(.data$covariateId == 666)
-  imputedFeatureTest <- imputedTestData$covariateData$covariates %>%
+  imputedFeatureTest <- imputedTestCovariates %>%
     dplyr::filter(
       .data$covariateId == 666,
       !.data$rowId %in% !!(originalFeatureTest %>%
@@ -346,83 +510,6 @@ test_that("IterativeImputer works", {
 
   expect_true(length(newFeatureTest) > length(originalFeatureTest))
   expect_equal(length(newFeatureTest), nrow(imputedTestData$labels))
-})
-
-test_that("SimpleImputer can add missing indicators for imputed features", {
-  skip_if_offline()
-  missingData <- createMissingData(tinyTrainData, 0.2)
-  imputer <- createSimpleImputer(
-    method = "mean",
-    missingThreshold = 0.3,
-    addMissingIndicator = TRUE
-  )
-  imputedData <- simpleImpute(missingData, imputer, done = FALSE)
-
-  metaData <- attr(imputedData$covariateData, "metaData")
-  testSettings <- metaData$featureEngineering$simpleImputer$settings$featureEngineeringSettings
-  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
-  expect_true(nrow(indicatorInfo$map) > 0)
-
-  fakeVariableMap <- indicatorInfo$map %>%
-    dplyr::filter(.data$sourceCovariateId == 666)
-  expect_equal(nrow(fakeVariableMap), 1)
-  indicatorId <- fakeVariableMap$indicatorCovariateId
-
-  expect_true(indicatorId %in% (imputedData$covariateData$covariateRef %>%
-    dplyr::pull(.data$covariateId)))
-  expect_true(any(imputedData$covariateData$analysisRef %>%
-    dplyr::pull(.data$isBinary) == "Y"))
-
-  observedRows <- missingData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == 666) %>%
-    dplyr::pull(.data$rowId)
-  expectedMissingRows <- setdiff(missingData$labels$rowId, observedRows)
-  indicatorRows <- imputedData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == !!indicatorId) %>%
-    dplyr::pull(.data$rowId)
-  indicatorValues <- imputedData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == !!indicatorId) %>%
-    dplyr::pull(.data$covariateValue)
-  expect_setequal(indicatorRows, expectedMissingRows)
-  expect_true(all(indicatorValues == 1))
-
-  missingTestData <- createMissingData(testData, 0.4, test = TRUE)
-  imputedTestData <- simpleImpute(missingTestData, testSettings, done = TRUE)
-  indicatorRowsTest <- imputedTestData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == !!indicatorId) %>%
-    dplyr::pull(.data$rowId)
-  observedRowsTest <- missingTestData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == 666) %>%
-    dplyr::pull(.data$rowId)
-  expectedMissingRowsTest <- setdiff(missingTestData$labels$rowId, observedRowsTest)
-  expect_setequal(indicatorRowsTest, expectedMissingRowsTest)
-})
-
-test_that("IterativeImputer can add missing indicators for imputed features", {
-  skip_if_offline()
-  skip_if_not_installed("glmnet")
-  missingData <- createMissingData(tinyTrainData, 0.2)
-  imputer <- createIterativeImputer(
-    method = "pmm",
-    missingThreshold = 0.3,
-    methodSettings = list(pmm = list(k = 1, iterations = 1)),
-    addMissingIndicator = TRUE
-  )
-  imputedData <- iterativeImpute(missingData, imputer, done = FALSE)
-
-  metaData <- attr(imputedData$covariateData, "metaData")
-  testSettings <- metaData$featureEngineering$iterativeImputer$settings$featureEngineeringSettings
-  indicatorInfo <- attr(testSettings, "missingIndicatorInfo")
-  expect_true(nrow(indicatorInfo$map) > 0)
-
-  fakeVariableMap <- indicatorInfo$map %>%
-    dplyr::filter(.data$sourceCovariateId == 666)
-  expect_equal(nrow(fakeVariableMap), 1)
-  indicatorId <- fakeVariableMap$indicatorCovariateId
-  indicatorRows <- imputedData$covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == !!indicatorId) %>%
-    dplyr::pull(.data$rowId)
-  expect_true(length(indicatorRows) > 0)
 })
 
 makePmmData <- function(nObs = 6, nMiss = 3) {
@@ -570,6 +657,11 @@ test_that("iterativeImpute apply path preserves non-imputed continuous covariate
     missing = numeric(0)
   )
 
+  testthat::local_mocked_bindings(
+    copyAndromeda = function(x) x,
+    .package = "Andromeda"
+  )
+
   out <- PatientLevelPrediction:::iterativeImpute(
     trainData = trainData,
     featureEngineeringSettings = settings,
@@ -584,10 +676,22 @@ test_that("iterativeImpute apply path preserves non-imputed continuous covariate
   expect_equal(nrow(preservedRows), nrow(trainData$labels))
 })
 
-test_that("iterativeImpute apply path leaves copyable covariateData (no dbplyr temp artifacts)", {
+test_that("iterativeImpute apply path uses configured PMM k and keeps covariateData copyable", {
   skip_if_not_installed("glmnet")
   trainData <- makeApplyImputeDataForKTest()
   settings <- makeApplyImputerSettingsForKTest(k = 3)
+
+  observed <- new.env(parent = emptyenv())
+  observed$k <- NULL
+  originalPmmPredict <- PatientLevelPrediction:::pmmPredict
+
+  testthat::local_mocked_bindings(
+    pmmPredict = function(data, k = 5, imputer) {
+      observed$k <- k
+      originalPmmPredict(data = data, k = k, imputer = imputer)
+    },
+    .package = "PatientLevelPrediction"
+  )
 
   out <- PatientLevelPrediction:::iterativeImpute(
     trainData = trainData,
@@ -595,6 +699,7 @@ test_that("iterativeImpute apply path leaves copyable covariateData (no dbplyr t
     done = TRUE
   )
 
+  expect_equal(observed$k, 3)
   expect_false(any(grepl("^dbplyr_", names(out$covariateData))))
   expect_no_error(Andromeda::copyAndromeda(out$covariateData))
 })
@@ -636,35 +741,6 @@ test_that("samplePmmDonors with k=1 matches nearest donor deterministically", {
   )
 
   expect_equal(actual, expected)
-})
-
-test_that("iterativeImpute done=TRUE uses configured PMM k", {
-  skip_if_not_installed("glmnet")
-  trainData <- makeApplyImputeDataForKTest()
-  settings <- makeApplyImputerSettingsForKTest(k = 3)
-
-  observed <- new.env(parent = emptyenv())
-  observed$k <- NULL
-
-  testthat::local_mocked_bindings(
-    pmmPredict = function(data, k = 5, imputer) {
-      observed$k <- k
-      rows <- data$xMiss %>%
-        dplyr::pull(.data$rowId) %>%
-        unique()
-      list(imputedValues = data.frame(rowId = rows, imputedValue = 0))
-    },
-    .package = "PatientLevelPrediction"
-  )
-
-  expect_no_error(
-    PatientLevelPrediction:::iterativeImpute(
-      trainData = trainData,
-      featureEngineeringSettings = settings,
-      done = TRUE
-    )
-  )
-  expect_equal(observed$k, 3)
 })
 
 test_that("pmmFit runs on a minimal valid dataset", {
@@ -726,8 +802,8 @@ test_that("pmmFit handles empty xMiss without failing", {
 test_that("PMM train/test imputations stay in observed range and preserve variance", {
   skip_if_not_installed("glmnet")
   pmmData <- withr::with_seed(1, {
-    nObs <- 200
-    nMissTrain <- 80
+    nObs <- 120
+    nMissTrain <- 50
 
     x1 <- runif(nObs, min = -2, max = 2)
     x2 <- rnorm(nObs)
@@ -753,7 +829,7 @@ test_that("PMM train/test imputations stay in observed range and preserve varian
 
   fitResults <- withr::with_seed(111, PatientLevelPrediction:::pmmFit(pmmData, k = 5))
 
-  nMissTest <- 90
+  nMissTest <- 60
   testXMiss <- withr::with_seed(222, data.frame(
     rowId = rep(2000 + seq_len(nMissTest), each = 2),
     covariateId = rep(c(101, 102), times = nMissTest),

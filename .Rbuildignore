@@ -2,6 +2,7 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^\\.cache$
 ^.vscode$
 standalone
 deploy.sh
@@ -23,3 +24,4 @@ _pkgdown.yml
 ^Dockerfile$
 ^.venv$
 ^.notVenv$
+.cache
