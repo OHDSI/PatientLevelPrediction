@@ -394,6 +394,7 @@ createModelDesign <- function(
     preprocessSettings = preprocessSettings,
     modelSettings = modelSettings,
     splitSettings = splitSettings,
+    hyperparameterSettings = hyperparameterSettings,
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = useSample,

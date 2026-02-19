@@ -733,7 +733,14 @@ insertModelInDatabase <- function(
 
   # need hyperParamSearch for shiny app but the other parts
   # are too large to store into the database
-  trainDetails <- list(hyperParamSearch = model$trainDetails$hyperParamSearch)
+  hyperparameterSettings <- NULL
+  if (!is.null(model$modelDesign) && is.list(model$modelDesign)) {
+    hyperparameterSettings <- model$modelDesign$hyperparameterSettings
+  }
+  trainDetails <- list(
+    hyperParamSearch = model$trainDetails$hyperParamSearch,
+    hyperparameterSettings = hyperparameterSettings
+  )
 
   # create this function
   modelId <- addModel(

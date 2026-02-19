@@ -41,6 +41,10 @@ insertModelDesignInDatabase <- function(
     cohortDefinitions) {
   # REMOVE THIS
   if (inherits(object, "externalValidatePlp") || inherits(object, "runPlp")) {
+    hyperparameterSettings <- object$model$modelDesign$hyperparameterSettings
+    if (is.null(hyperparameterSettings)) {
+      hyperparameterSettings <- createHyperparameterSettings()
+    }
     object <- PatientLevelPrediction::createModelDesign(
       targetId = object$model$modelDesign$targetId,
       outcomeId = object$model$modelDesign$outcomeId,
@@ -51,6 +55,7 @@ insertModelDesignInDatabase <- function(
       sampleSettings = object$model$modelDesign$sampleSettings,
       preprocessSettings = object$model$modelDesign$preprocessSettings,
       modelSettings = object$model$modelDesign$modelSettings,
+      hyperparameterSettings = hyperparameterSettings,
       runCovariateSummary = TRUE
     )
   }
