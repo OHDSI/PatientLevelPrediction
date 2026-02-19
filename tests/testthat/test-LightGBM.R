@@ -119,7 +119,18 @@ test_that("LightGBM working checks", {
 
   # current format should be JSON:
   expect_true(file.exists(file.path(savePath, "model.json")))
-  expect_silent(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")))
+  serialized <- ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json"))
+  expect_equal(serialized$modelType, "lightGBM")
+  expect_equal(serialized$modelFormat, "lightgbm_txt")
+  expect_true(is.character(serialized$model))
+  expect_length(serialized$model, 1)
+  expect_match(serialized$model, "^tree")
+  expect_match(serialized$model, "version=")
+  expect_equal(serialized$model, fitModel$model$save_model_to_string(NULL))
+
+  loadedBooster <- lightgbm::lgb.load(model_str = serialized$model)
+  expect_equal(class(loadedBooster), c("lgb.Booster", "R6"))
+  expect_equal(loadedBooster$num_trees(), fitModel$model$num_trees())
 
   loadModel <- loadPlpModel(savePath)
 

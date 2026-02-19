@@ -235,11 +235,7 @@ saveLoadLightGBM <- function() {
   rlang::check_installed("lightgbm")
   list(
     save = function(model, file) {
-      tmpFile <- tempfile("lgbm_model_", fileext = ".txt")
-      on.exit(unlink(tmpFile), add = TRUE)
-      lightgbm::lgb.save(model, tmpFile)
-
-      modelTxt <- paste(readLines(tmpFile, warn = FALSE), collapse = "\n")
+      modelTxt <- model$save_model_to_string(NULL)
 
       ParallelLogger::saveSettingsToJson(
         object = list(
