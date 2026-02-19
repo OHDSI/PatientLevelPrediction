@@ -328,6 +328,10 @@ test_that("test logistic regression runs", {
   )
 
   expect_true("covariateValue" %in% colnames(fitModel$covariateImportance))
+  expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
+  if (nrow(fitModel$trainDetails$hyperParamSearch) > 0) {
+    expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+  }
 
   expect_equal(fitModel$modelDesign$outcomeId, attr(trainData, "metaData")$outcomeId)
   expect_equal(fitModel$modelDesign$targetId, attr(trainData, "metaData")$targetId)

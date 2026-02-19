@@ -185,14 +185,19 @@ fitCyclopsModel <- function(
       x$out_sample_auc
     }))
     if (length(cvPerFold) > 0) {
+      cvMean <- mean(cvPerFold, na.rm = TRUE)
+      if (!is.finite(cvMean)) {
+        cvMean <- NA_real_
+      }
       cvPerFold <- data.frame(
         metric = "AUC",
-        fold = 1:length(cvPerFold),
-        value = cvPerFold,
+        fold = c("CV", paste0("Fold", seq_along(cvPerFold))),
+        value = c(cvMean, cvPerFold),
         startingVariance = ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance),
         lowerLimit = ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit),
         upperLimit = ifelse(is.null(param$upperLimit), "NULL", param$upperLimit),
-        tolerance = ifelse(is.null(settings$tolerance), "NULL", settings$tolerance)
+        tolerance = ifelse(is.null(settings$tolerance), "NULL", settings$tolerance),
+        stringsAsFactors = FALSE
       )
     } else {
       cvPerFold <- data.frame()
