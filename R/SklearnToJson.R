@@ -154,6 +154,12 @@ deSerializeTree <- function(tree_dict, nFeatures, nClasses, nOutputs) {
 }
 
 serializeDecisionTree <- function(model) {
+  nFeaturesIn <- if (reticulate::py_has_attr(model, "n_features_in_")) {
+    model$n_features_in_
+  } else {
+    model$tree_$n_features
+  }
+
   tree <- serializeTree(model$tree_)
   dtypes <- tree[[2]]
   tree <- tree[[1]]
@@ -163,7 +169,7 @@ serializeDecisionTree <- function(model) {
     "feature_importances_" = model$feature_importances_$tolist(),
     "max_features_" = model$max_features_,
     "n_classes_" = py$int(model$n_classes_),
-    "n_features_in_" = model$n_features_in_,
+    "n_features_in_" = nFeaturesIn,
     "n_outputs_" = model$n_outputs_,
     "tree_" = tree,
     "classes_" = model$classes_$tolist(),
@@ -190,7 +196,7 @@ deSerializeDecisionTree <- function(model_dict) {
   deserialized_model$classes_ <- np$array(model_dict["classes_"])
   deserialized_model$max_features_ <- model_dict["max_features_"]
   deserialized_model$n_classes_ <- model_dict["n_classes_"]
-  deserialized_model$n_features_in <- model_dict["n_features_in_"]
+  deserialized_model$n_features_in_ <- model_dict["n_features_in_"]
   deserialized_model$n_outputs_ <- model_dict["n_outputs_"]
 
   tree <- deSerializeTree(

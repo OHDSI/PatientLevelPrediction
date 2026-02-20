@@ -65,6 +65,9 @@ test_that("Random forest to json is correct", {
 
   loadedModel <- sklearnFromJson(path)
 
+  expect_true(reticulate::py_has_attr(loadedModel$estimators_[0], "n_features_in_"))
+  expect_no_error(sklearnToJson(loadedModel, path))
+
   loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
 
   expect_true(all.equal(predictions, loadedPredictions))
@@ -82,6 +85,9 @@ test_that("Adaboost to json is correct", {
   sklearnToJson(model, path)
 
   loadedModel <- sklearnFromJson(path)
+
+  expect_true(reticulate::py_has_attr(loadedModel$estimators_[0], "n_features_in_"))
+  expect_no_error(sklearnToJson(loadedModel, path))
 
   loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
 
