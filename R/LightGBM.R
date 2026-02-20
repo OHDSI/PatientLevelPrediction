@@ -235,10 +235,39 @@ saveLoadLightGBM <- function() {
   rlang::check_installed("lightgbm")
   list(
     save = function(model, file) {
-      lightgbm::lgb.save(model, file)
+      modelTxt <- model$save_model_to_string(NULL)
+
+      ParallelLogger::saveSettingsToJson(
+        object = list(
+          modelType = "lightGBM",
+          modelFormat = "lightgbm_txt",
+          model = modelTxt
+        ),
+        fileName = file
+      )
     },
     load = function(file) {
-      lightgbm::lgb.load(file)
+      firstLine <- tryCatch(readLines(file, n = 1, warn = FALSE), error = function(e) "")
+      firstLine <- trimws(firstLine)
+
+      wrapper <- NULL
+      if (nzchar(firstLine) && startsWith(firstLine, "{")) {
+        wrapper <- tryCatch(
+          ParallelLogger::loadSettingsFromJson(fileName = file),
+          error = function(e) NULL
+        )
+      }
+
+      if (!is.null(wrapper) &&
+        is.list(wrapper) &&
+        identical(wrapper$modelType, "lightGBM") &&
+        identical(wrapper$modelFormat, "lightgbm_txt") &&
+        is.character(wrapper$model) &&
+        length(wrapper$model) == 1) {
+        return(lightgbm::lgb.load(model_str = wrapper$model))
+      }
+
+      lightgbm::lgb.load(filename = file)
     }
   )
 }
