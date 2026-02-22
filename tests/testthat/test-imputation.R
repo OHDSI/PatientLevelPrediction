@@ -132,6 +132,65 @@ createMissingData <- function(trainData, missingness, test = FALSE) {
   missingData
 }
 
+makeWideMissingImputationData <- function(
+  n = 80,
+  nFeatures = 25,
+  missingness = 0.75,
+  seed = 1,
+  test = FALSE
+) {
+  stopifnot(nFeatures > 0, missingness >= 0, missingness < 1)
+  out <- makeToyImputationData(n = n, seed = seed)
+  if (test) {
+    out$folds <- NULL
+  }
+
+  labels <- out$labels
+  covariateIds <- seq_len(nFeatures) + 1000L
+  nObserved <- max(1L, floor(n * (1 - missingness)))
+
+  covariates <- withr::with_seed(seed, {
+    lapply(covariateIds, function(covariateId) {
+      observedRows <- sort(sample(labels$rowId, nObserved, replace = FALSE))
+      data.frame(
+        rowId = observedRows,
+        covariateId = covariateId,
+        covariateValue = runif(nObserved)
+      )
+    }) %>%
+      dplyr::bind_rows()
+  })
+
+  covariateRef <- data.frame(
+    covariateId = covariateIds,
+    covariateName = paste0("contFeature", covariateIds),
+    analysisId = covariateIds,
+    conceptId = covariateIds
+  )
+  analysisRef <- data.frame(
+    analysisId = covariateIds,
+    analysisName = rep("continuous", length(covariateIds)),
+    domainId = rep("measurement", length(covariateIds)),
+    startDay = rep(NA_real_, length(covariateIds)),
+    endDay = rep(NA_real_, length(covariateIds)),
+    isBinary = rep("N", length(covariateIds)),
+    missingMeansZero = rep("N", length(covariateIds))
+  )
+  Andromeda::appendToTable(
+    out$covariateData$covariates,
+    covariates
+  )
+  Andromeda::appendToTable(
+    out$covariateData$covariateRef,
+    covariateRef
+  )
+  Andromeda::appendToTable(
+    out$covariateData$analysisRef,
+    analysisRef
+  )
+  out
+}
+
 skip_if_no_sklearn_iterative <- function() {
   skip_if_not_installed("reticulate")
   available <- tryCatch(
@@ -404,6 +463,87 @@ test_that("simpleImpute works", {
     dplyr::filter(.data$covariateId == 666) %>%
     dplyr::collect()
   expect_equal(nrow(filteredCovariates), 0)
+})
+
+test_that("simpleImpute fills missing values across many continuous features", {
+  trainData <- makeWideMissingImputationData(
+    n = 80,
+    nFeatures = 30,
+    missingness = 0.8,
+    seed = 11,
+    test = FALSE
+  )
+  testData <- makeWideMissingImputationData(
+    n = 80,
+    nFeatures = 30,
+    missingness = 0.8,
+    seed = 12,
+    test = TRUE
+  )
+  imputer <- createSimpleImputer(
+    method = "mean",
+    missingThreshold = 0.95,
+    addMissingIndicator = FALSE
+  )
+
+  imputedTrain <- simpleImpute(trainData, imputer, done = FALSE)
+  settings <- attr(imputedTrain$covariateData, "metaData")$featureEngineering$simpleImputer$settings$featureEngineeringSettings
+  imputedTest <- simpleImpute(testData, settings, done = TRUE)
+
+  featureIds <- trainData$covariateData$covariateRef %>%
+    dplyr::collect() %>%
+    dplyr::pull(.data$covariateId)
+  trainObserved <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId %in% !!featureIds) %>%
+    dplyr::collect()
+  trainMeans <- trainObserved %>%
+    dplyr::group_by(.data$covariateId) %>%
+    dplyr::summarise(expectedValue = mean(.data$covariateValue), .groups = "drop")
+
+  trainCompleted <- imputedTrain$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId %in% !!featureIds) %>%
+    dplyr::collect() %>%
+    dplyr::count(.data$covariateId, name = "nRows")
+  expect_true(all(trainCompleted$nRows == nrow(trainData$labels)))
+
+  trainMissingPairs <- expand.grid(
+    rowId = trainData$labels$rowId,
+    covariateId = featureIds,
+    KEEP.OUT.ATTRS = FALSE
+  ) %>%
+    dplyr::anti_join(
+      trainObserved %>% dplyr::select("rowId", "covariateId"),
+      by = c("rowId", "covariateId")
+    )
+  trainImputedValues <- imputedTrain$covariateData$covariates %>%
+    dplyr::collect() %>%
+    dplyr::semi_join(trainMissingPairs, by = c("rowId", "covariateId")) %>%
+    dplyr::left_join(trainMeans, by = "covariateId")
+  expect_equal(trainImputedValues$covariateValue, trainImputedValues$expectedValue)
+
+  testObserved <- testData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId %in% !!featureIds) %>%
+    dplyr::collect()
+  testCompleted <- imputedTest$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId %in% !!featureIds) %>%
+    dplyr::collect() %>%
+    dplyr::count(.data$covariateId, name = "nRows")
+  expect_true(all(testCompleted$nRows == nrow(testData$labels)))
+
+  testMissingPairs <- expand.grid(
+    rowId = testData$labels$rowId,
+    covariateId = featureIds,
+    KEEP.OUT.ATTRS = FALSE
+  ) %>%
+    dplyr::anti_join(
+      testObserved %>% dplyr::select("rowId", "covariateId"),
+      by = c("rowId", "covariateId")
+    )
+  testImputedValues <- imputedTest$covariateData$covariates %>%
+    dplyr::collect() %>%
+    dplyr::semi_join(testMissingPairs, by = c("rowId", "covariateId")) %>%
+    dplyr::left_join(trainMeans, by = "covariateId")
+  expect_equal(testImputedValues$covariateValue, testImputedValues$expectedValue)
 })
 
 test_that("IterativeImputer works", {
