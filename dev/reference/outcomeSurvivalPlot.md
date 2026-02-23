@@ -82,7 +82,7 @@ plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 #> Removing subjects with no time at risk (if any)
 #> Outcome is 0 or 1
 #> Population created with: 995 observations, 995 unique subjects and 403 outcomes
-#> Population created in 0.0498 secs
+#> Population created in 0.0456 secs
 #> Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
 #> ℹ Please use `linewidth` instead.
 #> ℹ The deprecated feature was likely used in the ggpubr package.
