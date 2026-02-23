@@ -750,6 +750,77 @@ asSklearnImputedMatrix <- function(imputedData, nRows, nCols) {
   matrixData
 }
 
+appendSimpleImputedRows <- function(outputData,
+                                    covariates,
+                                    imputedValues,
+                                    rowIds,
+                                    indicatorMap = NULL,
+                                    tempData = NULL) {
+  if (is.null(imputedValues)) {
+    return(invisible(NULL))
+  }
+  imputedValues <- as.data.frame(imputedValues)
+  nImputed <- nrow(imputedValues)
+  if (nImputed == 0 || length(rowIds) == 0) {
+    return(invisible(NULL))
+  }
+  if (!all(c("covariateId", "imputedValues") %in% names(imputedValues))) {
+    stop("Imputed values must contain columns covariateId and imputedValues")
+  }
+  rowIds <- sort(unique(rowIds))
+  if (is.null(tempData)) {
+    tempData <- outputData$covariateData
+  }
+  tempData$tmpSimpleImputeRowIds <- data.frame(rowId = rowIds)
+  on.exit(tempData$tmpSimpleImputeRowIds <- NULL, add = TRUE)
+  tempData$tmpSimpleImputeValues <- imputedValues %>%
+    dplyr::select("covariateId", "imputedValues")
+  on.exit(tempData$tmpSimpleImputeValues <- NULL, add = TRUE)
+
+  candidatePairs <- tempData$tmpSimpleImputeRowIds %>%
+    dplyr::mutate(joinKey = 1L) %>%
+    dplyr::inner_join(
+      tempData$tmpSimpleImputeValues %>%
+        dplyr::transmute(
+          covariateId = .data$covariateId,
+          imputedValues = .data$imputedValues,
+          joinKey = 1L
+        ),
+      by = "joinKey"
+    ) %>%
+    dplyr::select(-"joinKey")
+  missingPairs <- candidatePairs %>%
+    dplyr::anti_join(
+      covariates %>%
+        dplyr::select("rowId", "covariateId"),
+      by = c("rowId", "covariateId")
+    )
+  imputedRows <- missingPairs %>%
+    dplyr::transmute(
+      rowId = .data$rowId,
+      covariateId = .data$covariateId,
+      covariateValue = .data$imputedValues
+    )
+  Andromeda::appendToTable(outputData$covariateData$covariates, imputedRows)
+  if (!is.null(indicatorMap) && nrow(indicatorMap) > 0) {
+    tempData$tmpSimpleImputeIndicators <- indicatorMap %>%
+      dplyr::select("sourceCovariateId", "indicatorCovariateId")
+    on.exit(tempData$tmpSimpleImputeIndicators <- NULL, add = TRUE)
+    indicatorRows <- missingPairs %>%
+      dplyr::inner_join(
+        tempData$tmpSimpleImputeIndicators,
+        by = c("covariateId" = "sourceCovariateId")
+      ) %>%
+      dplyr::transmute(
+        rowId = .data$rowId,
+        covariateId = .data$indicatorCovariateId,
+        covariateValue = 1
+      )
+    Andromeda::appendToTable(outputData$covariateData$covariates, indicatorRows)
+  }
+  invisible(NULL)
+}
+
 #' @title Simple Imputation
 #' @description This function does single imputation with the mean or median
 #' @param trainData The data to be imputed
@@ -792,32 +863,6 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     numericData <- featureData[[1]]
     on.exit(numericData <- NULL, add = TRUE)
 
-    allRowIds <- trainData$labels$rowId
-    allColumnIds <- numericData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      unique() %>%
-      sort()
-    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
-    numericData$covariates <- merge(completeIds, numericData$covariates,
-      all.x = TRUE
-    )
-    numericData$missingIndex <- numericData$covariates %>%
-      dplyr::filter(is.na(.data$covariateValue)) %>%
-      dplyr::select("rowId", "covariateId")
-
-    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
-      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
-      if (!is.null(indicatorInfo) &&
-        !is.null(indicatorInfo$map) &&
-        nrow(indicatorInfo$map) > 0) {
-        outputData <- appendMissingIndicatorValues(
-          outputData = outputData,
-          missingIndex = numericData$missingIndex,
-          indicatorMap = indicatorInfo$map
-        )
-      }
-    }
-
     if (featureEngineeringSettings$method == "mean") {
       numericData$imputedValues <- numericData$covariates %>%
         dplyr::group_by(.data$covariateId) %>%
@@ -829,36 +874,29 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
         dplyr::summarise(imputedValues = stats::median(.data$covariateValue, na.rm = TRUE))
     }
 
-    allRowIds <- outputData$labels$rowId
-    allColumnIds <- numericData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      unique() %>%
-      sort()
-    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
-    numericData$covariates <- merge(completeIds, numericData$covariates,
-      all.x = TRUE
-    )
-
-    numericData$imputedCovariates <- numericData$covariates %>%
-      dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
-        .data$imputedValues,
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("imputedValues"))
-    Andromeda::appendToTable(
-      outputData$covariateData$covariates,
-      numericData$imputedCovariates %>%
-        dplyr::filter(is.na(.data$covariateValue)) %>%
-        dplyr::mutate(covariateValue = .data$imputedValue) %>%
-        dplyr::select(-c("imputedValue"))
+    numericData$imputedValues <- numericData$imputedValues %>%
+      dplyr::collect()
+    indicatorMap <- NULL
+    if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
+      indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
+      if (!is.null(indicatorInfo) &&
+        !is.null(indicatorInfo$map) &&
+        nrow(indicatorInfo$map) > 0) {
+        indicatorMap <- indicatorInfo$map
+      }
+    }
+    appendSimpleImputedRows(
+      outputData = outputData,
+      covariates = numericData$covariates,
+      imputedValues = numericData$imputedValues,
+      rowIds = trainData$labels$rowId,
+      indicatorMap = indicatorMap,
+      tempData = numericData
     )
     attr(featureEngineeringSettings, "missingInfo") <-
       outputData$covariateData$missingInfo %>%
       dplyr::collect()
-    attr(featureEngineeringSettings, "imputer") <-
-      numericData$imputedValues %>% dplyr::collect()
+    attr(featureEngineeringSettings, "imputer") <- numericData$imputedValues
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying imputation to test data with simpleImputer
@@ -900,45 +938,23 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       dplyr::pull(.data$rowId) %>%
       unique() %>%
       sort()
-    allColumnIds <- numericData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      unique() %>%
-      sort()
-    completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
-    numericData$covariates <- merge(completeIds, numericData$covariates,
-      all.x = TRUE
-    )
-    numericData$missingIndex <- numericData$covariates %>%
-      dplyr::filter(is.na(.data$covariateValue)) %>%
-      dplyr::select("rowId", "covariateId")
-
+    numericData$imputedValues <- attr(featureEngineeringSettings, "imputer")
+    indicatorMap <- NULL
     if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
       indicatorInfo <- attr(featureEngineeringSettings, "missingIndicatorInfo")
       if (!is.null(indicatorInfo) &&
         !is.null(indicatorInfo$map) &&
         nrow(indicatorInfo$map) > 0) {
-        outputData <- appendMissingIndicatorValues(
-          outputData = outputData,
-          missingIndex = numericData$missingIndex,
-          indicatorMap = indicatorInfo$map
-        )
+        indicatorMap <- indicatorInfo$map
       }
     }
-    numericData$imputedValues <- attr(featureEngineeringSettings, "imputer")
-    numericData$imputedCovariates <- numericData$covariates %>%
-      dplyr::left_join(numericData$imputedValues, by = "covariateId") %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::mutate(imputedValue = ifelse(is.na(.data$covariateValue),
-        .data$imputedValues,
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("imputedValues"))
-    Andromeda::appendToTable(
-      outputData$covariateData$covariates,
-      numericData$imputedCovariates %>%
-        dplyr::filter(is.na(.data$covariateValue)) %>%
-        dplyr::mutate(covariateValue = .data$imputedValue) %>%
-        dplyr::select(-c("imputedValue"))
+    appendSimpleImputedRows(
+      outputData = outputData,
+      covariates = numericData$covariates,
+      imputedValues = numericData$imputedValues,
+      rowIds = allRowIds,
+      indicatorMap = indicatorMap,
+      tempData = numericData
     )
   }
   featureEngineering <- list(
