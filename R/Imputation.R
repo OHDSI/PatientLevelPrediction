@@ -760,7 +760,7 @@ appendSimpleImputedRows <- function(outputData,
     return(invisible(NULL))
   }
   imputedValues <- as.data.frame(imputedValues)
-  nImputed <- NROW(imputedValues)
+  nImputed <- nrow(imputedValues)
   if (nImputed == 0 || length(rowIds) == 0) {
     return(invisible(NULL))
   }
