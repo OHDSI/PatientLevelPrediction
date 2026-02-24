@@ -39,6 +39,7 @@ data extracted from the CDM.}
 \itemize{
 \item \code{setLassoLogisticRegression()} A lasso logistic regression model
 \item \code{setGradientBoostingMachine()} A gradient boosting machine
+\item \code{setCatBoost()} A CatBoost model
 \item \code{setAdaBoost()} An ada boost model
 \item \code{setRandomForest()} A random forest model
 \item \code{setDecisionTree()} A decision tree model

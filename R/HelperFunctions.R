@@ -45,6 +45,20 @@ checkSklearn <- function() {
   })
 }
 
+checkCatBoostPython <- function() {
+  rlang::check_installed(
+    "reticulate",
+    reason = "Reticulate is required to use Python CatBoost models"
+  )
+  reticulate::py_require(c("catboost", "scipy"))
+  tryCatch({
+    reticulate::import("catboost")
+    reticulate::import("scipy")
+  }, error = function(e) {
+    stop("catboost and scipy in a python environment reachable by reticulate are required to use CatBoost models")
+  })
+}
+
 #' Create a temporary model location
 #' @return A string for the location of the temporary model location
 #' @examples

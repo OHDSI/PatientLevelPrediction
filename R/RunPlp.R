@@ -51,6 +51,7 @@
 #'                                         \itemize{
 #'                                         \item setLassoLogisticRegression() A lasso logistic regression model
 #'                                         \item setGradientBoostingMachine() A gradient boosting machine
+#'                                         \item setCatBoost() A CatBoost model
 #'                                         \item setAdaBoost() An ada boost model
 #'                                         \item setRandomForest() A random forest model
 #'                                         \item setDecisionTree() A decision tree model
