@@ -896,7 +896,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     attr(featureEngineeringSettings, "missingInfo") <-
       outputData$covariateData$missingInfo %>%
       dplyr::collect()
-    attr(featureEngineeringSettings, "imputer") <- numericData$imputedValues
+    attr(featureEngineeringSettings, "imputer") <- as.data.frame(numericData$imputedValues)
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying imputation to test data with simpleImputer

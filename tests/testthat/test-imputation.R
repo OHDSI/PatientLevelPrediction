@@ -546,6 +546,35 @@ test_that("simpleImpute fills missing values across many continuous features", {
   expect_equal(testImputedValues$covariateValue, testImputedValues$expectedValue)
 })
 
+test_that("simpleImpute stores serializable imputer metadata", {
+  trainData <- makeToyImputationData(n = 80, seed = 13)
+  missingData <- createMissingData(trainData, 0.2)
+  imputer <- createSimpleImputer(
+    method = "mean",
+    missingThreshold = 0.3,
+    addMissingIndicator = FALSE
+  )
+
+  imputedData <- simpleImpute(missingData, imputer, done = FALSE)
+  settings <- attr(imputedData$covariateData, "metaData")$featureEngineering$simpleImputer$settings$featureEngineeringSettings
+  imputedValues <- attr(settings, "imputer")
+
+  expect_false(inherits(imputedValues, "tbl_Andromeda"))
+  expect_true(is.data.frame(imputedValues))
+  expect_true(all(c("covariateId", "imputedValues") %in% colnames(imputedValues)))
+
+  serializablePreprocessing <- list(
+    featureEngineering = list(
+      simpleImputer = list(
+        funct = "simpleImpute",
+        settings = list(featureEngineeringSettings = settings, done = TRUE)
+      )
+    )
+  )
+  jsonFile <- tempfile(fileext = ".json")
+  expect_no_error(ParallelLogger::saveSettingsToJson(serializablePreprocessing, jsonFile))
+})
+
 test_that("IterativeImputer works", {
   skip_if_not_installed("glmnet")
   trainData <- makeToyImputationData(n = 80, seed = 7)
