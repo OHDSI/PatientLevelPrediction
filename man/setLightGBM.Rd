@@ -8,9 +8,9 @@
 setLightGBM(
   nthread = 20,
   earlyStopRound = 25,
-  numIterations = c(100),
+  numIterations = c(100, 300),
   numLeaves = c(31),
-  maxDepth = c(5, 10),
+  maxDepth = c(4, 6, 8),
   minDataInLeaf = c(20),
   learningRate = c(0.05, 0.1, 0.3),
   lambdaL1 = c(0),
@@ -55,8 +55,8 @@ Create setting for gradient boosting machine model using lightGBM
 \examples{
 \dontshow{if (rlang::is_installed("lightgbm")) withAutoprint(\{ # examplesIf}
 modelLightGbm <- setLightGBM(
-  numLeaves = c(20, 31, 50), maxDepth = c(-1, 5, 10),
-  minDataInLeaf = c(10, 20, 30), learningRate = c(0.05, 0.1, 0.3)
+  numIterations = c(100, 300), maxDepth = c(4, 6, 8),
+  learningRate = c(0.05, 0.1, 0.3)
 )
 \dontshow{\}) # examplesIf}
 }

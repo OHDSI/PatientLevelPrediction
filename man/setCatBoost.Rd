@@ -6,8 +6,8 @@
 \usage{
 setCatBoost(
   iterations = c(100, 300),
-  depth = c(6, 8),
-  learningRate = c(0.03, 0.1),
+  depth = c(4, 6, 8),
+  learningRate = c(0.05, 0.1, 0.3),
   l2LeafReg = c(3),
   randomStrength = c(1),
   borderCount = c(254),
@@ -55,8 +55,8 @@ Create settings for CatBoost classifier using Python catboost
 \dontrun{
 modelCatBoost <- setCatBoost(
   iterations = c(100, 300),
-  depth = c(6, 8),
-  learningRate = c(0.03, 0.1)
+  depth = c(4, 6, 8),
+  learningRate = c(0.05, 0.1, 0.3)
 )
 }
 }
