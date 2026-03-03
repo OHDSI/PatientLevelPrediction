@@ -114,3 +114,154 @@ test_that("addModelSetting derives modelType from supported paths and sanitizes 
     expect_equal(res$modelType[1], expectedModelTypes[i])
   }
 })
+
+test_that("addHyperparameterSetting deduplicates identical settings json", {
+  skip_if_not_installed("RSQLite")
+
+  sqliteFile <- file.path(tempdir(), "plp-hyperparameter-setting.sqlite")
+  if (file.exists(sqliteFile)) unlink(sqliteFile)
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteFile
+  )
+
+  PatientLevelPrediction::createPlpResultTables(
+    connectionDetails = connectionDetails,
+    targetDialect = "sqlite",
+    resultSchema = "main",
+    deleteTables = TRUE,
+    createTables = TRUE,
+    tablePrefix = "",
+    tempEmulationSchema = NULL
+  )
+
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  hyperparameterSettings <- PatientLevelPrediction::createHyperparameterSettings(
+    search = "grid"
+  )
+
+  firstId <- PatientLevelPrediction:::addHyperparameterSetting(
+    conn = conn,
+    resultSchema = "main",
+    targetDialect = "sqlite",
+    tablePrefix = "",
+    json = hyperparameterSettings,
+    tempEmulationSchema = NULL
+  )
+  secondId <- PatientLevelPrediction:::addHyperparameterSetting(
+    conn = conn,
+    resultSchema = "main",
+    targetDialect = "sqlite",
+    tablePrefix = "",
+    json = hyperparameterSettings,
+    tempEmulationSchema = NULL
+  )
+
+  expect_equal(firstId, secondId)
+
+  res <- DatabaseConnector::querySql(
+    conn,
+    "select count(*) as n from main.hyperparameter_settings;"
+  )
+  expect_equal(res$n[1], 2)
+})
+
+test_that("insertModelDesignInDatabase differentiates model_design_id by hyperparameter settings", {
+  skip_if_not_installed("RSQLite")
+
+  sqliteFile <- file.path(tempdir(), "plp-model-design-hyperparameter.sqlite")
+  if (file.exists(sqliteFile)) unlink(sqliteFile)
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteFile
+  )
+
+  PatientLevelPrediction::createPlpResultTables(
+    connectionDetails = connectionDetails,
+    targetDialect = "sqlite",
+    resultSchema = "main",
+    deleteTables = TRUE,
+    createTables = TRUE,
+    tablePrefix = "",
+    tempEmulationSchema = NULL
+  )
+
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  databaseSchemaSettings <- PatientLevelPrediction::createDatabaseSchemaSettings(
+    resultSchema = "main",
+    targetDialect = "sqlite",
+    tempEmulationSchema = NULL
+  )
+
+  baseModelSettings <- PatientLevelPrediction::setLassoLogisticRegression(seed = 42)
+  cohortDefinitions <- data.frame(
+    cohortName = c("target", "outcome"),
+    cohortId = c(1, 2),
+    json = c("{}", "{}"),
+    stringsAsFactors = FALSE
+  )
+
+  modelDesignGrid <- PatientLevelPrediction::createModelDesign(
+    targetId = 1,
+    outcomeId = 2,
+    modelSettings = baseModelSettings,
+    hyperparameterSettings = PatientLevelPrediction::createHyperparameterSettings(
+      search = "grid"
+    )
+  )
+  modelDesignRandom <- PatientLevelPrediction::createModelDesign(
+    targetId = 1,
+    outcomeId = 2,
+    modelSettings = baseModelSettings,
+    hyperparameterSettings = PatientLevelPrediction::createHyperparameterSettings(
+      search = "random",
+      sampleSize = 1,
+      randomSeed = 42
+    )
+  )
+
+  modelDesignGridId <- PatientLevelPrediction:::insertModelDesignInDatabase(
+    object = modelDesignGrid,
+    conn = conn,
+    databaseSchemaSettings = databaseSchemaSettings,
+    cohortDefinitions = cohortDefinitions
+  )
+  modelDesignRandomId <- PatientLevelPrediction:::insertModelDesignInDatabase(
+    object = modelDesignRandom,
+    conn = conn,
+    databaseSchemaSettings = databaseSchemaSettings,
+    cohortDefinitions = cohortDefinitions
+  )
+  modelDesignGridIdRepeat <- PatientLevelPrediction:::insertModelDesignInDatabase(
+    object = modelDesignGrid,
+    conn = conn,
+    databaseSchemaSettings = databaseSchemaSettings,
+    cohortDefinitions = cohortDefinitions
+  )
+
+  expect_equal(modelDesignGridId, modelDesignGridIdRepeat)
+  expect_false(modelDesignGridId == modelDesignRandomId)
+
+  modelDesignRows <- DatabaseConnector::querySql(
+    conn,
+    paste0(
+      "select model_design_id as modelDesignId, ",
+      "hyperparameter_setting_id as hyperparameterSettingId ",
+      "from main.model_designs where model_design_id in (",
+      modelDesignGridId, ", ", modelDesignRandomId, ");"
+    )
+  )
+  expect_equal(length(unique(modelDesignRows$hyperparameterSettingId)), 2)
+
+  hyperparameterRows <- DatabaseConnector::querySql(
+    conn,
+    "select count(*) as n from main.hyperparameter_settings;"
+  )
+  expect_gte(hyperparameterRows$n[1], 2)
+})

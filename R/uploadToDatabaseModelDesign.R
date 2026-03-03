@@ -208,6 +208,20 @@ insertModelDesignSettings <- function(
   )
   ParallelLogger::logInfo(paste0("splitId: ", splitId))
 
+  hyperparameterSettings <- object$hyperparameterSettings
+  if (is.null(hyperparameterSettings)) {
+    hyperparameterSettings <- createHyperparameterSettings()
+  }
+  hyperparameterSetId <- addHyperparameterSetting(
+    conn = conn,
+    resultSchema = databaseSchemaSettings$resultSchema,
+    targetDialect = databaseSchemaSettings$targetDialect,
+    json = hyperparameterSettings,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
+    tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
+  ParallelLogger::logInfo(paste0("hyperparameterSetId: ", hyperparameterSetId))
+
   # create this function
   modelDesignId <- addModelDesign( # need to create
     conn = conn,
@@ -224,6 +238,7 @@ insertModelDesignSettings <- function(
     splitSettingId = splitId, # changed from trainingId
     featureEngineeringSettingId = FESetId,
     tidyCovariatesSettingId = tidySetId,
+    hyperparameterSettingId = hyperparameterSetId,
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
@@ -247,6 +262,7 @@ addModelDesign <- function(
     splitSettingId,
     featureEngineeringSettingId,
     tidyCovariatesSettingId,
+    hyperparameterSettingId,
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   if (is.null(targetId)) {
     stop("targetId is null")
@@ -282,6 +298,9 @@ addModelDesign <- function(
   if (is.null(tidyCovariatesSettingId)) {
     stop("tidyCovariatesSettingId is null")
   }
+  if (is.null(hyperparameterSettingId)) {
+    stop("hyperparameterSettingId is null")
+  }
 
   # process json to make it ordered...
   # TODO
@@ -303,7 +322,8 @@ addModelDesign <- function(
       "sample_setting_id",
       "split_setting_id",
       "feature_engineering_setting_id",
-      "tidy_covariates_setting_id"
+      "tidy_covariates_setting_id",
+      "hyperparameter_setting_id"
     ),
     values = c(
       targetId,
@@ -316,7 +336,8 @@ addModelDesign <- function(
       sampleSettingId,
       splitSettingId,
       featureEngineeringSettingId,
-      tidyCovariatesSettingId
+      tidyCovariatesSettingId,
+      hyperparameterSettingId
     ),
     tempEmulationSchema = tempEmulationSchema
   )
@@ -334,7 +355,8 @@ addModelDesign <- function(
     sample_setting_id,
     split_setting_id,
     feature_engineering_setting_id,
-    tidy_covariates_setting_id
+    tidy_covariates_setting_id,
+    hyperparameter_setting_id
     ) VALUES
   (
   @target_id,
@@ -347,7 +369,8 @@ addModelDesign <- function(
   @sample_setting_id,
   @split_setting_id,
   @feature_engineering_setting_id,
-  @tidy_covariates_setting_id
+  @tidy_covariates_setting_id,
+  @hyperparameter_setting_id
     )"
     sql <- SqlRender::render(
       sql,
@@ -363,6 +386,7 @@ addModelDesign <- function(
       split_setting_id = splitSettingId,
       feature_engineering_setting_id = featureEngineeringSettingId,
       tidy_covariates_setting_id = tidyCovariatesSettingId,
+      hyperparameter_setting_id = hyperparameterSettingId,
       string_to_append = tablePrefix
     )
     sql <- SqlRender::translate(sql,
@@ -389,7 +413,8 @@ addModelDesign <- function(
         "sample_setting_id",
         "split_setting_id",
         "feature_engineering_setting_id",
-        "tidy_covariates_setting_id"
+        "tidy_covariates_setting_id",
+        "hyperparameter_setting_id"
       ),
       values = c(
         targetId,
@@ -402,7 +427,8 @@ addModelDesign <- function(
         sampleSettingId,
         splitSettingId,
         featureEngineeringSettingId,
-        tidyCovariatesSettingId
+        tidyCovariatesSettingId,
+        hyperparameterSettingId
       ),
       tempEmulationSchema = tempEmulationSchema
     )
@@ -1013,6 +1039,69 @@ addSplitSettings <- function(
     )
   } else {
     ParallelLogger::logInfo("Split setting exists")
+  }
+
+  return(jsonId)
+}
+
+addHyperparameterSetting <- function(
+    conn,
+    resultSchema,
+    targetDialect,
+    tablePrefix = "",
+    json,
+    tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
+  if (!inherits(x = json, what = "character")) {
+    json <- orderJson(json) # to ensure attributes are alphabetic order
+    json <- ParallelLogger::convertSettingsToJson(json)
+    json <- as.character(json) # now convert to character
+  }
+
+  jsonId <- checkJson(
+    conn = conn,
+    resultSchema = resultSchema,
+    tablePrefix = tablePrefix,
+    targetDialect = targetDialect,
+    tableName = "hyperparameter_settings",
+    jsonColumnName = "hyperparameterSettingsJson",
+    id = "hyperparameterSettingId",
+    json = json,
+    tempEmulationSchema = tempEmulationSchema
+  )
+
+  if (is.null(jsonId)) {
+    ParallelLogger::logInfo("Adding new hyperparameter settings")
+
+    data <- data.frame(
+      hyperparameterSettingsJson = json
+    )
+
+    DatabaseConnector::insertTable(
+      connection = conn,
+      databaseSchema = resultSchema,
+      tableName = paste0(tablePrefix, "hyperparameter_settings"),
+      data = data,
+      dropTableIfExists = FALSE,
+      createTable = FALSE,
+      tempTable = FALSE,
+      progressBar = TRUE,
+      camelCaseToSnakeCase = TRUE,
+      tempEmulationSchema = tempEmulationSchema
+    )
+
+    jsonId <- checkJson(
+      conn = conn,
+      resultSchema = resultSchema,
+      tablePrefix = tablePrefix,
+      targetDialect = targetDialect,
+      tableName = "hyperparameter_settings",
+      jsonColumnName = "hyperparameterSettingsJson",
+      id = "hyperparameterSettingId",
+      json = json,
+      tempEmulationSchema = tempEmulationSchema
+    )
+  } else {
+    ParallelLogger::logInfo("Hyperparameter setting exists")
   }
 
   return(jsonId)
