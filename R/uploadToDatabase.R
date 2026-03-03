@@ -968,6 +968,7 @@ getPlpResultTables <- function() {
       "MODELS",
       "MODEL_DESIGNS",
       "MODEL_SETTINGS",
+      "HYPERPARAMETER_SETTINGS",
       "COVARIATE_SETTINGS",
       "POPULATION_SETTINGS",
       "FEATURE_ENGINEERING_SETTINGS",
