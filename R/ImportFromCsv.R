@@ -277,6 +277,20 @@ getModelDesignSettingTable <- function(modeldesignsRow) {
       "preprocessSettings"
     )
   )
+
+  if ("hyperparameter_setting_id" %in% colnames(modeldesignsRow) &&
+    !is.na(modeldesignsRow$hyperparameter_setting_id[1])) {
+    hyperparameterRow <- data.frame(
+      tableName = "hyperparameter_settings",
+      idColumn = "hyperparameter_setting_id",
+      jsonColumn = "hyperparameter_settings_json",
+      convertJson = TRUE,
+      value = modeldesignsRow$hyperparameter_setting_id[1],
+      modelDesignInput = "hyperparameterSettings"
+    )
+    result <- rbind(result, hyperparameterRow)
+  }
+
   return(result)
 }
 
@@ -392,7 +406,7 @@ extractObjectFromCsv <- function(
 
   modelDesignId <- poi$model_design_id
   modeldesigns <- readr::read_csv(file.path(csvFolder, csvFileNames[grep("model_designs", csvFileNames)]))
-  # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id
+  # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id	hyperparameter_setting_id
   modeldesigns <- modeldesigns[modeldesigns$model_design_id == modelDesignId, , ]
 
   modelDesignSettingTable <- getModelDesignSettingTable(
@@ -558,7 +572,7 @@ extractDiagnosticFromCsv <- function(
 
   modelDesignId <- doi$model_design_id
   modeldesigns <- readr::read_csv(file.path(csvFolder, csvFileNames[grep("model_designs", csvFileNames)]))
-  # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id
+  # model_design_id	target_id	outcome_id	tar_id	plp_data_setting_id	population_setting_id	model_setting_id	covariate_setting_id	sample_setting_id	split_setting_id	feature_engineering_setting_id	tidy_covariates_setting_id	hyperparameter_setting_id
   modeldesigns <- modeldesigns[modeldesigns$model_design_id == modelDesignId, , ]
 
   modelDesignSettingTable <- getModelDesignSettingTable(
