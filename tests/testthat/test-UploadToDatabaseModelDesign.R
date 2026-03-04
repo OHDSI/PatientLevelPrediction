@@ -143,6 +143,11 @@ test_that("addHyperparameterSetting deduplicates identical settings json", {
     search = "grid"
   )
 
+  rowCountBefore <- DatabaseConnector::querySql(
+    conn,
+    "select count(*) as n from main.hyperparameter_settings;"
+  )
+
   firstId <- PatientLevelPrediction:::addHyperparameterSetting(
     conn = conn,
     resultSchema = "main",
@@ -162,11 +167,11 @@ test_that("addHyperparameterSetting deduplicates identical settings json", {
 
   expect_equal(firstId, secondId)
 
-  res <- DatabaseConnector::querySql(
+  rowCountAfter <- DatabaseConnector::querySql(
     conn,
     "select count(*) as n from main.hyperparameter_settings;"
   )
-  expect_equal(res$n[1], 2)
+  expect_equal(rowCountAfter$n[1], rowCountBefore$n[1] + 1)
 })
 
 test_that("insertModelDesignInDatabase differentiates model_design_id by hyperparameter settings", {
