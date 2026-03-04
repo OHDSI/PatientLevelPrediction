@@ -635,36 +635,68 @@ addCovariateSetting <- function(conn, resultSchema, targetDialect,
 }
 
 
+extractModelSettingField <- function(json, fieldName, missingValue = NA_character_) {
+  candidate <- NULL
+  if (is.list(json)) {
+    if (!is.null(json$settings) && is.list(json$settings)) {
+      candidate <- json$settings[[fieldName]]
+    }
+
+    if (is.null(candidate) && !is.null(json$param)) {
+      paramSettings <- attr(json$param, "settings")
+      if (is.list(paramSettings)) {
+        candidate <- paramSettings[[fieldName]]
+      }
+    }
+  }
+
+  if (is.null(candidate) || is.list(candidate) || length(candidate) == 0) {
+    return(missingValue)
+  }
+
+  candidate <- as.character(candidate)[1]
+  if (is.na(candidate) || !nzchar(trimws(candidate))) {
+    return(missingValue)
+  }
+
+  trimws(candidate)
+}
+
+hasModelSettingColumn <- function(conn,
+                                  resultSchema,
+                                  targetDialect,
+                                  tablePrefix = "",
+                                  columnName,
+                                  tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
+  sql <- "SELECT * FROM @result_schema.@table_name WHERE 1 = 0;"
+  sql <- SqlRender::render(
+    sql,
+    result_schema = resultSchema,
+    table_name = paste0(tablePrefix, "model_settings")
+  )
+  sql <- SqlRender::translate(
+    sql,
+    targetDialect = targetDialect,
+    tempEmulationSchema = tempEmulationSchema
+  )
+  result <- DatabaseConnector::querySql(conn = conn, sql = sql)
+  tolower(columnName) %in% tolower(colnames(result))
+}
+
 addModelSetting <- function(conn, resultSchema, targetDialect,
                             tablePrefix = "",
                             json,
                             tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
-  modelType <- "NULL"
-  if (is.list(json)) {
-    modelTypeCandidate <- NULL
-
-    if (!is.null(json$settings) && is.list(json$settings)) {
-      modelTypeCandidate <- json$settings$modelType
-    }
-
-    if (is.null(modelTypeCandidate) && !is.null(json$param)) {
-      paramSettings <- attr(json$param, "settings")
-      if (is.list(paramSettings)) {
-        modelTypeCandidate <- paramSettings$modelType
-      }
-    }
-
-    if (!is.null(modelTypeCandidate)) {
-      if (is.list(modelTypeCandidate) || length(modelTypeCandidate) == 0) {
-        modelType <- "NULL"
-      } else {
-        modelType <- as.character(modelTypeCandidate)[1]
-        if (is.na(modelType) || !nzchar(modelType)) {
-          modelType <- "NULL"
-        }
-      }
-    }
-  }
+  modelType <- extractModelSettingField(
+    json = json,
+    fieldName = "modelType",
+    missingValue = "NULL"
+  )
+  modelName <- extractModelSettingField(
+    json = json,
+    fieldName = "modelName",
+    missingValue = NA_character_
+  )
   # process json to make it ordered...
   # make sure the json has been converted
   if (!inherits(x = json, what = "character")) {
@@ -688,10 +720,23 @@ addModelSetting <- function(conn, resultSchema, targetDialect,
   if (is.null(jsonId)) {
     ParallelLogger::logInfo("Adding new model settings")
 
+    hasModelNameColumn <- hasModelSettingColumn(
+      conn = conn,
+      resultSchema = resultSchema,
+      targetDialect = targetDialect,
+      tablePrefix = tablePrefix,
+      columnName = "model_name",
+      tempEmulationSchema = tempEmulationSchema
+    )
+
     data <- data.frame(
       modelType = modelType,
       modelSettingsJson = json
     )
+    if (hasModelNameColumn) {
+      data$modelName <- modelName
+      data <- data[c("modelType", "modelName", "modelSettingsJson")]
+    }
     DatabaseConnector::insertTable(
       connection = conn,
       databaseSchema = resultSchema,
