@@ -20,7 +20,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/OHDSI/PatientLevelPrediction/blob/main/inst/CITATION)
+[`inst/CITATION`](https://github.com/OHDSI/PatientLevelPrediction/blob/v6.6.0/inst/CITATION)
 
 Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). “Design
 and implementation of a standardized framework to generate and evaluate

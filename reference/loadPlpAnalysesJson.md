@@ -32,7 +32,7 @@ modelDesign <- createModelDesign(targetId = 1, outcomeId = 2,
                                  modelSettings = setLassoLogisticRegression())
 saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
 savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
-#> [1] "/tmp/RtmpKatQSO/loadPlpAnalysesJson/predictionAnalysisList.json"
+#> [1] "/tmp/RtmpAqRl34/loadPlpAnalysesJson/predictionAnalysisList.json"
 loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $plpVersion
 #> [1] "6.6.0"
@@ -384,8 +384,8 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #>     }
 #>     result
 #> }
-#> <bytecode: 0x55bc340a4e40>
-#> <environment: 0x55bc340af2a0>
+#> <bytecode: 0x558bdfb12b10>
+#> <environment: 0x558bdfb15450>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
