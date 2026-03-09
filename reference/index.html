@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,8 +61,7 @@
 
       <div class="section-desc"><p>Functions for getting the necessary data from the database in Common Data Model and saving/loading.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -73,55 +72,64 @@
 
         </dt>
         <dd>Create a setting that holds the details about the cdmDatabase connection for data extraction</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createRestrictPlpDataSettings.html">createRestrictPlpDataSettings()</a></code>
 
         </dt>
         <dd>createRestrictPlpDataSettings define extra restriction settings when calling getPlpData</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getPlpData.html">getPlpData()</a></code>
 
         </dt>
         <dd>Extract the patient level prediction data from the server</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getEunomiaPlpData.html">getEunomiaPlpData()</a></code>
 
         </dt>
         <dd>Create a plpData object from the Eunomia database'</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="savePlpData.html">savePlpData()</a></code>
 
         </dt>
         <dd>Save the plpData to folder</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPlpData.html">loadPlpData()</a></code>
 
         </dt>
         <dd>Load the plpData from a folder</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getCohortCovariateData.html">getCohortCovariateData()</a></code>
 
         </dt>
         <dd>Extracts covariates based on cohorts</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="print.plpData.html">print(<i>&lt;plpData&gt;</i>)</a></code>
 
         </dt>
         <dd>Print a plpData object</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="print.summary.plpData.html">print(<i>&lt;summary.plpData&gt;</i>)</a></code>
 
         </dt>
         <dd>Print a summary.plpData object</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="summary.plpData.html">summary(<i>&lt;plpData&gt;</i>)</a></code>
 
@@ -132,8 +140,7 @@
 
       <div class="section-desc"><p>Design settings required when developing a model.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -144,43 +151,61 @@
 
         </dt>
         <dd>create the study population settings</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createDefaultSplitSetting.html">createDefaultSplitSetting()</a></code>
 
         </dt>
         <dd>Create the settings for defining how the plpData are split into test/validation/train sets using default splitting functions (either random stratified by outcome, time or subject splitting)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createExistingSplitSettings.html">createExistingSplitSettings()</a></code>
 
         </dt>
         <dd>Create the settings for defining how the plpData are split into test/validation/train sets using an existing split - good to use for reproducing results from a different run</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createSampleSettings.html">createSampleSettings()</a></code>
 
         </dt>
         <dd>Create the settings for defining how the trainData from <code>splitData</code> are sampled using default sample functions.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createFeatureEngineeringSettings.html">createFeatureEngineeringSettings()</a></code>
 
         </dt>
         <dd>Create the settings for defining any feature engineering that will be done</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createPreprocessSettings.html">createPreprocessSettings()</a></code>
 
         </dt>
         <dd>Create the settings for preprocessing the trainData.</dd>
+
+        <dt>
+
+          <code><a href="createHyperparameterSettings.html">createHyperparameterSettings()</a></code>
+
+        </dt>
+        <dd>Create Hyperparameter Settings</dd>
+
+        <dt>
+
+          <code><a href="createTuningMetric.html">createTuningMetric()</a></code>
+
+        </dt>
+        <dd>Create a tuning metric descriptor</dd>
       </dl></div><div class="section level2">
       <h2 id="optional-design-settings">Optional design settings<a class="anchor" aria-label="anchor" href="#optional-design-settings"></a></h2>
 
       <div class="section-desc"><p>Settings for optional steps that can be used in the PLP pipeline</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -191,49 +216,64 @@
 
         </dt>
         <dd>Extracts covariates based on cohorts</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createRandomForestFeatureSelection.html">createRandomForestFeatureSelection()</a></code>
 
         </dt>
         <dd>Create the settings for random foreat based feature selection</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createUnivariateFeatureSelection.html">createUnivariateFeatureSelection()</a></code>
 
         </dt>
         <dd>Create the settings for defining any feature selection that will be done</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createSplineSettings.html">createSplineSettings()</a></code>
 
         </dt>
         <dd>Create the settings for adding a spline for continuous variables</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createStratifiedImputationSettings.html">createStratifiedImputationSettings()</a></code>
 
         </dt>
         <dd>Create the settings for using stratified imputation.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createNormalizer.html">createNormalizer()</a></code>
 
         </dt>
         <dd>Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createSimpleImputer.html">createSimpleImputer()</a></code>
 
         </dt>
         <dd>Create Simple Imputer settings</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createIterativeImputer.html">createIterativeImputer()</a></code>
 
         </dt>
         <dd>Create Iterative Imputer settings</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="createSklearnIterativeImputer.html">createSklearnIterativeImputer()</a></code>
+
+        </dt>
+        <dd>Create scikit-learn Iterative Imputer settings</dd>
+
+        <dt>
 
           <code><a href="createRareFeatureRemover.html">createRareFeatureRemover()</a></code>
 
@@ -244,8 +284,7 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -256,25 +295,29 @@
 
         </dt>
         <dd>createValidationDesign - Define the validation design for external validation</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="validateExternal.html">validateExternal()</a></code>
 
         </dt>
         <dd>validateExternal - Validate model performance on new data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createValidationSettings.html">createValidationSettings()</a></code>
 
         </dt>
         <dd>createValidationSettings define optional settings for performing external validation</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="recalibratePlp.html">recalibratePlp()</a></code>
 
         </dt>
         <dd>recalibratePlp</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="recalibratePlpRefit.html">recalibratePlpRefit()</a></code>
 
@@ -285,8 +328,7 @@
 
       <div class="section-desc"><p>Execution settings required when developing a model.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -297,13 +339,15 @@
 
         </dt>
         <dd>Create the settings for logging the progression of the analysis</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createExecuteSettings.html">createExecuteSettings()</a></code>
 
         </dt>
         <dd>Creates list of settings specifying what parts of runPlp to execute</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createDefaultExecuteSettings.html">createDefaultExecuteSettings()</a></code>
 
@@ -314,8 +358,7 @@
 
       <div class="section-desc"><p>Functions for creating binary models</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -326,55 +369,71 @@
 
         </dt>
         <dd>Create setting for AdaBoost with python DecisionTreeClassifier base estimator</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setDecisionTree.html">setDecisionTree()</a></code>
 
         </dt>
         <dd>Create setting for the scikit-learn DecisionTree with python</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setGradientBoostingMachine.html">setGradientBoostingMachine()</a></code>
 
         </dt>
         <dd>Create setting for gradient boosting machine model using gbm_xgboost implementation</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setLassoLogisticRegression.html">setLassoLogisticRegression()</a></code>
 
         </dt>
         <dd>Create modelSettings for lasso logistic regression</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="setRidgeRegression.html">setRidgeRegression()</a></code>
+
+        </dt>
+        <dd>Create modelSettings for ridge logistic regression</dd>
+
+        <dt>
 
           <code><a href="setMLP.html">setMLP()</a></code>
 
         </dt>
         <dd>Create setting for neural network model with python's scikit-learn. For bigger models, consider using <code>DeepPatientLevelPrediction</code> package.</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setNaiveBayes.html">setNaiveBayes()</a></code>
 
         </dt>
         <dd>Create setting for naive bayes model with python</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setRandomForest.html">setRandomForest()</a></code>
 
         </dt>
         <dd>Create setting for random forest model using sklearn</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setSVM.html">setSVM()</a></code>
 
         </dt>
         <dd>Create setting for the python sklearn SVM (SVC function)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setIterativeHardThresholding.html">setIterativeHardThresholding()</a></code>
 
         </dt>
         <dd>Create setting for Iterative Hard Thresholding model</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setLightGBM.html">setLightGBM()</a></code>
 
@@ -385,8 +444,7 @@
 
       <div class="section-desc"><p>Functions for creating survival models</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -402,8 +460,7 @@
 
       <div class="section-desc"><p>Functions for training/evaluating/applying a single patient-level-prediction model</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -414,37 +471,43 @@
 
         </dt>
         <dd>runPlp - Develop and internally evaluate a model using specified settings</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="externalValidateDbPlp.html">externalValidateDbPlp()</a></code>
 
         </dt>
         <dd>externalValidateDbPlp - Validate a model on new databases</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="savePlpModel.html">savePlpModel()</a></code>
 
         </dt>
         <dd>Saves the plp model</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPlpModel.html">loadPlpModel()</a></code>
 
         </dt>
         <dd>loads the plp model</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="savePlpResult.html">savePlpResult()</a></code>
 
         </dt>
         <dd>Saves the result from runPlp into the location directory</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPlpResult.html">loadPlpResult()</a></code>
 
         </dt>
         <dd>Loads the evalaution dataframe</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="diagnosePlp.html">diagnosePlp()</a></code>
 
@@ -455,8 +518,7 @@
 
       <div class="section-desc"><p>Functions for training multiple patient-level-prediction model in an efficient way.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -467,31 +529,36 @@
 
         </dt>
         <dd>Specify settings for developing a single model</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="runMultiplePlp.html">runMultiplePlp()</a></code>
 
         </dt>
         <dd>Run a list of predictions analyses</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="validateMultiplePlp.html">validateMultiplePlp()</a></code>
 
         </dt>
         <dd>externally validate the multiple plp models across new datasets</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="savePlpAnalysesJson.html">savePlpAnalysesJson()</a></code>
 
         </dt>
         <dd>Save the modelDesignList to a json file</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPlpAnalysesJson.html">loadPlpAnalysesJson()</a></code>
 
         </dt>
         <dd>Load the multiple prediction json settings from a file</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="diagnoseMultiplePlp.html">diagnoseMultiplePlp()</a></code>
 
@@ -502,8 +569,7 @@
 
       <div class="section-desc"><p>Functions for running parts of the PLP workflow</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -514,37 +580,43 @@
 
         </dt>
         <dd>Create a study population</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="splitData.html">splitData()</a></code>
 
         </dt>
         <dd>Split the plpData into test/train sets using a splitting settings of class <code>splitSettings</code></dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="preprocessData.html">preprocessData()</a></code>
 
         </dt>
         <dd>A function that wraps around FeatureExtraction::tidyCovariateData to normalise the data and remove rare or redundant features</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="fitPlp.html">fitPlp()</a></code>
 
         </dt>
         <dd>fitPlp</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="predictPlp.html">predictPlp()</a></code>
 
         </dt>
         <dd>predictPlp</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="evaluatePlp.html">evaluatePlp()</a></code>
 
         </dt>
         <dd>evaluatePlp</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="covariateSummary.html">covariateSummary()</a></code>
 
@@ -555,8 +627,7 @@
 
       <div class="section-desc"><p>Functions for saving the prediction model and performances into a database.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -567,31 +638,36 @@
 
         </dt>
         <dd>Create sqlite database with the results</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createPlpResultTables.html">createPlpResultTables()</a></code>
 
         </dt>
         <dd>Create the results tables to store PatientLevelPrediction models and results into a database</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createDatabaseSchemaSettings.html">createDatabaseSchemaSettings()</a></code>
 
         </dt>
         <dd>Create the PatientLevelPrediction database result schema settings</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="extractDatabaseToCsv.html">extractDatabaseToCsv()</a></code>
 
         </dt>
         <dd>Exports all the results from a database into csv files</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="insertCsvToDatabase.html">insertCsvToDatabase()</a></code>
 
         </dt>
         <dd>Function to insert results into a database from csvs</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="migrateDataModel.html">migrateDataModel()</a></code>
 
@@ -602,8 +678,7 @@
 
       <div class="section-desc"><p>Functions for viewing results via a shiny app</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -614,13 +689,15 @@
 
         </dt>
         <dd>viewPlp - Interactively view the performance and model settings</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="viewMultiplePlp.html">viewMultiplePlp()</a></code>
 
         </dt>
         <dd>open a local shiny app for viewing the result of a multiple PLP analyses</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="viewDatabaseResultPlp.html">viewDatabaseResultPlp()</a></code>
 
@@ -631,8 +708,7 @@
 
       <div class="section-desc"><p>Functions for various performance plots</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -643,85 +719,99 @@
 
         </dt>
         <dd>Plot all the PatientLevelPrediction plots</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotSparseRoc.html">plotSparseRoc()</a></code>
 
         </dt>
         <dd>Plot the ROC curve using the sparse thresholdSummary data frame</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotSmoothCalibration.html">plotSmoothCalibration()</a></code>
 
         </dt>
         <dd>Plot the smooth calibration as detailed in Calster et al. "A calibration heirarchy for risk models was defined: from utopia to empirical data" (2016)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotSparseCalibration.html">plotSparseCalibration()</a></code>
 
         </dt>
         <dd>Plot the calibration</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotSparseCalibration2.html">plotSparseCalibration2()</a></code>
 
         </dt>
         <dd>Plot the conventional calibration</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotNetBenefit.html">plotNetBenefit()</a></code>
 
         </dt>
         <dd>Plot the net benefit</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotDemographicSummary.html">plotDemographicSummary()</a></code>
 
         </dt>
         <dd>Plot the Observed vs. expected incidence, by age and gender</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotF1Measure.html">plotF1Measure()</a></code>
 
         </dt>
         <dd>Plot the F1 measure efficiency frontier using the sparse thresholdSummary data frame</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotGeneralizability.html">plotGeneralizability()</a></code>
 
         </dt>
         <dd>Plot the train/test generalizability diagnostic</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotPrecisionRecall.html">plotPrecisionRecall()</a></code>
 
         </dt>
         <dd>Plot the precision-recall curve using the sparse thresholdSummary data frame</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotPredictedPDF.html">plotPredictedPDF()</a></code>
 
         </dt>
         <dd>Plot the Predicted probability density function, showing prediction overlap between true and false cases</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotPreferencePDF.html">plotPreferencePDF()</a></code>
 
         </dt>
         <dd>Plot the preference score probability density function, showing prediction overlap between true and false cases #'</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotPredictionDistribution.html">plotPredictionDistribution()</a></code>
 
         </dt>
         <dd>Plot the side-by-side boxplots of prediction distribution, by class</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotVariableScatterplot.html">plotVariableScatterplot()</a></code>
 
         </dt>
         <dd>Plot the variable importance scatterplot</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="outcomeSurvivalPlot.html">outcomeSurvivalPlot()</a></code>
 
@@ -732,8 +822,7 @@
 
       <div class="section-desc"><p>Functions for creating and plotting learning curves</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -744,7 +833,8 @@
 
         </dt>
         <dd>createLearningCurve</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="plotLearningCurve.html">plotLearningCurve()</a></code>
 
@@ -755,8 +845,7 @@
 
       <div class="section-desc"><p>Functions for simulating PLP data objects.</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -767,7 +856,8 @@
 
         </dt>
         <dd>Generate simulated data</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="simulationProfile.html">simulationProfile</a></code>
 
@@ -778,8 +868,7 @@
 
       <div class="section-desc"><p>Functions for manipulating data</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -790,7 +879,8 @@
 
         </dt>
         <dd>Convert the plpData in COO format into a sparse R matrix</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="MapIds.html">MapIds()</a></code>
 
@@ -801,8 +891,7 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -813,25 +902,29 @@
 
         </dt>
         <dd>join two lists</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="listCartesian.html">listCartesian()</a></code>
 
         </dt>
         <dd>Cartesian product</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createTempModelLoc.html">createTempModelLoc()</a></code>
 
         </dt>
         <dd>Create a temporary model location</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="configurePython.html">configurePython()</a></code>
 
         </dt>
         <dd>Sets up a python environment to use for PLP (can be conda or venv)</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="setPythonEnvironment.html">setPythonEnvironment()</a></code>
 
@@ -842,8 +935,7 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -854,61 +946,78 @@
 
         </dt>
         <dd>Calculate the average precision</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="brierScore.html">brierScore()</a></code>
 
         </dt>
         <dd>brierScore</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="calibrationLine.html">calibrationLine()</a></code>
 
         </dt>
         <dd>calibrationLine</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="computeAuc.html">computeAuc()</a></code>
 
         </dt>
         <dd>Compute the area under the ROC curve</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="computeAuprc.html">computeAuprc()</a></code>
+
+        </dt>
+        <dd>Compute the area under the Precision-Recall curve</dd>
+
+        <dt>
 
           <code><a href="ici.html">ici()</a></code>
 
         </dt>
         <dd>Calculate the Integrated Calibration Index from Austin and Steyerberg https://onlinelibrary.wiley.com/doi/full/10.1002/sim.8281</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="modelBasedConcordance.html">modelBasedConcordance()</a></code>
 
         </dt>
         <dd>Calculate the model-based concordance, which is a calculation of the expected discrimination performance of a model under the assumption the model predicts the "TRUE" outcome as detailed in van Klaveren et al. https://pubmed.ncbi.nlm.nih.gov/27251001/</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="computeGridPerformance.html">computeGridPerformance()</a></code>
 
         </dt>
-        <dd>Computes grid performance with a specified performance function</dd>
-      </dl><dl><dt>
+        <dd>Computes grid performance for a hyperparameter combination (backwards compatible)</dd>
+
+        <dt>
 
           <code><a href="getCalibrationSummary.html">getCalibrationSummary()</a></code>
 
         </dt>
         <dd>Get a sparse summary of the calibration</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getDemographicSummary.html">getDemographicSummary()</a></code>
 
         </dt>
         <dd>Get a demographic summary</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getThresholdSummary.html">getThresholdSummary()</a></code>
 
         </dt>
         <dd>Calculate all measures for sparse ROC</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="getPredictionDistribution.html">getPredictionDistribution()</a></code>
 
@@ -919,8 +1028,7 @@
 
       <div class="section-desc"><p>Functions for saving or loading models as json</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -931,7 +1039,8 @@
 
         </dt>
         <dd>Loads sklearn python model from json</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="sklearnToJson.html">sklearnToJson()</a></code>
 
@@ -942,8 +1051,7 @@
 
       <div class="section-desc"><p>Functions for loading/saving objects for sharing</p></div>
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -954,19 +1062,22 @@
 
         </dt>
         <dd>Save the plp result as json files and csv files for transparent sharing</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPlpShareable.html">loadPlpShareable()</a></code>
 
         </dt>
         <dd>Loads the plp result saved as json/csv files for transparent sharing</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="loadPrediction.html">loadPrediction()</a></code>
 
         </dt>
         <dd>Loads the prediction dataframe to json</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="savePrediction.html">savePrediction()</a></code>
 
@@ -977,8 +1088,7 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -994,8 +1104,7 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
@@ -1006,19 +1115,22 @@
 
         </dt>
         <dd>Create predictive probabilities</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="predictGlm.html">predictGlm()</a></code>
 
         </dt>
         <dd>predict using a logistic regression model</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createGlmModel.html">createGlmModel()</a></code>
 
         </dt>
         <dd>createGlmModel</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="createSklearnModel.html">createSklearnModel()</a></code>
 
@@ -1034,7 +1146,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

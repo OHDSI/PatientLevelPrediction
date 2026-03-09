@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Egill
 Fridgeirsson</h4>
             
-            <h4 data-toc-skip class="date">2025-10-29</h4>
+            <h4 data-toc-skip class="date">2026-03-09</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/vignettes/maintainers/design-metrics-hyperparameters.Rmd" class="external-link"><code>vignettes/maintainers/design-metrics-hyperparameters.Rmd</code></a></small>
       <div class="d-none name"><code>design-metrics-hyperparameters.Rmd</code></div>
@@ -127,7 +127,7 @@ Fridgeirsson</h4>
 generator.</li>
 <li>
 <code>tuningMetric</code>: object created with
-<code>createTuningMetric()</code>; <code>NULL</code> falls back to
+<code><a href="../../reference/createTuningMetric.html">createTuningMetric()</a></code>; <code>NULL</code> falls back to
 AUC/maximize.</li>
 <li>
 <code>sampleSize</code>: required when
@@ -157,7 +157,7 @@ parameter sets; if present we force search = “custom”.</li>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  <span class="va">createModelDesign</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span></span>
 <span>      <span class="va">...</span>,</span>
-<span>      <span class="va">hyperparameterSettings</span> <span class="op">=</span> <span class="fu">createHyperparameterSettings</span><span class="op">(</span><span class="op">)</span>,</span>
+<span>      <span class="va">hyperparameterSettings</span> <span class="op">=</span> <span class="fu"><a href="../../reference/createHyperparameterSettings.html">createHyperparameterSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>      <span class="va">runCovariateSummary</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">...</span></span>
 <span>    <span class="va">settings</span><span class="op">$</span><span class="va">hyperparameterSettings</span> <span class="op">&lt;-</span> <span class="va">hyperparameterSettings</span></span>
@@ -180,7 +180,7 @@ call, pass both <code>hyperparameterSettings</code> and their
 <code>tuningMetric</code> into <code><a href="../../reference/fitPlp.html">fitPlp()</a></code>:</li>
 </ul>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">hyperparameterSettings</span> <span class="op">&lt;-</span> <span class="va">modelDesign</span><span class="op">$</span><span class="va">hyperparameterSettings</span> <span class="op"><a href="https://rdrr.io/r/base/Control.html" class="external-link">%||%</a></span> <span class="fu">createHyperparameterSettings</span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span>  <span class="va">hyperparameterSettings</span> <span class="op">&lt;-</span> <span class="va">modelDesign</span><span class="op">$</span><span class="va">hyperparameterSettings</span> <span class="op"><a href="https://rdrr.io/r/base/Control.html" class="external-link">%||%</a></span> <span class="fu"><a href="../../reference/createHyperparameterSettings.html">createHyperparameterSettings</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="va">settings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    trainData <span class="op">=</span> <span class="va">data</span><span class="op">$</span><span class="va">Train</span>,</span>
 <span>    modelSettings <span class="op">=</span> <span class="va">modelSettings</span>,</span>
@@ -190,7 +190,7 @@ call, pass both <code>hyperparameterSettings</code> and their
 <span>  <span class="op">)</span></span></code></pre></div>
 <p>Note: <code>%||%</code> means take
 <code>modelDesign$hyperparameterSettings</code> if it exists, otherwise
-default to <code>createHyperparameterSettings()</code></p>
+default to <code><a href="../../reference/createHyperparameterSettings.html">createHyperparameterSettings()</a></code></p>
 <ul>
 <li>Update <code>runPlp</code> signature.</li>
 </ul>
@@ -246,7 +246,7 @@ CV routines.</li>
 </h2>
 <ul>
 <li>Replace the current “return a list of params” approach with a
-lightweight iterator façade: <code>prepareHyperparameterGrid()</code>
+lightweight iterator façade: <code><a href="../../reference/prepareHyperparameterGrid.html">prepareHyperparameterGrid()</a></code>
 now returns an object exposing <code>R next = function(history)</code> …
 (and optionally finalize). The CV code simply calls candidate &lt;-
 iterator$next(history) until it gets NULL, so grid, random, and custom
@@ -274,7 +274,7 @@ iterator-based API so every search strategy—static or adaptive—lives
 behind the same helper and can hold state safely inside its
 closure/environment.</li>
 </ul>
-<p>Example code: - <code>prepareHyperparameterGrid()</code> returns an
+<p>Example code: - <code><a href="../../reference/prepareHyperparameterGrid.html">prepareHyperparameterGrid()</a></code> returns an
 iterator object with next/finalize so every search path looks the
 same:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>    prepareHyperparameterGrid <span class="ot">&lt;-</span> <span class="cf">function</span>(paramDefinition, hyperSettings, <span class="at">modelName =</span> <span class="cn">NULL</span>) {</span>
@@ -401,7 +401,7 @@ similar) now receives the metric and uses it:</li>
 <p>For metrics needing thresholds, the supplied function can capture the
 threshold:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="fu">createTuningMetric</span><span class="op">(</span></span>
+<code class="sourceCode R"><span>  <span class="fu"><a href="../../reference/createTuningMetric.html">createTuningMetric</a></span><span class="op">(</span></span>
 <span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span> <span class="op">{</span></span>
 <span>      <span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span> <span class="op">&gt;=</span> <span class="fl">0.6</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">pred</span> <span class="op">==</span> <span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">outcomeCount</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
@@ -422,7 +422,7 @@ needed.</p>
 package that provides a custom parameter grid continues to work.</li>
 <li>If someone relies on attributes like attr(param, “settings”)$search,
 we keep them for now but warn in documentation that
-<code>createHyperparameterSettings()</code> is the new home for search
+<code><a href="../../reference/createHyperparameterSettings.html">createHyperparameterSettings()</a></code> is the new home for search
 configuration.</li>
 <li>Keep the positional search argument on <code><a href="../../reference/fitPlp.html">fitPlp()</a></code> (and
 maybe on the classifier fitters) but internally let it override the
@@ -440,13 +440,13 @@ design-level setting only when explicitly set, e.g.:</li>
 <h2 id="usage-example">8. Usage example<a class="anchor" aria-label="anchor" href="#usage-example"></a>
 </h2>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="va">metric</span> <span class="op">&lt;-</span> <span class="fu">createTuningMetric</span><span class="op">(</span></span>
+<code class="sourceCode R"><span>  <span class="va">metric</span> <span class="op">&lt;-</span> <span class="fu"><a href="../../reference/createTuningMetric.html">createTuningMetric</a></span><span class="op">(</span></span>
 <span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span> <span class="op">&gt;=</span> <span class="fl">0.55</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">==</span> <span class="op">(</span><span class="va">prediction</span><span class="op">$</span><span class="va">outcomeCount</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    maximize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    label <span class="op">=</span> <span class="st">"Accuracy@0.55"</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span>  <span class="va">hyperSettings</span> <span class="op">&lt;-</span> <span class="fu">createHyperparameterSettings</span><span class="op">(</span></span>
+<span>  <span class="va">hyperSettings</span> <span class="op">&lt;-</span> <span class="fu"><a href="../../reference/createHyperparameterSettings.html">createHyperparameterSettings</a></span><span class="op">(</span></span>
 <span>    search <span class="op">=</span> <span class="st">"random"</span>,</span>
 <span>    tuningMetric <span class="op">=</span> <span class="va">metric</span>,</span>
 <span>    sampleSize <span class="op">=</span> <span class="fl">10</span>,</span>
@@ -467,7 +467,7 @@ design-level setting only when explicitly set, e.g.:</li>
 <h2 id="tests-docs">9. Tests &amp; docs<a class="anchor" aria-label="anchor" href="#tests-docs"></a>
 </h2>
 <ul>
-<li>New tests for <code>prepareHyperparameterGrid()</code> random
+<li>New tests for <code><a href="../../reference/prepareHyperparameterGrid.html">prepareHyperparameterGrid()</a></code> random
 sampling behavior and custom generator.</li>
 <li>Tests verifying the metric and search settings affect the CV
 selection.</li>
@@ -491,7 +491,7 @@ to be fixed</li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

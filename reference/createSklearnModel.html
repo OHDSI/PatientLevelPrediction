@@ -9,7 +9,7 @@ PLP framework"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,8 @@ PLP framework</p>
 <span>  covariateSettings <span class="op">=</span> <span class="fu">FeatureExtraction</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/FeatureExtraction/man/createDefaultCovariateSettings.html" class="external-link">createDefaultCovariateSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  featureEngineering <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tidyCovariates <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  requireDenseMatrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  modelName <span class="op">=</span> <span class="st">"existingSklearn"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -138,6 +139,10 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 <dt id="arg-requiredensematrix">requireDenseMatrix<a class="anchor" aria-label="anchor" href="#arg-requiredensematrix"></a></dt>
 <dd><p>Specify whether the model needs a dense matrix (TRUE or FALSE)</p></dd>
 
+
+<dt id="arg-modelname">modelName<a class="anchor" aria-label="anchor" href="#arg-modelname"></a></dt>
+<dd><p>A name that will show as the model type in the shiny app</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -169,7 +174,7 @@ the standard PLP model design.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

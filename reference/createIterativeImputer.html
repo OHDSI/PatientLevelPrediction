@@ -11,7 +11,7 @@ and then imputes the missing values iteratively using chained equations"></head>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,8 @@ and then imputes the missing values iteratively using chained equations</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createIterativeImputer</span><span class="op">(</span></span>
 <span>  missingThreshold <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"pmm"</span>,</span>
-<span>  methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
+<span>  methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  addMissingIndicator <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -93,7 +94,13 @@ and then imputes the missing values iteratively using chained equations</p>
 <dd><p>A list of settings for the imputation method to use.
 Currently only "pmm" is supported with the following settings:</p><ul><li><p>k: The number of donors to use for matching</p></li>
 <li><p>iterations: The number of iterations to use for imputation</p></li>
+<li><p>alpha: Elastic-net mixing parameter for PMM fit (<code>1</code> = lasso, <code>0</code> = ridge)</p></li>
 </ul></dd>
+
+
+<dt id="arg-addmissingindicator">addMissingIndicator<a class="anchor" aria-label="anchor" href="#arg-addmissingindicator"></a></dt>
+<dd><p>Add a binary missingness indicator per feature that
+passes the imputation missingness threshold.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -106,7 +113,7 @@ Currently only "pmm" is supported with the following settings:</p><ul><li><p>k: 
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># create imputer to impute values with missingness less than 30% using </span></span></span>
 <span class="r-in"><span><span class="co"># predictive mean matching in 5 iterations with 5 donors</span></span></span>
 <span class="r-in"><span><span class="fu">createIterativeImputer</span><span class="op">(</span>missingThreshold <span class="op">=</span> <span class="fl">0.3</span>, method <span class="op">=</span> <span class="st">"pmm"</span>,</span></span>
-<span class="r-in"><span>                       methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                       methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $missingThreshold</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -120,6 +127,12 @@ Currently only "pmm" is supported with the following settings:</p><ul><li><p>k: 
 <span class="r-out co"><span class="r-pr">#&gt;</span> $methodSettings$iterations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $methodSettings$alpha</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $addMissingIndicator</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"fun")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "iterativeImpute"</span>
@@ -136,7 +149,7 @@ Currently only "pmm" is supported with the following settings:</p><ul><li><p>k: 
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

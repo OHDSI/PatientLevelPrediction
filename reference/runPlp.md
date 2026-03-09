@@ -1,0 +1,150 @@
+# runPlp - Develop and internally evaluate a model using specified settings
+
+This provides a general framework for training patient level prediction
+models. The user can select various default feature selection methods or
+incorporate their own, The user can also select from a range of default
+classifiers or incorporate their own. There are three types of
+evaluations for the model patient (randomly splits people into
+train/validation sets) or year (randomly splits data into
+train/validation sets based on index year - older in training, newer in
+validation) or both (same as year spliting but checks there are no
+overlaps in patients within training set and validaiton set - any
+overlaps are removed from validation set)
+
+## Usage
+
+``` r
+runPlp(
+  plpData,
+  outcomeId = plpData$metaData$databaseDetails$outcomeIds[1],
+  analysisId = paste(Sys.Date(), outcomeId, sep = "-"),
+  analysisName = "Study details",
+  populationSettings = createStudyPopulationSettings(),
+  splitSettings = createDefaultSplitSetting(type = "stratified", testFraction = 0.25,
+    trainFraction = 0.75, splitSeed = 123, nfold = 3),
+  sampleSettings = createSampleSettings(type = "none"),
+  featureEngineeringSettings = createFeatureEngineeringSettings(type = "none"),
+  preprocessSettings = createPreprocessSettings(minFraction = 0.001, normalize = TRUE),
+  modelSettings = setLassoLogisticRegression(),
+  hyperparameterSettings = createHyperparameterSettings(),
+  logSettings = createLogSettings(verbosity = "DEBUG", timeStamp = TRUE, logName =
+    "runPlp Log"),
+  executeSettings = createDefaultExecuteSettings(),
+  saveDirectory = NULL
+)
+```
+
+## Arguments
+
+- plpData:
+
+  An object of type `plpData` - the patient level prediction data
+  extracted from the CDM. Can also include an initial population as
+  plpData\$popualtion.
+
+- outcomeId:
+
+  (integer) The ID of the outcome.
+
+- analysisId:
+
+  (integer) Identifier for the analysis. It is used to create, e.g., the
+  result folder. Default is a timestamp.
+
+- analysisName:
+
+  (character) Name for the analysis
+
+- populationSettings:
+
+  An object of type `populationSettings` created using
+  `createStudyPopulationSettings` that specifies how the data class
+  labels are defined and addition any exclusions to apply to the plpData
+  cohort
+
+- splitSettings:
+
+  An object of type `splitSettings` that specifies how to split the data
+  into train/validation/test. The default settings can be created using
+  `createDefaultSplitSetting`.
+
+- sampleSettings:
+
+  An object of type `sampleSettings` that specifies any under/over
+  sampling to be done. The default is none.
+
+- featureEngineeringSettings:
+
+  An object of `featureEngineeringSettings` specifying any feature
+  engineering to be learned (using the train data)
+
+- preprocessSettings:
+
+  An object of `preprocessSettings`. This setting specifies the minimum
+  fraction of target population who must have a covariate for it to be
+  included in the model training and whether to normalise the covariates
+  before training
+
+- modelSettings:
+
+  An object of class `modelSettings` created using one of the function:
+
+  - setLassoLogisticRegression() A lasso logistic regression model
+
+  - setGradientBoostingMachine() A gradient boosting machine
+
+  - setAdaBoost() An ada boost model
+
+  - setRandomForest() A random forest model
+
+  - setDecisionTree() A decision tree model
+
+  - setKNN() A KNN model
+
+- hyperparameterSettings:
+
+  An object of `hyperparameterSettings` created using
+  `createHyperparameterSettings`
+
+- logSettings:
+
+  An object of `logSettings` created using `createLogSettings`
+  specifying how the logging is done
+
+- executeSettings:
+
+  An object of `executeSettings` specifying which parts of the analysis
+  to run
+
+- saveDirectory:
+
+  The path to the directory where the results will be saved (if NULL
+  uses working directory)
+
+## Value
+
+An plpResults object containing the following:
+
+- model The developed model of class `plpModel`
+
+- executionSummary A list containing the hardward details, R package
+  details and execution time
+
+- performanceEvaluation Various internal performance metrics in sparse
+  format
+
+- prediction The plpData cohort table with the predicted risks added as
+  a column (named value)
+
+- covariateSummary A characterization of the features for patients with
+  and without the outcome during the time at risk
+
+- analysisRef A list with details about the analysis
+
+## Details
+
+This function takes as input the plpData extracted from an OMOP CDM
+database and follows the specified settings to develop and internally
+validate a model for the specified outcomeId.
+
+## Examples

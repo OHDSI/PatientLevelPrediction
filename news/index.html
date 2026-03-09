@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,8 +58,36 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="6.6.0" id="patientlevelprediction-660">PatientLevelPrediction 6.6.0<a class="anchor" aria-label="anchor" href="#patientlevelprediction-660"></a></h2>
+<div class="section level3">
+<h3 id="new-features-6-6-0">New features<a class="anchor" aria-label="anchor" href="#new-features-6-6-0"></a></h3>
+<ul><li>Added flexible hyperparameter tuning with configurable tuning metrics and support for grid, random, and custom search strategies (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/618" class="external-link">#618</a>).</li>
+<li>Standardized the non-Cyclops modeling interface to simplify tuning and maintenance of classification models (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/618" class="external-link">#618</a>).</li>
+<li>Added ridge logistic regression settings via Cyclops with <code><a href="../reference/setRidgeRegression.html">setRidgeRegression()</a></code> (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/621" class="external-link">#621</a>).</li>
+<li>Expanded imputation support and hardened the missing-indicator and predictive mean matching workflow (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/622" class="external-link">#622</a>).</li>
+<li>Added support for using logits / linear predictors in rank-based metrics (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/615" class="external-link">#615</a>).</li>
+<li>Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/633" class="external-link">#633</a>, <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/632" class="external-link">#632</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-6-6-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-6-6-0"></a></h3>
+<ul><li>Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/628" class="external-link">#628</a>, <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/623" class="external-link">#623</a>).</li>
+<li>Ensured existing GLM and scikit-learn model settings retain model identity so uploads generate distinct model design records (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/614" class="external-link">#614</a>).</li>
+<li>Fixed evaluation when outcomes are single-class (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/624" class="external-link">#624</a>).</li>
+<li>Improved LightGBM model persistence using a more robust in-memory serialization path (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/626" class="external-link">#626</a>).</li>
+<li>Removed deprecated sklearn AdaBoost usage for compatibility with newer scikit-learn versions (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/627" class="external-link">#627</a>).</li>
+<li>Fixed serialization of <code>simpleImputer</code> metadata when saving PLP models (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/630" class="external-link">#630</a>).</li>
+<li>Limited <code>batchRestrict</code> handling to SQLite-backed data to avoid incorrect behavior on other backends (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/612" class="external-link">#612</a>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-and-maintenance-6-6-0">Performance and maintenance<a class="anchor" aria-label="anchor" href="#performance-and-maintenance-6-6-0"></a></h3>
+<ul><li>Improved <code>simpleImpute</code> performance for large feature sets (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/629" class="external-link">#629</a>).</li>
+<li>Reduced GitHub Actions <code>R CMD check</code> runtime in CI (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/625" class="external-link">#625</a>).</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="6.5.1" id="patientlevelprediction-651">PatientLevelPrediction 6.5.1<a class="anchor" aria-label="anchor" href="#patientlevelprediction-651"></a></h2><p class="text-muted">CRAN release: 2025-10-15</p>
-<ul><li>[Bug] Remove old R condition from Rd files throug new roxygen2 (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/603" class="external-link">#603</a>)</li>
+<ul><li>[Feature] Added optional missingness indicators for features imputed with <code><a href="../reference/createSimpleImputer.html">createSimpleImputer()</a></code> and <code><a href="../reference/createIterativeImputer.html">createIterativeImputer()</a></code> via <code>addMissingIndicator</code> (default <code>FALSE</code> for backward compatibility)</li>
+<li>[Bug] Remove old R condition from Rd files throug new roxygen2 (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/603" class="external-link">#603</a>)</li>
 <li>[Internal] Use reticulate’s <code>py_require</code> for stating python dependencies (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/600" class="external-link">#600</a>)</li>
 <li>[Bug] use <code>closeConnection</code> instead of <code>finalize</code> for RMM (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/599" class="external-link">#599</a>)</li>
 <li>[Bug] Refresh the xgboost training call to remove watchlist/nthread deprecation warnings (PR <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/587" class="external-link">#587</a>)</li>
@@ -583,7 +611,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

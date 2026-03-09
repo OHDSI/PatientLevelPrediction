@@ -1,0 +1,349 @@
+# Adding Custom Patient-Level Prediction Algorithms
+
+## Introduction
+
+This vignette describes how you can add your own custom algorithms in
+the Observational Health Data Sciencs and Informatics (OHDSI)
+[`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction)
+package. This allows you to fully leverage the OHDSI
+PatientLevelPrediction framework for model development and validation.
+This vignette assumes you have read and are comfortable with building
+single patient level prediction models as described in the
+[`vignette('BuildingPredictiveModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingPredictiveModels.md).
+
+**We invite you to share your new algorithms with the OHDSI community
+through our [GitHub
+repository](https://github.com/OHDSI/PatientLevelPrediction).**
+
+## Algorithm Code Structure
+
+Each algorithm in the package should be implemented in its own
+\<Name\>.R file, e.g. KNN.R, containing a set\<Name\> function, a
+fit\<Name\> function and a predict\<Name\> function. Occasionally the
+fit and prediction functions may be reused (if using an R classifier see
+RClassifier.R or if using a scikit-learn classifier see
+SklearnClassifier.R). We will now describe each of these functions in
+more detail below.
+
+### Set
+
+The set\<Name\> is a function that takes as input the different
+hyper-parameter values to do a grid search when training. The output of
+the functions needs to be a list as class `modelSettings` containing:
+
+- param - a list of hyper-parameter values that can be used by
+  `createHyperparameterSettings`
+- settings - the settings such as modelName, trainRFunction,
+  predictRFunction, varImpRFunction and seed
+- fitFunction - a string specifying what function to call to fit the
+  model, generally the existing fitBinaryClassifier can be used for most
+  models
+
+The param object can have a setttings attribute containing any extra
+settings. For example to specify the model name and the seed used for
+reproducibility:
+
+``` r
+settings <- list(
+  seed = 12,
+  modelName = "Special classifier",
+  trainRFunction = 'madeupFit', # this will be called to train the made up model
+  predictRFunction = 'madeupPrediction', # this will be called to make predictions
+  varImpRFunction = 'madeupVarImp' # this will be called to get variable importance
+)
+```
+
+For example, if you were adding a model called madeUp that has two
+hyper-parameters then the set function should be:
+
+``` r
+setMadeUp <- function(a = c(1, 4, 10), b = 2, seed = NULL) {
+  # add input checks here...
+
+  param <- list(
+    a = a,
+    b = b
+    )
+
+  settings <- list(
+    modelName = "Made Up",
+    requiresDenseMatrix = TRUE,
+    seed = seed,
+    trainRFunction = 'madeupFit', # this will be called to train the made up model
+    predictRFunction = 'madeupPrediction', # this will be called to make predictions
+    varImpRFunction = 'madeupVarImp', # this will be called to get variable importance
+    saveToJson = TRUE,
+    saveType = "file"
+  )
+
+  # now create list of all combinations:
+  result <- list(
+    fitFunction = "fitBinaryClassifier", # this will be called to train the made up model
+    param = param,
+    settings = settings
+  )
+  class(result) <- "modelSettings"
+
+  return(result)
+}
+```
+
+### Fit
+
+This function specified by `trainRFunction` should train your custom
+model for a given hyper parameter setting. The takes as input:
+
+- dataMatrix - a sparse matrix with rows as patient and columns as
+  features
+- labels - a list where labels\$outcomeCount is the class label per
+  patient
+- hyperParameters - a named list of the hyperparameters
+- settings - the settings object defined in the set function that has
+  details such as seed.
+
+The output should be the trained model.
+
+``` r
+fitMadeUp <- function(
+    dataMatrix,
+    labels,
+    hyperParameters,
+    settings
+    ) {
+  # set the seed for reproducibility
+  set.seed(settings$seed)
+
+  # add code here to call a function to train the classifier using the data
+  # for the specified hyperparameters that are a named list in hyperParameters
+  model <- madeUpModel(
+    X = dataMatrix, 
+    Y = labels$outcomeCount,
+    hyperparameter1 = hyperParameters$hyperparameter1,
+    hyperparameter2 = hyperParameters$hyperparameter2
+    )
+  
+  return(model)
+}
+```
+
+### Predict
+
+The prediction function specified by `predictRFunction` takes as input:
+
+- plpModel: the model that was fit using trainRFunction
+- data: either a new plpData object or the output of toSparseM()
+- cohort: a target cohort or population data.frame
+
+The predict function needs to apply the model and then add a column
+called ‘value’ to the cohort data.frame with the predicted risks per
+patient.
+
+### VarImp
+
+The varImp function `varImpRFunction` must take as input the model and
+the covariateMap that is a data.frame with columns including
+covariateId, columnId.
+
+The output is covariateMap data.frame with two additional columns:
+
+- included: (0 or 1) specifying whether the variable was used in the
+  model
+- covariateValue: the variable importance for the variable
+
+## Algorithm Example
+
+Below a fully functional algorithm example is given, however we highly
+recommend you to have a look at the available algorithms in the package
+(see GradientBoostingMachine.R for the set function, RClassifier.R for
+the fit and prediction function for R classifiers).
+
+### Set
+
+``` r
+setMadeUp <- function(a = c(1, 4, 6), b = 2, seed = NULL) {
+  # add input checks here...
+
+  if (is.null(seed)) {
+    seed <- sample(100000, 1)
+  }
+
+  param <- list(
+      a = a,
+      b = b
+    )
+
+  settings <- list(
+    modelName = "Made Up",
+    requiresDenseMatrix = TRUE,
+    seed = seed,
+    trainRFunction = 'fitMadeUp',
+    predictRFunction = 'predictMadeUp',
+    varImpRFunction = 'varImpMadeUp',
+    saveToJson = TRUE,
+    saveType = "file"
+  )
+
+  # now create list of all combinations:
+  result <- list(
+    fitFunction = "fitBinaryClassifier", # this is an existing wrapper fit function
+    param = param,
+    settings = settings
+  )
+  class(result) <- "modelSettings"
+
+  return(result)
+}
+```
+
+### Fit
+
+The fit function needs to take a dataMatrix with the features per
+patient, a label vector with the class labels for each patient, the
+hyperparameters and the model settings.
+
+``` r
+fitMadeUp <- function(
+    dataMatrix,
+    labels,
+    hyperParameters,
+    settings
+    ) {
+  # set the seed for reproducibility
+  set.seed(settings$seed)
+
+  # add code here to call a function to train the classifier using the data
+  # for the specified hyperparameters that are a named list in hyperParameters
+  model <- madeUpModel(
+    X = dataMatrix, 
+    Y = labels$outcomeCount,
+    hyperparameter1 = hyperParameters$hyperparameter1,
+    hyperparameter2 = hyperParameters$hyperparameter2
+    )
+  
+  return(model)
+}
+```
+
+### Predict
+
+The final step is to create a predict function for the model. In the
+example above the prediction function in the settings was
+`predictRFunction = 'predictMadeUp'`, so a `predictMadeUp` function is
+required when applying the model. The predict function needs to take as
+input the plpModel returned by the fit function, new data to apply the
+model on and the cohort specifying the patients of interest to make the
+prediction for.
+
+``` r
+predictMadeUp <- function(plpModel, data, cohort) {
+  if (class(data) == "plpData") {
+    # convert
+    matrixObjects <- toSparseM(
+      plpData = data,
+      cohort = cohort,
+      map = plpModel$covariateImportance %>%
+        dplyr::select("columnId", "covariateId")
+    )
+
+    newData <- matrixObjects$dataMatrix
+    cohort <- matrixObjects$labels
+  } else {
+    newData <- data
+  }
+
+  if (class(plpModel) == "plpModel") {
+    model <- plpModel$model
+  } else {
+    model <- plpModel
+  }
+
+  cohort$value <- stats::predict(model, newData)
+
+  # fix the rowIds to be the old ones
+  # now use the originalRowId and remove the matrix rowId
+  cohort <- cohort %>%
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "originalRowId")
+
+  attr(cohort, "metaData") <- list(modelType = attr(plpModel, "modelType"))
+  return(cohort)
+}
+```
+
+As the madeup model uses the standard R prediction, it has the same
+prediction function as xgboost, so we could have not added a new
+prediction function and instead made the
+`predictRFunction = 'predictXgboost'`.
+
+### Variable importance
+
+Each classifier needs a variable importance function specified. This
+takes as input the model and a data.frame called covariateMap that
+specifies the covariateIds and their corresponding columnId in the
+feature matrix.
+
+``` r
+varImpMadeUp <- function(
+    model,
+    covariateMap
+    ) {
+  
+  variableImportance <- tryCatch(
+      {
+        varImp <- reticulate::py_to_r(model$feature_importances_)
+        varImp[is.na(varImp)] <- 0
+        
+        covariateMap$covariateValue <- unlist(varImp)
+        covariateMap$included <- 1
+      },
+      error = function(e) {
+        ParallelLogger::logInfo(e)
+        return(NULL)
+      }
+    )
+  
+  return(variableImportance)
+}
+```
+
+## Acknowledgments
+
+Considerable work has been dedicated to provide the
+`PatientLevelPrediction` package.
+
+``` r
+citation("PatientLevelPrediction")
+```
+
+    ## To cite PatientLevelPrediction in publications use:
+    ## 
+    ##   Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek P (2018). "Design
+    ##   and implementation of a standardized framework to generate and
+    ##   evaluate patient-level prediction models using observational
+    ##   healthcare data." _Journal of the American Medical Informatics
+    ##   Association_, *25*(8), 969-975.
+    ##   <https://doi.org/10.1093/jamia/ocy032>.
+    ## 
+    ## A BibTeX entry for LaTeX users is
+    ## 
+    ##   @Article{,
+    ##     author = {J. M. Reps and M. J. Schuemie and M. A. Suchard and P. B. Ryan and P. Rijnbeek},
+    ##     title = {Design and implementation of a standardized framework to generate and evaluate patient-level prediction models using observational healthcare data},
+    ##     journal = {Journal of the American Medical Informatics Association},
+    ##     volume = {25},
+    ##     number = {8},
+    ##     pages = {969-975},
+    ##     year = {2018},
+    ##     url = {https://doi.org/10.1093/jamia/ocy032},
+    ##   }
+
+**Please reference this paper if you use the PLP Package in your work:**
+
+[Reps JM, Schuemie MJ, Suchard MA, Ryan PB, Rijnbeek PR. Design and
+implementation of a standardized framework to generate and evaluate
+patient-level prediction models using observational healthcare data. J
+Am Med Inform Assoc.
+2018;25(8):969-975.](https://dx.doi.org/10.1093/jamia/ocy032)
+
+This work is supported in part through the National Science Foundation
+grant IIS 1251151.

@@ -17,7 +17,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,6 +91,7 @@ no overlaps in patients within training set and validaiton set - any overlaps ar
 <span>  featureEngineeringSettings <span class="op">=</span> <span class="fu"><a href="createFeatureEngineeringSettings.html">createFeatureEngineeringSettings</a></span><span class="op">(</span>type <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  preprocessSettings <span class="op">=</span> <span class="fu"><a href="createPreprocessSettings.html">createPreprocessSettings</a></span><span class="op">(</span>minFraction <span class="op">=</span> <span class="fl">0.001</span>, normalize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>  modelSettings <span class="op">=</span> <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  hyperparameterSettings <span class="op">=</span> <span class="fu"><a href="createHyperparameterSettings.html">createHyperparameterSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span>verbosity <span class="op">=</span> <span class="st">"DEBUG"</span>, timeStamp <span class="op">=</span> <span class="cn">TRUE</span>, logName <span class="op">=</span></span>
 <span>    <span class="st">"runPlp Log"</span><span class="op">)</span>,</span>
 <span>  executeSettings <span class="op">=</span> <span class="fu"><a href="createDefaultExecuteSettings.html">createDefaultExecuteSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -156,6 +157,10 @@ and whether to normalise the covariates before training</p></dd>
 </ul></dd>
 
 
+<dt id="arg-hyperparametersettings">hyperparameterSettings<a class="anchor" aria-label="anchor" href="#arg-hyperparametersettings"></a></dt>
+<dd><p>An object of <code>hyperparameterSettings</code> created using <code>createHyperparameterSettings</code></p></dd>
+
+
 <dt id="arg-logsettings">logSettings<a class="anchor" aria-label="anchor" href="#arg-logsettings"></a></dt>
 <dd><p>An object of <code>logSettings</code> created using <code>createLogSettings</code>
 specifying how the logging is done</p></dd>
@@ -198,7 +203,7 @@ develop and internally validate a model for the specified outcomeId.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

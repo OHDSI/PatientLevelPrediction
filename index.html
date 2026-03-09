@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -119,7 +119,7 @@
 <p><img src="articles/images/sparseCalibration.avif" alt="Calibration plot" title="Calibration plot"></p>
 </td>
 <td width="50%">
-<p><img src="articles/images/sparseROC.avif" alt="ROC plot" title="ROC plot"></p>
+<p><img src="articles/images/sparseRoc.avif" alt="ROC plot" title="ROC plot"></p>
 </td>
 </tr>
 <tr>
@@ -145,7 +145,7 @@ ROC Plot
 <h1 id="system-requirements">System Requirements<a class="anchor" aria-label="anchor" href="#system-requirements"></a>
 </h1>
 <p>Requires R (version 4.0 or higher). Installation on Windows requires <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">RTools</a>. Libraries used in PatientLevelPrediction require Java and Python.</p>
-<p>The python installation is required for some of the machine learning algorithms. We advise to install Python 3.9 or higher using Anaconda (<a href="https://www.continuum.io/downloads" class="external-link uri">https://www.continuum.io/downloads</a>).</p>
+<p>Some machine learning algorithms require python. Reticulate will manage python automatically using uv (<a href="https://docs.astral.sh/uv/getting-started/" class="external-link uri">https://docs.astral.sh/uv/getting-started/</a>). If you’re in an offline environment you can manage python in any way you want and set the <code>RETICULATE_PYTYHON</code> environment variable to the python binary. You will only need to install <code>scikit-learn</code> into that environment.</p>
 </div>
 <div class="section level1">
 <h1 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
@@ -257,7 +257,7 @@ ROC Plot
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
