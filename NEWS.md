@@ -1,5 +1,32 @@
+PatientLevelPrediction 6.6.0
+======================
+
+## New features
+- Added flexible hyperparameter tuning with configurable tuning metrics and support for grid, random, and custom search strategies (#618).
+- Standardized the non-Cyclops modeling interface to simplify tuning and maintenance of classification models (#618).
+- Added ridge logistic regression settings via Cyclops with `setRidgeRegression()` (#621).
+- Expanded imputation support and hardened the missing-indicator and predictive mean matching workflow (#622).
+- Added support for using logits / linear predictors in rank-based metrics (#615).
+- Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (#633, #632).
+
+## Bug fixes
+- Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (#628, #623).
+- Ensured existing GLM and scikit-learn model settings retain model identity so uploads generate distinct model design records (#614).
+- Fixed evaluation when outcomes are single-class (#624).
+- Improved LightGBM model persistence using a more robust in-memory serialization path (#626).
+- Removed deprecated sklearn AdaBoost usage for compatibility with newer scikit-learn versions (#627).
+- Fixed serialization of `simpleImputer` metadata when saving PLP models (#630).
+- Limited `batchRestrict` handling to SQLite-backed data to avoid incorrect behavior on other backends (#612).
+
+## Performance and maintenance
+- Improved `simpleImpute` performance for large feature sets (#629).
+- Reduced GitHub Actions `R CMD check` runtime in CI (#625).
+
 PatientLevelPrediction 6.5.1
 ======================
+- [Feature] Added optional missingness indicators for features imputed with
+  `createSimpleImputer()` and `createIterativeImputer()` via
+  `addMissingIndicator` (default `FALSE` for backward compatibility)
 - [Bug] Remove old R condition from Rd files throug new roxygen2 (PR #603)
 - [Internal] Use reticulate's `py_require` for stating python dependencies (PR #600)
 - [Bug] use `closeConnection` instead of `finalize` for RMM (PR #599)

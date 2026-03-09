@@ -242,8 +242,180 @@ test_that("temporary sqlite with results works", {
   res <- DatabaseConnector::querySql(conn, sql)
   expect_true(res$N[1] > 0)
 
+  # check the models table is populated and intercept is stored correctly
+  sql <- paste(
+    "select",
+    "  model_type as modelType,",
+    "  intercept as intercept,",
+    "  plp_model_file as plpModelFile,",
+    "  train_details as trainDetails",
+    "from main.models;"
+  )
+  res <- DatabaseConnector::querySql(conn, sql)
+  expect_true(nrow(res) > 0)
+  expect_true(all(!is.na(res$plpModelFile)))
+  expect_true(dir.exists(res$plpModelFile[1]))
+  expect_true(length(list.files(res$plpModelFile[1], all.files = TRUE, recursive = TRUE)) > 0)
+  expect_true(nzchar(res$modelType[1]))
+  expect_true(nzchar(res$trainDetails[1]))
+  trainDetails <- ParallelLogger::convertJsonToSettings(res$trainDetails[1])
+  expect_true("hyperParamSearch" %in% names(trainDetails))
+  expect_true("hyperparameterSettings" %in% names(trainDetails))
+  expect_equal(trainDetails$hyperparameterSettings$search, "grid")
+  expect_equal(trainDetails$hyperparameterSettings$tuningMetric$name, "AUC")
+
+  expectedIntercept <- PatientLevelPrediction:::getModelIntercept(plpResult$model)
+  expect_equal(res$intercept[1], expectedIntercept, tolerance = 1e-4)
+
   # disconnect
   DatabaseConnector::disconnect(conn)
+})
+
+test_that("list hyperParamSearch is flattened for sqlite uploads", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
+  runPlpListHyper <- plpResult
+  runPlpListHyper$model$trainDetails$hyperParamSearch <- list(
+    list(
+      metric = "AUC",
+      param = list(numIterations = 30, learningRate = 0.1),
+      cvPerformance = 0.60,
+      cvPerformancePerFold = c(0.59, 0.61),
+      hyperSummary = data.frame(
+        metric = "AUC",
+        fold = c("CV", "Fold1", "Fold2"),
+        value = c(0.60, 0.59, 0.61),
+        numIterations = c(30, 30, 30),
+        learningRate = c(0.1, 0.1, 0.1),
+        stringsAsFactors = FALSE
+      )
+    ),
+    list(
+      metric = "AUC",
+      param = list(numIterations = 50, learningRate = 0.05),
+      cvPerformance = 0.58,
+      cvPerformancePerFold = c(0.57, 0.59),
+      hyperSummary = data.frame(
+        metric = "AUC",
+        fold = c("CV", "Fold1", "Fold2"),
+        value = c(0.58, 0.57, 0.59),
+        numIterations = c(50, 50, 50),
+        learningRate = c(0.05, 0.05, 0.05),
+        stringsAsFactors = FALSE
+      )
+    )
+  )
+
+  sqliteLocation <- insertRunPlpToSqlite(
+    runPlp = runPlpListHyper,
+    externalValidatePlp = NULL
+  )
+  expect_true(file.exists(sqliteLocation))
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteLocation
+  )
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  res <- DatabaseConnector::querySql(conn, "select train_details as trainDetails from main.models;")
+  expect_true(nrow(res) > 0)
+  trainDetails <- ParallelLogger::convertJsonToSettings(res$trainDetails[1])
+
+  expect_true("hyperParamSearch" %in% names(trainDetails))
+  expect_true(is.data.frame(trainDetails$hyperParamSearch))
+  expect_true(nrow(trainDetails$hyperParamSearch) >= 6)
+  expect_true(all(c("metric", "fold", "value") %in% colnames(trainDetails$hyperParamSearch)))
+})
+
+test_that("normalizeHyperParamSearchForDatabase handles all supported shapes", {
+  baseDf <- data.frame(
+    metric = "AUC",
+    fold = "CV",
+    value = 0.7,
+    stringsAsFactors = FALSE
+  )
+
+  normalizedNull <- PatientLevelPrediction:::normalizeHyperParamSearchForDatabase(NULL)
+  expect_true(is.data.frame(normalizedNull))
+  expect_equal(nrow(normalizedNull), 0)
+
+  normalizedDf <- PatientLevelPrediction:::normalizeHyperParamSearchForDatabase(baseDf)
+  expect_equal(normalizedDf, baseDf)
+
+  normalizedFromSummary <- PatientLevelPrediction:::normalizeHyperParamSearchForDatabase(
+    list(
+      list(hyperSummary = baseDf),
+      list(hyperSummary = transform(baseDf, fold = "Fold1", value = 0.69))
+    )
+  )
+  expect_true(is.data.frame(normalizedFromSummary))
+  expect_equal(nrow(normalizedFromSummary), 2)
+  expect_true(all(c("metric", "fold", "value") %in% colnames(normalizedFromSummary)))
+
+  normalizedFromDirect <- PatientLevelPrediction:::normalizeHyperParamSearchForDatabase(
+    list(
+      baseDf,
+      transform(baseDf, fold = "Fold2", value = 0.68)
+    )
+  )
+  expect_true(is.data.frame(normalizedFromDirect))
+  expect_equal(nrow(normalizedFromDirect), 2)
+  expect_true(all(c("CV", "Fold2") %in% normalizedFromDirect$fold))
+
+  normalizedUnknown <- PatientLevelPrediction:::normalizeHyperParamSearchForDatabase(
+    list(list(metric = "AUC", value = 0.7))
+  )
+  expect_true(is.data.frame(normalizedUnknown))
+  expect_equal(nrow(normalizedUnknown), 0)
+})
+
+test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in runPlp model", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
+  sqliteLocation <- file.path(tempdir(), "issue620-modeldesign-fallback.sqlite")
+  if (file.exists(sqliteLocation)) {
+    file.remove(sqliteLocation)
+  }
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteLocation
+  )
+
+  createPlpResultTables(
+    connectionDetails = connectionDetails,
+    targetDialect = "sqlite",
+    resultSchema = "main",
+    deleteTables = TRUE,
+    createTables = TRUE,
+    tablePrefix = ""
+  )
+
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  runPlpNoHyper <- plpResult
+  runPlpNoHyper$model$modelDesign$hyperparameterSettings <- NULL
+
+  modelDesignId <- insertModelDesignInDatabase(
+    object = runPlpNoHyper,
+    conn = conn,
+    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+    cohortDefinitions = data.frame(
+      cohortName = c("blank1", "blank2", "blank3"),
+      cohortId = c(1, 2, 3),
+      json = rep("bla", 3)
+    )
+  )
+
+  expect_false(is.null(modelDesignId))
+  expect_true(is.numeric(modelDesignId) || is.integer(modelDesignId))
+
+  countRes <- DatabaseConnector::querySql(conn, "select count(*) as n from main.model_designs;")
+  expect_true(countRes$n[1] > 0)
 })
 
 # SQL lite test
@@ -284,6 +456,17 @@ test_that("temporary sqlite with results works", {
   res <- DatabaseConnector::querySql(conn, sql)
   expect_true(res$N[1] > 0)
 
+  # models table exists and has expected intercept
+  sql <- "select intercept as intercept, plp_model_file as plpModelFile from main.models;"
+  res <- DatabaseConnector::querySql(conn, sql)
+  expect_true(nrow(res) > 0)
+  expect_true(dir.exists(res$plpModelFile[1]))
+  expect_equal(
+    res$intercept[1],
+    PatientLevelPrediction:::getModelIntercept(plpResult$model),
+    tolerance = 1e-4
+  )
+
 
   # check export to csv
   extractDatabaseToCsv(
@@ -298,6 +481,59 @@ test_that("temporary sqlite with results works", {
   expect_true(length(dir(file.path(saveLoc, "csvFolder", "models"))) > 0) # new
   # disconnect
   DatabaseConnector::disconnect(conn)
+})
+
+test_that("external validation with no outcomes uploads to sqlite", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+
+  validationPopulation <- population
+  validationPopulation$outcomeCount <- 0
+
+  externalVal <- externalValidatePlp(
+    plpModel = plpResult$model,
+    plpData = plpData,
+    population = validationPopulation,
+    settings = createValidationSettings(
+      recalibrate = NULL,
+      runCovariateSummary = FALSE
+    )
+  )
+
+  sqliteLocation <- insertRunPlpToSqlite(
+    runPlp = plpResult,
+    externalValidatePlp = list(externalVal),
+    diagnosePlp = NULL
+  )
+
+  expect_true(file.exists(sqliteLocation))
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(
+    dbms = "sqlite",
+    server = sqliteLocation
+  )
+  conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+
+  res <- DatabaseConnector::querySql(conn, "select count(*) as N from main.performances;")
+  expect_gte(res$N[1], 2)
+
+  expect_true(DatabaseConnector::existsTable(
+    connection = conn,
+    databaseSchema = "main",
+    tableName = "evaluation_statistics"
+  ))
+
+  perf <- DatabaseConnector::querySql(conn, "select max(performance_id) as performanceId from main.performances;")
+  evalRows <- DatabaseConnector::querySql(
+    conn,
+    paste0(
+      "select count(*) as N from main.evaluation_statistics where performance_id = ",
+      perf$performanceId[1],
+      ";"
+    )
+  )
+  expect_gt(evalRows$N[1], 0)
 })
 
 # importFromCsv test here as can use previous csv saving
@@ -414,8 +650,8 @@ test_that("message if model is null", {
   skip_if_not_installed(c("ResultModelManager", "Eunomia"))
   skip_if_offline()
   model2 <- list(noModel = TRUE)
-  attr(model2, "predictionFunction") <- "noModel"
-  attr(model2, "saveType") <- "RtoJson"
+  model2$modelDesign$modelSettings$settings$predict <- "noModel"
+  model2$modelDesign$modelSettings$settings$saveType <- "RtoJson"
   class(model2) <- "plpModel"
 
   plpResult2 <- plpResult

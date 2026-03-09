@@ -65,6 +65,9 @@ test_that("Random forest to json is correct", {
 
   loadedModel <- sklearnFromJson(path)
 
+  expect_true(reticulate::py_has_attr(loadedModel$estimators_[0], "n_features_in_"))
+  expect_no_error(sklearnToJson(loadedModel, path))
+
   loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
 
   expect_true(all.equal(predictions, loadedPredictions))
@@ -82,6 +85,9 @@ test_that("Adaboost to json is correct", {
   sklearnToJson(model, path)
 
   loadedModel <- sklearnFromJson(path)
+
+  expect_true(reticulate::py_has_attr(loadedModel$estimators_[0], "n_features_in_"))
+  expect_no_error(sklearnToJson(loadedModel, path))
 
   loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
 
@@ -138,12 +144,12 @@ test_that("SVM to json is correct", {
   ySparse <- np$empty(100L)
   for (i in 1:100) {
     row <- reticulate::dict(
-      a = random$randint(0, 2),
-      b = random$randint(3, 5),
-      c = random$randint(6, 8)
+      a = random$randint(0L, 2L),
+      b = random$randint(3L, 5L),
+      c = random$randint(6L, 8L)
     )
     features <- c(features, row)
-    reticulate::py_set_item(ySparse, i - 1L, random$randint(0, 2))
+    reticulate::py_set_item(ySparse, i - 1L, random$randint(0L, 2L))
   }
   xSparse <- featureHasher$transform(features)
 

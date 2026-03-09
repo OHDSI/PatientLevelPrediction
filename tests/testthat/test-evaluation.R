@@ -65,17 +65,29 @@ test_that("AUROC", {
   expect_equal(as.numeric(procAuc$auc), plpAUC, tolerance = tolerance)
 })
 
-test_that("AUPRC", {
-  ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
+test_that("computeAuprc without rawValue matches PRROC", {
+  ePrediction <- data.frame(value = runif(100, min = 0.0001, max = 0.9999), outcomeCount = round(runif(100)))
 
   positive <- ePrediction$value[ePrediction$outcomeCount == 1]
   negative <- ePrediction$value[ePrediction$outcomeCount == 0]
   pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
-  auprc <- pr$auc.integral
 
-  # area under precision-recall curve must be between 0 and 1
-  expect_gte(auprc, 0)
-  expect_lte(auprc, 1)
+  expect_equal(computeAuprc(ePrediction), as.double(pr$auc.integral))
+})
+
+test_that("computeAuprc uses rawValue when available", {
+  rawScores <- stats::rnorm(100)
+  ePrediction <- data.frame(
+    value = rep(0.5, 100),
+    rawValue = rawScores,
+    outcomeCount = c(rep(1, 50), rep(0, 50))
+  )
+  pr <- PRROC::pr.curve(
+    scores.class0 = rawScores[ePrediction$outcomeCount == 1],
+    scores.class1 = rawScores[ePrediction$outcomeCount == 0]
+  )
+
+  expect_equal(computeAuprc(ePrediction), as.double(pr$auc.integral))
 })
 
 test_that("Brierscore", {
@@ -98,6 +110,31 @@ test_that("Average precision", {
   )
   avePPlp <- averagePrecision(ePrediction)
   expect_equal(as.double(avePMetrics), avePPlp)
+})
+
+test_that("Evaluation metrics handle no outcome patients", {
+  ePrediction <- data.frame(
+    rowId = 1:100,
+    ageYear = sample(18:90, 100, replace = TRUE),
+    gender = sample(c(8507, 8532), 100, replace = TRUE),
+    outcomeCount = rep(0, 100),
+    value = runif(100, min = 0.0001, max = 0.9999),
+    evaluationType = rep("Validation", 100)
+  )
+  attr(ePrediction, "metaData") <- list(modelType = "binary")
+
+  expect_true(is.na(computeAuc(ePrediction, confidenceInterval = FALSE)))
+  aucCi <- computeAuc(ePrediction, confidenceInterval = TRUE)
+  expect_true(is.data.frame(aucCi))
+  expect_true(all(is.na(aucCi)))
+  expect_true(is.na(computeAuprc(ePrediction)))
+  expect_true(is.na(averagePrecision(ePrediction)))
+
+  eval <- evaluatePlp(ePrediction, typeColumn = "evaluationType")
+  expect_equal(class(eval), "plpEvaluation")
+  aurocRow <- eval$evaluationStatistics[eval$evaluationStatistics$metric == "AUROC", , drop = FALSE]
+  expect_true(nrow(aurocRow) == 1)
+  expect_true(is.na(as.numeric(aurocRow$value[1])))
 })
 
 

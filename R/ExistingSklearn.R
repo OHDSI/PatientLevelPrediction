@@ -16,24 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 #' Plug an existing scikit learn python model into the
 #' PLP framework
 #'
 #' @details
-#' This function lets users add an existing scikit learn model that is saved as 
-#' model.pkl into PLP format.  covariateMap is a mapping between standard 
-#' covariateIds and the model columns. The user also needs to specify the 
-#' covariate settings and population settings as these are used to determine 
+#' This function lets users add an existing scikit learn model that is saved as
+#' model.pkl into PLP format.  covariateMap is a mapping between standard
+#' covariateIds and the model columns. The user also needs to specify the
+#' covariate settings and population settings as these are used to determine
 #' the standard PLP model design.
 #'
 #' @param modelLocation  The location of the folder that contains the model as
 #' model.pkl
-#' @param covariateMap  A data.frame with the columns: columnId and covariateId. 
+#' @param covariateMap  A data.frame with the columns: columnId and covariateId.
 #' `covariateId` from FeatureExtraction is the standard OHDSI covariateId.
 #' `columnId` is the column location the model expects that covariate to be in.
-#' For example, if you had a column called 'age' in your model and this was the 
-#' 3rd column when fitting the model, then the values for columnId would be 3, 
+#' For example, if you had a column called 'age' in your model and this was the
+#' 3rd column when fitting the model, then the values for columnId would be 3,
 #' covariateId would be 1002 (the covariateId for age in years) and
 #' @param isPickle If the model should be saved as a pickle set this to TRUE if
 #' it should be saved as json set this to FALSE.
@@ -43,21 +42,22 @@
 #' @param restrictPlpDataSettings Add development restriction settings
 #' @param covariateSettings Add the covariate settings here to specify how the model covariates are created from the OMOP CDM
 #' @param featureEngineering Add any feature engineering here (e.g., if you need to modify the covariates before applying the model)
-#'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that 
+#'   This is a list of lists containing a string named funct specifying the engineering function to call and settings that are inputs to that
 #'   function. funct must take as input trainData (a plpData object) and settings (a list).
 #' @param tidyCovariates Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)
 #' @param requireDenseMatrix Specify whether the model needs a dense matrix (TRUE or FALSE)
+#' @param modelName A name that will show as the model type in the shiny app
 #'
 #' @return
-#' An object of class plpModel, this is a list that contains: 
+#' An object of class plpModel, this is a list that contains:
 #'        model (the location of the model.pkl),
-#'        preprocessing (settings for mapping the covariateIds to the model 
-#'                       column mames), 
-#'        modelDesign (specification of the model design), 
-#'        trainDetails (information about the model fitting) and 
-#'        covariateImportance.  
-#' 
-#' You can use the output as an input in PatientLevelPrediction::predictPlp to 
+#'        preprocessing (settings for mapping the covariateIds to the model
+#'                       column mames),
+#'        modelDesign (specification of the model design),
+#'        trainDetails (information about the model fitting) and
+#'        covariateImportance.
+#'
+#' You can use the output as an input in PatientLevelPrediction::predictPlp to
 #' apply the model and calculate the risk for patients.
 #' @export
 createSklearnModel <- function(
@@ -74,33 +74,44 @@ createSklearnModel <- function(
     covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
     featureEngineering = NULL,
     tidyCovariates = NULL,
-    requireDenseMatrix = FALSE
+    requireDenseMatrix = FALSE,
+    modelName = "existingSklearn"
     ) {
   reticulate::py_require("scikit-learn")
   checkSklearn()
   checkFileExists(modelLocation)
   checkIsClass(covariateMap, "data.frame")
   checkBoolean(isPickle)
-  checkDataframe(covariateMap, c("columnId", "covariateId"),
+  checkDataframe(
+    covariateMap,
+    c("columnId", "covariateId"),
     columnTypes = list(c("numeric", "integer"), c("numeric", "integer"))
   )
-  
+
   checkIsClass(targetId, c("numeric", "NULL"))
   checkIsClass(outcomeId, c("numeric", "NULL"))
-  
+
   checkIsClass(populationSettings, c("NULL", "populationSettings"))
-  checkIsClass(restrictPlpDataSettings , c("NULL", "restrictPlpDataSettings"))
+  checkIsClass(restrictPlpDataSettings, c("NULL", "restrictPlpDataSettings"))
   checkIsClass(covariateSettings, c("list", "NULL", "covariateSettings"))
-  
+
   checkIsClass(requireDenseMatrix, c("logical"))
-  
+
   # start to make the plpModel
   # add param with modelType attribute 
-  param <- list()
-  attr(param, "settings") <- list(modelType = 'Sklearn')
+  param <- list(
+    model = modelLocation
+  )
+
   existingModel <- list(
     model = "existingSklearn",
-    param = param
+    param = param,
+    settings = list(
+      modelName = modelName,
+      predict = "predictSklearn",
+      modelType = "binary",
+      saveType = "file"
+    )
   )
   class(existingModel) <- "modelSettings"
 
@@ -108,7 +119,7 @@ createSklearnModel <- function(
     preprocessing = list(
       featureEngineering = featureEngineering,
       tidyCovariates = tidyCovariates,
-      requireDenseMatrix = requireDenseMatrix
+      requiresDenseMatrix = requireDenseMatrix
     ),
     covariateImportance = data.frame(
       columnId = covariateMap$columnId,
@@ -127,7 +138,9 @@ createSklearnModel <- function(
         normalize = FALSE,
         removeRedundancy = FALSE
       ),
-      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 123)
+      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(
+        splitSeed = 123
+      )
     ),
     model = modelLocation,
     trainDetails = list(
@@ -138,11 +151,6 @@ createSklearnModel <- function(
       modelName = "existingSklearn"
     )
   )
-
-  attr(plpModel, "modelType") <- "binary"
-  attr(plpModel, "saveType") <- "file"
-  attr(plpModel, "predictionFunction") <- "predictPythonSklearn"
-  attr(plpModel, "saveToJson") <- !isPickle
   class(plpModel) <- "plpModel"
   return(plpModel)
 }

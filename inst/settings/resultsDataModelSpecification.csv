@@ -33,6 +33,8 @@ covariate_settings,covariate_settings_json,text,Yes,No,No,No,the json with the s
 model_settings,model_setting_id,int,Yes,Yes,No,No,a unique identifier for the model settings
 model_settings,model_type,varchar,No,No,No,No,the type of model 
 model_settings,model_settings_json,varchar,Yes,No,No,No,the json with the settings
+hyperparameter_settings,hyperparameter_setting_id,int,Yes,Yes,No,No,a unique identifier for the hyperparameter settings
+hyperparameter_settings,hyperparameter_settings_json,text,Yes,No,No,No,the json with the settings
 split_settings,split_setting_id,int,Yes,Yes,No,No,a unique identifier for the split settings
 split_settings,split_settings_json,text,Yes,No,No,No,the json with the settings
 plp_data_settings,plp_data_setting_id,int,Yes,Yes,No,No,a unique identifier for the plp data settings
@@ -55,6 +57,7 @@ model_designs,sample_setting_id,int,Yes,No,No,No,the  identifier for the sample 
 model_designs,split_setting_id,int,Yes,No,No,No,the  identifier for the split setting
 model_designs,feature_engineering_setting_id,int,Yes,No,No,No,the  identifier for the feature engineering setting
 model_designs,tidy_covariates_setting_id,int,Yes,No,No,No,the  identifier for the tidy covariate setting
+model_designs,hyperparameter_setting_id,int,Yes,No,No,No,the  identifier for the hyperparameter setting
 diagnostics,diagnostic_id,int,Yes,Yes,No,No,the unique identifier for the diagnostic results
 diagnostics,model_design_id,int,Yes,No,No,No,the identifier for the model design
 diagnostics,database_id,int,Yes,No,No,No,the identifier for the database

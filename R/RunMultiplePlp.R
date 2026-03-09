@@ -246,6 +246,7 @@ runMultiplePlp <- function(
             featureEngineeringSettings = modelDesign$featureEngineeringSettings,
             preprocessSettings = modelDesign$preprocessSettings,
             modelSettings = modelDesign$modelSettings,
+            hyperparameterSettings = modelDesign$hyperparameterSettings,
             logSettings = logSettings,
             executeSettings = modelDesign$executeSettings,
             saveDirectory = saveDirectory
@@ -302,6 +303,7 @@ runMultiplePlp <- function(
 #' @param preprocessSettings              Either NULL or an object of class \code{preprocessSettings} created using \code{createPreprocessingSettings()}
 #' @param modelSettings                   The model settings such as \code{setLassoLogisticRegression()}
 #' @param splitSettings                  The train/validation/test splitting used by all analyses created using \code{createDefaultSplitSetting()}
+#' @param hyperparameterSettings         The hyperparameter settings created using \code{createHyperparameterSettings()}
 #' @param runCovariateSummary             Whether to run the covariateSummary
 #'
 #' @return
@@ -332,6 +334,7 @@ createModelDesign <- function(
     preprocessSettings = NULL,
     modelSettings = NULL,
     splitSettings = createDefaultSplitSetting(),
+    hyperparameterSettings = createHyperparameterSettings(),
     runCovariateSummary = TRUE) {
   checkIsClass(targetId, c("numeric", "integer", "NULL"))
   checkIsClass(outcomeId, c("numeric", "integer", "NULL"))
@@ -340,6 +343,9 @@ createModelDesign <- function(
   checkIsClass(restrictPlpDataSettings, c("restrictPlpDataSettings", "NULL"))
   checkIsClass(covariateSettings, c("covariateSettings", "list", "NULL"))
   checkIsClass(splitSettings, c("splitSettings", "NULL"))
+  if (is.null(hyperparameterSettings)) {
+    hyperparameterSettings <- createHyperparameterSettings()
+  }
 
   useFE <- FALSE
   if (!is.null(featureEngineeringSettings)) {
@@ -388,6 +394,7 @@ createModelDesign <- function(
     preprocessSettings = preprocessSettings,
     modelSettings = modelSettings,
     splitSettings = splitSettings,
+    hyperparameterSettings = hyperparameterSettings,
     executeSettings = createExecuteSettings(
       runSplitData = TRUE,
       runSampleData = useSample,

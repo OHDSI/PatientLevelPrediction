@@ -20,9 +20,17 @@
 fitCyclopsModel <- function(
     trainData,
     modelSettings, # old:param,
-    search = "adaptive",
+    hyperparameterSettings = NULL,
     analysisId,
     ...) {
+  
+  # if hyperparameterSettings not NULL warn it is ignored
+  if (!is.null(hyperparameterSettings)) {
+    if (hyperparameterSettings$search != "grid" && hyperparameterSettings$tuningMetric$name != "AUC") {
+      warning("Non-default hyperparameterSettings are not supported for Cyclops models.")
+    }
+  }
+  
   param <- modelSettings$param
 
   # check plpData is coo format:
@@ -30,7 +38,7 @@ fitCyclopsModel <- function(
     stop("Needs correct covariateData")
   }
 
-  settings <- attr(param, "settings")
+  settings <- modelSettings$settings
 
   trainData$covariateData$labels <- trainData$labels %>%
     dplyr::mutate(
@@ -61,7 +69,7 @@ fitCyclopsModel <- function(
     outcomes = trainData$covariateData$labels,
     covariates = covariates,
     addIntercept = settings$addIntercept,
-    modelType = modelTypeToCyclopsModelType(settings$modelType),
+    modelType = modelTypeToCyclopsModelType(settings$cyclopsModelType),
     checkRowIds = FALSE,
     normalize = NULL,
     quiet = TRUE
@@ -130,12 +138,13 @@ fitCyclopsModel <- function(
 
   modelTrained <- createCyclopsModel(
     fit = fit,
-    modelType = settings$modelType,
+    modelType = settings$cyclopsModelType,
     useCrossValidation = max(trainData$folds$index) > 1,
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
     folds = trainData$folds,
-    priorType = param$priorParams$priorType
+    priorType = param$priorParams$priorType,
+    covariateData  = trainData$covariateData
   )
 
   if (!is.null(param$priorCoefs)) {
@@ -143,7 +152,7 @@ fitCyclopsModel <- function(
   }
 
   # TODO get optimal lambda value
-  ParallelLogger::logTrace("Returned from fitting to LassoLogisticRegression")
+  ParallelLogger::logTrace("Returned from fitting Cyclops model")
   comp <- Sys.time() - start
 
   ParallelLogger::logTrace("Getting variable importance")
@@ -152,7 +161,7 @@ fitCyclopsModel <- function(
   # get prediction on test set:
   ParallelLogger::logTrace("Getting predictions on train set")
   tempModel <- list(model = modelTrained)
-  attr(tempModel, "modelType") <- attr(param, "modelType")
+  attr(tempModel, "modelType") <- settings$modelType
   prediction <- predictCyclops(
     plpModel = tempModel,
     cohort = trainData$labels,
@@ -176,14 +185,19 @@ fitCyclopsModel <- function(
       x$out_sample_auc
     }))
     if (length(cvPerFold) > 0) {
+      cvMean <- mean(cvPerFold, na.rm = TRUE)
+      if (!is.finite(cvMean)) {
+        cvMean <- NA_real_
+      }
       cvPerFold <- data.frame(
         metric = "AUC",
-        fold = 1:length(cvPerFold),
-        value = cvPerFold,
+        fold = c("CV", paste0("Fold", seq_along(cvPerFold))),
+        value = c(cvMean, cvPerFold),
         startingVariance = ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance),
         lowerLimit = ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit),
         upperLimit = ifelse(is.null(param$upperLimit), "NULL", param$upperLimit),
-        tolerance = ifelse(is.null(settings$tolerance), "NULL", settings$tolerance)
+        tolerance = ifelse(is.null(settings$tolerance), "NULL", settings$tolerance),
+        stringsAsFactors = FALSE
       )
     } else {
       cvPerFold <- data.frame()
@@ -198,7 +212,7 @@ fitCyclopsModel <- function(
     preprocessing = list(
       featureEngineering = attr(trainData$covariateData, "metaData")$featureEngineering,
       tidyCovariates = attr(trainData$covariateData, "metaData")$tidyCovariateDataSettings, 
-      requireDenseMatrix = FALSE
+      requiresDenseMatrix = FALSE
     ),
     prediction = prediction,
     modelDesign = PatientLevelPrediction::createModelDesign(
@@ -221,7 +235,7 @@ fitCyclopsModel <- function(
       attrition = attr(trainData, "metaData")$attrition,
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
-      modelName = settings$modelType,
+      modelName = settings$modelName,
       finalModelParameters = list(
         variance = modelTrained$priorVariance,
         log_likelihood = modelTrained$log_likelihood
@@ -234,8 +248,8 @@ fitCyclopsModel <- function(
 
   class(result) <- "plpModel"
   attr(result, "predictionFunction") <- "predictCyclops"
-  attr(result, "modelType") <- attr(param, "modelType")
-  attr(result, "saveType") <- attr(param, "saveType")
+  attr(result, "modelType") <- settings$modelType
+  attr(result, "saveType") <- settings$saveType
   return(result)
 }
 
@@ -280,7 +294,9 @@ predictCyclops <- function(plpModel, data, cohort) {
   )
 
   # survival cyclops use baseline hazard to convert to risk from exp(LP) to 1-S^exp(LP)
-  if (attr(plpModel, "modelType") == "survival") {
+  predictionType <- attr(plpModel, "modelType")
+
+  if (predictionType == "survival") {
     if (!is.null(plpModel$model$baselineSurvival)) {
       if (is.null(attr(cohort, "timepoint"))) {
         timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
@@ -336,22 +352,22 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
     prediction <- as.data.frame(prediction)
     prediction <- merge(population, prediction, by = "rowId", all.x = TRUE, fill = 0)
     prediction$value[is.na(prediction$value)] <- 0
-    prediction$value <- prediction$value + intercept
+    prediction$rawValue <- prediction$value + intercept
   } else {
     warning("Model had no non-zero coefficients so predicted same for all population...")
     prediction <- population
-    prediction$value <- rep(0, nrow(population)) + intercept
+    prediction$rawValue <- rep(0, nrow(population)) + intercept
   }
   if (modelType == "logistic") {
     link <- function(x) {
       return(1 / (1 + exp(0 - x)))
     }
-    prediction$value <- link(prediction$value)
+    prediction$value <- link(prediction$rawValue)
     attr(prediction, "metaData")$modelType <- "binary"
   } else if (modelType == "poisson" || modelType == "survival" || modelType == "cox") {
     # add baseline hazard stuff
 
-    prediction$value <- exp(prediction$value)
+    prediction$value <- exp(prediction$rawValue)
     attr(prediction, "metaData")$modelType <- "survival"
     if (modelType == "survival") { # is this needed?
       attr(prediction, "metaData")$timepoint <- max(population$survivalTime, na.rm = TRUE)
@@ -362,7 +378,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
-                               priorType) {
+                               priorType, covariateData = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -415,9 +431,13 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   # get CV - added && status == "OK" to only run if the model fit sucsessfully
   if (modelType == "logistic" && useCrossValidation && status == "OK") {
-    outcomeModel$cv <- getCV(cyclopsData, labels,
+    outcomeModel$cv <- getCV(
+      cyclopsData, 
+      labels,
       cvVariance = fit$variance, folds = folds,
-      priorType = priorType
+      priorType = priorType,
+      covariateData = covariateData,
+      modelType = modelType
     )
   }
 
@@ -452,7 +472,10 @@ getCV <- function(
     labels,
     cvVariance,
     folds,
-    priorType) {
+    priorType,
+    covariateData = NULL,
+    modelType = "logistic"
+) {
   fixed_prior <- Cyclops::createPrior(
     priorType = priorType,
     variance = cvVariance,
@@ -470,12 +493,33 @@ getCV <- function(
       prior = fixed_prior,
       weights = weights
     ))
-    predict <- stats::predict(subset_fit)
+    coefficients <- stats::coef(subset_fit)
+    coefDf <- data.frame(
+      betas = as.numeric(coefficients),
+      covariateIds = names(coefficients),
+      stringsAsFactors = FALSE
+    )
+    if (!is.null(covariateData)) {
+      predAll <- predictCyclopsType(
+        coefficients = coefDf,
+        population = labels,
+        covariateData = covariateData,
+        modelType = modelType
+      )
+      probsAll <- predAll$value
+      rawValueAll <- predAll$rawValue
+    } else {
+      probsAll <- stats::predict(subset_fit)
+      probsAllClipped <- pmin(pmax(probsAll, 1e-15), 1 - 1e-15)
+      rawValueAll <- stats::qlogis(probsAllClipped)
+    }
 
-    auc <- aucWithoutCi(predict[hold_out], labels$y[hold_out])
+    auc <- aucWithoutCi(rawValueAll[hold_out], labels$y[hold_out])
 
-    predCV <- cbind(labels[hold_out, ],
-      value = predict[hold_out]
+    predCV <- cbind(
+      labels[hold_out, ],
+      value = probsAll[hold_out],
+      rawValue = rawValueAll[hold_out]
     )
     return(list(
       out_sample_auc = auc,

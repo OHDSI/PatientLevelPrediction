@@ -20,7 +20,7 @@ test_that("getCalibration binary", {
     value = runif(100),
     outcomeCount = round(runif(100))
   )
-  attr(pErediction, "metaData")$predictionType <- "binary"
+  attr(pErediction, "metaData")$modelType <- "binary"
   calib <- getCalibrationSummary(
     prediction = pErediction,
     predictionType = "binary",

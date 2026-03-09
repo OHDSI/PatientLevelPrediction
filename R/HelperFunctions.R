@@ -211,6 +211,43 @@ getOs <- function() {
   tolower(os)
 }
 
+getModelIntercept <- function(plpModel, default = 0) {
+  if (is.null(plpModel) || is.null(plpModel$model)) {
+    return(default)
+  }
+
+  model <- plpModel$model
+
+  interceptCandidate <- tryCatch(
+    {
+      # Cyclops-style: coefficients$covariateIds + coefficients$betas, with "(Intercept)" label
+      if (is.list(model) &&
+        !is.null(model$coefficients) &&
+        !is.null(model$coefficients$covariateIds) &&
+        !is.null(model$coefficients$betas)) {
+        betas <- model$coefficients$betas[model$coefficients$covariateIds %in% "(Intercept)"]
+        if (length(betas) >= 1) {
+          betas[[1]]
+        } else {
+          NULL
+        }
+      } else if (is.list(model) && !is.null(model$intercept) && length(model$intercept) == 1) {
+        # Existing GLM-style: model$intercept
+        model$intercept[[1]]
+      } else {
+        NULL
+      }
+    },
+    error = function(e) NULL
+  )
+
+  intercept <- suppressWarnings(as.numeric(interceptCandidate))
+  if (length(intercept) != 1 || is.na(intercept) || !is.finite(intercept)) {
+    return(default)
+  }
+  intercept
+}
+
 
 # Borrowed and adapted from Hmisc: https://github.com/harrelfe/Hmisc/blob/39011dae3af3c943e67401ed6000644014707e8b/R/cut2.s
 cut2 <- function(x, g, m = 150, digits = 3) {
@@ -321,4 +358,10 @@ cut2 <- function(x, g, m = 150, digits = 3) {
   }
 
   return(y)
+}
+
+
+functionExists <- function(name, envir = parent.frame()) {
+  is.character(name) && length(name) == 1L && name != "file" &&
+    exists(name, envir = envir, mode = "function", inherits = TRUE)
 }

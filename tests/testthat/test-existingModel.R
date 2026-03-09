@@ -62,10 +62,9 @@ test_that("Create existing sklearn works", {
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
   )
-  expect_equal(attr(model, "modelType"), "binary")
-  expect_equal(attr(model, "saveType"), "file")
-  expect_equal(attr(model, "predictionFunction"), "predictPythonSklearn")
-  expect_equal(attr(model, "saveToJson"), FALSE)
+  expect_equal(model$modelDesign$modelSettings$settings$modelType, "binary")
+  expect_equal(model$modelDesign$modelSettings$settings$saveType, "file")
+  expect_equal(model$modelDesign$modelSettings$settings$predict, "predictSklearn")
   expect_equal(class(model), "plpModel")
   unlink("model.pkl")
 })
@@ -96,16 +95,18 @@ test_that("existing sklearn model works", {
     analysisPath = tempdir()
   )
 
-  # load model json and save as pickle with joblib
-  model <- sklearnFromJson(file.path(plpModel$model, "model.json"))
+  # save as pickle with joblib
+  model <- plpModel$model
   joblib <- reticulate::import("joblib")
-  joblib$dump(model, file.path(plpModel$model, "model.pkl"))
+  path <- file.path(tempdir(), "existingSklearn")
+  if (!dir.exists(path)) dir.create(path)
+  modelLocation <- joblib$dump(model, file.path(path, "model.pkl"))
 
   # extract covariateMap from plpModel
   covariateMap <- plpModel$covariateImportance %>% dplyr::select(columnId, covariateId)
 
   existingModel <- createSklearnModel(
-    modelLocation = file.path(plpModel$model),
+    modelLocation = modelLocation,
     covariateMap = covariateMap,
     covariateSettings = plpModel$modelDesign$covariateSettings,
     populationSettings = plpModel$modelDesign$populationSettings
@@ -153,7 +154,7 @@ test_that("Externally trained sklearn model works", {
   createDir(path)
   joblib$dump(classifier, file.path(path, "model.pkl"))
   plpModel <- createSklearnModel(
-    model = path,
+    modelLocation = path,
     covariateMap = matrixData$covariateMap,
     covariateSettings = FeatureExtraction::createCovariateSettings(
       useDemographicsAge = TRUE
@@ -212,7 +213,7 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", requireDenseMatrix = 4))
+  ), mapping = "logistic", requiresDenseMatrix = 4))
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -224,9 +225,9 @@ test_that("Create existing GLM model works", {
   )
   expect_equal(model$model$intercept, 2)
   expect_equal(model$model$mapping, "logistic")
-  expect_equal(attr(model, "modelType"), "binary")
-  expect_equal(attr(model, "saveType"), "RtoJson")
-  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+  expect_equal(model$modelDesign$modelSettings$settings$modelType, "binary")
+  expect_equal(model$modelDesign$modelSettings$settings$saveType, "RtoJson")
+  expect_equal(model$modelDesign$modelSettings$settings$predict, "predictGlm")
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -244,12 +245,12 @@ test_that("Create existing GLM model works", {
   )
   expect_equal(model$modelDesign$targetId, 33)
   expect_equal(model$modelDesign$outcomeId, 1)
-  expect_equal(model$preprocessing$requireDenseMatrix, TRUE)
+  expect_equal(model$preprocessing$requiresDenseMatrix, TRUE)
   expect_equal(model$modelDesign$populationSettings, createStudyPopulationSettings())
   expect_equal(model$modelDesign$restrictPlpDataSettings, createRestrictPlpDataSettings())
   expect_equal(model$modelDesign$covariateSettings, FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE))
   
-  madeupFunc <- function(x){return(x)}
+  madeupFunc <- function(x) x
   model <- createGlmModel(
     coefficients = data.frame(
       coefficient = c(1, 2),
@@ -259,9 +260,9 @@ test_that("Create existing GLM model works", {
     mapping = "madeupFunc"
   )
   expect_equal(model$model$mapping, "madeupFunc")
-  expect_equal(attr(model, "modelType"), "binary")
-  expect_equal(attr(model, "saveType"), "RtoJson")
-  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+  expect_equal(model$modelDesign$modelSettings$settings$modelType, "binary")
+  expect_equal(model$modelDesign$modelSettings$settings$saveType, "RtoJson")
+  expect_equal(model$modelDesign$modelSettings$settings$predict, "predictGlm")
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -272,9 +273,9 @@ test_that("Create existing GLM model works", {
     mapping = madeupFunc
   )
   expect_equal(model$model$mapping, madeupFunc)
-  expect_equal(attr(model, "modelType"), "binary")
-  expect_equal(attr(model, "saveType"), "RtoJson")
-  expect_equal(attr(model, "predictionFunction"), "PatientLevelPrediction::predictGlm")
+  expect_equal(model$modelDesign$modelSettings$settings$modelType, "binary")
+  expect_equal(model$modelDesign$modelSettings$settings$saveType, "RtoJson")
+  expect_equal(model$modelDesign$modelSettings$settings$predict, "predictGlm")
 })
 
 test_that("Existing glm model works", {

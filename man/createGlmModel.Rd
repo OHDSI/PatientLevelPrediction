@@ -15,7 +15,8 @@ createGlmModel(
   covariateSettings = FeatureExtraction::createDefaultCovariateSettings(),
   featureEngineering = NULL,
   tidyCovariates = NULL,
-  requireDenseMatrix = FALSE
+  requireDenseMatrix = FALSE,
+  modelName = "existingGlm"
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ function. funct must take as input trainData (a plpData object) and settings (a 
 \item{tidyCovariates}{Add any tidyCovariates mappings here (e.g., if you need to normalize the covariates)}
 
 \item{requireDenseMatrix}{Specify whether the model needs a dense matrix (TRUE or FALSE)}
+
+\item{modelName}{A name that will be used for the model type in the shiny viewer}
 }
 \value{
 A model object containing the model (Coefficients and intercept)

@@ -4,7 +4,7 @@
 \alias{pmmFit}
 \title{Predictive mean matching using lasso}
 \usage{
-pmmFit(data, k = 5)
+pmmFit(data, k = 5, alpha = 1)
 }
 \arguments{
 \item{data}{An andromeda object with the following fields:
@@ -13,6 +13,8 @@ xMiss: covariates table for missing data
 yObs: outcome variable that we want to impute}
 
 \item{k}{The number of donors to use for matching (default 5)}
+
+\item{alpha}{Elastic-net mixing parameter (\code{1} = lasso, \code{0} = ridge)}
 }
 \description{
 Predictive mean matching using lasso

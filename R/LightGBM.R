@@ -84,7 +84,7 @@ setLightGBM <- function(nthread = 20,
     stop("isUnbalance cannot be used at the same time with scale_pos_weight != 1, choose only one of them")
   }
 
-  paramGrid <- list(
+  param <- list(
     earlyStopRound = earlyStopRound,
     numIterations = numIterations,
     numLeaves = numLeaves,
@@ -97,23 +97,22 @@ setLightGBM <- function(nthread = 20,
     scalePosWeight = scalePosWeight
   )
 
-  param <- listCartesian(paramGrid)
 
-  attr(param, "settings") <- list(
-    modelType = "LightGBM",
+  settings <- list(
     seed = seed[[1]],
-    modelName = "LightGBM",
+    modelType = "binary",
+    modelName = "lightGBM",
     threads = nthread[1],
-    varImpRFunction = "varImpLightGBM",
-    trainRFunction = "fitLightGBM",
-    predictRFunction = "predictLightGBM"
+    variableImportance = "varImpLightGBM",
+    train = "fitLightGBM",
+    predict = "predictLightGBM",
+    prepareData = "toSparseM",
+    saveType = "saveLoadLightGBM"
   )
 
-  attr(param, "saveType") <- "lightgbm"
-
   result <- list(
-    fitFunction = "fitRclassifier",
-    param = param
+    param = param,
+    settings = settings
   )
 
   class(result) <- "modelSettings"
@@ -230,4 +229,45 @@ fitLightGBM <- function(dataMatrix,
   )
 
   return(model)
+}
+
+saveLoadLightGBM <- function() {
+  rlang::check_installed("lightgbm")
+  list(
+    save = function(model, file) {
+      modelTxt <- model$save_model_to_string(NULL)
+
+      ParallelLogger::saveSettingsToJson(
+        object = list(
+          modelType = "lightGBM",
+          modelFormat = "lightgbm_txt",
+          model = modelTxt
+        ),
+        fileName = file
+      )
+    },
+    load = function(file) {
+      firstLine <- tryCatch(readLines(file, n = 1, warn = FALSE), error = function(e) "")
+      firstLine <- trimws(firstLine)
+
+      wrapper <- NULL
+      if (nzchar(firstLine) && startsWith(firstLine, "{")) {
+        wrapper <- tryCatch(
+          ParallelLogger::loadSettingsFromJson(fileName = file),
+          error = function(e) NULL
+        )
+      }
+
+      if (!is.null(wrapper) &&
+        is.list(wrapper) &&
+        identical(wrapper$modelType, "lightGBM") &&
+        identical(wrapper$modelFormat, "lightgbm_txt") &&
+        is.character(wrapper$model) &&
+        length(wrapper$model) == 1) {
+        return(lightgbm::lgb.load(model_str = wrapper$model))
+      }
+
+      lightgbm::lgb.load(filename = file)
+    }
+  )
 }

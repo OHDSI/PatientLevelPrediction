@@ -36,30 +36,16 @@ test_that("LightGBM settings work", {
   )
 
   expect_s3_class(lgbmSet, "modelSettings")
-  expect_equal(lgbmSet$fitFunction, "fitRclassifier")
   expect_type(lgbmSet$param, "list")
 
-  expect_equal(attr(lgbmSet$param, "settings")$modelType, "LightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$seed, seed)
-  expect_equal(attr(lgbmSet$param, "settings")$modelName, "LightGBM")
+  expect_equal(lgbmSet$settings$modelType, "binary")
+  expect_equal(lgbmSet$settings$seed, seed)
+  expect_equal(lgbmSet$settings$modelName, "lightGBM")
 
-  expect_equal(attr(lgbmSet$param, "settings")$threads, 5)
-  expect_equal(attr(lgbmSet$param, "settings")$varImpRFunction, "varImpLightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$trainRFunction, "fitLightGBM")
-  expect_equal(attr(lgbmSet$param, "settings")$predictRFunction, "predictLightGBM")
-
-  expect_equal(length(lgbmSet$param), 2)
-
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$numIterations)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$numLeaves)))), 2)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$earlyStopRound)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$maxDepth)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$minDataInLeaf)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$learningRate)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$lambdaL1)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$lambdaL2)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$scalePosWeight)))), 1)
-  expect_equal(length(unique(unlist(lapply(lgbmSet$param, function(x) x$isUnbalance)))), 1)
+  expect_equal(lgbmSet$settings$threads, 5)
+  expect_equal(lgbmSet$settings$variableImportance, "varImpLightGBM")
+  expect_equal(lgbmSet$settings$train, "fitLightGBM")
+  expect_equal(lgbmSet$settings$predict, "predictLightGBM")
 })
 
 
@@ -88,7 +74,15 @@ test_that("LightGBM working checks", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
   skip_if_offline()
-  modelSettings <- setLightGBM(numIterations = 10, maxDepth = 3, learningRate = 0.1, numLeaves = 31, minDataInLeaf = 10, lambdaL1 = 0, lambdaL2 = 0)
+  modelSettings <- setLightGBM(
+    numIterations = 10, 
+    maxDepth = 3, 
+    learningRate = 0.1, 
+    numLeaves = 31, 
+    minDataInLeaf = 10, 
+    lambdaL1 = 0, 
+    lambdaL2 = 0
+  )
 
   fitModel <- fitPlp(
     trainData = trainData,
@@ -106,7 +100,10 @@ test_that("LightGBM working checks", {
 
   expect_equal(class(fitModel$model), c("lgb.Booster", "R6"))
 
-  expect_lte(nrow(fitModel$covariateImportance), trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull())
+  expect_lte(
+    nrow(fitModel$covariateImportance), 
+    trainData$covariateData$covariateRef %>% dplyr::tally() %>% dplyr::pull()
+  )
 
   expect_equal(fitModel$modelDesign$outcomeId, outcomeId)
   expect_equal(fitModel$modelDesign$targetId, 1)
@@ -114,4 +111,51 @@ test_that("LightGBM working checks", {
 
   # test that at least some features have importances that are not zero
   expect_equal(sum(abs(fitModel$covariateImportance$covariateValue)) > 0, TRUE)
+
+  # test save and load
+  savePath <- tempfile("lgbmTest_")
+  unlink(savePath, recursive = TRUE)
+  savePlpModel(fitModel, savePath)
+
+  # current format should be JSON:
+  expect_true(file.exists(file.path(savePath, "model.json")))
+  serialized <- ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json"))
+  expect_equal(serialized$modelType, "lightGBM")
+  expect_equal(serialized$modelFormat, "lightgbm_txt")
+  expect_true(is.character(serialized$model))
+  expect_length(serialized$model, 1)
+  expect_match(serialized$model, "^tree")
+  expect_match(serialized$model, "version=")
+  expect_equal(serialized$model, fitModel$model$save_model_to_string(NULL))
+
+  loadedBooster <- lightgbm::lgb.load(model_str = serialized$model)
+  expect_equal(class(loadedBooster), c("lgb.Booster", "R6"))
+  expect_equal(loadedBooster$num_trees(), fitModel$model$num_trees())
+
+  loadModel <- loadPlpModel(savePath)
+
+  expect_s3_class(loadModel, "plpModel")
+  expect_equal(class(loadModel$model), c("lgb.Booster", "R6"))
+  expect_equal(loadModel$model$num_trees(), fitModel$model$num_trees())
+
+  predFit <- predictPlp(
+    plpModel = fitModel,
+    plpData = testData,
+    population = testData$labels
+  )
+  predLoad <- predictPlp(
+    plpModel = loadModel,
+    plpData = testData,
+    population = testData$labels
+  )
+  expect_equal(predLoad$value, predFit$value, tolerance = 0e-10)
+  expect_true(all(predLoad$value >= 0))
+  expect_true(all(predLoad$value <= 1))
+
+  # backwards compatibility: old LightGBM serialization (raw text in model.json)
+  lightgbm::lgb.save(fitModel$model, file.path(savePath, "model.json"))
+  expect_error(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")))
+  loadModelOld <- loadPlpModel(savePath)
+  expect_s3_class(loadModelOld, "plpModel")
+  expect_equal(class(loadModelOld$model), c("lgb.Booster", "R6"))
 })

@@ -733,7 +733,17 @@ insertModelInDatabase <- function(
 
   # need hyperParamSearch for shiny app but the other parts
   # are too large to store into the database
-  trainDetails <- list(hyperParamSearch = model$trainDetails$hyperParamSearch)
+  hyperParamSearch <- normalizeHyperParamSearchForDatabase(
+    model$trainDetails$hyperParamSearch
+  )
+  hyperparameterSettings <- NULL
+  if (!is.null(model$modelDesign) && is.list(model$modelDesign)) {
+    hyperparameterSettings <- model$modelDesign$hyperparameterSettings
+  }
+  trainDetails <- list(
+    hyperParamSearch = hyperParamSearch,
+    hyperparameterSettings = hyperparameterSettings
+  )
 
   # create this function
   modelId <- addModel(
@@ -754,7 +764,7 @@ insertModelInDatabase <- function(
 
     executionDateTime = format(model$trainDetails$trainingDate, format = "%Y-%m-%d"),
     trainingTime = model$trainDetails$trainingTime,
-    intercept = ifelse(is.list(model$model) & attr(model, "saveType") != "xgboost", model$model$coefficients$betas[1], 0), # using the param useIntercept?
+    intercept = getModelIntercept(model), 
 
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
@@ -768,6 +778,39 @@ insertModelInDatabase <- function(
   )
 
   return(invisible(modelId))
+}
+
+normalizeHyperParamSearchForDatabase <- function(hyperParamSearch) {
+  if (is.null(hyperParamSearch)) {
+    return(data.frame())
+  }
+
+  if (is.data.frame(hyperParamSearch)) {
+    return(hyperParamSearch)
+  }
+
+  if (is.list(hyperParamSearch)) {
+    fromSummary <- lapply(hyperParamSearch, function(entry) {
+      if (is.list(entry) && is.data.frame(entry$hyperSummary)) {
+        return(entry$hyperSummary)
+      }
+      NULL
+    })
+    fromSummary <- Filter(Negate(is.null), fromSummary)
+    if (length(fromSummary) > 0) {
+      return(dplyr::bind_rows(fromSummary))
+    }
+
+    directDataFrames <- Filter(is.data.frame, hyperParamSearch)
+    if (length(directDataFrames) > 0) {
+      return(dplyr::bind_rows(directDataFrames))
+    }
+  }
+
+  ParallelLogger::logWarn(
+    "Unable to coerce hyperParamSearch to data.frame; storing empty table for compatibility."
+  )
+  data.frame()
 }
 
 addModel <- function(
@@ -925,6 +968,7 @@ getPlpResultTables <- function() {
       "MODELS",
       "MODEL_DESIGNS",
       "MODEL_SETTINGS",
+      "HYPERPARAMETER_SETTINGS",
       "COVARIATE_SETTINGS",
       "POPULATION_SETTINGS",
       "FEATURE_ENGINEERING_SETTINGS",

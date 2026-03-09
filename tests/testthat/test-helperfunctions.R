@@ -42,4 +42,70 @@ test_that("Borrowed cut2", {
   )
 })
 
+test_that("getModelIntercept", {
+  getIntercept <- PatientLevelPrediction:::getModelIntercept
+
+  # missing model
+  expect_equal(getIntercept(NULL), 0)
+  expect_equal(getIntercept(list()), 0)
+  expect_equal(getIntercept(list(model = NULL), default = 7), 7)
+
+  # Cyclops-style intercept present
+  cyclopsModel <- list(
+    model = list(
+      coefficients = list(
+        covariateIds = c("(Intercept)", "1002"),
+        betas = c(1.23, 0.4)
+      )
+    )
+  )
+  expect_equal(getIntercept(cyclopsModel), 1.23)
+
+  # Cyclops-style intercept absent
+  cyclopsNoIntercept <- list(
+    model = list(
+      coefficients = list(
+        covariateIds = c("1002", "1003"),
+        betas = c(1.23, 0.4)
+      )
+    )
+  )
+  expect_equal(getIntercept(cyclopsNoIntercept), 0)
+
+  # Cyclops-style malformed returns default
+  cyclopsMalformed <- list(
+    model = list(
+      coefficients = list(
+        covariateIds = c("(Intercept)", "1002")
+      )
+    )
+  )
+  expect_equal(getIntercept(cyclopsMalformed, default = 9), 9)
+
+  # GLM-style intercept present
+  glmModel <- list(model = list(intercept = -2.5))
+  expect_equal(getIntercept(glmModel), -2.5)
+
+  # GLM-style intercept invalid returns default
+  expect_equal(getIntercept(list(model = list(intercept = c(1, 2))), default = 11), 11)
+  expect_equal(getIntercept(list(model = list(intercept = "x")), default = 11), 11)
+  expect_equal(getIntercept(list(model = list(intercept = NA_real_)), default = 11), 11)
+  expect_equal(getIntercept(list(model = list(intercept = Inf)), default = 11), 11)
+
+  # Prefer Cyclops intercept when both are present
+  both <- list(
+    model = list(
+      intercept = -2.5,
+      coefficients = list(
+        covariateIds = c("(Intercept)", "1002"),
+        betas = c(9.9, 0.4)
+      )
+    )
+  )
+  expect_equal(getIntercept(both), 9.9)
+
+  # Non-linear model objects default
+  expect_equal(getIntercept(list(model = structure(1, class = "xgb.Booster")), default = 3), 3)
+})
+
 # getOs test?

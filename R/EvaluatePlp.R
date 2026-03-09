@@ -51,13 +51,19 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   start <- Sys.time()
   # checking inputs
   # ========================================
-  modelType <- attr(prediction, "metaData")$modelType
+  modelType <- attr(prediction, "metaData")$modelType 
+  if (is.null(modelType)) {
+    stop("No modelType found in prediction object in metaData$modelType attribute")
+  }
 
   # could remove the bit below to let people add custom types (but currently
   # we are thinking this should be set - so people should add a new type
   # evaluation into the package rather than use custom
   if (!modelType %in% c("binary", "survival")) {
-    stop("Currently only support binary or survival classification models")
+    stop(
+      "Currently only support binary or survival classification models, found: ",
+      modelType
+   )
   }
 
   if (is.null(prediction$outcomeCount)) {
