@@ -1,5 +1,23 @@
-PatientLevelPrediction 6.5.1.9999
+PatientLevelPrediction 6.6.0
 ======================
+
+## New features
+- Added ridge logistic regression settings via Cyclops with `setRidgeRegression()` (#621).
+- Expanded imputation support and hardened the missing-indicator and predictive mean matching workflow (#622).
+- Added support for using logits / linear predictors in rank-based metrics (#615).
+- Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (#633, #632).
+
+## Bug fixes
+- Improved upload of hyperparameter metadata for database viewers and downstream tools (#628).
+- Improved robustness when `modelType` is missing during model settings upload (#623).
+- Fixed evaluation when outcomes are single-class (#624).
+- Improved LightGBM model persistence using a more robust in-memory serialization path (#626).
+- Removed deprecated sklearn AdaBoost usage for compatibility with newer scikit-learn versions (#627).
+- Fixed serialization of `simpleImputer` metadata when saving PLP models (#630).
+
+## Performance and maintenance
+- Improved `simpleImpute` performance for large feature sets (#629).
+- Reduced GitHub Actions `R CMD check` runtime in CI (#625).
 
 PatientLevelPrediction 6.5.1
 ======================
