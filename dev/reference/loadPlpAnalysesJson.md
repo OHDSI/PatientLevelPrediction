@@ -32,7 +32,7 @@ modelDesign <- createModelDesign(targetId = 1, outcomeId = 2,
                                  modelSettings = setLassoLogisticRegression())
 saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
 savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
-#> [1] "/tmp/Rtmp1RpNip/loadPlpAnalysesJson/predictionAnalysisList.json"
+#> [1] "/tmp/Rtmpdi1Kvw/loadPlpAnalysesJson/predictionAnalysisList.json"
 loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $plpVersion
 #> [1] "6.5.1.9999"
@@ -327,7 +327,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] TRUE
 #> 
 #> $settings$seed
-#> [1] 41919421
+#> [1] 22590968
 #> 
 #> $settings$threads
 #> [1] -1
@@ -359,7 +359,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] 0.75
 #> 
 #> $seed
-#> [1] 3520
+#> [1] 50549
 #> 
 #> $nfold
 #> [1] 3
@@ -368,6 +368,46 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] "splitSettings"
 #> attr(,"fun")
 #> [1] "randomSplitter"
+#> 
+#> $hyperparameterSettings
+#> $search
+#> [1] "grid"
+#> 
+#> $tuningMetric
+#> $tuningMetric$fun
+#> function (prediction) 
+#> {
+#>     result <- do.call(fun, c(list(prediction = prediction), funArgs))
+#>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
+#>         stop("Metric function must return one finite numeric value.", 
+#>             call. = FALSE)
+#>     }
+#>     result
+#> }
+#> <bytecode: 0x55d21c4c0058>
+#> <environment: 0x55d21c4bf2f0>
+#> 
+#> $tuningMetric$maximize
+#> [1] TRUE
+#> 
+#> $tuningMetric$name
+#> [1] "AUC"
+#> 
+#> $tuningMetric$funArgs
+#> list()
+#> 
+#> 
+#> $sampleSize
+#> NULL
+#> 
+#> $randomSeed
+#> NULL
+#> 
+#> $generator
+#> NULL
+#> 
+#> attr(,"class")
+#> [1] "hyperparameterSettings"
 #> 
 #> $executeSettings
 #> $runSplitData

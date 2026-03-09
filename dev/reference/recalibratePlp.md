@@ -57,20 +57,20 @@ attr(prediction, "metaData") <- list(modelType = "binary")
 outcomeRate <- mean(prediction$outcomeCount)
 observedRisk <- mean(prediction$value)
 message("outcome rate is: ", outcomeRate)
-#> outcome rate is: 0.1
+#> outcome rate is: 0.12
 message("observed risk is: ", observedRisk)
-#> observed risk is: 0.483010764499195
+#> observed risk is: 0.486352271272335
 # lets recalibrate the predictions
 prediction <- recalibratePlp(prediction, 
                              analysisId = "recalibration", 
                              method = "recalibrationInTheLarge")
 recalibratedRisk <- mean(prediction$value)
 message("recalibrated risk with recalibration in the large is: ", recalibratedRisk)
-#> recalibrated risk with recalibration in the large is: 0.330723466843302
+#> recalibrated risk with recalibration in the large is: 0.34592215348276
 prediction <- recalibratePlp(prediction, 
                              analysisId = "recalibration", 
                              method = "weakRecalibration")
 recalibratedRisk <- mean(prediction$value)
 message("recalibrated risk with weak recalibration is: ", recalibratedRisk)
-#> recalibrated risk with weak recalibration is: 0.215361733421654
+#> recalibrated risk with weak recalibration is: 0.23296107674138
 ```

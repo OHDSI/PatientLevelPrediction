@@ -30,5 +30,5 @@ Calculate the model-based concordance
 ``` r
 prediction <- data.frame(value = runif(100))
 modelBasedConcordance(prediction)
-#> [1] 0.823139
+#> [1] 0.8336346
 ```

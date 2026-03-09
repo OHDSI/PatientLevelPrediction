@@ -436,6 +436,46 @@ createModelDesign(
 #> attr(,"class")
 #> [1] "splitSettings"
 #> 
+#> $hyperparameterSettings
+#> $search
+#> [1] "grid"
+#> 
+#> $tuningMetric
+#> $tuningMetric$fun
+#> function (prediction) 
+#> {
+#>     result <- do.call(fun, c(list(prediction = prediction), funArgs))
+#>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
+#>         stop("Metric function must return one finite numeric value.", 
+#>             call. = FALSE)
+#>     }
+#>     result
+#> }
+#> <bytecode: 0x55d20ef6ea98>
+#> <environment: 0x55d20bb0b588>
+#> 
+#> $tuningMetric$maximize
+#> [1] TRUE
+#> 
+#> $tuningMetric$name
+#> [1] "AUC"
+#> 
+#> $tuningMetric$funArgs
+#> list()
+#> 
+#> 
+#> $sampleSize
+#> NULL
+#> 
+#> $randomSeed
+#> NULL
+#> 
+#> $generator
+#> NULL
+#> 
+#> attr(,"class")
+#> [1] "hyperparameterSettings"
+#> 
 #> $executeSettings
 #> $runSplitData
 #> [1] TRUE
