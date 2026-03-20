@@ -165,10 +165,10 @@ runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
   writeLines(
     c(
       "args <- commandArgs(trailingOnly = TRUE)",
-      "if (length(args) < 2) stop('Expected 2 args: <pkgPath> <countsPath>')",
+      "if (length(args) < 3) stop('Expected 3 args: <pkgPath> <countsPath> <filterArg>')",
       "pkgPath <- args[[1]]",
       "countsPath <- args[[2]]",
-      "filterArg <- Sys.getenv('REVDEP_FILTER', unset = '')",
+      "filterArg <- args[[3]]",
       "",
       "if (!requireNamespace('testthat', quietly = TRUE)) stop('testthat not installed')",
       "if (!requireNamespace('jsonlite', quietly = TRUE)) stop('jsonlite not installed')",
@@ -194,11 +194,13 @@ runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
   )
   on.exit(unlink(runner), add = TRUE)
 
-  args <- c("--vanilla", runner, pkgPath, countsJsonPath)
+  args <- shQuote(
+    c("--vanilla", runner, pkgPath, countsJsonPath, filterArg),
+    type = "sh"
+  )
   system2(
     "Rscript",
     args,
-    env = c(paste0("REVDEP_FILTER=", filterArg)),
     stdout = testLogPath,
     stderr = testLogPath
   )
