@@ -21,90 +21,172 @@ env:
   R_KEEP_PKG_SOURCE: yes
 
 jobs:
-  revdep-default:
-    if: ${{ github.event.inputs.repos == '' }}
+  prepare-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      count: ${{ steps.matrix.outputs.count }}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
 
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Setup R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: 'release'
-          use-public-rspm: true
-
-      - name: Setup R dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: |
-            any::pak
-            any::testthat
-            any::jsonlite
-            any::desc
-            any::gert
-
-      - name: Install this package (dev version)
-        run: |
-          Rscript -e 'pak::pkg_install("local::.", upgrade = FALSE)'
-
-      - name: Run reverse dependency tests
-        env:
-          INPUT_REPOS: ""
-        run: |
-          Rscript extras/revDeps.R
-
-      - name: Upload results
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: revdep-results-default
-          path: revdep/results
-
-  revdep-custom:
-    if: ${{ github.event.inputs.repos != '' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v5
-
-      - name: Setup Quarto
-        uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Setup R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: 'release'
-          use-public-rspm: true
-
-      - name: Setup R dependencies
-        uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: |
-            any::pak
-            any::testthat
-            any::jsonlite
-            any::desc
-            any::gert
-
-      - name: Install this package (dev version)
-        run: |
-          Rscript -e 'pak::pkg_install("local::.", upgrade = FALSE)'
-
-      - name: Run reverse dependency tests
+      - name: Build revdep matrix
+        id: matrix
         env:
           INPUT_REPOS: ${{ github.event.inputs.repos }}
         run: |
+          matrix="$(python3 .github/scripts/revDepsMatrix.py)"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          MATRIX_JSON="$matrix" python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+          matrix = json.loads(os.environ["MATRIX_JSON"])
+          print(f"count={len(matrix['include'])}")
+          PY
+
+      - name: Show targets
+        env:
+          MATRIX_JSON: ${{ steps.matrix.outputs.matrix }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          matrix = json.loads(os.environ["MATRIX_JSON"])
+          print("Reverse dependency targets:")
+          for entry in matrix["include"]:
+              filter_text = f" filter={entry['filter']}" if entry["filter"] else ""
+              print(f"- {entry['repo']} ref_mode={entry['ref_mode']}{filter_text}")
+          PY
+
+  revdep:
+    needs: prepare-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::pak
+            any::testthat
+            any::jsonlite
+            any::desc
+            any::gert
+
+      - name: Install this package (dev version)
+        run: |
+          Rscript -e 'pak::pkg_install("local::.", upgrade = FALSE)'
+
+      - name: Run reverse dependency tests
+        env:
+          INPUT_REPOS: ${{ matrix.spec }}
+        run: |
           Rscript extras/revDeps.R
 
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: revdep-results-custom
+          name: revdep-results-${{ matrix.slug }}
           path: revdep/results
+
+  summarize:
+    if: always()
+    needs:
+      - prepare-matrix
+      - revdep
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download results
+        uses: actions/download-artifact@v5
+        with:
+          pattern: revdep-results-*
+          path: revdep-artifacts
+          merge-multiple: true
+
+      - name: Summarize reverse dependency results
+        env:
+          TARGET_COUNT: ${{ needs.prepare-matrix.outputs.count }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          summaries = []
+          for path in sorted(Path("revdep-artifacts").glob("**/summary.json")):
+              with path.open(encoding="utf-8") as handle:
+                  summaries.append(json.load(handle))
+
+          print(
+              f"Collected {len(summaries)} summaries from "
+              f"{os.environ['TARGET_COUNT']} matrix targets."
+          )
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if not step_summary:
+              raise SystemExit(0)
+
+          lines = [
+              "## Reverse Dependency Results",
+              "",
+              "| Repository | Ref Mode | Resolved Ref | Status | Fail | Error | Warn | Skip | Duration |",
+              "| :--- | :--- | :--- | :--- | ---: | ---: | ---: | ---: | ---: |",
+          ]
+
+          summaries.sort(
+              key=lambda item: (
+                  item.get("owner_repo", ""),
+                  item.get("ref_mode", ""),
+              )
+          )
+          for item in summaries:
+              lines.append(
+                  "| {repo} | {ref_mode} | {resolved_ref} | {status} | {fail} | {err} | {warn} | {skip} | {duration:.0f}s |".format(
+                      repo=item.get("owner_repo", ""),
+                      ref_mode=item.get("ref_mode", ""),
+                      resolved_ref=item.get("resolved_ref", ""),
+                      status=item.get("status", ""),
+                      fail=item.get("test_failures", 0),
+                      err=item.get("test_errors", 0),
+                      warn=item.get("test_warnings", 0),
+                      skip=item.get("test_skipped", 0),
+                      duration=item.get("duration_sec", 0),
+                  )
+              )
+
+          lines.append("")
+          failures = [
+              item for item in summaries if item.get("status") != "SUCCESS"
+          ]
+          if failures:
+              lines.append("### Failures")
+              lines.append("")
+              for item in failures:
+                  lines.append(
+                      "- {repo} ({ref_mode}): {status}".format(
+                          repo=item.get("owner_repo", ""),
+                          ref_mode=item.get("ref_mode", ""),
+                          status=item.get("status", ""),
+                      )
+                  )
+
+          Path(step_summary).write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
