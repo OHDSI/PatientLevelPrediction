@@ -420,3 +420,112 @@ test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitSklearn
     )
   })
 })
+
+test_that("v6.5-style modelDesign JSON roundtrip keeps PLP-compatible model settings", {
+  skip_if_not_installed(c("Eunomia", "xgboost"))
+  skip_if_offline()
+  skip_on_cran()
+
+  paramGrid <- list(
+    ntrees = list(2L),
+    earlyStopRound = list(25L),
+    maxDepth = list(3L),
+    minChildWeight = list(1),
+    learnRate = list(0.1),
+    scalePosWeight = list(1),
+    lambda = list(1),
+    alpha = list(0)
+  )
+  param <- listCartesian(paramGrid)
+  attr(param, "settings") <- list(
+    modelType = "Xgboost",
+    seed = 1,
+    modelName = "Gradient Boosting Machine",
+    threads = 1,
+    varImpRFunction = "varImpXgboost",
+    trainRFunction = "fitXgboost",
+    predictRFunction = "predictXgboost"
+  )
+  attr(param, "saveType") <- "xgboost"
+
+  legacyModelSettings <- structure(
+    list(
+      fitFunction = "fitRclassifier",
+      param = param
+    ),
+    class = "modelSettings"
+  )
+
+  modelDesign <- createModelDesign(
+    targetId = 1,
+    outcomeId = 2,
+    modelSettings = legacyModelSettings
+  )
+
+  jsonFile <- tempfile("legacy_modelDesign_", fileext = ".json")
+  ParallelLogger::saveSettingsToJson(
+    object = modelDesign,
+    fileName = jsonFile
+  )
+  reloaded <- ParallelLogger::loadSettingsFromJson(fileName = jsonFile)
+
+  expect_s3_class(reloaded, "modelDesign")
+  expect_s3_class(reloaded$modelSettings, "modelSettings")
+  expect_true(!is.null(attr(reloaded$modelSettings$param, "settings")))
+
+  expect_no_error({
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = reloaded$modelSettings,
+      hyperparameterSettings = reloaded$hyperparameterSettings,
+      analysisId = "compat_json_modelDesign",
+      analysisPath = tempdir()
+    )
+  })
+})
+
+test_that("runMultiplePlp tolerates legacy NULL skipDiagnostics", {
+  saveDirectory <- tempfile("plp_skip_diagnostics_")
+  dir.create(saveDirectory)
+
+  settingstable <- data.frame(
+    analysisId = "Analysis_1",
+    targetId = 1,
+    targetName = "Target",
+    outcomeId = 2,
+    outcomeName = "Outcome",
+    dataLocation = "targetId_1",
+    covariateSettings = "{}",
+    restrictPlpDataSettings = "{}",
+    stringsAsFactors = FALSE
+  )
+
+  expect_no_error(
+    with_mocked_bindings(
+      runMultiplePlp(
+        databaseDetails = createDatabaseDetails(
+          connectionDetails = DatabaseConnector::createConnectionDetails(
+            dbms = "sqlite",
+            server = ":memory:"
+          ),
+          cdmDatabaseSchema = "main"
+        ),
+        modelDesignList = list(createModelDesign(
+          targetId = 1,
+          outcomeId = 2,
+          modelSettings = setLassoLogisticRegression()
+        )),
+        onlyFetchData = TRUE,
+        skipDiagnostics = NULL,
+        saveDirectory = saveDirectory
+      ),
+      convertToJson = function(...) settingstable,
+      getPlpData = function(...) list(mock = TRUE),
+      savePlpData = function(plpData, path) {
+        dir.create(path, recursive = TRUE, showWarnings = FALSE)
+        writeLines("ok", file.path(path, "plpData.txt"))
+      },
+      .package = "PatientLevelPrediction"
+    )
+  )
+})

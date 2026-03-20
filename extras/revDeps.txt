@@ -1,8 +1,9 @@
+# Format: owner/repo [filter] [ref_mode]
+# ref_mode defaults to `head` when omitted.
+# Supported ref_mode values: `head`, `release`, `both`.
 OHDSI/PheValuator
 OHDSI/EnsemblePatientLevelPrediction
-OHDSI/Strategus PatientLevelPrediction
+OHDSI/Strategus Execution|PatientLevelPrediction both
 OHDSI/DeepPatientLevelPrediction
 OHDSI/ProtocolGenerator
-
-
 

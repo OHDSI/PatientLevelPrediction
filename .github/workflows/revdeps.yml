@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       repos:
-        description: "owner/repo [filter]. Example: 'r-lib/cli test-files'. If empty, uses extras/revDeps.txt"
+        description: "owner/repo [filter] [ref_mode]. Example: 'OHDSI/Strategus Execution|PatientLevelPrediction both'. If empty, uses extras/revDeps.txt."
         required: false
         default: ""
 
@@ -18,10 +18,55 @@ concurrency:
 env:
   RSPM: https://packagemanager.posit.co/cran/__linux__/noble/latest
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-  R_KEEP_PKG_SOURCE: yes                    
+  R_KEEP_PKG_SOURCE: yes
 
 jobs:
-  revdep:
+  revdep-default:
+    if: ${{ github.event.inputs.repos == '' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            any::pak
+            any::testthat
+            any::jsonlite
+            any::desc
+            any::gert
+
+      - name: Install this package (dev version)
+        run: |
+          Rscript -e 'pak::pkg_install("local::.", upgrade = FALSE)'
+
+      - name: Run reverse dependency tests
+        env:
+          INPUT_REPOS: ""
+        run: |
+          Rscript extras/revDeps.R
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: revdep-results-default
+          path: revdep/results
+
+  revdep-custom:
+    if: ${{ github.event.inputs.repos != '' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -61,5 +106,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: revdep-results
+          name: revdep-results-custom
           path: revdep/results

@@ -110,6 +110,10 @@ runMultiplePlp <- function(
   checkIsClass(databaseDetails, c("databaseDetails"))
   checkIsClass(modelDesignList, c("list", "modelDesign"))
   checkIsClass(onlyFetchData, "logical")
+  if (is.null(skipDiagnostics)) {
+    skipDiagnostics <- FALSE
+  }
+  checkIsClass(skipDiagnostics, "logical")
   checkIsClass(logSettings, "logSettings")
   checkIsClass(saveDirectory, "character")
   if (!dir.exists(saveDirectory)) {

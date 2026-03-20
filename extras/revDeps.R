@@ -40,10 +40,47 @@ readRepoList <- function() {
     stop("Reverse-dep list is empty.")
   }
 
-  lapply(lines, function(line) {
+  configs <- lapply(lines, function(line) {
     parts <- strsplit(line, "\\s+")[[1]]
-    list(repo = parts[1], filter = if (length(parts) > 1) parts[2] else NULL)
+    filter <- NULL
+    refMode <- NULL
+
+    if (length(parts) > 1) {
+      second <- tolower(parts[2])
+      if (second %in% c("head", "release", "both")) {
+        refMode <- second
+      } else {
+        filter <- parts[2]
+        if (length(parts) > 2) {
+          refMode <- tolower(parts[3])
+        }
+      }
+    }
+
+    refMode <- refMode %||% "head"
+    if (!refMode %in% c("head", "release", "both")) {
+      stop(sprintf(
+        "Unsupported ref_mode '%s' in reverse dependency config line: %s",
+        refMode,
+        line
+      ))
+    }
+
+    list(repo = parts[1], filter = filter, refMode = refMode)
   })
+
+  expanded <- lapply(configs, function(config) {
+    if (identical(config$refMode, "both")) {
+      list(
+        list(repo = config$repo, filter = config$filter, refMode = "release"),
+        list(repo = config$repo, filter = config$filter, refMode = "head")
+      )
+    } else {
+      list(config)
+    }
+  })
+
+  unlist(expanded, recursive = FALSE)
 }
 
 safe <- function(expr, default = NULL) {
@@ -51,6 +88,72 @@ safe <- function(expr, default = NULL) {
     message("! ", conditionMessage(e))
     default
   })
+}
+
+resolveLatestReleaseTag <- function(repoUrl) {
+  lines <- safe(
+    system2(
+      "git",
+      c("ls-remote", "--tags", "--refs", repoUrl),
+      stdout = TRUE,
+      stderr = TRUE
+    ),
+    default = character()
+  )
+
+  if (!length(lines)) {
+    stop(sprintf("Unable to resolve tags for %s", repoUrl))
+  }
+
+  tags <- sub(".*refs/tags/", "", lines)
+  stableTags <- tags[grepl("^v?[0-9]+(\\.[0-9]+)*$", tags)]
+
+  if (!length(stableTags)) {
+    stop(sprintf("No semver-like release tags found for %s", repoUrl))
+  }
+
+  versions <- numeric_version(sub("^v", "", stableTags))
+  stableTags[[order(versions, decreasing = TRUE)[1]]]
+}
+
+cloneRepo <- function(repoUrl, destination, refMode) {
+  refMode <- refMode %||% "head"
+
+  if (identical(refMode, "release")) {
+    resolvedRef <- resolveLatestReleaseTag(repoUrl)
+    cloneOutput <- safe(
+      system2(
+        "git",
+        c("clone", "--depth", "1", "--branch", resolvedRef, repoUrl, destination),
+        stdout = TRUE,
+        stderr = TRUE
+      ),
+      default = character()
+    )
+  } else {
+    resolvedRef <- "HEAD"
+    cloneOutput <- safe(
+      system2(
+        "git",
+        c("clone", "--depth", "1", repoUrl, destination),
+        stdout = TRUE,
+        stderr = TRUE
+      ),
+      default = character()
+    )
+  }
+
+  checkedOutCommit <- safe(
+    system2("git", c("-C", destination, "rev-parse", "--short", "HEAD"), stdout = TRUE),
+    default = NA_character_
+  )
+  checkedOutCommit <- checkedOutCommit[[1]] %||% NA_character_
+
+  list(
+    output = cloneOutput,
+    resolvedRef = resolvedRef,
+    checkedOutCommit = checkedOutCommit
+  )
 }
 
 runTestsIsolated <- function(pkgPath, filterArg, testLogPath, countsJsonPath) {
@@ -114,8 +217,10 @@ printSummary <- function(results) {
     "\n========================================================================="
   )
   message(sprintf(
-    "%-30s | %-15s | %4s | %4s | %4s",
+    "%-30s | %-12s | %-14s | %-15s | %4s | %4s | %4s",
     "Repository",
+    "Ref Mode",
+    "Resolved Ref",
     "Status",
     "Fail",
     "Err",
@@ -131,8 +236,10 @@ printSummary <- function(results) {
       statusStr <- paste0("!! ", statusStr)
     }
     message(sprintf(
-      "%-30s | %-15s | %4d | %4d | %4.0fs",
+      "%-30s | %-12s | %-14s | %-15s | %4d | %4d | %4.0fs",
       substring(r$repo, 1, 30),
+      substring(r$refMode %||% "", 1, 12),
+      substring(r$resolvedRef %||% "", 1, 14),
       statusStr,
       r$fail,
       r$err,
@@ -147,8 +254,8 @@ printSummary <- function(results) {
   if (nzchar(ghSummaryFile)) {
     sink(ghSummaryFile, append = TRUE)
     cat("## Reverse Dependency Results\n\n")
-    cat("| Repository | Status | Fail | Error | Warn | Skip | Duration |\n")
-    cat("| :--- | :--- | :---: | :---: | :---: | :---: | ---: |\n")
+    cat("| Repository | Ref Mode | Resolved Ref | Status | Fail | Error | Warn | Skip | Duration |\n")
+    cat("| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | ---: |\n")
 
     for (r in results) {
       icon <- if (r$status == "SUCCESS") "✅" else "❌"
@@ -159,8 +266,10 @@ printSummary <- function(results) {
       }
 
       cat(sprintf(
-        "| %s | %s %s | %d | %d | %d | %d | %.0fs |\n",
+        "| %s | %s | %s | %s %s | %d | %d | %d | %d | %.0fs |\n",
         r$repo,
+        r$refMode %||% "",
+        r$resolvedRef %||% "",
         icon,
         statusFmt,
         r$fail,
@@ -178,7 +287,7 @@ printSummary <- function(results) {
       cat("### 🔍 Failure Details\n\n")
 
       for (f in failures) {
-        safeName <- gsub("/", "_", f$repo, fixed = TRUE)
+        safeName <- gsub("/", "_", paste(f$repo, f$refMode, sep = "__"), fixed = TRUE)
         # Try finding the most relevant log: tests > install > clone
         logFiles <- file.path(
           "revdep",
@@ -225,11 +334,17 @@ printSummary <- function(results) {
 runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   ownerRepo <- config$repo
   filterArg <- config$filter
+  refMode <- config$refMode %||% "head"
+  resultKey <- paste(ownerRepo, refMode, sep = "__")
   start <- Sys.time()
+
+  resolvedRef <- NA_character_
 
   mkResult <- function(status, fail = 0, err = 0, warn = 0, skip = 0) {
     list(
       repo = ownerRepo,
+      refMode = refMode,
+      resolvedRef = resolvedRef,
       status = status,
       fail = fail,
       err = err,
@@ -242,7 +357,7 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   outDir <- file.path(
     "revdep",
     "results",
-    gsub("/", "_", ownerRepo, fixed = TRUE)
+    gsub("/", "_", resultKey, fixed = TRUE)
   )
   dir.create(outDir, recursive = TRUE, showWarnings = FALSE)
 
@@ -250,6 +365,7 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   if (!is.null(filterArg)) {
     message("    Filter: '", filterArg, "'")
   }
+  message("    Ref mode: '", refMode, "'")
   message("")
 
   tmp <- tempfile("revdep_repo_")
@@ -257,15 +373,16 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
   repoUrl <- paste0("https://github.com/", ownerRepo, ".git")
 
   message("[", ownerRepo, "] cloning ", repoUrl)
-  ok <- safe(
-    system2(
-      "git",
-      c("clone", "--depth", "1", repoUrl, tmp),
-      stdout = TRUE,
-      stderr = TRUE
-    ),
-    ""
-  )
+  cloneInfo <- safe(cloneRepo(repoUrl, tmp, refMode), default = NULL)
+  ok <- if (!is.null(cloneInfo)) cloneInfo$output else character()
+  if (!is.null(cloneInfo)) {
+    resolvedRef <- if (identical(refMode, "release")) {
+      paste0(cloneInfo$resolvedRef, "@", cloneInfo$checkedOutCommit)
+    } else {
+      cloneInfo$checkedOutCommit
+    }
+    message("[", ownerRepo, "] resolved ref: ", resolvedRef)
+  }
 
   if (!dir.exists(file.path(tmp, ".git"))) {
     writeLines(as.character(ok), file.path(outDir, "clone.log"))
@@ -393,6 +510,8 @@ runOneRepo <- function(config, currentPkgName, timeoutMin = 60L) {
     owner_repo = ownerRepo,
     package = pkg,
     filter = filterArg,
+    ref_mode = refMode,
+    resolved_ref = resolvedRef,
     duration_sec = as.numeric(difftime(Sys.time(), start, units = "secs")),
     test_failures = nFail,
     test_errors = nError,
@@ -434,6 +553,8 @@ main <- function() {
         message("! Unhandled critical error: ", conditionMessage(e))
         list(
           repo = config$repo,
+          refMode = config$refMode %||% "head",
+          resolvedRef = NA_character_,
           status = "SCRIPT_ERROR",
           fail = 0,
           err = 0,
@@ -444,7 +565,7 @@ main <- function() {
       }
     )
 
-    allResults[[config$repo]] <- res
+    allResults[[paste(config$repo, config$refMode %||% "head", sep = "__")]] <- res
 
     if (res$fail > 0 || res$err > 0 || !res$status %in% c("SUCCESS")) {
       failures <- failures + 1L
