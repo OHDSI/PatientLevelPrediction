@@ -53,7 +53,7 @@ createSimulationProfile <- function(plpData) {
   for (i in seq_along(plpData$metaData$databaseDetails$outcomeIds)) {
    coefficients <- c("(Intercept)" = -2, 
        "1002" = 0.04,  # age
-       "8532" = 0.5,   # male 
+       "8532001" = 0.5,   # female 
        "81893102" = 0.5, # ulcerative colitis
        "4266809102" = 1.0, # Diverticular disease
        "4310024102" = 1.5, #Angiodysplasia of stomach
