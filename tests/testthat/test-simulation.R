@@ -48,7 +48,7 @@ test_that("create simulation profile works", {
       analysisRef = analysisRef
     )
   )
-  simProfile <- createSimulationProfile(simData)
+  simProfile <- PatientLevelPrediction:::createSimulationProfile(simData)
   expect_type(simProfile, "list")
   expect_s3_class(simProfile, "plpDataSimulationProfile")
   expect_true(all(c(
@@ -71,10 +71,52 @@ test_that("create simulation profile works", {
     length(simProfile$outcomeModels),
     length(metaData$databaseDetails$outcomeIds)
   )
+  # sex covariate (8532 raw concept ID) should be picked up and used in model
   expect_true(all(list("(Intercept)" = -2.0, "1002" = 0.04, "8532" = 0.50)
   %in% simProfile$outcomeModels[[1]]))
   expect_equal(simProfile$metaData, metaData)
   expect_equal(simProfile$covariateRef, as.data.frame(covariateRef))
+})
+
+test_that("createSimulationProfile uses FeatureExtraction-format sex covariateId", {
+  # FeatureExtraction stores gender as conceptId * 1000 + analysisId, e.g. 8532001
+  # The outcome model should reference this full covariateId, not the raw concept ID
+  cohorts <- data.frame(rowId = 1:10, subjectId = 1:10, targetId = rep(1, 10))
+  femaleCovId <- 8532001L  # 8532 * 1000 + 1 (analysisId = 1)
+  covariates <- data.frame(
+    rowId = c(1:10, 1:10),
+    covariateId = c(rep(1002L, 10), rep(femaleCovId, 10)),
+    covariateValue = c(stats::runif(10), rep(1, 10))
+  )
+  covariateRef <- data.frame(
+    covariateId = c(1002L, femaleCovId),
+    covariateName = c("age", "gender = FEMALE"),
+    analysisId = c(2L, 1L)
+  )
+  analysisRef <- data.frame(
+    analysisId = c(1L, 2L),
+    analysisName = c("DemographicsGender", "DemographicsAge"),
+    isBinary = c("Y", "N")
+  )
+  outcomes <- data.frame(rowId = 1:5, daysToEvent = c(10, 20, 30, 40, 50))
+  metaData <- list(databaseDetails = list(outcomeIds = 1L))
+  simData <- list(
+    cohorts = cohorts,
+    outcomes = outcomes,
+    metaData = metaData,
+    covariateData = list(
+      covariates = covariates,
+      covariateRef = covariateRef,
+      analysisRef = analysisRef
+    )
+  )
+  simProfile <- PatientLevelPrediction:::createSimulationProfile(simData)
+  model <- simProfile$outcomeModels[[1]]
+  # The outcome model must contain the full FeatureExtraction covariateId (8532001)
+  expect_true(as.character(femaleCovId) %in% names(model),
+    label = "sex covariateId with analysisId suffix is included in outcome model")
+  # The raw concept ID alone should NOT be used when the full ID is available
+  expect_equal(model[[as.character(femaleCovId)]], 0.5)
 })
 
 test_that("simulatePlpData works", {

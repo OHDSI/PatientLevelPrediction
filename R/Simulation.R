@@ -48,19 +48,33 @@ createSimulationProfile <- function(plpData) {
     dplyr::collect()
 
   outcomeRate <- nrow(plpData$outcomes) / nrow(plpData$cohorts)
+
+  # Look up actual sex covariateId from data (OMOP: 8507=male, 8532=female).
+  # FeatureExtraction stores gender as conceptId * 1000 + analysisId (e.g. 8507001),
+  # so the raw concept IDs alone will not match via inner_join in predictCyclopsType.
+  allCovIds <- as.numeric(names(covariatePrevalence))
+  sexCovIds <- allCovIds[floor(allCovIds / 1000) %in% c(8507L, 8532L) |
+                           allCovIds %in% c(8507L, 8532L)]
+  sexCoefName <- if (length(sexCovIds) > 0) as.character(sexCovIds[1]) else NULL
+
   writeLines("Fitting outcome model(s)")
   outcomeModels <- vector("list", length(plpData$metaData$databaseDetails$outcomeIds))
   for (i in seq_along(plpData$metaData$databaseDetails$outcomeIds)) {
-   coefficients <- c("(Intercept)" = -2, 
-       "1002" = 0.04,  # age
-       "8532" = 0.5,   # male 
-       "81893102" = 0.5, # ulcerative colitis
-       "4266809102" = 1.0, # Diverticular disease
-       "4310024102" = 1.5, #Angiodysplasia of stomach
-       "1112807402" = 0.7, # Aspirin
-       "1177480402" = 0.6, # Ibuprofen
-       "439777102" = 0.8)  # Anemia
-    outcomeModels[[i]] <- coefficients
+    baseCoefficients <- c(
+      "(Intercept)" = -2,
+      "1002" = 0.04,  # age
+      "81893102" = 0.5, # ulcerative colitis
+      "4266809102" = 1.0, # Diverticular disease
+      "4310024102" = 1.5, # Angiodysplasia of stomach
+      "1112807402" = 0.7, # Aspirin
+      "1177480402" = 0.6, # Ibuprofen
+      "439777102" = 0.8  # Anemia
+    )
+    if (!is.null(sexCoefName)) {
+      # Insert sex coefficient using the actual covariateId from the data
+      baseCoefficients <- c(baseCoefficients, stats::setNames(0.5, sexCoefName))
+    }
+    outcomeModels[[i]] <- baseCoefficients
   }
 
   timeMax <- max(plpData$outcomes$daysToEvent)
