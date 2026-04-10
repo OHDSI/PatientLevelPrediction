@@ -144,12 +144,12 @@ test_that("SVM to json is correct", {
   ySparse <- np$empty(100L)
   for (i in 1:100) {
     row <- reticulate::dict(
-      a = random$randint(0, 2),
-      b = random$randint(3, 5),
-      c = random$randint(6, 8)
+      a = random$randint(0L, 2L),
+      b = random$randint(3L, 5L),
+      c = random$randint(6L, 8L)
     )
     features <- c(features, row)
-    reticulate::py_set_item(ySparse, i - 1L, random$randint(0, 2))
+    reticulate::py_set_item(ySparse, i - 1L, random$randint(0L, 2L))
   }
   xSparse <- featureHasher$transform(features)
 
