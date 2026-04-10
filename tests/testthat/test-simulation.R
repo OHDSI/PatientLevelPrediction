@@ -71,8 +71,10 @@ test_that("create simulation profile works", {
     length(simProfile$outcomeModels),
     length(metaData$databaseDetails$outcomeIds)
   )
-  expect_true(all(list("(Intercept)" = -2.0, "1002" = 0.04, "8532" = 0.50)
-  %in% simProfile$outcomeModels[[1]]))
+  expect_equal(simProfile$outcomeModels[[1]][["(Intercept)"]], -2)
+  expect_equal(simProfile$outcomeModels[[1]][["1002"]], 0.04)
+  expect_equal(simProfile$outcomeModels[[1]][["8532001"]], 0.5)
+  expect_false("8532" %in% names(simProfile$outcomeModels[[1]]))
   expect_equal(simProfile$metaData, metaData)
   expect_equal(simProfile$covariateRef, as.data.frame(covariateRef))
 })
