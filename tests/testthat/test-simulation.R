@@ -18,11 +18,11 @@ test_that("create simulation profile works", {
   cohorts <- data.frame(rowId = 1:10, subjectId = 1:10, targetId = rep(1, 10))
   covariates <- data.frame(
     rowId = c(rep(1:10, each = 2), 1:10),
-    covariateId = c(rep(c(1002, 14310024102), 10), rep(8532, 10)),
+    covariateId = c(rep(c(1002, 14310024102), 10), rep(8532001, 10)),
     covariateValue = c(stats::runif(20), stats::rbinom(10, 1, 0.5))
   )
   covariateRef <- data.frame(
-    covariateId = c(1002, 14310024102, 8532),
+    covariateId = c(1002, 14310024102, 8532001),
     covariateName = c("cont1", "cont2", "bin1"),
     analysisId = c(1, 1, 2)
   )
@@ -48,7 +48,10 @@ test_that("create simulation profile works", {
       analysisRef = analysisRef
     )
   )
-  simProfile <- createSimulationProfile(simData)
+  expect_warning(
+    simProfile <- createSimulationProfile(simData),
+    "Default outcome model omitted"
+  )
   expect_type(simProfile, "list")
   expect_s3_class(simProfile, "plpDataSimulationProfile")
   expect_true(all(c(
@@ -59,7 +62,7 @@ test_that("create simulation profile works", {
   prevalence <- simProfile$covariateInfo$covariatePrevalence
   expect_type(prevalence, "double")
   expect_equal(as.numeric(prevalence["1002"]), 1)
-  expect_equal(as.numeric(prevalence["8532"]), 1)
+  expect_equal(as.numeric(prevalence["8532001"]), 1)
   expect_equal(as.numeric(prevalence["14310024102"]), 1)
 
   continuousCovs <- simProfile$covariateInfo$continuousCovariates
@@ -75,8 +78,23 @@ test_that("create simulation profile works", {
   expect_equal(simProfile$outcomeModels[[1]][["1002"]], 0.04)
   expect_equal(simProfile$outcomeModels[[1]][["8532001"]], 0.5)
   expect_false("8532" %in% names(simProfile$outcomeModels[[1]]))
+  expect_true(all(
+    setdiff(names(simProfile$outcomeModels[[1]]), "(Intercept)") %in% names(prevalence)
+  ))
   expect_equal(simProfile$metaData, metaData)
   expect_equal(simProfile$covariateRef, as.data.frame(covariateRef))
+
+  customOutcomeModel <- c("(Intercept)" = -1, "1002" = 0.1, "8532001" = 0.3)
+  customProfile <- createSimulationProfile(simData, outcomeModels = customOutcomeModel)
+  expect_equal(customProfile$outcomeModels[[1]], customOutcomeModel)
+
+  expect_error(
+    createSimulationProfile(
+      simData,
+      outcomeModels = c("(Intercept)" = -1, "9999" = 0.3)
+    ),
+    "9999"
+  )
 })
 
 test_that("simulatePlpData works", {
@@ -86,7 +104,7 @@ test_that("simulatePlpData works", {
   }
   dummyProfile <- list(
     covariateInfo = list(
-      covariatePrevalence = c("1002" = 1, "8532" = 0.3, "2001" = 0.5), continuousCovariates = data.frame(
+      covariatePrevalence = c("1002" = 1, "8532001" = 0.3, "2001" = 0.5), continuousCovariates = data.frame(
         covariateId = 1002,
         mean = 50,
         sd = 5,
@@ -98,7 +116,7 @@ test_that("simulatePlpData works", {
       covariateId = 2001,
       covariateName = "continuous feature",
       stringsAsFactors = FALSE
-    ), timeMax = c(100), outcomeModels = list(c("(Intercept)" = -2, "1002" = 0.04, "8532" = 0.05)),
+    ), timeMax = c(100), outcomeModels = list(c("(Intercept)" = -2, "1002" = 0.04, "8532001" = 0.05)),
     metaData = list(
       databaseDetails = list(
         outcomeIds = 3
@@ -136,4 +154,32 @@ test_that("simulatePlpData works", {
   expect_equal(simData$metaData$databaseDetails$cdmVersion, 5)
   expect_equal(simData$metaData$databaseDetails$targetId, 1) 
   expect_equal(simData$metaData$databaseDetails$outcomeIds, 3)
+})
+
+test_that("simulatePlpData rejects outcome models with unavailable covariates", {
+  invalidProfile <- list(
+    covariateInfo = list(
+      covariatePrevalence = c("1002" = 1),
+      continuousCovariates = data.frame(
+        covariateId = 1002,
+        mean = 50,
+        sd = 5,
+        min = 30,
+        max = 70
+      )
+    ),
+    covariateRef = data.frame(
+      covariateId = 1002,
+      covariateName = "age",
+      stringsAsFactors = FALSE
+    ),
+    timeMax = c(100),
+    outcomeModels = list(c("(Intercept)" = -2, "1002" = 0.04, "9999" = 0.5)),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+
+  expect_error(
+    simulatePlpData(invalidProfile, n = 100, seed = 42),
+    "9999"
+  )
 })
