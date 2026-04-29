@@ -10,6 +10,7 @@ PatientLevelPrediction 6.6.0
 - Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (#633, #632).
 
 ## Bug fixes
+- Fixed simulation profile outcome models so generated coefficients only reference covariates available in the profile, added support for user-supplied outcome models, and invalid custom profiles now fail early instead of silently dropping outcome signal.
 - Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (#628, #623).
 - Ensured existing GLM and scikit-learn model settings retain model identity so uploads generate distinct model design records (#614).
 - Fixed evaluation when outcomes are single-class (#624).

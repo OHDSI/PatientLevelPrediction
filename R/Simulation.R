@@ -16,13 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create simulation profile using eunomia data and a fixed outcome model
+#' Create simulation profile from PLP data and an outcome model
 #'
 #' @param plpData An object of type \code{plpData} as generated using the \cr\code{getPlpData} function.'
+#' @param outcomeModels Optional named numeric vector or list of named numeric vectors with outcome model coefficients.
 #' @return An object of type \code{plpDataSimulationProfile}.
 #' @keywords internal
 #' @noRd
-createSimulationProfile <- function(plpData) {
+createSimulationProfile <- function(plpData, outcomeModels = NULL) {
   writeLines("Computing covariate prevalence") # (Note: currently assuming binary covariates)
   sums <- plpData$covariateData$covariates %>%
     dplyr::group_by(.data$covariateId) %>%
@@ -49,18 +50,16 @@ createSimulationProfile <- function(plpData) {
 
   outcomeRate <- nrow(plpData$outcomes) / nrow(plpData$cohorts)
   writeLines("Fitting outcome model(s)")
-  outcomeModels <- vector("list", length(plpData$metaData$databaseDetails$outcomeIds))
-  for (i in seq_along(plpData$metaData$databaseDetails$outcomeIds)) {
-   coefficients <- c("(Intercept)" = -2, 
-       "1002" = 0.04,  # age
-       "8532001" = 0.5,   # female 
-       "81893102" = 0.5, # ulcerative colitis
-       "4266809102" = 1.0, # Diverticular disease
-       "4310024102" = 1.5, #Angiodysplasia of stomach
-       "1112807402" = 0.7, # Aspirin
-       "1177480402" = 0.6, # Ibuprofen
-       "439777102" = 0.8)  # Anemia
-    outcomeModels[[i]] <- coefficients
+  outcomeIds <- plpData$metaData$databaseDetails$outcomeIds
+  if (is.null(outcomeModels)) {
+    outcomeModels <- vector("list", length(outcomeIds))
+    for (i in seq_along(outcomeIds)) {
+      outcomeModels[[i]] <- createDefaultSimulationOutcomeModel(
+        covariatePrevalence = covariatePrevalence
+      )
+    }
+  } else {
+    outcomeModels <- normalizeSimulationOutcomeModels(outcomeModels, length(outcomeIds))
   }
 
   timeMax <- max(plpData$outcomes$daysToEvent)
@@ -77,8 +76,100 @@ createSimulationProfile <- function(plpData) {
     covariateRef = plpData$covariateData$covariateRef %>% dplyr::collect()
   )
   class(result) <- "plpDataSimulationProfile"
+  validateSimulationOutcomeModels(result)
   return(result)
 }
+
+normalizeSimulationOutcomeModels <- function(outcomeModels, numberOfOutcomeIds) {
+  if (is.numeric(outcomeModels)) {
+    outcomeModels <- list(outcomeModels)
+  }
+
+  if (!is.list(outcomeModels)) {
+    stop("outcomeModels must be a named numeric vector or list of named numeric vectors")
+  }
+
+  if (length(outcomeModels) == 1 && numberOfOutcomeIds > 1) {
+    outcomeModels <- rep(outcomeModels, numberOfOutcomeIds)
+  }
+
+  if (length(outcomeModels) != numberOfOutcomeIds) {
+    stop("outcomeModels must contain one model for each outcomeId")
+  }
+
+  for (i in seq_along(outcomeModels)) {
+    if (!is.numeric(outcomeModels[[i]])) {
+      stop(sprintf("Outcome model %s must be a named numeric vector", i))
+    }
+    coefficientIds <- names(outcomeModels[[i]])
+    if (is.null(coefficientIds) || any(is.na(coefficientIds)) || any(coefficientIds == "")) {
+      stop(sprintf("Outcome model %s must have names for all coefficients", i))
+    }
+  }
+
+  return(outcomeModels)
+}
+
+createDefaultSimulationOutcomeModel <- function(covariatePrevalence) {
+  availableCovariateIds <- names(covariatePrevalence)
+
+  preferredCoefficients <- c(
+    "1002" = 0.04, # age
+    "8532001" = 0.5, # female
+    "81893102" = 0.5, # ulcerative colitis
+    "4266809102" = 1.0, # diverticular disease
+    "4310024102" = 1.5, # angiodysplasia of stomach
+    "1112807402" = 0.7, # aspirin
+    "1177480402" = 0.6, # ibuprofen
+    "439777102" = 0.8 # anemia
+  )
+  coefficients <- c(
+    "(Intercept)" = -2,
+    preferredCoefficients[names(preferredCoefficients) %in% availableCovariateIds]
+  )
+
+  missingIds <- setdiff(names(preferredCoefficients), availableCovariateIds)
+  if (length(missingIds) > 0) {
+    warning(
+      sprintf(
+        paste(
+          "Default outcome model omitted %s coefficient covariateId(s)",
+          "not available in covariateInfo$covariatePrevalence: %s"
+        ),
+        length(missingIds),
+        paste(head(missingIds, 10), collapse = ", ")
+      )
+    )
+  }
+  if (length(coefficients) == 1) {
+    warning("Default outcome model contains only an intercept; simulated outcomes may have no covariate signal")
+  }
+
+  return(coefficients)
+}
+
+validateSimulationOutcomeModels <- function(plpDataSimulationProfile) {
+  availableCovariateIds <- names(plpDataSimulationProfile$covariateInfo$covariatePrevalence)
+  for (i in seq_along(plpDataSimulationProfile$outcomeModels)) {
+    coefficientIds <- names(plpDataSimulationProfile$outcomeModels[[i]])
+    coefficientIds <- coefficientIds[!is.na(coefficientIds) & coefficientIds != "(Intercept)"]
+    missingIds <- setdiff(coefficientIds, availableCovariateIds)
+    if (length(missingIds) > 0) {
+      stop(
+        sprintf(
+          paste(
+            "Outcome model %s references %s covariateId(s) that are not available",
+            "in covariateInfo$covariatePrevalence: %s"
+          ),
+          i,
+          length(missingIds),
+          paste(head(missingIds, 10), collapse = ", ")
+        )
+      )
+    }
+  }
+}
+
 #' Generate simulated data
 #'
 #' @description
@@ -121,9 +212,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
   }
 
   # Note: currently, simulation is done completely in-memory. Could easily do batch-wise
-  writeLines("Generating covariates")
   covariatePrevalence <- plpDataSimulationProfile$covariateInfo$covariatePrevalence
+  validateSimulationOutcomeModels(plpDataSimulationProfile)
 
+  writeLines("Generating covariates")
   personsPerCov <- stats::rpois(n = length(covariatePrevalence), lambda = covariatePrevalence * n)
   personsPerCov[personsPerCov > n] <- n
   rowId <- unlist(sapply(personsPerCov[personsPerCov > 0], function(x, n) sample.int(size = x, n), n = n))
