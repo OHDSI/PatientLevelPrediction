@@ -2,6 +2,7 @@ PatientLevelPrediction 6.6.0
 ======================
 
 ## New features
+- Added `simulatePlpBenchmarkData()` to generate semi-synthetic PLP benchmark data with known outcome risk.
 - Added flexible hyperparameter tuning with configurable tuning metrics and support for grid, random, and custom search strategies (#618).
 - Standardized the non-Cyclops modeling interface to simplify tuning and maintenance of classification models (#618).
 - Added ridge logistic regression settings via Cyclops with `setRidgeRegression()` (#621).

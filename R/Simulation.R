@@ -503,3 +503,539 @@ predictSimulationOutcomeRisk <- function(outcomeModel, plpModel, cohorts, covari
     modelType = "logistic"
   ))
 }
+#' Generate benchmark PLP data with known outcome risk
+#'
+#' @description
+#' \code{simulatePlpBenchmarkData} creates semi-synthetic PLP data by resampling rows
+#' from an existing \code{plpData} object and generating outcomes from a known logistic
+#' outcome model. The source covariate patterns are preserved, so this function is
+#' intended for benchmark simulations rather than realistic synthetic patient generation.
+#' Rows without observable time at \code{riskWindowStart} are excluded before
+#' resampling, and generated event times are sampled within each row's observed
+#' risk window. When \code{daysToCohortEnd} is present and contains positive
+#' follow-up, event times are also kept within the target cohort end.
+#'
+#' The attached truth is defined for each simulated row's observable risk window.
+#' For benchmark evaluation against this truth, use population settings with
+#' \code{requireTimeAtRisk = FALSE}; otherwise PLP can drop short-follow-up
+#' non-outcome rows and change the estimand. For a strict fixed-horizon benchmark,
+#' first restrict the source \code{plpData} to rows with complete follow-up through
+#' \code{riskWindowEnd}.
+#'
+#' Rows are sampled with replacement, as in standard plasmode simulation. A source
+#' row can therefore appear more than once with different simulated \code{rowId} and
+#' \code{subjectId} values. The truth table records \code{sourceRowId} and
+#' \code{sourceSubjectId} so duplicate source rows can be identified. This is not a
+#' problem when using the simulated data to study known risks in realistic covariate
+#' distributions, but ordinary row-level train/test splitting can put the same source
+#' covariate pattern in both partitions and can make held-out performance optimistic.
+#'
+#' @param plpData An object of type \code{plpData}.
+#' @param outcomeModel A PLP model, a \code{runPlp()} result, or a named numeric
+#'                     vector of logistic model coefficients. When a PLP model or
+#'                     result is supplied, outcomes are generated from
+#'                     \code{predictPlp()}, so the model's feature engineering and
+#'                     preprocessing are applied before calculating true risks.
+#'                     Named numeric vectors are used directly and must already
+#'                     match the scale and feature space of \code{plpData}; use
+#'                     \code{"(Intercept)"} for the intercept and covariate IDs for
+#'                     covariate coefficients.
+#' @param n The number of rows to generate.
+#' @param riskWindowStart The earliest generated \code{daysToEvent} for outcome cases.
+#' @param riskWindowEnd The latest generated \code{daysToEvent} for outcome cases.
+#' @param outcomeId The outcome ID to use. If \code{NULL}, the first outcome ID in
+#'                  \code{plpData$metaData$databaseDetails$outcomeIds} is used.
+#' @param targetOutcomeRate Optional target mean true risk. If provided, the intercept
+#'                          is shifted so the generated population has this mean risk.
+#' @param seed An optional seed for the random number generator.
+#' @param returnTruth If \code{TRUE}, a truth table with source row and subject IDs,
+#'                    linear predictors, true risks, and generated outcome status is
+#'                    returned as \code{simulationTruth}.
+#'
+#' @return
+#' An object of type \code{plpData}. The returned object includes
+#' \code{simulationSettings}; when \code{returnTruth = TRUE}, it also includes
+#' \code{simulationTruth}.
+#'
+#' @examples
+#' data("simulationProfile")
+#' plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
+#' benchmarkData <- simulatePlpBenchmarkData(
+#'   plpData = plpData,
+#'   outcomeModel = c("(Intercept)" = -2, "1002" = 0.04),
+#'   n = 100,
+#'   riskWindowStart = 1,
+#'   riskWindowEnd = 365,
+#'   seed = 42
+#' )
+#' benchmarkData$simulationTruth
+#' @export
+simulatePlpBenchmarkData <- function(plpData,
+                                     outcomeModel,
+                                     n = nrow(plpData$cohorts),
+                                     riskWindowStart = 1,
+                                     riskWindowEnd = 365,
+                                     outcomeId = NULL,
+                                     targetOutcomeRate = NULL,
+                                     seed = NULL,
+                                     returnTruth = TRUE) {
+  benchmarkOutcomeModel <- normalizeBenchmarkOutcomeModel(outcomeModel)
+  validateBenchmarkSimulationInputs(
+    plpData = plpData,
+    outcomeModel = benchmarkOutcomeModel,
+    n = n,
+    riskWindowStart = riskWindowStart,
+    riskWindowEnd = riskWindowEnd,
+    targetOutcomeRate = targetOutcomeRate,
+    seed = seed,
+    returnTruth = returnTruth,
+    outcomeId = outcomeId
+  )
+
+  if (!is.null(seed)) {
+    oldSeedExists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    if (oldSeedExists) oldSeed <- get(".Random.seed", envir = .GlobalEnv)
+    set.seed(as.integer(seed))
+    on.exit({
+      if (oldSeedExists) {
+        assign(".Random.seed", oldSeed, envir = .GlobalEnv)
+      } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+        rm(".Random.seed", envir = .GlobalEnv)
+      }
+    }, add = TRUE)
+  }
+
+  n <- as.integer(n)
+  riskWindowStart <- as.integer(riskWindowStart)
+  riskWindowEnd <- as.integer(riskWindowEnd)
+
+  cohorts <- as.data.frame(plpData$cohorts)
+  targetId <- unique(cohorts$targetId)
+  outcomeId <- resolveBenchmarkOutcomeId(plpData, outcomeId)
+  simulationSettings <- list(
+    outcomeId = outcomeId,
+    targetId = targetId,
+    n = n,
+    riskWindowStart = riskWindowStart,
+    riskWindowEnd = riskWindowEnd,
+    targetOutcomeRate = targetOutcomeRate,
+    seed = seed,
+    sampleWithReplacement = TRUE,
+    returnTruth = returnTruth,
+    estimand = "observable risk window"
+  )
+  cohorts <- restrictBenchmarkCohortsToObservableRiskWindow(
+    cohorts = cohorts,
+    riskWindowStart = riskWindowStart
+  )
+  sampledIndexes <- sample.int(nrow(cohorts), size = n, replace = TRUE)
+  sampledCohorts <- cohorts[sampledIndexes, , drop = FALSE]
+  rowMap <- data.frame(
+    sourceRowId = sampledCohorts$rowId,
+    sourceSubjectId = sampledCohorts$subjectId,
+    newRowId = seq_len(n)
+  )
+
+  sampledCohorts$rowId <- seq_len(n)
+  sampledCohorts$subjectId <- 2e+10 + seq_len(n)
+  attr(sampledCohorts, "metaData") <- list(
+    targetId = targetId,
+    outcomeId = outcomeId
+  )
+
+  covariateData <- resampleBenchmarkCovariateData(
+    covariateData = plpData$covariateData,
+    rowMap = rowMap,
+    populationSize = n,
+    cohortId = targetId
+  )
+
+  truth <- calculateBenchmarkTruth(
+    plpData = plpData,
+    covariateData = covariateData,
+    population = sampledCohorts,
+    rowMap = rowMap,
+    outcomeModel = benchmarkOutcomeModel,
+    targetOutcomeRate = targetOutcomeRate
+  )
+
+  generatedOutcome <- stats::rbinom(n = n, size = 1, prob = truth$trueRisk)
+  truth$outcomeCount <- generatedOutcome
+  if (sum(generatedOutcome) > 0) {
+    truth$daysToEvent <- NA_integer_
+    eventRows <- which(generatedOutcome == 1)
+    eventWindowEnd <- getBenchmarkObservableWindowEnd(sampledCohorts, riskWindowEnd)
+    truth$daysToEvent[eventRows] <- vapply(
+      eventRows,
+      function(rowIndex) {
+        sample.int(
+          n = eventWindowEnd[rowIndex] - riskWindowStart + 1L,
+          size = 1L
+        ) + riskWindowStart - 1L
+      },
+      integer(1)
+    )
+  } else {
+    truth$daysToEvent <- NA_integer_
+  }
+
+  outcomes <- truth[truth$outcomeCount == 1, c("rowId", "outcomeCount", "daysToEvent")]
+  outcomes$outcomeId <- rep(outcomeId, nrow(outcomes))
+  outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
+
+  metaData <- plpData$metaData
+  metaData$databaseDetails$outcomeIds <- outcomeId
+
+  attrition <- data.frame(
+    outcomeId = outcomeId,
+    description = "Benchmark simulated data",
+    targetCount = nrow(sampledCohorts),
+    uniquePeople = length(unique(sampledCohorts$subjectId)),
+    outcomes = nrow(outcomes)
+  )
+  attr(sampledCohorts, "metaData") <- list(
+    targetId = targetId,
+    attrition = attrition
+  )
+  attr(outcomes, "metaData") <- data.frame(outcomeIds = outcomeId)
+
+  result <- list(
+    cohorts = sampledCohorts,
+    outcomes = outcomes,
+    covariateData = covariateData,
+    timeRef = NULL,
+    metaData = metaData,
+    simulationSettings = simulationSettings
+  )
+  class(result) <- "plpData"
+  if (returnTruth) {
+    result$simulationTruth <- truth
+  }
+  return(result)
+}
+
+normalizeBenchmarkOutcomeModel <- function(outcomeModel) {
+  if (inherits(outcomeModel, "runPlp")) {
+    if (is.null(outcomeModel$model)) {
+      stop("outcomeModel is a runPlp result but does not contain a model")
+    }
+    outcomeModel <- outcomeModel$model
+  }
+  if (inherits(outcomeModel, "plpModel")) {
+    return(list(type = "plpModel", model = outcomeModel))
+  }
+  return(list(type = "coefficients", coefficients = outcomeModel))
+}
+
+validateBenchmarkSimulationInputs <- function(plpData,
+                                              outcomeModel,
+                                              n,
+                                              riskWindowStart,
+                                              riskWindowEnd,
+                                              targetOutcomeRate,
+                                              seed,
+                                              returnTruth,
+                                              outcomeId) {
+  if (is.null(plpData$cohorts) || is.null(plpData$covariateData$covariates)) {
+    stop("plpData must contain cohorts and covariateData$covariates")
+  }
+  if (!"daysToObsEnd" %in% colnames(plpData$cohorts)) {
+    stop("plpData$cohorts must contain daysToObsEnd")
+  }
+  if (!"targetId" %in% colnames(plpData$cohorts)) {
+    stop("plpData$cohorts must contain targetId")
+  }
+  targetIds <- unique(plpData$cohorts$targetId)
+  if (!is.numeric(targetIds) || length(targetIds) != 1L ||
+      is.na(targetIds) || !is.finite(targetIds) || targetIds %% 1 != 0) {
+    stop("plpData$cohorts must contain exactly one finite targetId")
+  }
+  if ("timeId" %in% colnames(plpData$covariateData$covariates) ||
+      !is.null(plpData$covariateData$timeRef) ||
+      !is.null(plpData$timeRef)) {
+    stop("simulatePlpBenchmarkData does not support temporal covariateData")
+  }
+  if (!is.list(outcomeModel) || is.null(outcomeModel$type)) {
+    stop("outcomeModel must be a PLP model, runPlp result, or named finite numeric vector")
+  }
+  if (identical(outcomeModel$type, "coefficients")) {
+    coefficients <- outcomeModel$coefficients
+    if (!is.numeric(coefficients)) {
+      stop("outcomeModel must be a PLP model, runPlp result, or named finite numeric vector")
+    }
+    coefficientIds <- names(coefficients)
+    if (is.null(coefficientIds) || any(is.na(coefficientIds)) || any(coefficientIds == "")) {
+      stop("outcomeModel must have names for all coefficients")
+    }
+    if (anyNA(coefficients) || any(!is.finite(coefficients))) {
+      stop("outcomeModel must be a named finite numeric vector")
+    }
+    if (anyDuplicated(coefficientIds)) {
+      stop("outcomeModel coefficient names must be unique")
+    }
+    covariateCoefficientIds <- coefficientIds[coefficientIds != "(Intercept)"]
+    if (length(covariateCoefficientIds) > 0 &&
+        any(is.na(suppressWarnings(as.numeric(covariateCoefficientIds))))) {
+      stop("All non-intercept outcomeModel names must be numeric covariate IDs")
+    }
+    covariateRef <- plpData$covariateData$covariateRef %>%
+      dplyr::collect()
+    missingCovariateIds <- setdiff(covariateCoefficientIds, as.character(covariateRef$covariateId))
+    if (length(missingCovariateIds) > 0) {
+      stop(sprintf(
+        "outcomeModel references covariate ID(s) not available in covariateRef: %s",
+        paste(head(missingCovariateIds, 10), collapse = ", ")
+      ))
+    }
+  } else if (identical(outcomeModel$type, "plpModel")) {
+    if (is.null(outcomeModel$model)) {
+      stop("outcomeModel must contain a PLP model")
+    }
+  } else {
+    stop("outcomeModel must be a PLP model, runPlp result, or named finite numeric vector")
+  }
+  checkBenchmarkScalarInteger(n, "n", positive = TRUE)
+  checkBenchmarkScalarInteger(riskWindowStart, "riskWindowStart")
+  checkBenchmarkScalarInteger(riskWindowEnd, "riskWindowEnd")
+  if (riskWindowEnd < riskWindowStart) {
+    stop("riskWindowEnd must be greater than or equal to riskWindowStart")
+  }
+  if (!is.null(targetOutcomeRate) &&
+      (!is.numeric(targetOutcomeRate) || length(targetOutcomeRate) != 1L ||
+       is.na(targetOutcomeRate) || !is.finite(targetOutcomeRate) ||
+       targetOutcomeRate <= 0 || targetOutcomeRate >= 1)) {
+    stop("targetOutcomeRate must be NULL or a single number between 0 and 1")
+  }
+  if (!is.null(seed)) {
+    checkBenchmarkScalarInteger(seed, "Seed")
+  }
+  if (!is.logical(returnTruth) || length(returnTruth) != 1L || is.na(returnTruth)) {
+    stop("returnTruth must be TRUE or FALSE")
+  }
+  resolveBenchmarkOutcomeId(plpData, outcomeId)
+}
+
+checkBenchmarkScalarInteger <- function(x, name, positive = FALSE) {
+  if (!is.numeric(x) || length(x) != 1L || is.na(x) || !is.finite(x) ||
+      x %% 1 != 0 || (positive && x <= 0)) {
+    if (positive) {
+      stop(sprintf("%s must be a positive finite scalar integer", name))
+    }
+    stop(sprintf("%s must be a finite scalar integer", name))
+  }
+}
+
+resolveBenchmarkOutcomeId <- function(plpData, outcomeId) {
+  if (is.null(outcomeId)) {
+    outcomeIds <- plpData$metaData$databaseDetails$outcomeIds
+    if (is.null(outcomeIds) || !is.numeric(outcomeIds) || length(outcomeIds) != 1L ||
+        is.na(outcomeIds) || !is.finite(outcomeIds) || outcomeIds %% 1 != 0) {
+      stop("outcomeId must be specified when plpData metadata does not contain exactly one finite outcome ID")
+    }
+    return(as.integer(outcomeIds))
+  }
+  checkBenchmarkScalarInteger(outcomeId, "outcomeId", positive = TRUE)
+  as.integer(outcomeId)
+}
+
+restrictBenchmarkCohortsToObservableRiskWindow <- function(cohorts, riskWindowStart) {
+  if (any(is.na(cohorts$daysToObsEnd))) {
+    stop("plpData$cohorts$daysToObsEnd must not contain missing values")
+  }
+  observableRows <- getBenchmarkObservableWindowEnd(cohorts) >= riskWindowStart
+  if (!any(observableRows)) {
+    stop("No cohort rows have observation time at riskWindowStart")
+  }
+  if (sum(!observableRows) > 0) {
+    warning(sprintf(
+      "Excluding %s cohort row(s) without observable time at riskWindowStart",
+      sum(!observableRows)
+    ))
+  }
+  cohorts[observableRows, , drop = FALSE]
+}
+
+getBenchmarkObservableWindowEnd <- function(cohorts, riskWindowEnd = NULL) {
+  observableEnd <- cohorts$daysToObsEnd
+  if ("daysToCohortEnd" %in% colnames(cohorts)) {
+    if (any(is.na(cohorts$daysToCohortEnd))) {
+      stop("plpData$cohorts$daysToCohortEnd must not contain missing values")
+    }
+    if (max(cohorts$daysToCohortEnd) > 0) {
+      observableEnd <- pmin(observableEnd, cohorts$daysToCohortEnd)
+    }
+  }
+  if (!is.null(riskWindowEnd)) {
+    observableEnd <- pmin(riskWindowEnd, observableEnd)
+  }
+  observableEnd
+}
+
+resampleBenchmarkCovariateData <- function(covariateData, rowMap, populationSize, cohortId) {
+  covariateData$benchmarkRowMap <- rowMap
+  on.exit(covariateData$benchmarkRowMap <- NULL, add = TRUE)
+
+  if ("analysisRef" %in% names(covariateData)) {
+    result <- Andromeda::andromeda(
+      covariateRef = covariateData$covariateRef,
+      analysisRef = covariateData$analysisRef
+    )
+  } else {
+    covariateRef <- covariateData$covariateRef %>% dplyr::collect()
+    result <- Andromeda::andromeda(
+      covariateRef = covariateRef,
+      analysisRef = data.frame(analysisId = unique(covariateRef$analysisId))
+    )
+  }
+
+  result$covariates <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$benchmarkRowMap, by = c("rowId" = "sourceRowId")) %>%
+    dplyr::transmute(
+      rowId = .data$newRowId,
+      covariateId = .data$covariateId,
+      covariateValue = .data$covariateValue
+    )
+  if (inherits(result, "RSQLiteConnection")) {
+    Andromeda::createIndex(
+      tbl = result$covariates,
+      columnNames = "rowId",
+      indexName = "covariates_rowId"
+    )
+    Andromeda::createIndex(
+      tbl = result$covariates,
+      columnNames = "covariateId",
+      indexName = "covariates_covariateId"
+    )
+  }
+
+  class(result) <- "CovariateData"
+  attr(class(result), "package") <- "FeatureExtraction"
+  metaData <- attr(covariateData, "metaData")
+  if (is.null(metaData)) {
+    metaData <- list()
+  }
+  metaData$populationSize <- populationSize
+  metaData$cohortIds <- cohortId
+  metaData$cohortId <- cohortId
+  attr(result, "metaData") <- metaData
+  return(result)
+}
+
+calculateBenchmarkTruth <- function(plpData, covariateData, population, rowMap, outcomeModel, targetOutcomeRate) {
+  if (identical(outcomeModel$type, "plpModel")) {
+    linearPredictor <- calculateBenchmarkTruthFromPlpModel(
+      plpData = plpData,
+      covariateData = covariateData,
+      population = population,
+      plpModel = outcomeModel$model
+    )
+  } else {
+    linearPredictor <- calculateBenchmarkTruthFromCoefficients(
+      covariateData = covariateData,
+      rowMap = rowMap,
+      coefficients = outcomeModel$coefficients
+    )
+  }
+  linearPredictor <- adjustBenchmarkLinearPredictor(
+    linearPredictor = linearPredictor,
+    targetOutcomeRate = targetOutcomeRate
+  )
+  interceptAdjustment <- attr(linearPredictor, "interceptAdjustment")
+
+  data.frame(
+    rowId = rowMap$newRowId,
+    sourceRowId = rowMap$sourceRowId,
+    sourceSubjectId = rowMap$sourceSubjectId,
+    linearPredictor = as.numeric(linearPredictor),
+    trueRisk = as.numeric(stats::plogis(linearPredictor)),
+    interceptAdjustment = interceptAdjustment
+  )
+}
+
+calculateBenchmarkTruthFromCoefficients <- function(covariateData, rowMap, coefficients) {
+  outcomeModel <- coefficients
+  intercept <- outcomeModel[names(outcomeModel) == "(Intercept)"]
+  if (length(intercept) == 0) intercept <- 0
+  covariateCoefficients <- outcomeModel[names(outcomeModel) != "(Intercept)"]
+
+  linearPredictor <- rep(as.numeric(intercept[1]), nrow(rowMap))
+  if (length(covariateCoefficients) > 0) {
+    covariateData$benchmarkCoefficients <- data.frame(
+      covariateId = as.numeric(names(covariateCoefficients)),
+      beta = as.numeric(covariateCoefficients)
+    )
+    on.exit(covariateData$benchmarkCoefficients <- NULL, add = TRUE)
+
+    rowContributions <- covariateData$covariates %>%
+      dplyr::inner_join(covariateData$benchmarkCoefficients, by = "covariateId") %>%
+      dplyr::mutate(contribution = .data$covariateValue * .data$beta) %>%
+      dplyr::group_by(.data$rowId) %>%
+      dplyr::summarise(contribution = sum(.data$contribution, na.rm = TRUE)) %>%
+      dplyr::collect()
+    if (nrow(rowContributions) > 0) {
+      linearPredictor[rowContributions$rowId] <- linearPredictor[rowContributions$rowId] + rowContributions$contribution
+    }
+  }
+  linearPredictor
+}
+
+calculateBenchmarkTruthFromPlpModel <- function(plpData, covariateData, population, plpModel) {
+  predictionData <- plpData
+  predictionData$cohorts <- population
+  predictionData$covariateData <- covariateData
+  predictionData$outcomes <- data.frame(
+    rowId = integer(),
+    outcomeId = integer(),
+    outcomeCount = integer(),
+    daysToEvent = integer()
+  )
+  prediction <- predictPlp(
+    plpModel = plpModel,
+    plpData = predictionData,
+    population = population
+  )
+  prediction <- as.data.frame(prediction)
+  if (!"rowId" %in% colnames(prediction)) {
+    stop("predictPlp() did not return a rowId column for outcomeModel")
+  }
+  prediction <- prediction[match(population$rowId, prediction$rowId), , drop = FALSE]
+  if (any(is.na(prediction$rowId))) {
+    stop("predictPlp() did not return predictions for every simulated row")
+  }
+  if ("rawValue" %in% colnames(prediction)) {
+    linearPredictor <- prediction$rawValue
+  } else if ("value" %in% colnames(prediction)) {
+    if (anyNA(prediction$value) || any(prediction$value < 0 | prediction$value > 1)) {
+      stop("predictPlp() returned values outside [0, 1] and no rawValue column for outcomeModel")
+    }
+    risk <- pmin(pmax(prediction$value, 1e-15), 1 - 1e-15)
+    linearPredictor <- stats::qlogis(risk)
+  } else {
+    stop("predictPlp() must return rawValue or value for outcomeModel")
+  }
+  if (anyNA(linearPredictor) || any(!is.finite(linearPredictor))) {
+    stop("predictPlp() returned non-finite linear predictors for outcomeModel")
+  }
+  linearPredictor
+}
+
+adjustBenchmarkLinearPredictor <- function(linearPredictor, targetOutcomeRate) {
+  interceptAdjustment <- 0
+  if (!is.null(targetOutcomeRate)) {
+    if (any(!is.finite(linearPredictor))) {
+      stop("Cannot target outcome rate because the linear predictor contains non-finite values")
+    }
+    targetLogit <- stats::qlogis(targetOutcomeRate)
+    rootInterval <- c(
+      targetLogit - max(linearPredictor) - 20,
+      targetLogit - min(linearPredictor) + 20
+    )
+    interceptAdjustment <- stats::uniroot(
+      f = function(adjustment) mean(stats::plogis(linearPredictor + adjustment)) - targetOutcomeRate,
+      interval = rootInterval
+    )$root
+    linearPredictor <- linearPredictor + interceptAdjustment
+  }
+  attr(linearPredictor, "interceptAdjustment") <- interceptAdjustment
+  linearPredictor
+}
