@@ -333,3 +333,677 @@ test_that("simulation outcome scoring applies PLP model preprocessing", {
   expect_equal(prediction$rawValue, 0.5)
   expect_equal(prediction$value, stats::plogis(0.5))
 })
+test_that("simulatePlpBenchmarkData generates known risks from sampled covariates", {
+  cohorts <- data.frame(
+    rowId = c(10, 20, 30),
+    subjectId = 101:103,
+    targetId = rep(1, 3),
+    cohortStartDate = as.Date("2020-01-01") + 0:2,
+    daysFromObsStart = rep(100, 3),
+    daysToCohortEnd = rep(365, 3),
+    daysToObsEnd = c(6, 8, 365),
+    ageYear = c(40, 50, 60),
+    gender = c(8532, 8507, 8532)
+  )
+  covariates <- data.frame(
+    rowId = c(10, 20, 30, 30),
+    covariateId = c(100, 100, 100, 200),
+    covariateValue = c(1, 2, 0, 1)
+  )
+  covariateRef <- data.frame(
+    covariateId = c(100, 200),
+    covariateName = c("test covariate", "other covariate"),
+    analysisId = c(1, 1)
+  )
+  analysisRef <- data.frame(
+    analysisId = 1,
+    analysisName = "binary",
+    isBinary = "Y"
+  )
+  plpData <- list(
+    cohorts = cohorts,
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = list(
+      covariates = covariates,
+      covariateRef = covariateRef,
+      analysisRef = analysisRef
+    ),
+    timeRef = NULL,
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -1, "100" = 0.5),
+    n = 8,
+    riskWindowStart = 5,
+    riskWindowEnd = 9,
+    outcomeId = 99,
+    seed = 42
+  )
+
+  expect_s3_class(benchmarkData, "plpData")
+  expect_equal(nrow(benchmarkData$cohorts), 8)
+  expect_equal(benchmarkData$cohorts$rowId, 1:8)
+  expect_equal(length(unique(benchmarkData$cohorts$subjectId)), 8)
+  expect_equal(benchmarkData$metaData$databaseDetails$outcomeIds, 99)
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$cohortId, 1)
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$cohortIds, 1)
+
+  truth <- benchmarkData$simulationTruth
+  expect_null(attr(benchmarkData, "simulationTruth"))
+  expect_equal(benchmarkData$simulationSettings$outcomeId, 99)
+  expect_equal(benchmarkData$simulationSettings$targetId, 1)
+  expect_true(benchmarkData$simulationSettings$sampleWithReplacement)
+  expect_true(is.data.frame(truth))
+  expect_equal(nrow(truth), 8)
+  expect_true(all(truth$sourceRowId %in% cohorts$rowId))
+  sourceSubjects <- cohorts$subjectId[match(truth$sourceRowId, cohorts$rowId)]
+  expect_equal(truth$sourceSubjectId, sourceSubjects)
+  expect_true(anyDuplicated(truth$sourceRowId) > 0)
+
+  simulatedCovariates <- benchmarkData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 100) %>%
+    dplyr::collect()
+  covariate100 <- rep(0, 8)
+  covariate100[simulatedCovariates$rowId] <- simulatedCovariates$covariateValue
+  expectedLinearPredictor <- -1 + 0.5 * covariate100
+  expect_equal(truth$linearPredictor, expectedLinearPredictor)
+  expect_equal(truth$trueRisk, stats::plogis(expectedLinearPredictor))
+
+  if (nrow(benchmarkData$outcomes) > 0) {
+    outcomeCohorts <- merge(
+      benchmarkData$outcomes,
+      benchmarkData$cohorts[, c("rowId", "daysToObsEnd")],
+      by = "rowId"
+    )
+    expect_true(all(benchmarkData$outcomes$daysToEvent >= 5))
+    expect_true(all(benchmarkData$outcomes$daysToEvent <= 9))
+    expect_true(all(outcomeCohorts$daysToEvent <= outcomeCohorts$daysToObsEnd))
+    expect_equal(unique(benchmarkData$outcomes$outcomeId), 99)
+  }
+})
+
+test_that("simulatePlpBenchmarkData resamples Andromeda covariateData", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 3),
+      covariateId = c(100, 100, 100, 200),
+      covariateValue = c(1, 0, 2, 1)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(100, 200),
+      covariateName = c("test covariate", "other covariate"),
+      analysisId = c(1, 1)
+    ),
+    analysisRef = data.frame(
+      analysisId = 1,
+      analysisName = "binary",
+      isBinary = "Y"
+    )
+  )
+  attr(covariateData, "metaData") <- list(
+    populationSize = 3,
+    cohortIds = 11,
+    covariateSettings = "preserve"
+  )
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:3, subjectId = 1:3, targetId = 11, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = covariateData,
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -2, "100" = 0.75),
+    n = 6,
+    seed = 42
+  )
+  on.exit(Andromeda::close(benchmarkData$covariateData), add = TRUE)
+
+  expect_s3_class(benchmarkData, "plpData")
+  expect_s4_class(benchmarkData$covariateData, "CovariateData")
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$populationSize, 6)
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$cohortId, 11)
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$cohortIds, 11)
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$covariateSettings, "preserve")
+
+  simulatedCovariates <- benchmarkData$covariateData$covariates %>%
+    dplyr::collect()
+  expect_true(all(simulatedCovariates$rowId %in% 1:6))
+  expect_true(all(simulatedCovariates$covariateId %in% c(100, 200)))
+
+  truth <- benchmarkData$simulationTruth
+  covariate100 <- rep(0, 6)
+  covariate100[simulatedCovariates$rowId[simulatedCovariates$covariateId == 100]] <-
+    simulatedCovariates$covariateValue[simulatedCovariates$covariateId == 100]
+  expect_equal(truth$linearPredictor, -2 + 0.75 * covariate100)
+})
+
+test_that("simulatePlpBenchmarkData uses predictPlp for PLP model outcome generation", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(1, 2),
+      covariateId = c(100, 100),
+      covariateValue = c(10, 20)
+    ),
+    covariateRef = data.frame(
+      covariateId = 100,
+      covariateName = "continuous covariate",
+      analysisId = 1
+    ),
+    analysisRef = data.frame(
+      analysisId = 1,
+      analysisName = "continuous",
+      isBinary = "N"
+    )
+  )
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = covariateData,
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  plpModel <- createGlmModel(
+    coefficients = data.frame(covariateId = 100, coefficient = 1),
+    intercept = -2,
+    tidyCovariates = list(
+      normFactors = data.frame(covariateId = 100, maxValue = 10),
+      deletedRedundantCovariateIds = numeric(),
+      deletedInfrequentCovariateIds = numeric()
+    )
+  )
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = plpModel,
+    n = 6,
+    seed = 42
+  )
+  on.exit(Andromeda::close(benchmarkData$covariateData), add = TRUE)
+
+  truth <- benchmarkData$simulationTruth
+  sourceCovariates <- data.frame(sourceRowId = 1:2, sourceValue = c(10, 20))
+  truth <- merge(truth, sourceCovariates, by = "sourceRowId", sort = FALSE)
+  expectedLinearPredictor <- -2 + truth$sourceValue / 10
+  expect_equal(truth$linearPredictor, expectedLinearPredictor)
+
+  simulatedCovariates <- benchmarkData$covariateData$covariates %>%
+    dplyr::collect()
+  expect_true(any(simulatedCovariates$covariateValue == 20))
+})
+
+test_that("simulatePlpBenchmarkData accepts runPlp results as outcome models", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = 1, covariateId = 100, covariateValue = 1),
+    covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1),
+    analysisRef = data.frame(analysisId = 1, analysisName = "binary", isBinary = "Y")
+  )
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+
+  plpData <- list(
+    cohorts = data.frame(rowId = 1, subjectId = 1, targetId = 1, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = covariateData,
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  plpResult <- list(
+    model = createGlmModel(
+      coefficients = data.frame(covariateId = 100, coefficient = 0.5),
+      intercept = -1
+    )
+  )
+  class(plpResult) <- "runPlp"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = plpResult,
+    n = 3,
+    seed = 42
+  )
+  on.exit(Andromeda::close(benchmarkData$covariateData), add = TRUE)
+
+  expect_equal(benchmarkData$simulationTruth$linearPredictor, rep(-0.5, 3))
+})
+
+test_that("simulatePlpBenchmarkData can omit simulation truth", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = c(0, 1)),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -1, "100" = 1),
+    n = 5,
+    seed = 42,
+    returnTruth = FALSE
+  )
+
+  expect_s3_class(benchmarkData, "plpData")
+  expect_null(attr(benchmarkData, "simulationTruth"))
+  expect_null(benchmarkData$simulationTruth)
+  expect_equal(benchmarkData$simulationSettings$returnTruth, FALSE)
+})
+
+test_that("simulatePlpBenchmarkData truth and settings survive save/load", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = c(0, 1)),
+    covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+  )
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = covariateData,
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -1, "100" = 1),
+    n = 5,
+    seed = 42
+  )
+  on.exit(Andromeda::close(benchmarkData$covariateData), add = TRUE)
+
+  saveLoc <- file.path(tempdir(), paste0("benchmarkSaveLoad", sample.int(1e6, 1)))
+  on.exit(unlink(saveLoc, recursive = TRUE), add = TRUE)
+  savePlpData(benchmarkData, saveLoc)
+  loadedData <- loadPlpData(saveLoc)
+  on.exit(Andromeda::close(loadedData$covariateData), add = TRUE)
+
+  expect_equal(loadedData$simulationSettings, benchmarkData$simulationSettings)
+  expect_equal(loadedData$simulationTruth, benchmarkData$simulationTruth)
+  expect_null(attr(loadedData, "simulationTruth"))
+})
+
+test_that("simulatePlpBenchmarkData returns well-formed data when no outcomes are generated", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = c(0, 1)),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -1000, "100" = 1),
+    n = 5,
+    seed = 42
+  )
+
+  expect_equal(nrow(benchmarkData$outcomes), 0)
+  expect_equal(names(benchmarkData$outcomes), c("rowId", "outcomeId", "outcomeCount", "daysToEvent"))
+  expect_equal(benchmarkData$metaData$databaseDetails$outcomeIds, 3)
+  expect_equal(attr(benchmarkData$outcomes, "metaData")$outcomeIds, 3)
+
+  truth <- benchmarkData$simulationTruth
+  expect_equal(truth$outcomeCount, rep(0, 5))
+  expect_true(all(is.na(truth$daysToEvent)))
+})
+
+test_that("simulatePlpBenchmarkData validates benchmark inputs", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = c(0, 1)),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), seed = 1.5),
+    "Seed"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), seed = NA),
+    "Seed"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(list(covariateData = plpData$covariateData), c("(Intercept)" = -1)),
+    "plpData must contain cohorts"
+  )
+  missingTargetData <- plpData
+  missingTargetData$cohorts$targetId <- NULL
+  expect_error(
+    simulatePlpBenchmarkData(missingTargetData, c("(Intercept)" = -1)),
+    "targetId"
+  )
+  multipleTargetData <- plpData
+  multipleTargetData$cohorts$targetId <- 1:2
+  expect_error(
+    simulatePlpBenchmarkData(multipleTargetData, c("(Intercept)" = -1)),
+    "exactly one finite targetId"
+  )
+  missingObsEndData <- plpData
+  missingObsEndData$cohorts$daysToObsEnd <- NULL
+  expect_error(
+    simulatePlpBenchmarkData(missingObsEndData, c("(Intercept)" = -1)),
+    "daysToObsEnd"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, list("(Intercept)" = -1)),
+    "named finite numeric vector"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = NA)),
+    "named finite numeric vector"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = Inf)),
+    "named finite numeric vector"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, stats::setNames(c(-1, 1), c("100", "100"))),
+    "coefficient names must be unique"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, stats::setNames(c(-1, 1), c("(Intercept)", ""))),
+    "names for all coefficients"
+  )
+  expect_error(
+    suppressWarnings(simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1, abc = 1))),
+    "numeric covariate IDs"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), n = 0),
+    "positive finite scalar integer"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), n = NA),
+    "positive finite scalar integer"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), n = Inf),
+    "positive finite scalar integer"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), riskWindowStart = 1.5),
+    "riskWindowStart"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), riskWindowStart = NA),
+    "riskWindowStart"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), riskWindowEnd = 1.5),
+    "riskWindowEnd"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), riskWindowEnd = Inf),
+    "riskWindowEnd"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), riskWindowStart = 10, riskWindowEnd = 1),
+    "greater than or equal"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), targetOutcomeRate = 1),
+    "between 0 and 1"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), targetOutcomeRate = NA),
+    "between 0 and 1"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), returnTruth = NA),
+    "returnTruth"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), returnTruth = "TRUE"),
+    "returnTruth"
+  )
+  missingOutcomeData <- plpData
+  missingOutcomeData$metaData$databaseDetails$outcomeIds <- NULL
+  expect_error(
+    simulatePlpBenchmarkData(missingOutcomeData, c("(Intercept)" = -1)),
+    "outcomeId must be specified"
+  )
+  multipleOutcomeData <- plpData
+  multipleOutcomeData$metaData$databaseDetails$outcomeIds <- c(3, 4)
+  expect_error(
+    simulatePlpBenchmarkData(multipleOutcomeData, c("(Intercept)" = -1)),
+    "outcomeId must be specified"
+  )
+  explicitOutcomeData <- simulatePlpBenchmarkData(
+    multipleOutcomeData,
+    c("(Intercept)" = -1),
+    outcomeId = 9,
+    seed = 42
+  )
+  expect_equal(explicitOutcomeData$simulationSettings$outcomeId, 9)
+  expect_error(
+    simulatePlpBenchmarkData(plpData, c("(Intercept)" = -1), outcomeId = NA),
+    "outcomeId"
+  )
+
+  missingFollowUpData <- plpData
+  missingFollowUpData$cohorts$daysToObsEnd[1] <- NA
+  expect_error(
+    simulatePlpBenchmarkData(missingFollowUpData, c("(Intercept)" = -1)),
+    "must not contain missing values"
+  )
+  noObservableData <- plpData
+  noObservableData$cohorts$daysToObsEnd <- 0
+  expect_error(
+    simulatePlpBenchmarkData(noObservableData, c("(Intercept)" = -1), riskWindowStart = 1),
+    "No cohort rows"
+  )
+  missingCohortEndData <- plpData
+  missingCohortEndData$cohorts$daysToCohortEnd <- c(365, NA)
+  expect_error(
+    simulatePlpBenchmarkData(missingCohortEndData, c("(Intercept)" = -1)),
+    "daysToCohortEnd"
+  )
+  expect_error(
+    simulatePlpBenchmarkData(
+      plpData,
+      c("(Intercept)" = 0, "100" = Inf),
+      targetOutcomeRate = 0.5
+    ),
+    "named finite numeric vector"
+  )
+
+  benchmarkData <- simulatePlpBenchmarkData(plpData, c("100" = 1), n = 5, seed = 42)
+  truth <- benchmarkData$simulationTruth
+  expect_equal(truth$linearPredictor, as.numeric(truth$sourceRowId == 2))
+})
+
+test_that("simulatePlpBenchmarkData can target the mean true risk", {
+  cohorts <- data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365)
+  covariates <- data.frame(rowId = c(1, 2), covariateId = c(100, 100), covariateValue = c(0, 1))
+  covariateRef <- data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+  analysisRef <- data.frame(analysisId = 1, analysisName = "binary", isBinary = "Y")
+  plpData <- list(
+    cohorts = cohorts,
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = list(covariates = covariates, covariateRef = covariateRef, analysisRef = analysisRef),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = -1, "100" = 1),
+    n = 20,
+    targetOutcomeRate = 0.25,
+    seed = 123
+  )
+  truth <- benchmarkData$simulationTruth
+  expect_equal(mean(truth$trueRisk), 0.25, tolerance = 1e-5)
+})
+
+test_that("simulatePlpBenchmarkData rejects unavailable outcome covariates", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1, subjectId = 1, targetId = 1, daysToObsEnd = 365),
+    covariateData = list(
+      covariates = data.frame(rowId = 1, covariateId = 100, covariateValue = 1),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  expect_error(
+    simulatePlpBenchmarkData(
+      plpData = plpData,
+      outcomeModel = c("(Intercept)" = -1, "999" = 1)
+    ),
+    "999"
+  )
+})
+
+test_that("simulatePlpBenchmarkData samples only rows observable at risk start", {
+  plpData <- list(
+    cohorts = data.frame(
+      rowId = 1:2,
+      subjectId = 1:2,
+      targetId = 1,
+      daysToObsEnd = c(0, 10)
+    ),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = 1),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  expect_warning(
+    benchmarkData <- simulatePlpBenchmarkData(
+      plpData = plpData,
+      outcomeModel = c("(Intercept)" = 20),
+      n = 10,
+      riskWindowStart = 1,
+      riskWindowEnd = 20,
+      seed = 42
+    ),
+    "without observable time"
+  )
+  truth <- benchmarkData$simulationTruth
+  expect_equal(unique(truth$sourceRowId), 2)
+  expect_true(all(benchmarkData$outcomes$daysToEvent <= 10))
+})
+
+test_that("simulatePlpBenchmarkData samples events within target cohort end", {
+  plpData <- list(
+    cohorts = data.frame(
+      rowId = 1:2,
+      subjectId = 1:2,
+      targetId = 242,
+      cohortStartDate = as.Date("2020-01-01"),
+      daysFromObsStart = 365,
+      daysToCohortEnd = c(5, 20),
+      daysToObsEnd = 365,
+      ageYear = 50,
+      gender = 8532
+    ),
+    outcomes = data.frame(rowId = integer(), outcomeId = integer(), outcomeCount = integer(), daysToEvent = integer()),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = 1),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = 20),
+    n = 20,
+    riskWindowStart = 1,
+    riskWindowEnd = 20,
+    outcomeId = 99,
+    seed = 42
+  )
+  outcomeCohorts <- merge(
+    benchmarkData$outcomes,
+    benchmarkData$cohorts[, c("rowId", "daysToCohortEnd")],
+    by = "rowId"
+  )
+  expect_true(all(outcomeCohorts$daysToEvent <= outcomeCohorts$daysToCohortEnd))
+  expect_equal(attr(benchmarkData$covariateData, "metaData")$cohortId, 242)
+
+  population <- createStudyPopulation(
+    plpData = benchmarkData,
+    outcomeId = 99,
+    populationSettings = createStudyPopulationSettings(
+      removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = FALSE,
+      riskWindowStart = 1,
+      riskWindowEnd = 20,
+      restrictTarToCohortEnd = TRUE
+    )
+  )
+  truth <- benchmarkData$simulationTruth
+  expect_equal(mean(population$outcomeCount), mean(truth$outcomeCount))
+})
+
+test_that("simulatePlpBenchmarkData rejects temporal covariate data", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1, subjectId = 1, targetId = 1, daysToObsEnd = 365),
+    covariateData = list(
+      covariates = data.frame(rowId = 1, covariateId = 100, covariateValue = 1, timeId = 1),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1),
+      timeRef = data.frame(timeId = 1, startDay = -365, endDay = -1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  expect_error(
+    simulatePlpBenchmarkData(
+      plpData = plpData,
+      outcomeModel = c("(Intercept)" = -1, "100" = 1)
+    ),
+    "temporal covariateData"
+  )
+})
+
+test_that("simulatePlpBenchmarkData targets outcome rate with shifted linear predictors", {
+  plpData <- list(
+    cohorts = data.frame(rowId = 1:2, subjectId = 1:2, targetId = 1, daysToObsEnd = 365),
+    covariateData = list(
+      covariates = data.frame(rowId = 1:2, covariateId = 100, covariateValue = c(0, 1)),
+      covariateRef = data.frame(covariateId = 100, covariateName = "test covariate", analysisId = 1)
+    ),
+    metaData = list(databaseDetails = list(outcomeIds = 3))
+  )
+  class(plpData) <- "plpData"
+
+  benchmarkData <- simulatePlpBenchmarkData(
+    plpData = plpData,
+    outcomeModel = c("(Intercept)" = 100, "100" = 1),
+    n = 20,
+    targetOutcomeRate = 0.2,
+    seed = 42
+  )
+  truth <- benchmarkData$simulationTruth
+  expect_equal(mean(truth$trueRisk), 0.2, tolerance = 1e-5)
+})
