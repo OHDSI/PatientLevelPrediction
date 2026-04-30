@@ -54,11 +54,11 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.6.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="6.6.0" id="patientlevelprediction-660">PatientLevelPrediction 6.6.0<a class="anchor" aria-label="anchor" href="#patientlevelprediction-660"></a></h2>
+<h2 class="pkg-version" data-toc-text="6.6.0" id="patientlevelprediction-660">PatientLevelPrediction 6.6.0<a class="anchor" aria-label="anchor" href="#patientlevelprediction-660"></a></h2><p class="text-muted">CRAN release: 2026-03-09</p>
 <div class="section level3">
 <h3 id="new-features-6-6-0">New features<a class="anchor" aria-label="anchor" href="#new-features-6-6-0"></a></h3>
 <ul><li>Added flexible hyperparameter tuning with configurable tuning metrics and support for grid, random, and custom search strategies (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/618" class="external-link">#618</a>).</li>
@@ -70,7 +70,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-6-6-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-6-6-0"></a></h3>
-<ul><li>Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/628" class="external-link">#628</a>, <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/623" class="external-link">#623</a>).</li>
+<ul><li>Fixed simulation profile outcome models so generated coefficients only reference covariates available in the profile, added support for user-supplied outcome models, and invalid custom profiles now fail early instead of silently dropping outcome signal.</li>
+<li>Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/628" class="external-link">#628</a>, <a href="https://github.com/OHDSI/PatientLevelPrediction/issues/623" class="external-link">#623</a>).</li>
 <li>Ensured existing GLM and scikit-learn model settings retain model identity so uploads generate distinct model design records (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/614" class="external-link">#614</a>).</li>
 <li>Fixed evaluation when outcomes are single-class (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/624" class="external-link">#624</a>).</li>
 <li>Improved LightGBM model persistence using a more robust in-memory serialization path (<a href="https://github.com/OHDSI/PatientLevelPrediction/issues/626" class="external-link">#626</a>).</li>

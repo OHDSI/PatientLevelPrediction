@@ -2,6 +2,8 @@
 
 ## PatientLevelPrediction 6.6.0
 
+CRAN release: 2026-03-09
+
 ### New features
 
 - Added flexible hyperparameter tuning with configurable tuning metrics
@@ -26,6 +28,10 @@
 
 ### Bug fixes
 
+- Fixed simulation profile outcome models so generated coefficients only
+  reference covariates available in the profile, added support for
+  user-supplied outcome models, and invalid custom profiles now fail
+  early instead of silently dropping outcome signal.
 - Improved upload of hyperparameter metadata and robustness of model
   settings persistence for database viewers and downstream tools
   ([\#628](https://github.com/OHDSI/PatientLevelPrediction/issues/628),
