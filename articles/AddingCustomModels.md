@@ -44,6 +44,7 @@ settings. For example to specify the model name and the seed used for
 reproducibility:
 
 ``` r
+
 settings <- list(
   seed = 12,
   modelName = "Special classifier",
@@ -57,6 +58,7 @@ For example, if you were adding a model called madeUp that has two
 hyper-parameters then the set function should be:
 
 ``` r
+
 setMadeUp <- function(a = c(1, 4, 10), b = 2, seed = NULL) {
   # add input checks here...
 
@@ -104,6 +106,7 @@ model for a given hyper parameter setting. The takes as input:
 The output should be the trained model.
 
 ``` r
+
 fitMadeUp <- function(
     dataMatrix,
     labels,
@@ -160,6 +163,7 @@ the fit and prediction function for R classifiers).
 ### Set
 
 ``` r
+
 setMadeUp <- function(a = c(1, 4, 6), b = 2, seed = NULL) {
   # add input checks here...
 
@@ -202,6 +206,7 @@ patient, a label vector with the class labels for each patient, the
 hyperparameters and the model settings.
 
 ``` r
+
 fitMadeUp <- function(
     dataMatrix,
     labels,
@@ -235,6 +240,7 @@ model on and the cohort specifying the patients of interest to make the
 prediction for.
 
 ``` r
+
 predictMadeUp <- function(plpModel, data, cohort) {
   if (class(data) == "plpData") {
     # convert
@@ -283,6 +289,7 @@ specifies the covariateIds and their corresponding columnId in the
 feature matrix.
 
 ``` r
+
 varImpMadeUp <- function(
     model,
     covariateMap
@@ -312,6 +319,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

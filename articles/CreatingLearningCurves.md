@@ -80,6 +80,7 @@ of the data simulator. The following code snippet creates data for 12000
 patients.
 
 ``` r
+
 set.seed(1234)
 data(simulationProfile)
 sampleSize <- 12000
@@ -95,6 +96,7 @@ requiring minimum prior observation or no prior outcome as well as
 specifying the time-at-risk period to enable labels to be created):
 
 ``` r
+
 populationSettings <- createStudyPopulationSettings(
   binary = TRUE,
   firstExposureOnly = FALSE,
@@ -112,6 +114,7 @@ populationSettings <- createStudyPopulationSettings(
 Specify the prediction algorithm to be used.
 
 ``` r
+
 # Use LASSO logistic regression
 modelSettings <- setLassoLogisticRegression()
 ```
@@ -125,6 +128,7 @@ important determinant of model performance. Make sure that your training
 set contains the number of events specified.
 
 ``` r
+
 splitSettings <- createDefaultSplitSetting(
   testFraction = 0.2,
   type = "stratified",
@@ -137,6 +141,7 @@ trainFractions <- seq(0.1, 0.8, 0.1) # Create eight training set fractions
 Create the learning curve object.
 
 ``` r
+
 learningCurve <- createLearningCurve(
   plpData = plpData,
   outcomeId = 2,
@@ -172,6 +177,7 @@ model performance and allow you to better compare learning curves across
 different prediction problems and databases.
 
 ``` r
+
 plotLearningCurve(
   learningCurve,
   metric = "AUROC",
@@ -206,6 +212,7 @@ use via the `cores` input.
 We have added a demo of the learningcurve:
 
 ``` r
+
 # Show all demos in our package:
 demo(package = "PatientLevelPrediction")
 
@@ -228,6 +235,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

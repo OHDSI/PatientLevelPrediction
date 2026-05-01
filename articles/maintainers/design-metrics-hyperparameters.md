@@ -5,6 +5,7 @@
 Add a file `R/HyperparameterSettings.R`:
 
 ``` r
+
   createHyperparameterSettings <- function(
       search = "grid",
       tuningMetric = NULL,
@@ -62,6 +63,7 @@ In `R/RunMultiplePlp.R`:
 - Update signature:
 
 ``` r
+
   createModelDesign <- function(
       ...,
       hyperparameterSettings = createHyperparameterSettings(),
@@ -85,6 +87,7 @@ In `R/RunMultiplePlp.R`:
   [`fitPlp()`](https://ohdsi.github.io/PatientLevelPrediction/reference/fitPlp.md):
 
 ``` r
+
   hyperparameterSettings <- modelDesign$hyperparameterSettings %||% createHyperparameterSettings()
   settings <- list(
     trainData = data$Train,
@@ -249,6 +252,7 @@ the same:
 - The unified CV loop consumes the iterator uniformly:
 
 ``` r
+
     iterator <- prepareHyperparameterGrid(
       paramDefinition, 
       hyperSettings, 
@@ -298,6 +302,7 @@ whichBest <- if (metric$maximize) {
   signature changes:
 
 ``` r
+
   computeGridPerformance <- function(prediction, param, metric) {
     perf <- metric$fun(prediction)
     folds <- vapply(unique(prediction$index), function(foldId) {
@@ -319,6 +324,7 @@ For metrics needing thresholds, the supplied function can capture the
 threshold:
 
 ``` r
+
   createTuningMetric(
     fun = function(prediction) {
       pred <- ifelse(prediction$value >= 0.6, 1, 0)
@@ -348,6 +354,7 @@ needed.
   the design-level setting only when explicitly set, e.g.:
 
 ``` r
+
   if (!missing(search)) {
     hyperparameterSettings$search <- search
   }
@@ -361,6 +368,7 @@ working.
 ## 8. Usage example
 
 ``` r
+
   metric <- createTuningMetric(
     fun = function(prediction) mean(ifelse(prediction$value >= 0.55, 1, 0) == (prediction$outcomeCount > 0)),
     maximize = TRUE,

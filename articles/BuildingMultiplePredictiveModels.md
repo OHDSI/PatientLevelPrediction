@@ -30,19 +30,19 @@ out-of-scope for this vignette.
 The first step is to specify each model you wish to develop by using the
 `createModelDesign` function. This function requires the following:
 
-| input                      | Description                                                                                                                     |
-|:---------------------------|:--------------------------------------------------------------------------------------------------------------------------------|
-| targetId                   | The id for the target cohort                                                                                                    |
-| outcomeId                  | The id for the outcome                                                                                                          |
-| restrictPlpDataSettings    | The settings used to restrict the target population, created with createRestrictPlpDataSettings()                               |
-| populationSettings         | The settings used to restrict the target population and create the outcome labels, created with createStudyPopulationSettings() |
-| covariateSettings          | The settings used to define the covariates, created with FeatureExtraction::createDefaultCovariateSettings()                    |
-| sampleSettings             | The settings used to define any under/over sampling, created with createSampleSettings()                                        |
-| featureEngineeringSettings | The settings used to define any feature engineering, created with createFeatureEngineeringSettings()                            |
-| preprocessSettings         | The settings used to define any preprocessing, created with createPreprocessSettings()                                          |
-| modelSettings              | The settings used to define the model fitting settings, such as setLassoLogisticRegression()                                    |
+| input | Description |
+|:---|:---|
+| targetId | The id for the target cohort |
+| outcomeId | The id for the outcome |
+| restrictPlpDataSettings | The settings used to restrict the target population, created with createRestrictPlpDataSettings() |
+| populationSettings | The settings used to restrict the target population and create the outcome labels, created with createStudyPopulationSettings() |
+| covariateSettings | The settings used to define the covariates, created with FeatureExtraction::createDefaultCovariateSettings() |
+| sampleSettings | The settings used to define any under/over sampling, created with createSampleSettings() |
+| featureEngineeringSettings | The settings used to define any feature engineering, created with createFeatureEngineeringSettings() |
+| preprocessSettings | The settings used to define any preprocessing, created with createPreprocessSettings() |
+| modelSettings | The settings used to define the model fitting settings, such as setLassoLogisticRegression() |
 
-The inputs for the model design
+The inputs for the model design {.table}
 
 ### Model design example 1
 
@@ -53,6 +53,7 @@ only want to use age, gender in 5 year buckets and conditions as
 features. The model can be specified by:
 
 ``` r
+
 # Model 1 is only using data between 2018-2020:
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
   studyStartDate = "20180101", 
@@ -102,6 +103,7 @@ want to use age, gender in 5 year buckets, drug ingredients (and groups)
 and conditions as features. The model can be specified by:
 
 ``` r
+
 # Model 2 has no restrictions when extracting data
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
   )
@@ -150,6 +152,7 @@ gender in 5 year buckets and indications of measurements taken as
 features. The model can be specified by:
 
 ``` r
+
 # Model 3 has no restrictions when extracting data
 restrictPlpDataSettings <- createRestrictPlpDataSettings(
   )
@@ -200,6 +203,7 @@ access and plenty of space.
 To run the study requires setting up a connectionDetails object
 
 ``` r
+
 dbms <- "your dbms"
 user <- "your username"
 pw <- "your password"
@@ -220,6 +224,7 @@ string with a shareable name of the database (this will be shown to
 OHDSI researchers if the results get transported).
 
 ``` r
+
 cdmDatabaseSchema <- "your cdmDatabaseSchema"
 workDatabaseSchema <- "your workDatabaseSchema"
 cdmDatabaseName <- "your cdmDatabaseName"
@@ -240,6 +245,7 @@ databaseDetails <- createDatabaseDetails(
 Now you can run the multiple patient-level prediction analysis:
 
 ``` r
+
 results <- runMultiplePlp(
   databaseDetails = databaseDetails,
   modelDesignList = list(
@@ -270,6 +276,7 @@ If you have access to multiple databases on the same server in different
 schemas you could evaluate accross these using this call:
 
 ``` r
+
 validationDatabaseDetails <- createDatabaseDetails(
   connectionDetails = connectionDetails,
   cdmDatabaseSchema = "new cdm schema",
@@ -299,6 +306,7 @@ runPlpAnalyses).
 To view the results for the multiple prediction analysis:
 
 ``` r
+
 viewMultiplePlp(analysesLocation = "./PlpMultiOutput")
 ```
 
@@ -311,6 +319,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

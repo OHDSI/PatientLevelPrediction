@@ -52,6 +52,7 @@ specifying the number of patients to sample \* `sampleSeed` an
 integer/double specifying the seed for reproducibility
 
 ``` r
+
 createRandomSampleSettings <- function(n = 10000,
                                        sampleSeed = sample(10000, 1)) {
   # add input checks
@@ -88,6 +89,7 @@ In our example, the `createRandomSampleSettings()` will return a list
 with ‘n’ and ‘sampleSeed’. The sampleSettings therefore contains these.
 
 ``` r
+
 implementRandomSampleSettings <- function(trainData, sampleSettings) {
   n <- sampleSettings$n
   sampleSeed <- sampleSettings$sampleSeed
@@ -136,6 +138,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

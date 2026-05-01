@@ -63,6 +63,7 @@ inputs for this are: `knots` - an integer/double specifying the number
 of knots.
 
 ``` r
+
 createAgeSpline <- function(knots = 5) {
   # create list of inputs to implement function
   featureEngineeringSettings <- list(
@@ -91,6 +92,7 @@ In our example, the `createAgeSpline()` will return a list with ‘knots’.
 The `featureEngineeringSettings` therefore contains this.
 
 ``` r
+
 implementAgeSplines <- function(trainData, featureEngineeringSettings, model = NULL) {
   # if there is a model, it means this function is called through applyFeatureengineering, meaning it   # should apply the model fitten on training data to the test data
   if (is.null(model)) {
@@ -160,6 +162,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

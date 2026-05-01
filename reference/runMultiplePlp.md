@@ -63,12 +63,12 @@ runMultiplePlp(
 
 A data frame with the following columns:
 
-|                    |                                                            |
-|--------------------|------------------------------------------------------------|
-| `analysisId`       | The unique identifier for a set of analysis choices.       |
-| `targetId`         | The ID of the target cohort populations.                   |
-| `outcomeId`        | The ID of the outcomeId.                                   |
-| `dataLocation`     | The location where the plpData was saved                   |
+|  |  |
+|----|----|
+| `analysisId` | The unique identifier for a set of analysis choices. |
+| `targetId` | The ID of the target cohort populations. |
+| `outcomeId` | The ID of the outcomeId. |
+| `dataLocation` | The location where the plpData was saved |
 | `the settings ids` | The ids for all other settings used for model development. |
 
 ## Details

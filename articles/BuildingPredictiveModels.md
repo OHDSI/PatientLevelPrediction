@@ -227,16 +227,16 @@ algorithms as described in more detail in
 
 Our package currently contains the following algorithms to choose from:
 
-| Algorihm                                                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Hyper-parameters                                                                                                                                                                                                                                                    |
-|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Regularized Logistic Regression                                      | Lasso logistic regression belongs to the family of generalized linear models, where a linear combination of the variables is learned and finally a logistic function maps the linear combination to a value between 0 and 1. The lasso regularization adds a cost based on model complexity to the objective function when training the model. This cost is the sum of the absolute values of the linear combination of the coefficients. The model automatically performs feature selection by minimizing this cost. We use the Cyclic coordinate descent for logistic, Poisson and survival analysis (Cyclops) package to perform large-scale regularized logistic regression: <https://github.com/OHDSI/Cyclops> | var (starting variance), seed                                                                                                                                                                                                                                       |
-| Gradient boosting machines                                           | Gradient boosting machines is a boosting ensemble technique and in our framework it combines multiple decision trees. Boosting works by iteratively adding decision trees but adds more weight to the data-points that are misclassified by prior decision trees in the cost function when training the next tree. We use Extreme Gradient Boosting, which is an efficient implementation of the gradient boosting framework implemented in the xgboost R package available from CRAN.                                                                                                                                                                                                                              | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, balance (balance class labels), seed                                                                                                             |
-| Random forest                                                        | Random forest is a bagging ensemble technique that combines multiple decision trees. The idea behind bagging is to reduce the likelihood of overfitting, by using weak classifiers, but combining multiple diverse weak classifiers into a strong classifier. Random forest accomplishes this by training multiple decision trees but only using a subset of the variables in each tree and the subset of variables differ between trees. Our packages uses the sklearn learn implementation of Random Forest in python.                                                                                                                                                                                            | mtry (number of features in each tree),ntree (number of trees), maxDepth (max levels in tree), minRows (minimum data points in in node),balance (balance class labels), seed                                                                                        |
-| Naive Bayes                                                          | The Naive Bayes algorithm applies the Bayes theorem with the ‘naive’ assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained.                                                                                                                                                                                                                                                                                                                                                                                                | none                                                                                                                                                                                                                                                                |
-| AdaBoost                                                             | AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn ‘AdaboostClassifier’ implementation in Python.                                                                                                                                                                                                                                                                                                                                                                                                           | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators)                                |
-| Decision Tree                                                        | A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach. It aims to find partitions that have the highest information gain to separate the classes. The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn ‘DecisionTreeClassifier’ implementation in Python.                                                                                                                                                                                                  | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight (‘Balance’ or ‘None’) |
-| Multilayer Perception                                                | Neural networks contain multiple layers that weight their inputs using a non-linear function. The first layer is the input layer, the last layer is the output layer the between are the hidden layers. Neural networks are generally trained using feed forward back-propagation. This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error.                                                                                                                                                                                                   | size (the number of hidden nodes), alpha (the l2 regularisation), seed                                                                                                                                                                                              |
-| Deep Learning (now in seperate DeepPatientLevelPrediction R package) | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | see: <https://github.com/OHDSI/DeepPatientLevelPrediction>                                                                                                                                                                                                          |
+| Algorihm | Description | Hyper-parameters |
+|----|----|----|
+| Regularized Logistic Regression | Lasso logistic regression belongs to the family of generalized linear models, where a linear combination of the variables is learned and finally a logistic function maps the linear combination to a value between 0 and 1. The lasso regularization adds a cost based on model complexity to the objective function when training the model. This cost is the sum of the absolute values of the linear combination of the coefficients. The model automatically performs feature selection by minimizing this cost. We use the Cyclic coordinate descent for logistic, Poisson and survival analysis (Cyclops) package to perform large-scale regularized logistic regression: <https://github.com/OHDSI/Cyclops> | var (starting variance), seed |
+| Gradient boosting machines | Gradient boosting machines is a boosting ensemble technique and in our framework it combines multiple decision trees. Boosting works by iteratively adding decision trees but adds more weight to the data-points that are misclassified by prior decision trees in the cost function when training the next tree. We use Extreme Gradient Boosting, which is an efficient implementation of the gradient boosting framework implemented in the xgboost R package available from CRAN. | ntree (number of trees), max depth (max levels in tree), min rows (minimum data points in in node), learning rate, balance (balance class labels), seed |
+| Random forest | Random forest is a bagging ensemble technique that combines multiple decision trees. The idea behind bagging is to reduce the likelihood of overfitting, by using weak classifiers, but combining multiple diverse weak classifiers into a strong classifier. Random forest accomplishes this by training multiple decision trees but only using a subset of the variables in each tree and the subset of variables differ between trees. Our packages uses the sklearn learn implementation of Random Forest in python. | mtry (number of features in each tree),ntree (number of trees), maxDepth (max levels in tree), minRows (minimum data points in in node),balance (balance class labels), seed |
+| Naive Bayes | The Naive Bayes algorithm applies the Bayes theorem with the ‘naive’ assumption of conditional independence between every pair of features given the value of the class variable. Based on the likelihood the data belongs to a class and the prior distribution of the class, a posterior distribution is obtained. | none |
+| AdaBoost | AdaBoost is a boosting ensemble technique. Boosting works by iteratively adding classifiers but adds more weight to the data-points that are misclassified by prior classifiers in the cost function when training the next classifier. We use the sklearn ‘AdaboostClassifier’ implementation in Python. | nEstimators (the maximum number of estimators at which boosting is terminated), learningRate (learning rate shrinks the contribution of each classifier by learning_rate. There is a trade-off between learningRate and nEstimators) |
+| Decision Tree | A decision tree is a classifier that partitions the variable space using individual tests selected using a greedy approach. It aims to find partitions that have the highest information gain to separate the classes. The decision tree can easily overfit by enabling a large number of partitions (tree depth) and often needs some regularization (e.g., pruning or specifying hyper-parameters that limit the complexity of the model). We use the sklearn ‘DecisionTreeClassifier’ implementation in Python. | maxDepth (the maximum depth of the tree), minSamplesSplit,minSamplesLeaf, minImpuritySplit (threshold for early stopping in tree growth. A node will split if its impurity is above the threshold, otherwise it is a leaf.), seed,classWeight (‘Balance’ or ‘None’) |
+| Multilayer Perception | Neural networks contain multiple layers that weight their inputs using a non-linear function. The first layer is the input layer, the last layer is the output layer the between are the hidden layers. Neural networks are generally trained using feed forward back-propagation. This is when you go through the network with a data-point and calculate the error between the true label and predicted label, then go backwards through the network and update the linear function weights based on the error. | size (the number of hidden nodes), alpha (the l2 regularisation), seed |
+| Deep Learning (now in seperate DeepPatientLevelPrediction R package) | Deep learning such as deep nets, convolutional neural networks or recurrent neural networks are similar to a neural network but have multiple hidden layers that aim to learn latent representations useful for prediction. | see: <https://github.com/OHDSI/DeepPatientLevelPrediction> |
 
 Furthermore, we have to decide on the **covariates** that we will use to
 train our model. This choice can be driven by domain knowledge of
@@ -274,26 +274,26 @@ For our first prediction model we decide to start with a Regularized
 Logistic Regression and will use the default parameters. We will do a
 75%-25% split by person.
 
-| Definition                                | Value                                                                                                                                                                                                                                                                                         |
-|-------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Problem Definition**                    |                                                                                                                                                                                                                                                                                               |
-| Target Cohort (T)                         | ‘Patients who are newly diagnosed with Atrial Fibrillation’ defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmia, or a procedure to treat arrhythmia. |
-| Outcome Cohort (O)                        | ‘Ischemic stroke events’ defined as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes.                                                                                                            |
-| Time-at-risk (TAR)                        | 1 day till 365 days from cohort start                                                                                                                                                                                                                                                         |
-|                                           |                                                                                                                                                                                                                                                                                               |
-| **Population Definition**                 |                                                                                                                                                                                                                                                                                               |
-| Washout Period                            | 1095                                                                                                                                                                                                                                                                                          |
-| Enter the target cohort multiple times?   | No                                                                                                                                                                                                                                                                                            |
-| Allow prior outcomes?                     | Yes                                                                                                                                                                                                                                                                                           |
-| Start of time-at-risk                     | 1 day                                                                                                                                                                                                                                                                                         |
-| End of time-at-risk                       | 365 days                                                                                                                                                                                                                                                                                      |
-| Require a minimum amount of time-at-risk? | Yes (364 days)                                                                                                                                                                                                                                                                                |
-|                                           |                                                                                                                                                                                                                                                                                               |
-| **Model Development**                     |                                                                                                                                                                                                                                                                                               |
-| Algorithm                                 | Regularized Logistic Regression                                                                                                                                                                                                                                                               |
-| Hyper-parameters                          | variance = 0.01 (Default)                                                                                                                                                                                                                                                                     |
-| Covariates                                | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count                                                                                                                                                                                              |
-| Data split                                | 75% train, 25% test. Randomly assigned by person                                                                                                                                                                                                                                              |
+| Definition | Value |
+|----|----|
+| **Problem Definition** |  |
+| Target Cohort (T) | ‘Patients who are newly diagnosed with Atrial Fibrillation’ defined as the first condition record of cardiac arrhythmia, which is followed by another cardiac arrhythmia condition record, at least two drug records for a drug used to treat arrhythmia, or a procedure to treat arrhythmia. |
+| Outcome Cohort (O) | ‘Ischemic stroke events’ defined as ischemic stroke condition records during an inpatient or ER visit; successive records with \> 180 day gap are considered independent episodes. |
+| Time-at-risk (TAR) | 1 day till 365 days from cohort start |
+|  |  |
+| **Population Definition** |  |
+| Washout Period | 1095 |
+| Enter the target cohort multiple times? | No |
+| Allow prior outcomes? | Yes |
+| Start of time-at-risk | 1 day |
+| End of time-at-risk | 365 days |
+| Require a minimum amount of time-at-risk? | Yes (364 days) |
+|  |  |
+| **Model Development** |  |
+| Algorithm | Regularized Logistic Regression |
+| Hyper-parameters | variance = 0.01 (Default) |
+| Covariates | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count |
+| Data split | 75% train, 25% test. Randomly assigned by person |
 
 According to the best practices we need to make a protocol that
 completely specifies how we plan to execute our study. This protocol
@@ -504,6 +504,7 @@ systems (DBMS). For example, one might connect to a PostgreSQL database
 using this code:
 
 ``` r
+
 library(DatabaseConnector)
 connectionDetails <- createConnectionDetails(
   dbms = "postgresql",
@@ -526,6 +527,7 @@ database and the schema, so for example
 `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ``` r
+
 library(SqlRender)
 sql <- readSql("AfStrokeCohorts.sql")
 sql <- render(sql,
@@ -548,6 +550,7 @@ If all went well, we now have a table with the events of interest. We
 can see how many events per type:
 
 ``` r
+
 sql <- paste(
   "SELECT cohort_definition_id, COUNT(*) AS count",
   "FROM @cohortsDatabaseSchema.AFibStrokeCohort",
@@ -583,6 +586,7 @@ package see its [vignettes](https://github.com/OHDSI/FeatureExtraction).
 For our example study we decided to use these settings:
 
 ``` r
+
 library(FeatureExtraction)
 covariateSettings <- createCovariateSettings(
   useDemographicsGender = TRUE,
@@ -607,6 +611,7 @@ included into the data, and finally input the previously constructed
 `covariateSettings`.
 
 ``` r
+
 library(PatientLevelPrediction)
 databaseDetails <- createDatabaseDetails(
   connectionDetails = connectionDetails,
@@ -651,6 +656,7 @@ Instead, we’ll have to use the
 function:
 
 ``` r
+
 savePlpData(plpData, "stroke_in_af_data")
 ```
 
@@ -674,6 +680,7 @@ In the example below all the settings we defined for our study are
 imposed:
 
 ``` r
+
 populationSettings <- createStudyPopulationSettings(
   washoutPeriod = 1095,
   firstExposureOnly = FALSE,
@@ -722,6 +729,7 @@ the data are small, it may be optimal to not use a test set). For the
 the patient-level prediction pipeline:
 
 ``` r
+
 splitSettings <- createDefaultSplitSetting(
   trainFraction = 0.75,
   testFraction = 0.25,
@@ -750,6 +758,7 @@ The default sample settings does nothing, it simply returns the
 trainData as input, see below:
 
 ``` r
+
 sampleSettings <- createSampleSettings()
 ```
 
@@ -766,6 +775,7 @@ different features. The default feature engineering setting does
 nothing:
 
 ``` r
+
 featureEngineeringSettings <- createFeatureEngineeringSettings()
 ```
 
@@ -784,6 +794,7 @@ The input `removeRedundancy` specifies whether features that are
 observed in all of the target population are removed.
 
 ``` r
+
 preprocessSettingsSettings <- createPreprocessSettings(
   minFraction = 0.01,
   normalize = TRUE,
@@ -810,6 +821,7 @@ model. For our problem we choose to build a logistic regression model
 with the default hyper-parameters
 
 ``` r
+
 lrModel <- setLassoLogisticRegression()
 ```
 
@@ -820,6 +832,7 @@ the outcome being predicted and the settings: `populationSettings`,
 model.
 
 ``` r
+
 lrResults <- runPlp(
   plpData = plpData,
   outcomeId = 2,
@@ -853,24 +866,28 @@ returned containing information about the model, its performance etc.
 You can save the model using:
 
 ``` r
+
 savePlpModel(lrResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ``` r
+
 plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ``` r
+
 savePlpResult(lrResults, location = file.path(tempdir(), "lr"))
 ```
 
 To load the full results structure use:
 
 ``` r
+
 lrResults <- loadPlpResult(file.path(tempdir(), "lr"))
 ```
 
@@ -878,26 +895,26 @@ lrResults <- loadPlpResult(file.path(tempdir(), "lr"))
 
 ### Study Specification
 
-| Definition                                | Value                                                                                                     |
-|-------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| **Problem Definition**                    |                                                                                                           |
-| Target Cohort (T)                         | ‘Patients who are newly dispensed an ACE inhibitor’ defined as the first drug record of any ACE inhibitor |
-| Outcome Cohort (O)                        | ‘Angioedema’ defined as an angioedema condition record during an inpatient or ER visit                    |
-| Time-at-risk (TAR)                        | 1 day till 365 days from cohort start                                                                     |
-|                                           |                                                                                                           |
-| **Population Definition**                 |                                                                                                           |
-| Washout Period                            | 365                                                                                                       |
-| Enter the target cohort multiple times?   | No                                                                                                        |
-| Allow prior outcomes?                     | No                                                                                                        |
-| Start of time-at-risk                     | 1 day                                                                                                     |
-| End of time-at-risk                       | 365 days                                                                                                  |
-| Require a minimum amount of time-at-risk? | Yes (364 days)                                                                                            |
-|                                           |                                                                                                           |
-| **Model Development**                     |                                                                                                           |
-| Algorithm                                 | Gradient Boosting Machine                                                                                 |
-| Hyper-parameters                          | ntree:5000, max depth:4 or 7 or 10 and learning rate: 0.001 or 0.01 or 0.1 or 0.9                         |
-| Covariates                                | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count          |
-| Data split                                | 75% train, 25% test. Randomly assigned by person                                                          |
+| Definition | Value |
+|----|----|
+| **Problem Definition** |  |
+| Target Cohort (T) | ‘Patients who are newly dispensed an ACE inhibitor’ defined as the first drug record of any ACE inhibitor |
+| Outcome Cohort (O) | ‘Angioedema’ defined as an angioedema condition record during an inpatient or ER visit |
+| Time-at-risk (TAR) | 1 day till 365 days from cohort start |
+|  |  |
+| **Population Definition** |  |
+| Washout Period | 365 |
+| Enter the target cohort multiple times? | No |
+| Allow prior outcomes? | No |
+| Start of time-at-risk | 1 day |
+| End of time-at-risk | 365 days |
+| Require a minimum amount of time-at-risk? | Yes (364 days) |
+|  |  |
+| **Model Development** |  |
+| Algorithm | Gradient Boosting Machine |
+| Hyper-parameters | ntree:5000, max depth:4 or 7 or 10 and learning rate: 0.001 or 0.01 or 0.1 or 0.9 |
+| Covariates | Gender, Age, Conditions (ever before, \<365), Drugs Groups (ever before, \<365), and Visit Count |
+| Data split | 75% train, 25% test. Randomly assigned by person |
 
 According to the best practices we need to make a protocol that
 completely specifies how we plan to execute our study. This protocol
@@ -1084,6 +1101,7 @@ systems (DBMS). For example, one might connect to a PostgreSQL database
 using this code:
 
 ``` r
+
 connectionDetails <- createConnectionDetails(
   dbms = "postgresql",
   server = "localhost/ohdsi",
@@ -1105,6 +1123,7 @@ the database and the schema, so for example
 `cdmDatabaseSchema <- "my_cdm_data.dbo"`.
 
 ``` r
+
 library(SqlRender)
 sql <- readSql("AceAngioCohorts.sql")
 sql <- render(sql,
@@ -1127,6 +1146,7 @@ If all went well, we now have a table with the events of interest. We
 can see how many events per type:
 
 ``` r
+
 sql <- paste(
   "SELECT cohort_definition_id, COUNT(*) AS count",
   "FROM @cohortsDatabaseSchema.AceAngioCohort",
@@ -1162,6 +1182,7 @@ detailed information on the FeatureExtraction package see its
 study we decided to use these settings:
 
 ``` r
+
 covariateSettings <- createCovariateSettings(
   useDemographicsGender = TRUE,
   useDemographicsAge = TRUE,
@@ -1184,6 +1205,7 @@ included into the data, and finally input the previously constructed
 covariate settings.
 
 ``` r
+
 databaseDetails <- createDatabaseDetails(
   connectionDetails = connectionDetails,
   cdmDatabaseSchema = cdmDatabaseSchema,
@@ -1221,6 +1243,7 @@ we’ll have to use the
 function:
 
 ``` r
+
 savePlpData(plpData, "angio_in_ace_data")
 ```
 
@@ -1251,6 +1274,7 @@ In the example below all the settings we defined for our study are
 imposed:
 
 ``` r
+
 populationSettings <- createStudyPopulationSettings(
   washoutPeriod = 364,
   firstExposureOnly = FALSE,
@@ -1297,6 +1321,7 @@ testFraction parameters to split the data in a 75%-25% split and run the
 patient-level prediction pipeline:
 
 ``` r
+
 splitSettings <- createDefaultSplitSetting(
   trainFraction = 0.75,
   testFraction = 0.25,
@@ -1325,6 +1350,7 @@ The default sample settings does nothing, it simply returns the
 trainData as input, see below:
 
 ``` r
+
 sampleSettings <- createSampleSettings()
 ```
 
@@ -1341,6 +1367,7 @@ different features. The default feature engineering setting does
 nothing:
 
 ``` r
+
 featureEngineeringSettings <- createFeatureEngineeringSettings()
 ```
 
@@ -1359,6 +1386,7 @@ The input `removeRedundancy` specifies whether features that are
 observed in all of the target population are removed.
 
 ``` r
+
 preprocessSettingsSettings <- createPreprocessSettings(
   minFraction = 0.01,
   normalize = TRUE,
@@ -1385,6 +1413,7 @@ model. For our problem we choose to build a logistic regression model
 with the default hyper-parameters
 
 ``` r
+
 gbmModel <- setGradientBoostingMachine(ntrees = 5000, maxDepth = c(4, 7, 10), learnRate = c(0.001,
     0.01, 0.1, 0.9))
 ```
@@ -1396,6 +1425,7 @@ the outcome being predicted and the settings: `populationSettings`,
 model.
 
 ``` r
+
 gbmResults <- runPlp(
   plpData = plpData,
   outcomeId = 2,
@@ -1428,18 +1458,21 @@ containing information about the model, its performance etc.
 You can save the model using:
 
 ``` r
+
 savePlpModel(gbmResults$model, dirPath = file.path(tempdir(), "model"))
 ```
 
 You can load the model using:
 
 ``` r
+
 plpModel <- loadPlpModel(file.path(tempdir(), "model"))
 ```
 
 You can also save the full results structure using:
 
 ``` r
+
 savePlpResult(gbmResults, location = file.path(tempdir(), "gbm"))
 ```
 
@@ -1536,6 +1569,7 @@ To generate and save all the evaluation plots to a folder run the
 following code:
 
 ``` r
+
 plotPlp(lrResults, dirPath = file.path(tempdir(), "plots"))
 ```
 
@@ -1589,6 +1623,7 @@ to produce the smooth plot for final versions. To create the smooth
 calibarion plot you have to run the follow command:
 
 ``` r
+
 plotSmoothCalibration(lrResults)
 ```
 
@@ -1664,6 +1699,7 @@ Precision is defined as the number of true positives (Tp) over the
 number of true positives plus the number of false positives (Fp).
 
 ``` r
+
 precision <- Tp/(Tp + Fp)
 ```
 
@@ -1671,6 +1707,7 @@ Recall is defined as the number of true positives (Tp) over the number
 of true positives plus the number of false negatives (Fn).
 
 ``` r
+
 recall <- Tp/(Tp + Fn)
 ```
 
@@ -1678,6 +1715,7 @@ These quantities are also related to the (F1) score, which is defined as
 the harmonic mean of precision and recall.
 
 ``` r
+
 f1Score <- 2 * P * R/(P + R)
 ```
 
@@ -1717,6 +1755,7 @@ We recommend to always perform external validation, i.e. apply the final
 model on as much new datasets as feasible and evaluate its performance.
 
 ``` r
+
 # load the trained model
 plpModel <- loadPlpModel(file.path(tempdir(), "model"), "model")
 
@@ -1749,20 +1788,21 @@ The package has much more functionality than described in this vignette
 and contributions have been made my many persons in the OHDSI community.
 The table below provides an overview:
 
-| Functionality                        | Description                                                                                                                                                                                                                                                                  | Vignette                                                                                                                                      |
-|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| Builing Multiple Models              | This vignette describes how you can run multiple models automatically                                                                                                                                                                                                        | [`vignette('BuildingMultiplePredictiveModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingMultiplePredictiveModels.md) |
-| Custom Models                        | This vignette describes how you can add your own custom algorithms in the framework                                                                                                                                                                                          | [`vignette('AddingCustomModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomModels.md)                             |
-| Custom Splitting Functions           | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework                                                                                                                                                     | [`vignette('AddingCustomSplitting')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomSplitting.md)                       |
-| Custom Sampling Functions            | This vignette describes how you can add your own custom sampling functions in the framework                                                                                                                                                                                  | [`vignette('AddingCustomSamples')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomSamples.md)                           |
-| Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework                                                                                                                                                         | [`vignette('AddingCustomFeatureEngineering')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomFeatureEngineering.md)     |
-| Learning curves                      | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`vignette('CreatingLearningCurves')`](https://ohdsi.github.io/PatientLevelPrediction/articles/CreatingLearningCurves.md)                     |
+| Functionality | Description | Vignette |
+|----|----|----|
+| Builing Multiple Models | This vignette describes how you can run multiple models automatically | [`vignette('BuildingMultiplePredictiveModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingMultiplePredictiveModels.md) |
+| Custom Models | This vignette describes how you can add your own custom algorithms in the framework | [`vignette('AddingCustomModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomModels.md) |
+| Custom Splitting Functions | This vignette describes how you can add your own custom training/validation/testing splitting functions in the framework | [`vignette('AddingCustomSplitting')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomSplitting.md) |
+| Custom Sampling Functions | This vignette describes how you can add your own custom sampling functions in the framework | [`vignette('AddingCustomSamples')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomSamples.md) |
+| Custom Feature Engineering/Selection | This vignette describes how you can add your own custom feature engineering and selection functions in the framework | [`vignette('AddingCustomFeatureEngineering')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomFeatureEngineering.md) |
+| Learning curves | Learning curves assess the effect of training set size on model performance by training a sequence of prediction models on successively larger subsets of the training set. A learning curve plot can also help in diagnosing a bias or variance problem as explained below. | [`vignette('CreatingLearningCurves')`](https://ohdsi.github.io/PatientLevelPrediction/articles/CreatingLearningCurves.md) |
 
 ## Demos
 
 We have added several demos in the package that run on simulated data:
 
 ``` r
+
 # Show all demos in our package:
 demo(package = "PatientLevelPrediction")
 
@@ -1776,6 +1816,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 
@@ -1805,6 +1846,7 @@ Further, `PatientLevelPrediction` makes extensive use of the `Cyclops`
 package.
 
 ``` r
+
 citation("Cyclops")
 ```
 

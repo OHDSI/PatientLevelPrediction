@@ -49,6 +49,7 @@ them to us if you experience problems.
 To install using `remotes` run:
 
 ``` r
+
 install.packages("remotes")
 remotes::install_github("OHDSI/PatientLevelPrediction")
 ```
@@ -63,6 +64,7 @@ Many of the classifiers in the `PatientLevelPrediction` use a Python
 backend. To set up a python environment run:
 
 ``` r
+
 library(PatientLevelPrediction)
 reticulate::install_miniconda()
 configurePython(envname = "r-reticulate", envtype = "conda")
@@ -94,12 +96,14 @@ edit your .Rprofile with the location of the python binary for the PLP
 environment. Edit the .Rprofile by running:
 
 ``` r
+
 usethis::edit_r_profile()
 ```
 
 and add
 
 ``` r
+
 Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep = ":"))
 ```
 
@@ -107,6 +111,7 @@ to the file then save. Where your python bin location is the location
 returned by
 
 ``` r
+
 reticulate::conda_list()
 ```
 
@@ -121,6 +126,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

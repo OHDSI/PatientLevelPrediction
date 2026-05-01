@@ -47,6 +47,7 @@ single nfold input that returns a list of class ‘splitSettings’ with the
 ‘fun’ attribute specifying the ‘implement’ function we will use.
 
 ``` r
+
 createGenderSplit <- function(nfold) {
   # create list of inputs to implement function
   splitSettings <- list(nfold = nfold)
@@ -76,6 +77,7 @@ example, if rowId 2 is assigned index 5, then it means the patient with
 the rowId 2 is used to train the model and is in fold 5.
 
 ``` r
+
 implementGenderSplit <- function(population, splitSettings) {
   # find the people who are male:
   males <- population$rowId[population$gender == 8507]
@@ -100,6 +102,7 @@ Considerable work has been dedicated to provide the
 `PatientLevelPrediction` package.
 
 ``` r
+
 citation("PatientLevelPrediction")
 ```
 

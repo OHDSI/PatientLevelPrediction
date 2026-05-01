@@ -44,12 +44,12 @@ mappedData <- MapIds(covariateData)
 # columnId and rowId are now starting from 1 and are consecutive
 mappedData$covariates
 #> # Source:   table<covariates> [?? x 4]
-#> # Database: DuckDB 1.5.2 [unknown@Linux 6.17.0-1010-azure:R 4.6.0//tmp/RtmpFZeDTR/file214153c538db.duckdb]
+#> # Database: DuckDB 1.5.2 [unknown@Linux 6.17.0-1010-azure:R 4.6.0//tmp/RtmpDJzB64/file1ea15277f692.duckdb]
 #>   covariateId covariateValue columnId rowId
 #>         <dbl>          <dbl>    <int> <int>
-#> 1          10              1        1     1
-#> 2          20              1        2     4
-#> 3          10              1        1     2
-#> 4          10              1        1     3
-#> 5          20              1        2     5
+#> 1          10              1        1     3
+#> 2          20              1        2     1
+#> 3          10              1        1     4
+#> 4          10              1        1     5
+#> 5          20              1        2     2
 ```

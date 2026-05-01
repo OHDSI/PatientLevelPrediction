@@ -71,10 +71,10 @@ below (T=green, O=red).
 
 # Screenshots
 
-|                                                                                |                                                        |
-|--------------------------------------------------------------------------------|--------------------------------------------------------|
+|  |  |
+|----|----|
 | ![Calibration plot](articles/images/sparseCalibration.avif "Calibration plot") | ![ROC plot](articles/images/sparseRoc.avif "ROC plot") |
-| Calibration Plot                                                               | ROC Plot                                               |
+| Calibration Plot | ROC Plot |
 
 Demo of the Shiny Apps can be found here:
 

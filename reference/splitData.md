@@ -61,7 +61,7 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 population <- createStudyPopulation(plpData)
 #> Outcome is 0 or 1
 #> Population created with: 961 observations, 961 unique subjects and 499 outcomes
-#> Population created in 0.351 secs
+#> Population created in 0.36 secs
 splitSettings <- createDefaultSplitSetting(testFraction = 0.50, 
                                            trainFraction = 0.50, nfold = 5)
 data = splitData(plpData, population, splitSettings)

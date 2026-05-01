@@ -47,6 +47,7 @@ imported necessary packages and defined the relevant parameters about
 the data source:
 
 ``` r
+
 library(PatientLevelPrediction)
 library(dplyr)
 outputFolder <- "/ohdsi-gis/copdResultsPM25_NEW"
@@ -78,6 +79,7 @@ launched the `runMultiplePLP` function to create a base `plpData`
 object:
 
 ``` r
+
 databaseDetails <- PatientLevelPrediction::createDatabaseDetails(
         connectionDetails = connectionDetails, 
         cdmDatabaseSchema = cdmDatabaseSchema, 
@@ -113,6 +115,7 @@ elements like gender and age; we added an additional data element to
 this object derived from the `EXPOSURE_OCCURRENCE` table:
 
 ``` r
+
 cohortDefinitions <- NULL
 modelDesign <- createModelDesign(targetId = 9, outcomeId = 8, modelSettings = setLassoLogisticRegression())
 populationSettings <- modelDesign$populationSettings
@@ -150,6 +153,7 @@ follow the feature engineering vignette and create two functions,
 `createPollutants` and `implementPollutants`:
 
 ``` r
+
 createPollutants <- function(
                      method = 'QNCV'
                      ){
@@ -229,6 +233,7 @@ We can then execute these functions to create training and test data
 objects that contain our extended covariates:
 
 ``` r
+
 featureEngineeringSettingsPol <- createPollutants('QNCV')
 trainDataPol <- implementPollutants(trainData, featureEngineeringSettings)
 testDataPol <- implementPollutants(testData, featureEngineeringSettings, trainDataPol$model)
@@ -250,6 +255,7 @@ OR Estimation
 #### Step 5: Apply new train and test datasets to `runPlp` and evaluate output
 
 ``` r
+
 analysisId <- '1'
 analysisPath = file.path(saveDirectory, analysisId)
 
