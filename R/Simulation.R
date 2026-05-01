@@ -19,8 +19,27 @@
 #' Create simulation profile from PLP data and an outcome model
 #'
 #' @param plpData An object of type \code{plpData} as generated using the \cr\code{getPlpData} function.'
-#' @param outcomeModels Optional named numeric vector or list of named numeric vectors with outcome model coefficients.
+#' @param outcomeModels Optional outcome model specification. This can be a named numeric vector,
+#'   a list of named numeric vectors, a Cyclops/GLM coefficient data frame, a trained model, a
+#'   \code{plpModel}, or a \code{runPlp} result. When a \code{plpModel} or \code{runPlp}
+#'   result is supplied, the model's saved preprocessing is applied before generating outcome risks.
 #' @return An object of type \code{plpDataSimulationProfile}.
+#' @examplesIf rlang::is_installed("Eunomia") && rlang::is_installed("curl") && curl::has_internet()
+#' \donttest{ \dontshow{ # takes too long }
+#' plpData <- getEunomiaPlpData()
+#' saveLoc <- file.path(tempdir(), "simulationProfile")
+#' plpResult <- runPlp(
+#'   plpData = plpData,
+#'   outcomeId = 3,
+#'   analysisId = 1,
+#'   saveDirectory = saveLoc
+#' )
+#' simulationProfile <- PatientLevelPrediction:::createSimulationProfile(
+#'   plpData = plpData,
+#'   outcomeModels = plpResult
+#' )
+#' simulatedData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
+#' }
 #' @keywords internal
 #' @noRd
 createSimulationProfile <- function(plpData, outcomeModels = NULL) {
@@ -53,13 +72,16 @@ createSimulationProfile <- function(plpData, outcomeModels = NULL) {
   outcomeIds <- plpData$metaData$databaseDetails$outcomeIds
   if (is.null(outcomeModels)) {
     outcomeModels <- vector("list", length(outcomeIds))
+    outcomeModelPlpModels <- vector("list", length(outcomeIds))
     for (i in seq_along(outcomeIds)) {
       outcomeModels[[i]] <- createDefaultSimulationOutcomeModel(
         covariatePrevalence = covariatePrevalence
       )
     }
   } else {
-    outcomeModels <- normalizeSimulationOutcomeModels(outcomeModels, length(outcomeIds))
+    normalizedOutcomeModels <- normalizeSimulationOutcomeModels(outcomeModels, length(outcomeIds))
+    outcomeModels <- normalizedOutcomeModels$outcomeModels
+    outcomeModelPlpModels <- normalizedOutcomeModels$outcomeModelPlpModels
   }
 
   timeMax <- max(plpData$outcomes$daysToEvent)
@@ -72,6 +94,7 @@ createSimulationProfile <- function(plpData, outcomeModels = NULL) {
     timeMax = timeMax,
     outcomeRate = outcomeRate,
     outcomeModels = outcomeModels,
+    outcomeModelPlpModels = outcomeModelPlpModels,
     metaData = plpData$metaData,
     covariateRef = plpData$covariateData$covariateRef %>% dplyr::collect()
   )
@@ -81,16 +104,35 @@ createSimulationProfile <- function(plpData, outcomeModels = NULL) {
 }
 
 normalizeSimulationOutcomeModels <- function(outcomeModels, numberOfOutcomeIds) {
-  if (is.numeric(outcomeModels)) {
+  outcomeModel <- coerceSimulationOutcomeModel(outcomeModels)
+  if (!is.null(outcomeModel)) {
+    outcomeModels <- list(outcomeModel$outcomeModel)
+    outcomeModelPlpModels <- list(outcomeModel$plpModel)
+  } else if (is.data.frame(outcomeModels)) {
     outcomeModels <- list(outcomeModels)
+    outcomeModelPlpModels <- list(NULL)
+  } else if (is.list(outcomeModels)) {
+    coercedOutcomeModels <- lapply(outcomeModels, function(outcomeModel) {
+      coercedOutcomeModel <- coerceSimulationOutcomeModel(outcomeModel)
+      if (is.null(coercedOutcomeModel)) {
+        return(list(outcomeModel = outcomeModel, plpModel = NULL))
+      }
+      return(coercedOutcomeModel)
+    })
+    outcomeModels <- lapply(coercedOutcomeModels, function(outcomeModel) outcomeModel$outcomeModel)
+    outcomeModelPlpModels <- lapply(coercedOutcomeModels, function(outcomeModel) outcomeModel$plpModel)
   }
 
   if (!is.list(outcomeModels)) {
-    stop("outcomeModels must be a named numeric vector or list of named numeric vectors")
+    stop(paste(
+      "outcomeModels must be a named numeric vector, a list of named numeric vectors,",
+      "a supported model object, or a list of supported model objects"
+    ))
   }
 
   if (length(outcomeModels) == 1 && numberOfOutcomeIds > 1) {
     outcomeModels <- rep(outcomeModels, numberOfOutcomeIds)
+    outcomeModelPlpModels <- rep(outcomeModelPlpModels, numberOfOutcomeIds)
   }
 
   if (length(outcomeModels) != numberOfOutcomeIds) {
@@ -107,7 +149,88 @@ normalizeSimulationOutcomeModels <- function(outcomeModels, numberOfOutcomeIds) 
     }
   }
 
-  return(outcomeModels)
+  return(list(
+    outcomeModels = outcomeModels,
+    outcomeModelPlpModels = outcomeModelPlpModels
+  ))
+}
+
+coerceSimulationOutcomeModel <- function(outcomeModel) {
+  if (is.numeric(outcomeModel)) {
+    return(list(outcomeModel = outcomeModel, plpModel = NULL))
+  }
+
+  if (is.data.frame(outcomeModel)) {
+    coefficients <- coerceSimulationCoefficientDataFrame(outcomeModel)
+    if (is.null(coefficients)) {
+      return(NULL)
+    }
+    return(list(outcomeModel = coefficients, plpModel = NULL))
+  }
+
+  if (!is.list(outcomeModel)) {
+    return(NULL)
+  }
+
+  if (inherits(outcomeModel, "runPlp") && inherits(outcomeModel$model, "plpModel")) {
+    return(coerceSimulationPlpModel(outcomeModel$model))
+  }
+
+  if (inherits(outcomeModel, "plpModel")) {
+    return(coerceSimulationPlpModel(outcomeModel))
+  }
+
+  if (!is.null(outcomeModel$coefficients)) {
+    coefficients <- coerceSimulationCoefficientDataFrame(
+      outcomeModel$coefficients,
+      intercept = outcomeModel$intercept
+    )
+    if (is.null(coefficients)) {
+      return(NULL)
+    }
+    return(list(outcomeModel = coefficients, plpModel = NULL))
+  }
+
+  if (!is.null(outcomeModel$model)) {
+    return(coerceSimulationOutcomeModel(outcomeModel$model))
+  }
+
+  return(NULL)
+}
+
+coerceSimulationPlpModel <- function(plpModel) {
+  outcomeModel <- coerceSimulationOutcomeModel(plpModel$model)
+  if (is.null(outcomeModel)) {
+    return(NULL)
+  }
+  outcomeModel$plpModel <- plpModel
+  return(outcomeModel)
+}
+
+coerceSimulationCoefficientDataFrame <- function(coefficients, intercept = NULL) {
+  if (!is.data.frame(coefficients)) {
+    return(NULL)
+  }
+
+  if (all(c("betas", "covariateIds") %in% colnames(coefficients))) {
+    outcomeModel <- stats::setNames(
+      as.numeric(coefficients$betas),
+      as.character(coefficients$covariateIds)
+    )
+  } else if (all(c("coefficient", "covariateId") %in% colnames(coefficients))) {
+    outcomeModel <- stats::setNames(
+      as.numeric(coefficients$coefficient),
+      as.character(coefficients$covariateId)
+    )
+  } else {
+    return(NULL)
+  }
+
+  if (!is.null(intercept) && !"(Intercept)" %in% names(outcomeModel)) {
+    outcomeModel <- c("(Intercept)" = as.numeric(intercept)[[1]], outcomeModel)
+  }
+
+  return(outcomeModel)
 }
 
 createDefaultSimulationOutcomeModel <- function(covariatePrevalence) {
@@ -267,27 +390,39 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
   writeLines("Generating outcomes")
   allOutcomes <- vector("list", length(plpDataSimulationProfile$metaData$databaseDetails$outcomeIds))
+  allSimulationTruth <- vector("list", length(plpDataSimulationProfile$metaData$databaseDetails$outcomeIds))
   outcomeIds <- plpDataSimulationProfile$metaData$databaseDetails$outcomeIds
   timeMax <- max(plpDataSimulationProfile$timeMax)
   for (i in seq_along(outcomeIds)) {
-    coefficients <- data.frame(
-      betas = as.numeric(plpDataSimulationProfile$outcomeModels[[i]]),
-      covariateIds = names(plpDataSimulationProfile$outcomeModels[[i]])
+    prediction <- predictSimulationOutcomeRisk(
+      outcomeModel = plpDataSimulationProfile$outcomeModels[[i]],
+      plpModel = plpDataSimulationProfile$outcomeModelPlpModels[[i]],
+      cohorts = cohorts,
+      covariateData = covariateData,
+      metaData = plpDataSimulationProfile$metaData
     )
-    prediction <- predictCyclopsType(coefficients,
-      cohorts,
-      covariateData,
-      modelType = "logistic"
+    outcomeCount <- stats::rbinom(nrow(prediction), size = 1, prob = prediction$value)
+    daysToEvent <- rep(NA_integer_, nrow(prediction))
+    eventRows <- outcomeCount != 0
+    daysToEvent[eventRows] <- round(stats::runif(sum(eventRows), 0, timeMax))
+    linearPredictor <- rep(NA_real_, nrow(prediction))
+    if ("rawValue" %in% colnames(prediction)) {
+      linearPredictor <- prediction$rawValue
+    }
+    simulationTruth <- data.frame(
+      rowId = prediction$rowId,
+      outcomeId = outcomeIds[i],
+      linearPredictor = linearPredictor,
+      trueRisk = prediction$value,
+      outcomeCount = outcomeCount,
+      daysToEvent = daysToEvent
     )
-    outcomes <- prediction
-    outcomes$outcomeCount <- stats::rbinom(nrow(outcomes), size = 1, prob = outcomes$value)
-    outcomes <- outcomes[outcomes$outcomeCount != 0, ]
-    outcomes$outcomeId <- outcomeIds[i]
-    outcomes$daysToEvent <- round(stats::runif(nrow(outcomes), 0, timeMax))
-    outcomes <- outcomes[, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
+    outcomes <- simulationTruth[simulationTruth$outcomeCount != 0, c("rowId", "outcomeId", "outcomeCount", "daysToEvent")]
     allOutcomes[[i]] <- outcomes
+    allSimulationTruth[[i]] <- simulationTruth
   }
   allOutcomes <- dplyr::bind_rows(allOutcomes)
+  simulationTruth <- dplyr::bind_rows(allSimulationTruth)
 
   covariateData$coefficients <- NULL
 
@@ -332,6 +467,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
   result <- list(
     cohorts = cohorts,
     outcomes = allOutcomes,
+    simulationTruth = simulationTruth,
     covariateData = covariateData,
     timeRef = NULL,
     metaData = metaData
@@ -339,4 +475,31 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
   class(result) <- "plpData"
   return(result)
+}
+
+predictSimulationOutcomeRisk <- function(outcomeModel, plpModel, cohorts, covariateData, metaData) {
+  if (!is.null(plpModel)) {
+    plpData <- list(
+      cohorts = cohorts,
+      outcomes = data.frame(),
+      covariateData = covariateData,
+      metaData = metaData
+    )
+    class(plpData) <- "plpData"
+    return(predictPlp(
+      plpModel = plpModel,
+      plpData = plpData,
+      population = cohorts
+    ))
+  }
+
+  coefficients <- data.frame(
+    betas = as.numeric(outcomeModel),
+    covariateIds = names(outcomeModel)
+  )
+  return(predictCyclopsType(coefficients,
+    cohorts,
+    covariateData,
+    modelType = "logistic"
+  ))
 }
