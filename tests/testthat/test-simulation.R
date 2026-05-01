@@ -88,6 +88,92 @@ test_that("create simulation profile works", {
   customProfile <- createSimulationProfile(simData, outcomeModels = customOutcomeModel)
   expect_equal(customProfile$outcomeModels[[1]], customOutcomeModel)
 
+  cyclopsCoefficients <- data.frame(
+    betas = c(-1, 0.1, 0.3),
+    covariateIds = c("(Intercept)", "1002", "8532001"),
+    stringsAsFactors = FALSE
+  )
+  cyclopsModel <- list(coefficients = cyclopsCoefficients)
+  plpModel <- list(model = cyclopsModel)
+  class(plpModel) <- "plpModel"
+  plpResult <- list(model = plpModel)
+  class(plpResult) <- "runPlp"
+
+  cyclopsCoefficientProfile <- createSimulationProfile(simData, outcomeModels = cyclopsCoefficients)
+  expect_equal(cyclopsCoefficientProfile$outcomeModels[[1]], customOutcomeModel)
+
+  cyclopsProfile <- createSimulationProfile(simData, outcomeModels = cyclopsModel)
+  expect_equal(cyclopsProfile$outcomeModels[[1]], customOutcomeModel)
+
+  plpModelProfile <- createSimulationProfile(simData, outcomeModels = plpModel)
+  expect_equal(plpModelProfile$outcomeModels[[1]], customOutcomeModel)
+
+  plpResultProfile <- createSimulationProfile(simData, outcomeModels = plpResult)
+  expect_equal(plpResultProfile$outcomeModels[[1]], customOutcomeModel)
+
+  glmModel <- list(
+    intercept = -1,
+    coefficients = data.frame(
+      covariateId = c(1002, 8532001),
+      coefficient = c(0.1, 0.3)
+    )
+  )
+  glmProfile <- createSimulationProfile(simData, outcomeModels = glmModel)
+  expect_equal(glmProfile$outcomeModels[[1]], customOutcomeModel)
+
+  glmModelWithInterceptCoefficient <- list(
+    intercept = 0,
+    coefficients = data.frame(
+      covariateId = c("(Intercept)", "1002", "8532001"),
+      coefficient = c(-1, 0.1, 0.3)
+    )
+  )
+  glmWithInterceptProfile <- createSimulationProfile(
+    simData,
+    outcomeModels = glmModelWithInterceptCoefficient
+  )
+  expect_equal(glmWithInterceptProfile$outcomeModels[[1]], customOutcomeModel)
+
+  twoOutcomeSimData <- simData
+  twoOutcomeSimData$metaData$databaseDetails$outcomeIds <- c(1, 2)
+  repeatedOutcomeModelProfile <- createSimulationProfile(
+    twoOutcomeSimData,
+    outcomeModels = cyclopsModel
+  )
+  expect_equal(repeatedOutcomeModelProfile$outcomeModels, list(customOutcomeModel, customOutcomeModel))
+
+  secondOutcomeModel <- c("(Intercept)" = -2, "1002" = 0.2, "8532001" = 0.4)
+  twoOutcomeProfile <- createSimulationProfile(
+    twoOutcomeSimData,
+    outcomeModels = list(cyclopsModel, secondOutcomeModel)
+  )
+  expect_equal(twoOutcomeProfile$outcomeModels, list(customOutcomeModel, secondOutcomeModel))
+
+  expect_error(
+    createSimulationProfile(simData, outcomeModels = "not a model"),
+    "outcomeModels must be a named numeric vector"
+  )
+  expect_error(
+    createSimulationProfile(simData, outcomeModels = list(list(notCoefficients = TRUE))),
+    "Outcome model 1 must be a named numeric vector"
+  )
+  expect_error(
+    createSimulationProfile(simData, outcomeModels = list(coefficients = c(1, 2))),
+    "Outcome model 1 must have names for all coefficients"
+  )
+  expect_error(
+    createSimulationProfile(simData, outcomeModels = data.frame(x = 1, y = 2)),
+    "Outcome model 1 must be a named numeric vector"
+  )
+  expect_error(
+    createSimulationProfile(simData, outcomeModels = c(-1, 0.1)),
+    "Outcome model 1 must have names for all coefficients"
+  )
+  expect_error(
+    createSimulationProfile(twoOutcomeSimData, outcomeModels = list(customOutcomeModel, secondOutcomeModel, customOutcomeModel)),
+    "outcomeModels must contain one model for each outcomeId"
+  )
+
   expect_error(
     createSimulationProfile(
       simData,
@@ -147,6 +233,16 @@ test_that("simulatePlpData works", {
       expect_true(col %in% names(simData$outcomes))
     }
   }
+  expect_true(is.data.frame(simData$simulationTruth))
+  expect_equal(nrow(simData$simulationTruth), n)
+  expect_equal(
+    names(simData$simulationTruth),
+    c("rowId", "outcomeId", "linearPredictor", "trueRisk", "outcomeCount", "daysToEvent")
+  )
+  expect_equal(simData$simulationTruth$outcomeId, rep(3, n))
+  expect_true(all(simData$simulationTruth$trueRisk >= 0 & simData$simulationTruth$trueRisk <= 1))
+  expect_equal(nrow(simData$outcomes), sum(simData$simulationTruth$outcomeCount))
+  expect_true(all(is.na(simData$simulationTruth$daysToEvent[simData$simulationTruth$outcomeCount == 0])))
   expect_true(is.list(simData$metaData))
   expect_true("databaseDetails" %in% names(simData$metaData))
   expect_equal(simData$metaData$databaseDetails$cdmDatabaseSchema, "CDM_SCHEMA")
@@ -182,4 +278,58 @@ test_that("simulatePlpData rejects outcome models with unavailable covariates", 
     simulatePlpData(invalidProfile, n = 100, seed = 42),
     "9999"
   )
+})
+
+test_that("simulation outcome scoring applies PLP model preprocessing", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = 1,
+      covariateId = 1002,
+      covariateValue = 50
+    ),
+    covariateRef = data.frame(
+      covariateId = 1002,
+      covariateName = "age",
+      analysisId = 1
+    ),
+    analysisRef = data.frame(analysisId = 1)
+  )
+  class(covariateData) <- "CovariateData"
+  attr(class(covariateData), "package") <- "FeatureExtraction"
+
+  plpModel <- list(
+    model = list(
+      modelType = "logistic",
+      coefficients = data.frame(
+        betas = c(0, 1),
+        covariateIds = c("(Intercept)", "1002")
+      )
+    ),
+    preprocessing = list(
+      tidyCovariates = list(
+        normFactors = data.frame(covariateId = 1002, maxValue = 100),
+        deletedRedundantCovariateIds = numeric(0),
+        deletedInfrequentCovariateIds = numeric(0)
+      ),
+      featureEngineering = NULL
+    ),
+    modelDesign = list(
+      modelSettings = list(
+        settings = list(predict = "predictCyclops")
+      )
+    )
+  )
+  class(plpModel) <- "plpModel"
+  attr(plpModel, "modelType") <- "binary"
+
+  prediction <- predictSimulationOutcomeRisk(
+    outcomeModel = c("(Intercept)" = 0, "1002" = 1),
+    plpModel = plpModel,
+    cohorts = data.frame(rowId = 1),
+    covariateData = covariateData,
+    metaData = list()
+  )
+
+  expect_equal(prediction$rawValue, 0.5)
+  expect_equal(prediction$value, stats::plogis(0.5))
 })
