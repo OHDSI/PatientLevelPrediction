@@ -111,13 +111,14 @@ jobs:
           path: check/*.tar.gz
           
       - name: Install covr
-        if: runner.os == 'Linux'
+        if: runner.os == 'macOS'
         run: |
+          install.packages("remotes")
           remotes::install_cran("covr")
         shell: Rscript {0}
         
       - name: Test coverage
-        if: runner.os == 'Linux'
+        if: runner.os == 'macOS'
         run: covr::codecov(token = "${{ secrets.CODECOV_TOKEN }}")
         shell: Rscript {0}
 
