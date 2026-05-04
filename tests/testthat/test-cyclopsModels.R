@@ -301,6 +301,147 @@ test_that("test IHT incorrect inputs", {
 
 # ================ FUNCTION TESTING
 
+test_that("Cyclops CV prior uses fitted standard variance", {
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  cvPrior <- createCyclopsCvPrior(
+    modelSettings = setRidgeRegression(variance = 0.01),
+    fit = list(variance = 0.25),
+    cyclopsData = cyclopsData
+  )
+
+  expect_s3_class(cvPrior, "cyclopsPrior")
+  expect_equal(cvPrior$priorType, "normal")
+  expect_equal(cvPrior$variance, 0.25)
+  expect_false(cvPrior$useCrossValidation)
+})
+
+test_that("Cyclops CV prior supports fitted final variances", {
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = FALSE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+  finalVariance <- c(0.2, 0.3)
+  modelSettings <- setIterativeHardThresholding()
+
+  cvPrior <- createCyclopsCvPrior(
+    modelSettings = modelSettings,
+    fit = list(ihtFinalPriorVariance = finalVariance),
+    cyclopsData = cyclopsData
+  )
+
+  expect_s3_class(cvPrior, "cyclopsPrior")
+  expect_equal(length(cvPrior$priorType), length(finalVariance))
+  expect_equal(cvPrior$variance, finalVariance)
+})
+
+test_that("Cyclops CV prior maps per-covariate prior exclusions", {
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = 100)
+  expect_equal(priorType$types, c("none", "none", "normal"))
+  expect_equal(as.numeric(priorType$excludeCovariateIds), c(0, 100))
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = c("(Intercept)", "200"))
+  expect_equal(priorType$types, c("none", "normal", "none"))
+  expect_equal(as.numeric(priorType$excludeCovariateIds), c(0, 200))
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = c(), forceIntercept = TRUE)
+  expect_equal(priorType$types, c("normal", "normal", "normal"))
+  expect_null(priorType$excludeCovariateIds)
+})
+
+test_that("Cyclops CV prior fails clearly for invalid per-covariate prior inputs", {
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = FALSE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  expect_error(
+    createNormalPriorType(cyclopsData, exclude = "unknown"),
+    "Unable to match all covariates: unknown"
+  )
+  expect_error(
+    createCyclopsCvPrior(
+      modelSettings = setIterativeHardThresholding(),
+      fit = list(ihtFinalPriorVariance = c(0.2)),
+      cyclopsData = cyclopsData
+    ),
+    "Fitted prior variance length does not match the number of Cyclops covariates"
+  )
+  expect_error(
+    createCyclopsCvPrior(
+      modelSettings = setIterativeHardThresholding(),
+      fit = list(),
+      cyclopsData = cyclopsData
+    ),
+    "Cyclops fit did not return fitted final prior variances for CV refitting"
+  )
+})
+
+test_that("test IHT returns CV predictions", {
+  skip_if_offline()
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  fitModel <- fitPlp(
+    trainData = trainData,
+    modelSettings = setIterativeHardThresholding(K = 5, seed = 42, maxIterations = 100),
+    analysisId = "ihtTest",
+    analysisPath = tempdir()
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
+  expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
+  expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+})
+
 test_that("test logistic regression runs", {
   skip_if_offline()
   modelSettings <- setLassoLogisticRegression()
