@@ -28,6 +28,8 @@ CRAN release: 2026-03-09
 
 ### Bug fixes
 
+- Fixed cross-validation prediction generation for iterative hard
+  thresholding models by reusing fitted per-covariate prior variances.
 - Fixed simulation profile outcome models so generated coefficients only
   reference covariates available in the profile, added support for
   user-supplied outcome models, and invalid custom profiles now fail
