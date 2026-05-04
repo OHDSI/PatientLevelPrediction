@@ -143,7 +143,7 @@ fitCyclopsModel <- function(
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
     folds = trainData$folds,
-    priorType = param$priorParams$priorType,
+    modelSettings = modelSettings,
     covariateData  = trainData$covariateData
   )
 
@@ -378,7 +378,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
-                               priorType, covariateData = NULL) {
+                               modelSettings, covariateData = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -431,11 +431,16 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   # get CV - added && status == "OK" to only run if the model fit sucsessfully
   if (modelType == "logistic" && useCrossValidation && status == "OK") {
+    cvPrior <- createCyclopsCvPrior(
+      modelSettings = modelSettings,
+      fit = fit,
+      cyclopsData = cyclopsData
+    )
     outcomeModel$cv <- getCV(
       cyclopsData, 
       labels,
-      cvVariance = fit$variance, folds = folds,
-      priorType = priorType,
+      cvPrior = cvPrior,
+      folds = folds,
       covariateData = covariateData,
       modelType = modelType
     )
@@ -465,23 +470,98 @@ modelTypeToCyclopsModelType <- function(modelType, stratified = FALSE) {
   }
 }
 
+createCyclopsCvPrior <- function(modelSettings, fit, cyclopsData) {
+  priorFunction <- modelSettings$settings$priorfunction
+  priorParams <- modelSettings$param$priorParams
+
+  if (identical(priorFunction, "Cyclops::createPrior")) {
+    priorParams$variance <- fit$variance
+    priorParams$useCrossValidation <- FALSE
+    return(do.call(eval(parse(text = priorFunction)), priorParams))
+  }
+
+  cvVariance <- getFittedPriorVariance(fit)
+  if (!is.null(cvVariance)) {
+    if (length(cvVariance) != Cyclops::getNumberOfCovariates(cyclopsData)) {
+      stop(
+        "Fitted prior variance length does not match the number of Cyclops covariates"
+      )
+    }
+    priorType <- createNormalPriorType(
+      cyclopsData = cyclopsData,
+      exclude = priorParams$exclude,
+      forceIntercept = isTRUE(priorParams$forceIntercept)
+    )
+    return(Cyclops::createPrior(
+      priorType = priorType$types,
+      variance = cvVariance,
+      forceIntercept = isTRUE(priorParams$forceIntercept)
+    ))
+  }
+
+  stop(
+    "Cyclops fit did not return fitted final prior variances for CV refitting"
+  )
+}
+
+getFittedPriorVariance <- function(fit) {
+  fittedVarianceNames <- names(fit)[
+    grepl("FinalPriorVariance$", names(fit)) |
+      grepl("FinalPriorVariances$", names(fit))
+  ]
+  if (length(fittedVarianceNames) == 0) {
+    return(NULL)
+  }
+  fit[[fittedVarianceNames[1]]]
+}
+
+createNormalPriorType <- function(cyclopsData, exclude = c(), forceIntercept = FALSE) {
+  exclude <- checkCyclopsCovariates(cyclopsData, exclude)
+  covariateIds <- Cyclops::getCovariateIds(cyclopsData)
+  if (0 %in% covariateIds && !forceIntercept) {
+    interceptId <- 0
+    if (inherits(exclude, "integer64")) {
+      interceptId <- covariateIds[covariateIds == 0][1]
+    }
+    if (is.null(exclude)) {
+      exclude <- interceptId
+    } else if (!interceptId %in% exclude) {
+      exclude <- c(interceptId, exclude)
+    }
+  }
+
+  types <- rep("normal", Cyclops::getNumberOfCovariates(cyclopsData))
+  if (!is.null(exclude)) {
+    types[covariateIds %in% exclude] <- "none"
+  }
+  list(types = types, excludeCovariateIds = exclude)
+}
+
+checkCyclopsCovariates <- function(cyclopsData, covariates) {
+  if (is.null(covariates) || length(covariates) == 0) {
+    return(NULL)
+  }
+  saved <- covariates
+  if (inherits(covariates, "character")) {
+    indices <- match(covariates, cyclopsData$coefficientNames)
+    covariates <- Cyclops::getCovariateIds(cyclopsData)[indices]
+  }
+  if (any(is.na(covariates))) {
+    stop("Unable to match all covariates: ", paste(saved, collapse = ", "))
+  }
+  covariates
+}
+
 
 
 getCV <- function(
     cyclopsData,
     labels,
-    cvVariance,
+    cvPrior,
     folds,
-    priorType,
     covariateData = NULL,
     modelType = "logistic"
 ) {
-  fixed_prior <- Cyclops::createPrior(
-    priorType = priorType,
-    variance = cvVariance,
-    useCrossValidation = FALSE
-  )
-
   # add the index to the labels
   labels <- merge(labels, folds, by = "rowId")
 
@@ -490,7 +570,7 @@ getCV <- function(
     weights <- rep(1.0, Cyclops::getNumberOfRows(cyclopsData))
     weights[hold_out] <- 0.0
     subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
-      prior = fixed_prior,
+      prior = cvPrior,
       weights = weights
     ))
     coefficients <- stats::coef(subset_fit)
