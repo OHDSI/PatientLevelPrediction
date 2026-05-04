@@ -244,7 +244,7 @@ test_that("set IHT inputs", {
   expect_equal(modelSet$settings$cyclopsModelType, "logistic")
   expect_equal(modelSet$settings$modelType, "binary")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
-  expect_equal(modelSet$settings$addIntercept, FALSE)
+  expect_equal(modelSet$settings$addIntercept, TRUE)
   expect_equal(modelSet$settings$useControl, FALSE)
   expect_equal(modelSet$settings$crossValidationInPrior, FALSE)
 
@@ -428,16 +428,19 @@ test_that("test IHT returns CV predictions", {
   skip_if_not_installed("IterativeHardThresholding")
   skip_on_cran()
 
-  fitModel <- fitPlp(
-    trainData = trainData,
-    modelSettings = setIterativeHardThresholding(K = 5, seed = 42, maxIterations = 100),
-    analysisId = "ihtTest",
-    analysisPath = tempdir()
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = setIterativeHardThresholding(K = 5, seed = 42, maxIterations = 100),
+      analysisId = "ihtTest",
+      analysisPath = tempdir()
+    )
   )
 
   expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
   expect_true("CV" %in% fitModel$prediction$evaluationType)
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
+  expect_true("(Intercept)" %in% fitModel$model$coefficients$covariateIds)
   expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
   expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
 })
