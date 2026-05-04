@@ -355,7 +355,7 @@ setIterativeHardThresholding <- function(
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     selectorType = "byRow",
     crossValidationInPrior = FALSE,
-    addIntercept = FALSE,
+    addIntercept = TRUE,
     useControl = FALSE,
     seed = seed[1],
     predict = "predictCyclops",
