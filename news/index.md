@@ -6,6 +6,9 @@ CRAN release: 2026-03-09
 
 ### New features
 
+- Added
+  [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
+  to generate semi-synthetic PLP benchmark data with known outcome risk.
 - Added flexible hyperparameter tuning with configurable tuning metrics
   and support for grid, random, and custom search strategies
   ([\#618](https://github.com/OHDSI/PatientLevelPrediction/issues/618)).
