@@ -34,7 +34,14 @@ jobs:
 
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --root-dir "${{ github.workspace }}"  --verbose --no-progress --accept '100..=103, 200..=299, 403, 429' './**/*.md' './**/*.Rmd'
+          args: >
+            --root-dir "${{ github.workspace }}"
+            --verbose
+            --no-progress
+            --header 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+            --accept '100..=103, 200..=299, 403, 429'
+            './**/*.md'
+            './**/*.Rmd'
     
       - name: Build site
         run: Rscript -e 'pkgdown::build_site_github_pages(new_process = FALSE, install = TRUE)'

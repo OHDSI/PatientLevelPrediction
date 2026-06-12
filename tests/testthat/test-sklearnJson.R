@@ -161,7 +161,37 @@ test_that("SVM to json is correct", {
 
   loadedModel <- sklearnFromJson(path)
 
+  expect_true(reticulate::py_has_attr(loadedModel, "_effective_probability"))
+  expect_true(reticulate::py_has_attr(loadedModel, "n_features_in_"))
+
   loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
 
   expect_true(all.equal(predictions, loadedPredictions))
+
+  py <- reticulate::import_builtins(convert = FALSE)
+  json <- reticulate::import("json", convert = FALSE)
+  with(py$open(path, "r"), as = file, {
+    legacyModelDict <- json$load(fp = file)
+  })
+  for (key in c(
+    "n_features_in_",
+    "_effective_probability",
+    "fit_status_",
+    "_num_iter",
+    "n_iter_"
+  )) {
+    if (reticulate::py_bool(legacyModelDict$`__contains__`(key))) {
+      invisible(legacyModelDict$pop(key))
+    }
+  }
+  legacyPath <- file.path(tempdir(), "legacy-model.json")
+  with(py$open(legacyPath, "w"), as = file, {
+    json$dump(legacyModelDict, fp = file)
+  })
+
+  legacyLoadedModel <- sklearnFromJson(legacyPath)
+  legacyPredictions <- reticulate::py_to_r(legacyLoadedModel$predict_proba(xUnseen))
+
+  expect_true(reticulate::py_has_attr(legacyLoadedModel, "_effective_probability"))
+  expect_true(all.equal(predictions, legacyPredictions))
 })
