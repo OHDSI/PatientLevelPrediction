@@ -1701,7 +1701,7 @@ extractMissingInfo <- function(trainData) {
     "missingInfo" = missingInfo,
     "continuousFeatures" = continuousFeatures
   )
-  ParallelLogger::logInfo("Found ", nrow(missingInfo), " features with missing values")
+  ParallelLogger::logInfo("Found ", nrow(missingInfo$missing > 0), " features with missing values")
 
   return(results)
 }
