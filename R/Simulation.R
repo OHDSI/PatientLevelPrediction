@@ -260,7 +260,7 @@ createDefaultSimulationOutcomeModel <- function(covariatePrevalence) {
           "not available in covariateInfo$covariatePrevalence: %s"
         ),
         length(missingIds),
-        paste(head(missingIds, 10), collapse = ", ")
+        paste(utils::head(missingIds, 10), collapse = ", ")
       )
     )
   }
@@ -286,7 +286,7 @@ validateSimulationOutcomeModels <- function(plpDataSimulationProfile) {
           ),
           i,
           length(missingIds),
-          paste(head(missingIds, 10), collapse = ", ")
+          paste(utils::head(missingIds, 10), collapse = ", ")
         )
       )
     }
@@ -784,7 +784,7 @@ validateBenchmarkSimulationInputs <- function(plpData,
     if (length(missingCovariateIds) > 0) {
       stop(sprintf(
         "outcomeModel references covariate ID(s) not available in covariateRef: %s",
-        paste(head(missingCovariateIds, 10), collapse = ", ")
+        paste(utils::head(missingCovariateIds, 10), collapse = ", ")
       ))
     }
   } else if (identical(outcomeModel$type, "plpModel")) {
