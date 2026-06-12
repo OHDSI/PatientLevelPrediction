@@ -438,6 +438,21 @@ serializeSVM <- function(model) {
     "_gamma" = model$`_gamma`,
     "params" = model$get_params()
   )
+  if (reticulate::py_has_attr(model, "n_features_in_")) {
+    serialized_model["n_features_in_"] <- model$n_features_in_
+  }
+  if (reticulate::py_has_attr(model, "_effective_probability")) {
+    serialized_model["_effective_probability"] <- model$`_effective_probability`
+  }
+  if (reticulate::py_has_attr(model, "fit_status_")) {
+    serialized_model["fit_status_"] <- model$fit_status_
+  }
+  if (reticulate::py_has_attr(model, "_num_iter")) {
+    serialized_model["_num_iter"] <- model$`_num_iter`$tolist()
+  }
+  if (reticulate::py_has_attr(model, "n_iter_")) {
+    serialized_model["n_iter_"] <- model$n_iter_$tolist()
+  }
   if (inherits(model$support_vectors_, "numpy.ndarray")) {
     serialized_model["support_vectors_"] <- model$support_vectors_$tolist()
   } else {
@@ -458,6 +473,10 @@ serializeSVM <- function(model) {
   return(serialized_model)
 }
 
+pythonDictHasKey <- function(dict, key) {
+  reticulate::py_bool(dict$`__contains__`(key))
+}
+
 deSerializeSVM <- function(model_dict) {
   sklearn <- reticulate::import("sklearn", convert = FALSE)
   np <- reticulate::import("numpy", convert = FALSE)
@@ -475,6 +494,26 @@ deSerializeSVM <- function(model_dict) {
   model$`_probA` <- np$array(model_dict["probA_"])$astype(np$float64)
   model$`_probB` <- np$array(model_dict["probB_"])$astype(np$float64)
   model$`_intercept_` <- np$array(model_dict["_intercept_"])$astype(np$float64)
+  if (pythonDictHasKey(model_dict, "n_features_in_")) {
+    model$n_features_in_ <- model_dict["n_features_in_"]
+  } else {
+    model$n_features_in_ <- as.integer(reticulate::py_to_r(model_dict["shape_fit_"])[[2]])
+  }
+  if (pythonDictHasKey(model_dict, "_effective_probability")) {
+    model$`_effective_probability` <- model_dict["_effective_probability"]
+  } else {
+    probability <- reticulate::py_to_r(model$probability)
+    model$`_effective_probability` <- isTRUE(probability)
+  }
+  if (pythonDictHasKey(model_dict, "fit_status_")) {
+    model$fit_status_ <- model_dict["fit_status_"]
+  }
+  if (pythonDictHasKey(model_dict, "_num_iter")) {
+    model$`_num_iter` <- np$array(model_dict["_num_iter"])$astype(np$int32)
+  }
+  if (pythonDictHasKey(model_dict, "n_iter_")) {
+    model$n_iter_ <- np$array(model_dict["n_iter_"])$astype(np$int32)
+  }
 
   if (reticulate::py_bool((model_dict$support_vectors_["meta"] != reticulate::py_none())) &
     (reticulate::py_bool(model_dict$support_vectors_["meta"] == "csr"))) {
