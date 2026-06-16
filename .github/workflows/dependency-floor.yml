@@ -25,6 +25,7 @@ env:
   R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
   _R_CHECK_FORCE_SUGGESTS_: ${{ inputs.install_suggests }}
   RSPM: https://packagemanager.posit.co/cran/__linux__/focal/latest
+  R_LIBS: ${{ github.workspace }}/.r-library
   R_LIBS_USER: ${{ github.workspace }}/.r-library
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
@@ -78,8 +79,9 @@ jobs:
         run: |
           mkdir -p "${R_LIBS_USER}" "${EUNOMIA_DATA_FOLDER}" "${UV_CACHE_DIR}"
 
-      - name: Cache R library
-        uses: actions/cache@v5
+      - name: Restore R library cache
+        id: cache-r-library-restore
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.R_LIBS_USER }}
           key: dependency-floor-r${{ inputs.r_version }}-${{ hashFiles('DESCRIPTION', '.github/workflows/dependency-floor.yml') }}
@@ -103,6 +105,9 @@ jobs:
         env:
           INSTALL_SUGGESTS: ${{ inputs.install_suggests }}
         run: |
+          .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
+          message("R library paths: ", paste(.libPaths(), collapse = ", "))
+
           repos <- Sys.getenv("RSPM", unset = "https://cloud.r-project.org")
           install.packages(c("remotes", "rcmdcheck"), repos = repos)
           options(Ncpus = max(1L, parallel::detectCores()))
@@ -217,9 +222,19 @@ jobs:
           installed <- installed[order(tolower(installed$Package)), ]
           write.csv(installed, "dependency-floor-installed.csv", row.names = FALSE)
 
+      - name: Save R library cache
+        if: steps.cache-r-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ steps.cache-r-library-restore.outputs.cache-primary-key }}
+
       - name: Run R CMD check
         shell: Rscript {0}
         run: |
+          .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
+          message("R library paths: ", paste(.libPaths(), collapse = ", "))
+
           result <- rcmdcheck::rcmdcheck(
             args = c("--no-manual", "--no-build-vignettes", "--ignore-vignettes"),
             build_args = c("--no-manual", "--no-build-vignettes"),
