@@ -3,6 +3,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\\.cache$
+^\.r-library$
 ^.vscode$
 standalone
 deploy.sh

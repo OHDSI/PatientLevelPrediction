@@ -24,9 +24,10 @@ env:
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
   R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
   _R_CHECK_FORCE_SUGGESTS_: ${{ inputs.install_suggests }}
+  DEPENDENCY_FLOOR_CACHE_VERSION: v2
   RSPM: https://packagemanager.posit.co/cran/__linux__/focal/latest
-  R_LIBS: ${{ github.workspace }}/.r-library
-  R_LIBS_USER: ${{ github.workspace }}/.r-library
+  R_LIBS: ${{ github.workspace }}/../.r-library
+  R_LIBS_USER: ${{ github.workspace }}/../.r-library
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
   RETICULATE_PY_VERSION: 3.11
@@ -84,9 +85,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: dependency-floor-r${{ inputs.r_version }}-${{ hashFiles('DESCRIPTION', '.github/workflows/dependency-floor.yml') }}
+          key: dependency-floor-${{ env.DEPENDENCY_FLOOR_CACHE_VERSION }}-focal-r${{ inputs.r_version }}-suggests-${{ inputs.install_suggests }}-${{ hashFiles('DESCRIPTION') }}
           restore-keys: |
-            dependency-floor-r${{ inputs.r_version }}-
+            dependency-floor-${{ env.DEPENDENCY_FLOOR_CACHE_VERSION }}-focal-r${{ inputs.r_version }}-suggests-${{ inputs.install_suggests }}-
 
       - name: Cache Eunomia datasets
         uses: actions/cache@v5
