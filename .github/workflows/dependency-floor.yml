@@ -145,8 +145,8 @@ jobs:
 
           if (installSuggests) {
             compatibilityPins <- data.frame(
-              package = c("Matrix", "arrow", "xgboost"),
-              version = c("1.6-5", "17.0.0", "1.7.8.1"),
+              package = c("Matrix", "arrow", "pbkrtest", "xgboost"),
+              version = c("1.6-5", "17.0.0", "0.5.2", "1.7.8.1"),
               stringsAsFactors = FALSE
             )
             write.csv(compatibilityPins, "dependency-floor-compatibility-pins.csv", row.names = FALSE)
@@ -185,6 +185,13 @@ jobs:
                 suggestedPackages,
                 repos = repos,
                 dependencies = hardDependencyFields
+              )
+            }
+            missingSuggestedPackages <- setdiff(suggestedPackages, rownames(installed.packages()))
+            if (length(missingSuggestedPackages) > 0) {
+              stop(
+                "Failed to install direct suggested packages: ",
+                paste(missingSuggestedPackages, collapse = ", ")
               )
             }
           }
