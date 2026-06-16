@@ -2,7 +2,7 @@
 ^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^\\.cache$
+^\.cache$
 ^\.r-library$
 ^.vscode$
 standalone
