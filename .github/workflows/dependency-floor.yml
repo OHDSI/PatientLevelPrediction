@@ -18,7 +18,7 @@ concurrency:
 env:
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
   R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
-  RSPM: https://packagemanager.posit.co/cran/__linux__/jammy/latest
+  RSPM: https://packagemanager.posit.co/cran/__linux__/focal/latest
   R_LIBS_USER: ${{ github.workspace }}/.r-library
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
