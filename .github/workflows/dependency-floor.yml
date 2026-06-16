@@ -1,0 +1,166 @@
+name: Dependency floor checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      r_version:
+        description: "R version to test. Use the latest patch release for the minimum supported R minor version."
+        required: true
+        default: "4.1.3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-floor-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
+  RSPM: https://packagemanager.posit.co/cran/__linux__/jammy/latest
+  R_LIBS_USER: ${{ github.workspace }}/.r-library
+  EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
+  UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+  RETICULATE_PY_VERSION: 3.11
+
+jobs:
+  dependency-floor:
+    runs-on: ubuntu-latest
+    container: rocker/r-ver:${{ inputs.r_version }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Install system requirements
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            cmake \
+            curl \
+            git \
+            libbz2-dev \
+            libcurl4-openssl-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libfribidi-dev \
+            libgit2-dev \
+            libharfbuzz-dev \
+            libicu-dev \
+            libjpeg-dev \
+            liblzma-dev \
+            libomp-dev \
+            libpng-dev \
+            libssh-dev \
+            libssl-dev \
+            libtiff5-dev \
+            libxml2-dev \
+            make \
+            pandoc \
+            python3 \
+            python3-pip \
+            python3-venv \
+            zlib1g-dev
+
+      - name: Prepare caches
+        run: |
+          mkdir -p "${R_LIBS_USER}" "${EUNOMIA_DATA_FOLDER}" "${UV_CACHE_DIR}"
+
+      - name: Cache R library
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: dependency-floor-r${{ inputs.r_version }}-${{ hashFiles('DESCRIPTION', '.github/workflows/dependency-floor.yml') }}
+          restore-keys: |
+            dependency-floor-r${{ inputs.r_version }}-
+
+      - name: Cache Eunomia datasets
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.EUNOMIA_DATA_FOLDER }}
+          key: eunomia-v1-${{ runner.os }}-GiBleed_5.3
+
+      - name: Cache uv
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-v1-${{ runner.os }}-py${{ env.RETICULATE_PY_VERSION }}
+
+      - name: Install dependency floor
+        shell: Rscript {0}
+        run: |
+          repos <- Sys.getenv("RSPM", unset = "https://cloud.r-project.org")
+          install.packages(c("remotes", "rcmdcheck"), repos = repos)
+
+          description <- read.dcf("DESCRIPTION")[1, ]
+          dependencyFields <- intersect(
+            c("Depends", "Imports", "Suggests", "LinkingTo"),
+            names(description)
+          )
+          dependencyText <- paste(description[dependencyFields], collapse = ",")
+          dependencyText <- gsub("[\r\n]", " ", dependencyText)
+          dependencies <- trimws(unlist(strsplit(dependencyText, ",")))
+          dependencies <- dependencies[nzchar(dependencies)]
+
+          parsed <- regexec("^([A-Za-z0-9.]+)\\s*(?:\\(([^ ]+)\\s*([^)]+)\\))?$", dependencies)
+          parsed <- regmatches(dependencies, parsed)
+          parsed <- do.call(rbind, lapply(parsed, function(x) {
+            length(x) <- 4
+            data.frame(
+              package = x[2],
+              operator = x[3],
+              version = x[4],
+              stringsAsFactors = FALSE
+            )
+          }))
+          parsed <- parsed[parsed$package != "R", ]
+
+          floorDependencies <- parsed[parsed$operator == ">=", ]
+          write.csv(floorDependencies, "dependency-floor-requested.csv", row.names = FALSE)
+
+          for (i in seq_len(nrow(floorDependencies))) {
+            package <- floorDependencies$package[[i]]
+            version <- floorDependencies$version[[i]]
+            message("Installing floor dependency: ", package, " ", version)
+            remotes::install_version(
+              package = package,
+              version = version,
+              repos = repos,
+              dependencies = NA,
+              upgrade = "never"
+            )
+          }
+
+          remotes::install_deps(
+            dependencies = TRUE,
+            repos = repos,
+            upgrade = "never"
+          )
+
+          installed <- as.data.frame(installed.packages()[, c("Package", "Version")])
+          declared <- parsed$package
+          installed <- installed[installed$Package %in% declared, ]
+          installed <- installed[order(tolower(installed$Package)), ]
+          write.csv(installed, "dependency-floor-installed.csv", row.names = FALSE)
+
+      - name: Run R CMD check
+        shell: Rscript {0}
+        run: |
+          result <- rcmdcheck::rcmdcheck(
+            args = c("--no-manual", "--no-build-vignettes", "--ignore-vignettes"),
+            build_args = c("--no-manual", "--no-build-vignettes"),
+            error_on = "warning",
+            check_dir = "check"
+          )
+          print(result)
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: dependency-floor-results
+          path: |
+            check
+            dependency-floor-requested.csv
+            dependency-floor-installed.csv
