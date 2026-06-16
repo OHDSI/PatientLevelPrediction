@@ -46,6 +46,7 @@ jobs:
             build-essential \
             cmake \
             curl \
+            default-jdk \
             git \
             libbz2-dev \
             libcurl4-openssl-dev \
@@ -71,6 +72,7 @@ jobs:
             python3-pip \
             python3-venv \
             zlib1g-dev
+          R CMD javareconf
 
       - name: Prepare caches
         run: |
