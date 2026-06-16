@@ -204,16 +204,26 @@ jobs:
             }
           }
 
+          sourceFloorPackages <- c("Andromeda", "FeatureExtraction")
+          sourceRepos <- "https://cloud.r-project.org"
           for (i in seq_len(nrow(floorDependencies))) {
             package <- floorDependencies$package[[i]]
             version <- floorDependencies$version[[i]]
-            message("Installing floor dependency: ", package, " ", version)
+            useSource <- package %in% sourceFloorPackages
+            message(
+              "Installing floor dependency: ",
+              package,
+              " ",
+              version,
+              if (useSource) " from source" else ""
+            )
             remotes::install_version(
               package = package,
               version = version,
-              repos = repos,
+              repos = if (useSource) sourceRepos else repos,
               dependencies = FALSE,
-              upgrade = "never"
+              upgrade = "never",
+              type = if (useSource) "source" else getOption("pkgType")
             )
           }
 
