@@ -57,10 +57,10 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Use timeStamp: TRUE
-#> Creating save directory at: /tmp/Rtmp0xpFtU/plotDemographicSummary/2026-06-16-3
+#> Creating save directory at: /tmp/RtmpGZyDvv/plotDemographicSummary/2026-06-16-3
 #> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)
 #> Patient-Level Prediction Package version 6.6.0
-#> Study started at: 2026-06-16 13:36:02.669827
+#> Study started at: 2026-06-16 14:20:04.879551
 #> AnalysisID:         2026-06-16-3
 #> AnalysisName:       Study details
 #> TargetID:           1
@@ -70,11 +70,11 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Creating population
 #> Outcome is 0 or 1
 #> Population created with: 954 observations, 954 unique subjects and 434 outcomes
-#> Population created in 0.0516 secs
+#> Population created in 0.0541 secs
 #> seed: 123
 #> Creating a 25% test and 75% train (into 3 folds) random stratified split by class
 #> Data split into 238 test cases and 716 train cases (239, 239, 238)
-#> Data split in 1.42 secs
+#> Data split in 1.62 secs
 #> Train Set:
 #> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes
 #> 66 covariates in train data
@@ -83,7 +83,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Removing 2 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.67 secs
+#> Tidying covariates took 1.87 secs
 #> Train Set:
 #> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes
 #> 64 covariates in train data
@@ -94,12 +94,12 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Done.
 #> GLM fit status:  OK
 #> Creating variable importance data frame
-#> Prediction took 0.187 secs
-#> Time to fit model: 0.935 secs
+#> Prediction took 0.176 secs
+#> Time to fit model: 0.966 secs
 #> Removing infrequent and redundant covariates and normalizing
-#> Removing infrequent and redundant covariates covariates and normalizing took 0.475 secs
-#> Prediction took 0.188 secs
-#> Prediction done in: 1.09 secs
+#> Removing infrequent and redundant covariates covariates and normalizing took 0.529 secs
+#> Prediction took 0.168 secs
+#> Prediction done in: 1.17 secs
 #> Calculating Performance for Test
 #> =============
 #> AUC                 61.40
@@ -139,8 +139,8 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Weak calibration intercept: 0.0072 - gradient:1.0442
 #> Hosmer-Lemeshow calibration gradient: 0.97 intercept:         0.01
 #> Average Precision:  0.52
-#> Time to calculate evaluation metrics: 0.23 secs
-#> Calculating covariate summary @ 2026-06-16 13:36:08.511307
+#> Time to calculate evaluation metrics: 0.244 secs
+#> Calculating covariate summary @ 2026-06-16 14:20:11.19221
 #> This can take a while...
 #> Creating binary labels
 #> Joining with strata
@@ -157,13 +157,13 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Restricting to subgroup
 #> Calculating summary for subgroup TestWithNoOutcome
 #> Aggregating with labels and strata
-#> Finished covariate summary @ 2026-06-16 13:36:10.652956
-#> Time to calculate covariate summary: 2.14 secs
+#> Finished covariate summary @ 2026-06-16 14:20:13.458277
+#> Time to calculate covariate summary: 2.27 secs
 #> Run finished successfully.
 #> Saving PlpResult
 #> Creating directory to save model
-#> plpResult saved to ..\/tmp/Rtmp0xpFtU/plotDemographicSummary/2026-06-16-3\plpResult
-#> runPlp time taken: 8.02 secs
+#> plpResult saved to ..\/tmp/RtmpGZyDvv/plotDemographicSummary/2026-06-16-3\plpResult
+#> runPlp time taken: 8.62 secs
 plotDemographicSummary(plpResult)
 
 # clean up 
