@@ -188,19 +188,10 @@ splitData <- function(plpData = plpData,
     trainData$folds <- trainId
 
     # restrict to trainIds
-    if (inherits(plpData$covariateData, "RSQLiteConnection") &&
-    length(trainId$rowID) > 200000) {
-      trainData$covariateData <- batchRestrict(
-        plpData$covariateData,
-        data.frame(rowId = trainId$rowId),
-        sizeN = 10000000
-      )
-    } else {
-      trainData$covariateData <- limitCovariatesToPopulation(
-        plpData$covariateData,
-        trainId$rowId
-      )
-    }
+    trainData$covariateData <- limitCovariatesToPopulation(
+      plpData$covariateData,
+      trainId$rowId
+    )
 
     metaData <- attr(population, "metaData")
     attr(trainData, "metaData") <- list(
@@ -231,19 +222,10 @@ splitData <- function(plpData = plpData,
     trainData$folds <- trainId
 
     # restrict to trainIds
-    if (inherits(plpData$covariateData, "RSQLiteConnection") &&
-    length(trainId$rowID) > 200000) {
-      trainData$covariateData <- batchRestrict(
-        plpData$covariateData,
-        data.frame(rowId = trainId$rowId),
-        sizeN = 10000000
-      )
-    } else {
-      trainData$covariateData <- limitCovariatesToPopulation(
-        plpData$covariateData,
-        trainId$rowId
-      )
-    }
+    trainData$covariateData <- limitCovariatesToPopulation(
+      plpData$covariateData,
+      trainId$rowId
+    )
     metaData <- attr(population, "metaData")
     attr(trainData, "metaData") <- list(
       outcomeId = metaData$outcomeId,
@@ -265,19 +247,10 @@ splitData <- function(plpData = plpData,
     testData$labels <- population %>%
       dplyr::filter(.data$rowId %in% testId$rowId)
 
-    if (inherits(plpData$covariateData, "RSQLiteConnection") &&
-    length(testId$rowID) > 200000) {
-      testData$covariateData <- batchRestrict(
-        plpData$covariateData,
-        data.frame(rowId = testId$rowId),
-        sizeN = 10000000
-      )
-    } else {
-      testData$covariateData <- limitCovariatesToPopulation(
-        plpData$covariateData,
-        testId$rowId
-      )
-    }
+    testData$covariateData <- limitCovariatesToPopulation(
+      plpData$covariateData,
+      testId$rowId
+    )
 
     result <- list(
       Train = trainData,
@@ -633,4 +606,3 @@ checkOutcomes <- function(population, train, nfold) {
   }
   return(invisible(TRUE))
 }
-

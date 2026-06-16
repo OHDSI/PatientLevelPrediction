@@ -182,11 +182,6 @@ applyTidyCovariateData <- function(
   temp <- covariateData$covariateRef %>% dplyr::collect()
   allCovariateIds <- temp$covariateId
   covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds %in% deleteCovariateIds])
-  if (inherits(covariateData, "RSQLiteConnection")) {
-    Andromeda::createIndex(covariateData$includeCovariates, c("covariateId"),
-      indexName = "includeCovariates_covariateId"
-    )
-  }
   on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
   # ---
 
@@ -203,13 +198,6 @@ applyTidyCovariateData <- function(
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
 
-    if (inherits(covariateData, "RSQLiteConnection")) {
-      # --- added for speed
-      Andromeda::createIndex(covariateData$maxes, c("covariateId"),
-        indexName = "maxes_covariateId"
-      )
-    } # ---
-
     newCovariateData$covariates <- covariateData$covariates %>%
       dplyr::inner_join(covariateData$includeCovariates, by = "covariateId") %>% # added as join
       dplyr::inner_join(covariateData$maxes, by = "covariateId") %>%
@@ -225,15 +213,6 @@ applyTidyCovariateData <- function(
   newCovariateData$covariateRef <- covariateData$covariateRef %>%
     dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
 
-
-  if (inherits(newCovariateData, "RSQLiteConnection")) {
-    # adding index for restrict to pop
-    Andromeda::createIndex(
-      newCovariateData$covariates,
-      c("rowId"),
-      indexName = "ncovariates_rowId"
-    )
-  }
   class(newCovariateData) <- "CovariateData"
 
   delta <- Sys.time() - start
