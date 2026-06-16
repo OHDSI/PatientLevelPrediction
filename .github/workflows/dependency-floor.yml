@@ -8,10 +8,10 @@ on:
         required: true
         default: "4.1.3"
       install_suggests:
-        description: "Install Suggests too. This is slower and may require newer system/package floors."
+        description: "Install Suggests too. Disable only for a faster import-only smoke check."
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: read
@@ -66,6 +66,7 @@ jobs:
             libxml2-dev \
             make \
             pandoc \
+            pkg-config \
             python3 \
             python3-pip \
             python3-venv \
@@ -133,6 +134,33 @@ jobs:
           floorDependencies <- parsed[parsed$operator == ">=", ]
           write.csv(floorDependencies, "dependency-floor-requested.csv", row.names = FALSE)
 
+          if (installSuggests) {
+            compatibilityPins <- data.frame(
+              package = c("Matrix", "arrow", "xgboost"),
+              version = c("1.6-5", "17.0.0", "1.7.8.1"),
+              stringsAsFactors = FALSE
+            )
+            write.csv(compatibilityPins, "dependency-floor-compatibility-pins.csv", row.names = FALSE)
+
+            for (i in seq_len(nrow(compatibilityPins))) {
+              package <- compatibilityPins$package[[i]]
+              version <- compatibilityPins$version[[i]]
+              message("Installing old-R compatibility pin: ", package, " ", version)
+              remotes::install_version(
+                package = package,
+                version = version,
+                repos = repos,
+                dependencies = FALSE,
+                upgrade = "never"
+              )
+            }
+          } else {
+            write.csv(data.frame(package = character(), version = character()),
+              "dependency-floor-compatibility-pins.csv",
+              row.names = FALSE
+            )
+          }
+
           remotes::install_deps(
             dependencies = dependencyFields,
             repos = repos,
@@ -177,4 +205,5 @@ jobs:
           path: |
             check
             dependency-floor-requested.csv
+            dependency-floor-compatibility-pins.csv
             dependency-floor-installed.csv
