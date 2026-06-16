@@ -103,33 +103,42 @@ jobs:
         run: |
           repos <- Sys.getenv("RSPM", unset = "https://cloud.r-project.org")
           install.packages(c("remotes", "rcmdcheck"), repos = repos)
+          options(Ncpus = max(1L, parallel::detectCores()))
 
           installSuggests <- tolower(Sys.getenv("INSTALL_SUGGESTS", unset = "false")) == "true"
           description <- read.dcf("DESCRIPTION")[1, ]
-          dependencyFields <- c("Depends", "Imports", "LinkingTo")
-          if (installSuggests) {
-            dependencyFields <- c(dependencyFields, "Suggests")
-          }
+          hardDependencyFields <- intersect(c("Depends", "Imports", "LinkingTo"), names(description))
+          dependencyFields <- hardDependencyFields
+          suggestedPackages <- character()
           dependencyFields <- intersect(dependencyFields, names(description))
           message("Installing dependency fields: ", paste(dependencyFields, collapse = ", "))
 
-          dependencyText <- paste(description[dependencyFields], collapse = ",")
-          dependencyText <- gsub("[\r\n]", " ", dependencyText)
-          dependencies <- trimws(unlist(strsplit(dependencyText, ",")))
-          dependencies <- dependencies[nzchar(dependencies)]
+          parseDependencies <- function(fields) {
+            dependencyText <- paste(description[fields], collapse = ",")
+            dependencyText <- gsub("[\r\n]", " ", dependencyText)
+            dependencies <- trimws(unlist(strsplit(dependencyText, ",")))
+            dependencies <- dependencies[nzchar(dependencies)]
 
-          parsed <- regexec("^([A-Za-z0-9.]+)\\s*(?:\\(([^ ]+)\\s*([^)]+)\\))?$", dependencies)
-          parsed <- regmatches(dependencies, parsed)
-          parsed <- do.call(rbind, lapply(parsed, function(x) {
-            length(x) <- 4
-            data.frame(
-              package = x[2],
-              operator = x[3],
-              version = x[4],
-              stringsAsFactors = FALSE
-            )
-          }))
-          parsed <- parsed[parsed$package != "R", ]
+            parsed <- regexec("^([A-Za-z0-9.]+)\\s*(?:\\(([^ ]+)\\s*([^)]+)\\))?$", dependencies)
+            parsed <- regmatches(dependencies, parsed)
+            parsed <- do.call(rbind, lapply(parsed, function(x) {
+              length(x) <- 4
+              data.frame(
+                package = x[2],
+                operator = x[3],
+                version = x[4],
+                stringsAsFactors = FALSE
+              )
+            }))
+            parsed[parsed$package != "R", ]
+          }
+
+          parsed <- parseDependencies(dependencyFields)
+          if (installSuggests && "Suggests" %in% names(description)) {
+            suggested <- parseDependencies("Suggests")
+            suggestedPackages <- suggested$package
+            parsed <- rbind(parsed, suggested)
+          }
 
           floorDependencies <- parsed[parsed$operator == ">=", ]
           write.csv(floorDependencies, "dependency-floor-requested.csv", row.names = FALSE)
@@ -162,10 +171,23 @@ jobs:
           }
 
           remotes::install_deps(
-            dependencies = dependencyFields,
+            dependencies = hardDependencyFields,
             repos = repos,
             upgrade = "never"
           )
+
+          if (length(suggestedPackages) > 0) {
+            installedPackages <- rownames(installed.packages())
+            suggestedPackages <- setdiff(suggestedPackages, installedPackages)
+            if (length(suggestedPackages) > 0) {
+              message("Installing direct suggested packages: ", paste(suggestedPackages, collapse = ", "))
+              install.packages(
+                suggestedPackages,
+                repos = repos,
+                dependencies = hardDependencyFields
+              )
+            }
+          }
 
           for (i in seq_len(nrow(floorDependencies))) {
             package <- floorDependencies$package[[i]]
