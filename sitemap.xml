@@ -145,7 +145,6 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setRidgeRegression.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setSVM.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simpleImpute.html</loc></url>
-<url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simulationProfile.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/sklearnFromJson.html</loc></url>

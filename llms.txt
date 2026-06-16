@@ -496,8 +496,6 @@ Functions for simulating PLP data objects.
 
 - [`simulatePlpData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpData.md)
   : Generate simulated data
-- [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
-  : Generate benchmark PLP data with known outcome risk
 - [`simulationProfile`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulationProfile.md)
   : A simulation profile for generating synthetic patient level
   prediction data

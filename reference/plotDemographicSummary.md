@@ -57,11 +57,11 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Use timeStamp: TRUE
-#> Creating save directory at: /tmp/RtmpfYHDeq/plotDemographicSummary/2026-06-12-3
+#> Creating save directory at: /tmp/Rtmp8FOikQ/plotDemographicSummary/2026-06-16-3
 #> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)
 #> Patient-Level Prediction Package version 6.6.0
-#> Study started at: 2026-06-12 12:40:25.778677
-#> AnalysisID:         2026-06-12-3
+#> Study started at: 2026-06-16 09:37:38.304919
+#> AnalysisID:         2026-06-16-3
 #> AnalysisName:       Study details
 #> TargetID:           1
 #> OutcomeID:          3
@@ -69,78 +69,78 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Covariates:         98
 #> Creating population
 #> Outcome is 0 or 1
-#> Population created with: 961 observations, 961 unique subjects and 499 outcomes
-#> Population created in 0.0527 secs
+#> Population created with: 954 observations, 954 unique subjects and 434 outcomes
+#> Population created in 0.0515 secs
 #> seed: 123
 #> Creating a 25% test and 75% train (into 3 folds) random stratified split by class
-#> Data split into 239 test cases and 722 train cases (241, 241, 240)
+#> Data split into 238 test cases and 716 train cases (239, 239, 238)
 #> Data split in 1.39 secs
 #> Train Set:
-#> Fold 1 241 patients with 125 outcomes - Fold 2 241 patients with 125 outcomes - Fold 3 240 patients with 125 outcomes
-#> 67 covariates in train data
+#> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes
+#> 66 covariates in train data
 #> Test Set:
-#> 239 patients with 124 outcomes
+#> 238 patients with 108 outcomes
 #> Removing 2 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
 #> Tidying covariates took 1.6 secs
 #> Train Set:
-#> Fold 1 241 patients with 125 outcomes - Fold 2 241 patients with 125 outcomes - Fold 3 240 patients with 125 outcomes
-#> 65 covariates in train data
+#> Fold 1 239 patients with 109 outcomes - Fold 2 239 patients with 109 outcomes - Fold 3 238 patients with 108 outcomes
+#> 64 covariates in train data
 #> Test Set:
-#> 239 patients with 124 outcomes
+#> 238 patients with 108 outcomes
 #> 
 #> Running Cyclops
 #> Done.
 #> GLM fit status:  OK
 #> Creating variable importance data frame
-#> Prediction took 0.179 secs
-#> Time to fit model: 0.916 secs
+#> Prediction took 0.183 secs
+#> Time to fit model: 0.906 secs
 #> Removing infrequent and redundant covariates and normalizing
-#> Removing infrequent and redundant covariates covariates and normalizing took 0.44 secs
-#> Prediction took 0.179 secs
+#> Removing infrequent and redundant covariates covariates and normalizing took 0.467 secs
+#> Prediction took 0.182 secs
 #> Prediction done in: 1.07 secs
 #> Calculating Performance for Test
 #> =============
-#> AUC                 61.69
-#> 95% lower AUC:      54.93
-#> 95% upper AUC:      68.46
-#> AUPRC:              61.18
-#> Brier:              0.24
-#> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.5272 : observed risk 0.5188
-#> Calibration in large- Intercept -0.028
-#> Weak calibration intercept: -0.028 - gradient:0.9273
-#> Hosmer-Lemeshow calibration gradient: 1.17 intercept:         -0.13
-#> Average Precision:  0.64
+#> AUC                 61.40
+#> 95% lower AUC:      54.59
+#> 95% upper AUC:      68.21
+#> AUPRC:              57.58
+#> Brier:              0.23
+#> Eavg:               0.06
+#> Calibration in large- Mean predicted risk 0.4489 : observed risk 0.4538
+#> Calibration in large- Intercept 0.245
+#> Weak calibration intercept: 0.245 - gradient:2.0312
+#> Hosmer-Lemeshow calibration gradient: 2.10 intercept:         -0.56
+#> Average Precision:  0.58
 #> Calculating Performance for Train
 #> =============
-#> AUC                 63.34
-#> 95% lower AUC:      59.54
-#> 95% upper AUC:      67.14
-#> AUPRC:              65.93
-#> Brier:              0.23
-#> Eavg:               0.01
-#> Calibration in large- Mean predicted risk 0.5194 : observed risk 0.5194
-#> Calibration in large- Intercept -0.0099
-#> Weak calibration intercept: -0.0099 - gradient:1.1658
-#> Hosmer-Lemeshow calibration gradient: 1.17 intercept:         -0.08
-#> Average Precision:  0.67
-#> Calculating Performance for CV
-#> =============
-#> AUC                 61.94
-#> 95% lower AUC:      57.89
-#> 95% upper AUC:      65.99
-#> AUPRC:              64.20
+#> AUC                 59.21
+#> 95% lower AUC:      55.21
+#> 95% upper AUC:      63.20
+#> AUPRC:              55.33
 #> Brier:              0.24
 #> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.519 : observed risk 0.5194
-#> Calibration in large- Intercept -0.0092
-#> Weak calibration intercept: -0.0092 - gradient:1.1791
-#> Hosmer-Lemeshow calibration gradient: 1.20 intercept:         -0.11
-#> Average Precision:  0.64
-#> Time to calculate evaluation metrics: 0.221 secs
-#> Calculating covariate summary @ 2026-06-12 12:40:31.377135
+#> Calibration in large- Mean predicted risk 0.4553 : observed risk 0.4553
+#> Calibration in large- Intercept 0.0374
+#> Weak calibration intercept: 0.0374 - gradient:1.2041
+#> Hosmer-Lemeshow calibration gradient: 1.17 intercept:         -0.08
+#> Average Precision:  0.55
+#> Calculating Performance for CV
+#> =============
+#> AUC                 56.43
+#> 95% lower AUC:      52.21
+#> 95% upper AUC:      60.66
+#> AUPRC:              52.00
+#> Brier:              0.24
+#> Eavg:               0.01
+#> Calibration in large- Mean predicted risk 0.4555 : observed risk 0.4553
+#> Calibration in large- Intercept 0.0072
+#> Weak calibration intercept: 0.0072 - gradient:1.0442
+#> Hosmer-Lemeshow calibration gradient: 0.97 intercept:         0.01
+#> Average Precision:  0.52
+#> Time to calculate evaluation metrics: 0.228 secs
+#> Calculating covariate summary @ 2026-06-16 09:37:43.968964
 #> This can take a while...
 #> Creating binary labels
 #> Joining with strata
@@ -149,21 +149,21 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> calculating subset of strata 3
 #> calculating subset of strata 4
 #> Restricting to subgroup
-#> Calculating summary for subgroup TrainWithNoOutcome
-#> Restricting to subgroup
 #> Calculating summary for subgroup TrainWithOutcome
+#> Restricting to subgroup
+#> Calculating summary for subgroup TrainWithNoOutcome
 #> Restricting to subgroup
 #> Calculating summary for subgroup TestWithOutcome
 #> Restricting to subgroup
 #> Calculating summary for subgroup TestWithNoOutcome
 #> Aggregating with labels and strata
-#> Finished covariate summary @ 2026-06-12 12:40:33.415192
-#> Time to calculate covariate summary: 2.04 secs
+#> Finished covariate summary @ 2026-06-16 09:37:46.068673
+#> Time to calculate covariate summary: 2.1 secs
 #> Run finished successfully.
 #> Saving PlpResult
 #> Creating directory to save model
-#> plpResult saved to ..\/tmp/RtmpfYHDeq/plotDemographicSummary/2026-06-12-3\plpResult
-#> runPlp time taken: 7.67 secs
+#> plpResult saved to ..\/tmp/Rtmp8FOikQ/plotDemographicSummary/2026-06-16-3\plpResult
+#> runPlp time taken: 7.8 secs
 plotDemographicSummary(plpResult)
 
 # clean up 
