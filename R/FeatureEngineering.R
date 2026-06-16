@@ -643,10 +643,9 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     # apply the normalization to trainData
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$minMaxs, by = "covariateId") %>%
-      # use ifelse to only normalize if min and max are not NA as is the case
-      # for continous features, else return original value
-      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
-        (.data$covariateValue - min) / (max - min),
+      # Only continuous features have min/max rows after the join.
+      dplyr::mutate(covariateValue = dplyr::coalesce(
+        (.data$covariateValue - .data$min) / (.data$max - .data$min),
         .data$covariateValue
       )) %>%
       dplyr::select(-c("max", "min"))
@@ -669,8 +668,8 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$minMaxs,
         by = "covariateId") %>%
-      dplyr::mutate(covariateValue = ifelse(!is.na(min) & !is.na(max),
-        (.data$covariateValue - min) / (max - min),
+      dplyr::mutate(covariateValue = dplyr::coalesce(
+        (.data$covariateValue - .data$min) / (.data$max - .data$min),
         .data$covariateValue
       )) %>%
       dplyr::select(-c("max", "min"))
@@ -728,15 +727,14 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::pull(.data$covariateId)
 
     # get (25, 75)% quantiles of each feature
-    if (inherits(outData$covariateData, "SQLiteConnection")) {
-      RSQLite::initExtension(outData$covariateData, "math")
+    if (inherits(outData$covariateData$covariates, "tbl_sql")) {
       outData$covariateData$quantiles <- outData$covariateData$covariates %>%
         dplyr::filter(.data$covariateId %in% continousFeatures) %>%
         dplyr::group_by(.data$covariateId) %>%
         dplyr::summarise(
-          q25 = dplyr::sql("lower_quartile(covariateValue)"), 
-          q75 = dplyr::sql("upper_quartile(covariateValue)"),
-          median = stats::median(.data$covariateValue, na.rm = TRUE)
+          q25 = dbplyr::sql("quantile_cont(covariateValue, 0.25)"),
+          q75 = dbplyr::sql("quantile_cont(covariateValue, 0.75)"),
+          median = dbplyr::sql("median(covariateValue)")
         ) %>%
         dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
         dplyr::mutate(
@@ -765,25 +763,28 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     # save the normalization
     attr(featureEngineeringSettings, "quantiles") <-
       outData$covariateData$quantiles %>% dplyr::collect()
+    clip <- featureEngineeringSettings$settings$clip
 
     # apply the normalization to trainData
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
-      # use ifelse to only normalize continous features
-      dplyr::mutate(covariateValue = ifelse(
-        !is.na(.data$iqr) && !is.na(.data$median),
+      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
+        (.data$iqr == .data$iqr) & (.data$median == .data$median),
+        FALSE
+      )) %>%
+      # Only continuous features have median/iqr rows after the join.
+      dplyr::mutate(covariateValue = dplyr::coalesce(
         (.data$covariateValue - .data$median) / .data$iqr,
         .data$covariateValue
       )) %>%
       # optionally if settings$clip is TRUE.
       # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
       # ref: https://arxiv.org/abs/2407.04491
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) &&
-        !is.na(.data$median) && featureEngineeringSettings$settings$clip,
+      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
         .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
         .data$covariateValue
       )) %>%
-      dplyr::select(-c("median", "iqr"))
+      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
@@ -799,21 +800,24 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
+    clip <- featureEngineeringSettings$settings$clip
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$quantiles,
         by = "covariateId", copy = TRUE
       ) %>%
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && !is.na(.data$median),
+      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
+        (.data$iqr == .data$iqr) & (.data$median == .data$median),
+        FALSE
+      )) %>%
+      dplyr::mutate(covariateValue = dplyr::coalesce(
         (.data$covariateValue - .data$median) / .data$iqr,
         .data$covariateValue
       )) %>%
-      dplyr::mutate(covariateValue = ifelse(!is.na(.data$iqr) && 
-        !is.na(.data$median) &&
-        featureEngineeringSettings$settings$clip,
+      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
         .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
         .data$covariateValue
       )) %>%
-      dplyr::select(-c("median", "iqr"))
+      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
   }
   featureEngineering <- list(
     funct = "robustNormalize",

@@ -408,19 +408,6 @@ getPlpData <- function(
     rowIdField = "row_id",
     covariateSettings = covariateSettings
   )
-  if (inherits(covariateData, "RSQLiteConnection")) {
-    # add indexes for tidyCov + covariate summary
-    Andromeda::createIndex(covariateData$covariates, c("rowId"),
-      indexName = "covariates_rowId"
-    )
-    Andromeda::createIndex(covariateData$covariates, c("covariateId"),
-      indexName = "covariates_covariateId"
-    )
-    Andromeda::createIndex(covariateData$covariates, c("covariateId", "covariateValue"),
-      indexName = "covariates_covariateId_value"
-    )
-  }
-
   if (max(databaseDetails$outcomeIds) != -999) {
     ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()

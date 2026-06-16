@@ -23,6 +23,17 @@ removeInvalidString <- function(string) {
   return(modString)
 }
 
+#' Null-default operator
+#' @keywords internal
+#' @noRd
+`%||%` <- function(x, y) {
+  if (is.null(x)) {
+    y
+  } else {
+    x
+  }
+}
+
 #' Check if the required packages for survival analysis are installed
 #' @keywords internal
 #' @noRd

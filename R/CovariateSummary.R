@@ -382,19 +382,10 @@ covariateSummarySubset <- function(
 
 getCovariatesForGroup <- function(covariateData, restrictIds) {
   # restrict covariateData to specified rowIds
-  if (inherits(covariateData, "RSQLiteConnection") &&
-    length(restrictIds) > 200000) {
-    newCovariateData <- batchRestrict(
-      covariateData,
-      data.frame(rowId = restrictIds),
-      sizeN = 10000000
-    )
-  } else {
-    newCovariateData <- Andromeda::copyAndromeda(covariateData)
-    covariateData$restrictIds <- data.frame(rowId = restrictIds)
-    on.exit(covariateData$restrictIds <- NULL)
-    newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$restrictIds, by = "rowId")
-  }
+  newCovariateData <- Andromeda::copyAndromeda(covariateData)
+  covariateData$restrictIds <- data.frame(rowId = restrictIds)
+  on.exit(covariateData$restrictIds <- NULL)
+  newCovariateData$covariates <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$restrictIds, by = "rowId")
   return(newCovariateData)
 }

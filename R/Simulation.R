@@ -895,18 +895,6 @@ resampleBenchmarkCovariateData <- function(covariateData, rowMap, populationSize
       covariateId = .data$covariateId,
       covariateValue = .data$covariateValue
     )
-  if (inherits(result, "RSQLiteConnection")) {
-    Andromeda::createIndex(
-      tbl = result$covariates,
-      columnNames = "rowId",
-      indexName = "covariates_rowId"
-    )
-    Andromeda::createIndex(
-      tbl = result$covariates,
-      columnNames = "covariateId",
-      indexName = "covariates_covariateId"
-    )
-  }
 
   class(result) <- "CovariateData"
   attr(class(result), "package") <- "FeatureExtraction"

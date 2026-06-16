@@ -15,14 +15,13 @@
 # limitations under the License.
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test
-test_that("batchRestrict", {
+test_that("limitCovariatesToPopulation preserves metadata", {
   skip_if_offline()
   metaData <- attr(plpData$covariateData, "metaData")
   covariateData <-
-    PatientLevelPrediction:::batchRestrict(
+    PatientLevelPrediction:::limitCovariatesToPopulation(
       plpData$covariateData,
-      population,
-      sizeN = 1000000
+      population$rowId
     )
   expect_s4_class(covariateData, "CovariateData")
 
