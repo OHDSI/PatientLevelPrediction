@@ -38,7 +38,8 @@ test_that("addModelSetting handles minimal modelSettings objects", {
 
   res <- DatabaseConnector::querySql(
     conn,
-    "select model_type as modelType, model_name as modelName from main.model_settings;"
+    "select model_type as model_type, model_name as model_name from main.model_settings;",
+    snakeCaseToCamelCase = TRUE
   )
   expect_true("modelType" %in% names(res))
   expect_true("modelName" %in% names(res))
@@ -125,10 +126,11 @@ test_that("addModelSetting derives modelType/modelName and sanitizes invalid val
     res <- DatabaseConnector::querySql(
       conn,
       paste0(
-        "select model_type as modelType, model_name as modelName ",
+        "select model_type as model_type, model_name as model_name ",
         "from main.model_settings ",
         "where model_setting_id = ", modelSettingId, ";"
-      )
+      ),
+      snakeCaseToCamelCase = TRUE
     )
     expect_equal(res$modelType[1], expectedModelTypes[i])
     expect_equal(res$modelName[1], expectedModelNames[i])
@@ -187,12 +189,17 @@ test_that("Migration_3 adds model_name and backfills from models table", {
   )
   DatabaseConnector::executeSql(conn, migrationSql)
 
-  columnInfo <- DatabaseConnector::querySql(conn, "PRAGMA table_info(model_settings);")
+  columnInfo <- DatabaseConnector::querySql(
+    conn,
+    "PRAGMA table_info(model_settings);",
+    snakeCaseToCamelCase = TRUE
+  )
   expect_true("model_name" %in% columnInfo$name)
 
   migrated <- DatabaseConnector::querySql(
     conn,
-    "select model_name as modelName from main.model_settings where model_setting_id = 1;"
+    "select model_name as model_name from main.model_settings where model_setting_id = 1;",
+    snakeCaseToCamelCase = TRUE
   )
   expect_equal(migrated$modelName[1], "xgboost")
 })
@@ -227,7 +234,8 @@ test_that("addHyperparameterSetting deduplicates identical settings json", {
 
   rowCountBefore <- DatabaseConnector::querySql(
     conn,
-    "select count(*) as n from main.hyperparameter_settings;"
+    "select count(*) as n from main.hyperparameter_settings;",
+    snakeCaseToCamelCase = TRUE
   )
 
   firstId <- PatientLevelPrediction:::addHyperparameterSetting(
@@ -251,7 +259,8 @@ test_that("addHyperparameterSetting deduplicates identical settings json", {
 
   rowCountAfter <- DatabaseConnector::querySql(
     conn,
-    "select count(*) as n from main.hyperparameter_settings;"
+    "select count(*) as n from main.hyperparameter_settings;",
+    snakeCaseToCamelCase = TRUE
   )
   expect_equal(rowCountAfter$n[1], rowCountBefore$n[1] + 1)
 })
@@ -338,17 +347,19 @@ test_that("insertModelDesignInDatabase differentiates model_design_id by hyperpa
   modelDesignRows <- DatabaseConnector::querySql(
     conn,
     paste0(
-      "select model_design_id as modelDesignId, ",
-      "hyperparameter_setting_id as hyperparameterSettingId ",
+      "select model_design_id as model_design_id, ",
+      "hyperparameter_setting_id as hyperparameter_setting_id ",
       "from main.model_designs where model_design_id in (",
       modelDesignGridId, ", ", modelDesignRandomId, ");"
-    )
+    ),
+    snakeCaseToCamelCase = TRUE
   )
   expect_equal(length(unique(modelDesignRows$hyperparameterSettingId)), 2)
 
   hyperparameterRows <- DatabaseConnector::querySql(
     conn,
-    "select count(*) as n from main.hyperparameter_settings;"
+    "select count(*) as n from main.hyperparameter_settings;",
+    snakeCaseToCamelCase = TRUE
   )
   expect_gte(hyperparameterRows$n[1], 2)
 })
