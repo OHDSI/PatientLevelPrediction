@@ -82,7 +82,7 @@ plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 #> Removing subjects with no time at risk (if any)
 #> Outcome is 0 or 1
 #> Population created with: 995 observations, 995 unique subjects and 496 outcomes
-#> Population created in 0.048 secs
+#> Population created in 0.0514 secs
 #> Ignoring unknown labels:
 #> • fill : "Strata"
 print(plotObject)

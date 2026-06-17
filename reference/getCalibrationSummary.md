@@ -78,7 +78,7 @@ population <- createStudyPopulation(plpData, outcomeId = 3)
 #> Removing non outcome subjects with insufficient time at risk (if any)
 #> Outcome is 0 or 1
 #> Population created with: 481 observations, 481 unique subjects and 249 outcomes
-#> Population created in 0.0567 secs
+#> Population created in 0.0452 secs
 data <- splitData(plpData, population, createDefaultSplitSetting())
 #> test: 0.25
 #> train: 0.75
@@ -90,7 +90,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> Finished limiting covariate data to population...
 #> Starting to limit covariate data to population...
 #> Finished limiting covariate data to population...
-#> Data split in 1.38 secs
+#> Data split in 1.32 secs
 data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> minFraction: 0.001
 #> normalize: TRUE
@@ -98,7 +98,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> Removing 1 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.59 secs
+#> Tidying covariates took 1.58 secs
 saveLoc <- file.path(tempdir(), "calibrationSummary")
 # fit a lasso logistic regression model using the training data
 plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
@@ -114,9 +114,9 @@ plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42)
 #> Getting predictions on train set
 #> predictProbabilities - predictAndromeda start
 #> Warning: Model had no non-zero coefficients so predicted same for all population...
-#> Prediction took 0.000629 secs
+#> Prediction took 0.000622 secs
 #> Returned from classifier function
-#> Time to fit model: 0.166 secs
+#> Time to fit model: 0.173 secs
 calibrationSummary <- getCalibrationSummary(plpModel$prediction, 
                                             "binary", 
                                             numberOfStrata = 10,
