@@ -23,6 +23,25 @@ test_that("evaluatePlp", {
   expect_equal(names(eval), c("evaluationStatistics", "thresholdSummary", "demographicSummary", "calibrationSummary", "predictionDistribution"))
 })
 
+test_that("evaluatePlp uses All when type column is absent", {
+  prediction <- data.frame(
+    rowId = 1:100,
+    ageYear = sample(18:90, 100, replace = TRUE),
+    gender = sample(c(8507, 8532), 100, replace = TRUE),
+    outcomeCount = rep(c(0, 1), 50),
+    value = seq(0.01, 0.99, length.out = 100)
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+
+  eval <- evaluatePlp(prediction)
+
+  expect_equal(unique(as.character(eval$evaluationStatistics$evaluation)), "All")
+  expect_equal(unique(eval$thresholdSummary$evaluation), "All")
+  expect_equal(unique(eval$demographicSummary$evaluation), "All")
+  expect_equal(unique(eval$calibrationSummary$evaluation), "All")
+  expect_equal(unique(eval$predictionDistribution$evaluation), "All")
+})
+
 test_that("modelBasedConcordance", {
   skip_if_offline()
   concordance <- PatientLevelPrediction::modelBasedConcordance(prediction = plpResult$prediction)

@@ -72,6 +72,9 @@ evaluatePlp <- function(prediction, typeColumn = "evaluationType") {
   if (length(unique(prediction$value)) == 1) {
     stop("Cannot evaluate as predictions all the same value")
   }
+  if (!typeColumn %in% colnames(prediction)) {
+    prediction[[typeColumn]] <- "All"
+  }
 
   # 1) evaluationSummary
   ParallelLogger::logTrace(paste0("Calulating evaluation summary Started @ ", Sys.time()))
