@@ -57,6 +57,19 @@ test_that("auprcMetric wraps averagePrecision", {
   expect_equal(auprcMetric$fun(prediction), auprcFun(prediction))
 })
 
+test_that("createHyperparameterSettings accepts generator objects with lifecycle hooks", {
+  generator <- list(
+    initialize = function(definition, settings) invisible(NULL),
+    getNext = function(history) NULL,
+    finalize = function(history) invisible(NULL)
+  )
+
+  settings <- createHyperparameterSettings(generator = generator)
+
+  expect_equal(settings$search, "custom")
+  expect_identical(settings$generator, generator)
+})
+
 test_that("prepareHyperparameterGrid returns sequential combinations for grid search", {
   paramDefinition <- list(alpha = list(0.1, 0.2), lambda = list(1L, 2L))
   iterator <- prepareHyperparameterGrid(
