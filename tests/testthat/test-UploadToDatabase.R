@@ -12,18 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# only run this during CI in main repo
-if (Sys.getenv("CI") == "true" &&
-  Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
-  cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
-  ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
+runPostgresUploadTests <- Sys.getenv("CI") == "true" &&
+  Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction" &&
+  all(nzchar(Sys.getenv(c(
+    "CDM5_POSTGRESQL_CDM_SCHEMA",
+    "CDM5_POSTGRESQL_OHDSI_SCHEMA",
+    "CDM5_POSTGRESQL_PASSWORD",
+    "CDM5_POSTGRESQL_SERVER",
+    "CDM5_POSTGRESQL_USER"
+  )))) &&
+  grepl("/", Sys.getenv("CDM5_POSTGRESQL_SERVER"), fixed = TRUE)
+
+skip_if_no_postgres_upload <- function() {
+  skip_if(!runPostgresUploadTests, "PostgreSQL test connection is not configured")
+}
+
+# only run this during CI in main repo when PostgreSQL secrets are available
+if (runPostgresUploadTests) {
   cdmDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_CDM_SCHEMA")
   ohdsiDatabaseSchema <- Sys.getenv("CDM5_POSTGRESQL_OHDSI_SCHEMA")
   connectionRedshift <- DatabaseConnector::createConnectionDetails(
     dbms = "postgresql",
     user = Sys.getenv("CDM5_POSTGRESQL_USER"),
     password = URLdecode(Sys.getenv("CDM5_POSTGRESQL_PASSWORD")),
-    server = Sys.getenv("CDM5_POSTGRESQL_SERVER"),
+    server = Sys.getenv("CDM5_POSTGRESQL_SERVER")
   )
   conn <- DatabaseConnector::connect(connectionRedshift)
   targetDialect <- "postgresql"
@@ -36,8 +48,7 @@ if (Sys.getenv("CI") == "true" &&
   }
 }
 test_that("test createDatabaseSchemaSettings works", {
-  skip_if(Sys.getenv("CI") != "true", "only run on CI")
-  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
+  skip_if_no_postgres_upload()
   databaseSchemaSettings <- createDatabaseSchemaSettings(
     resultSchema = ohdsiDatabaseSchema,
     tablePrefix = "",
@@ -89,8 +100,7 @@ test_that("test createDatabaseDetails works", {
 
 
 test_that("database creation", {
-  skip_if(Sys.getenv("CI") != "true", "only run on CI")
-  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
+  skip_if_no_postgres_upload()
   createPlpResultTables(
     connectionDetails = connectionRedshift,
     resultSchema = ohdsiDatabaseSchema,
@@ -110,8 +120,7 @@ test_that("database creation", {
 
 
 test_that("results uploaded to database", {
-  skip_if(Sys.getenv("CI") != "true", "only run on CI")
-  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
+  skip_if_no_postgres_upload()
   resultsLoc <- file.path(saveLoc, "dbUp")
 
   plpResult$model$trainDetails$developmentDatabase <- "test"
@@ -151,7 +160,7 @@ test_that("results uploaded to database", {
   )
 
   # check the results table is populated
-  sql <- "select count(*) as N from @resultSchema.@appendperformances;"
+  sql <- "select count(*) as n from @resultSchema.@appendperformances;"
   sql <- SqlRender::render(sql, resultSchema = ohdsiDatabaseSchema, append = appendRandom("test_"))
   res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
   expect_true(res$n[1] > 0)
@@ -160,8 +169,7 @@ test_that("results uploaded to database", {
 })
 
 test_that("database deletion", {
-  skip_if(Sys.getenv("CI") != "true", "only run on CI")
-  skip_if(Sys.getenv("GITHUB_REPOSITORY") != "OHDSI/PatientLevelPrediction", "not run in fork")
+  skip_if_no_postgres_upload()
   createPlpResultTables(
     connectionDetails = connectionRedshift,
     resultSchema = ohdsiDatabaseSchema,
@@ -192,7 +200,7 @@ test_that("database deletion", {
 })
 
 # disconnect
-if (Sys.getenv("CI") == "true" && Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction") {
+if (runPostgresUploadTests) {
   DatabaseConnector::disconnect(conn)
 }
 
@@ -233,25 +241,25 @@ test_that("temporary sqlite with results works", {
   targetDialect <- "sqlite"
 
   # check the results table is populated
-  sql <- "select count(*) as N from main.performances;"
-  res <- DatabaseConnector::querySql(conn, sql)
-  expect_true(res$N[1] > 0)
+  sql <- "select count(*) as n from main.performances;"
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
+  expect_true(res$n[1] > 0)
 
   # check the diagnostic table is populated
-  sql <- "select count(*) as N from main.diagnostics;"
-  res <- DatabaseConnector::querySql(conn, sql)
-  expect_true(res$N[1] > 0)
+  sql <- "select count(*) as n from main.diagnostics;"
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
+  expect_true(res$n[1] > 0)
 
   # check the models table is populated and intercept is stored correctly
   sql <- paste(
     "select",
-    "  model_type as modelType,",
+    "  model_type as model_type,",
     "  intercept as intercept,",
-    "  plp_model_file as plpModelFile,",
-    "  train_details as trainDetails",
+    "  plp_model_file as plp_model_file,",
+    "  train_details as train_details",
     "from main.models;"
   )
-  res <- DatabaseConnector::querySql(conn, sql)
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
   expect_true(nrow(res) > 0)
   expect_true(all(!is.na(res$plpModelFile)))
   expect_true(dir.exists(res$plpModelFile[1]))
@@ -320,7 +328,11 @@ test_that("list hyperParamSearch is flattened for sqlite uploads", {
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
 
-  res <- DatabaseConnector::querySql(conn, "select train_details as trainDetails from main.models;")
+  res <- DatabaseConnector::querySql(
+    conn,
+    "select train_details as train_details from main.models;",
+    snakeCaseToCamelCase = TRUE
+  )
   expect_true(nrow(res) > 0)
   trainDetails <- ParallelLogger::convertJsonToSettings(res$trainDetails[1])
 
@@ -414,7 +426,11 @@ test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in
   expect_false(is.null(modelDesignId))
   expect_true(is.numeric(modelDesignId) || is.integer(modelDesignId))
 
-  countRes <- DatabaseConnector::querySql(conn, "select count(*) as n from main.model_designs;")
+  countRes <- DatabaseConnector::querySql(
+    conn,
+    "select count(*) as n from main.model_designs;",
+    snakeCaseToCamelCase = TRUE
+  )
   expect_true(countRes$n[1] > 0)
 })
 
@@ -452,13 +468,13 @@ test_that("temporary sqlite with results works", {
   targetDialect <- "sqlite"
 
   # check the results table is populated
-  sql <- "select count(*) as N from main.performances;"
-  res <- DatabaseConnector::querySql(conn, sql)
-  expect_true(res$N[1] > 0)
+  sql <- "select count(*) as n from main.performances;"
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
+  expect_true(res$n[1] > 0)
 
   # models table exists and has expected intercept
-  sql <- "select intercept as intercept, plp_model_file as plpModelFile from main.models;"
-  res <- DatabaseConnector::querySql(conn, sql)
+  sql <- "select intercept as intercept, plp_model_file as plp_model_file from main.models;"
+  res <- DatabaseConnector::querySql(conn, sql, snakeCaseToCamelCase = TRUE)
   expect_true(nrow(res) > 0)
   expect_true(dir.exists(res$plpModelFile[1]))
   expect_equal(
@@ -515,8 +531,12 @@ test_that("external validation with no outcomes uploads to sqlite", {
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
 
-  res <- DatabaseConnector::querySql(conn, "select count(*) as N from main.performances;")
-  expect_gte(res$N[1], 2)
+  res <- DatabaseConnector::querySql(
+    conn,
+    "select count(*) as n from main.performances;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_gte(res$n[1], 2)
 
   expect_true(DatabaseConnector::existsTable(
     connection = conn,
@@ -524,16 +544,21 @@ test_that("external validation with no outcomes uploads to sqlite", {
     tableName = "evaluation_statistics"
   ))
 
-  perf <- DatabaseConnector::querySql(conn, "select max(performance_id) as performanceId from main.performances;")
+  perf <- DatabaseConnector::querySql(
+    conn,
+    "select max(performance_id) as performance_id from main.performances;",
+    snakeCaseToCamelCase = TRUE
+  )
   evalRows <- DatabaseConnector::querySql(
     conn,
     paste0(
-      "select count(*) as N from main.evaluation_statistics where performance_id = ",
+      "select count(*) as n from main.evaluation_statistics where performance_id = ",
       perf$performanceId[1],
       ";"
-    )
+    ),
+    snakeCaseToCamelCase = TRUE
   )
-  expect_gt(evalRows$N[1], 0)
+  expect_gt(evalRows$n[1], 0)
 })
 
 # importFromCsv test here as can use previous csv saving
