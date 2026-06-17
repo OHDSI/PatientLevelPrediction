@@ -70,6 +70,40 @@ test_that("createHyperparameterSettings accepts generator objects with lifecycle
   expect_identical(settings$generator, generator)
 })
 
+test_that("createHyperparameterSettings accepts generator objects without finalize", {
+  generator <- list(
+    initialize = function(definition, settings) invisible(NULL),
+    getNext = function(history) NULL
+  )
+
+  settings <- createHyperparameterSettings(generator = generator)
+
+  expect_equal(settings$search, "custom")
+  expect_identical(settings$generator, generator)
+})
+
+test_that("createHyperparameterSettings rejects invalid generator objects", {
+  expect_error(
+    createHyperparameterSettings(generator = list(getNext = function(history) NULL)),
+    "`generator` must be a function or an object with initialize and getNext methods",
+    fixed = TRUE
+  )
+  expect_error(
+    createHyperparameterSettings(generator = list(
+      initialize = function(definition, settings) invisible(NULL),
+      getNext = function(history) NULL,
+      finalize = "not a function"
+    )),
+    "`generator` must be a function or an object with initialize and getNext methods",
+    fixed = TRUE
+  )
+  expect_error(
+    createHyperparameterSettings(generator = 1),
+    "`generator` must be a function or an object with initialize and getNext methods",
+    fixed = TRUE
+  )
+})
+
 test_that("prepareHyperparameterGrid returns sequential combinations for grid search", {
   paramDefinition <- list(alpha = list(0.1, 0.2), lambda = list(1L, 2L))
   iterator <- prepareHyperparameterGrid(
