@@ -32,6 +32,11 @@ env:
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
   RETICULATE_PY_VERSION: 3.11
+  CDM5_POSTGRESQL_CDM_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_CDM_SCHEMA }}
+  CDM5_POSTGRESQL_OHDSI_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_OHDSI_SCHEMA }}
+  CDM5_POSTGRESQL_PASSWORD: ${{ secrets.CDM5_POSTGRESQL_PASSWORD }}
+  CDM5_POSTGRESQL_SERVER: ${{ secrets.CDM5_POSTGRESQL_SERVER }}
+  CDM5_POSTGRESQL_USER: ${{ secrets.CDM5_POSTGRESQL_USER }}
 
 jobs:
   dependency-floor:
