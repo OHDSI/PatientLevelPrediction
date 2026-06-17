@@ -1097,6 +1097,7 @@ addHyperparameterSetting <- function(
     json,
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   if (!inherits(x = json, what = "character")) {
+    json <- sanitizeHyperparameterSettingsForDatabase(json)
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character
