@@ -409,6 +409,48 @@ test_that("sanitizeHyperparameterSettingsForDatabase stores metric metadata only
   expect_lt(nchar(json), 1000)
 })
 
+test_that("sanitizeHyperparameterSettingsForDatabase handles optional and non-json fields", {
+  env <- new.env(parent = emptyenv())
+  env$value <- 1
+  object <- structure(list(x = 1), class = "customThing")
+  generator <- list(
+    initialize = function(definition, settings) invisible(NULL),
+    getNext = function(history) NULL
+  )
+
+  expect_null(PatientLevelPrediction:::sanitizeObjectForDatabaseJson(NULL))
+  expect_equal(
+    PatientLevelPrediction:::sanitizeObjectForDatabaseJson(function() NULL),
+    list(type = "function")
+  )
+  expect_equal(
+    PatientLevelPrediction:::sanitizeObjectForDatabaseJson(env),
+    list(type = "environment")
+  )
+  expect_equal(
+    PatientLevelPrediction:::sanitizeObjectForDatabaseJson(data.frame(
+      keep = 1,
+      drop = I(list(function() NULL))
+    )),
+    data.frame(
+      keep = 1,
+      type = "function"
+    )
+  )
+  expect_equal(PatientLevelPrediction:::sanitizeObjectForDatabaseJson(object), list(x = 1))
+  expect_equal(
+    PatientLevelPrediction:::sanitizeObjectForDatabaseJson(stats::as.formula("~ x")),
+    c("~", "x")
+  )
+  expect_null(PatientLevelPrediction:::sanitizeTuningMetricForDatabase(NULL))
+  expect_null(PatientLevelPrediction:::sanitizeGeneratorForDatabase(NULL))
+  expect_equal(
+    PatientLevelPrediction:::sanitizeGeneratorForDatabase(generator),
+    list(type = "list", methods = c("initialize", "getNext"))
+  )
+  expect_null(PatientLevelPrediction:::sanitizeHyperparameterSettingsForDatabase(NULL))
+})
+
 test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in runPlp model", {
   skip_if_not_installed(c("ResultModelManager", "Eunomia"))
   skip_if_offline()
