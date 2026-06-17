@@ -31,6 +31,7 @@ env:
   R_LIBS_USER: ${{ github.workspace }}/.cache/r-library
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+  RETICULATE_PYTHON: /usr/bin/python3
   RETICULATE_PY_VERSION: 3.11
   CDM5_POSTGRESQL_CDM_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_CDM_SCHEMA }}
   CDM5_POSTGRESQL_OHDSI_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_OHDSI_SCHEMA }}
@@ -85,6 +86,11 @@ jobs:
       - name: Prepare caches
         run: |
           mkdir -p "${R_LIBS_USER}" "${EUNOMIA_DATA_FOLDER}" "${UV_CACHE_DIR}"
+
+      - name: Install Python test dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "scikit-learn==1.3.2"
 
       - name: Restore R library cache
         id: cache-r-library-restore
