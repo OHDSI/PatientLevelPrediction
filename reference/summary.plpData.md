@@ -42,7 +42,7 @@ summary(plpData)
 #> 
 #> Outcome counts:
 #>   Event count Person count
-#> 3           4            4
+#> 3           5            5
 #> 
 #> Covariates:
 #> Number of covariates: 98

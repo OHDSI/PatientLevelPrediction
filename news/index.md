@@ -6,6 +6,9 @@ CRAN release: 2026-03-09
 
 ### New features
 
+- Added
+  [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
+  to generate semi-synthetic PLP benchmark data with known outcome risk.
 - Added flexible hyperparameter tuning with configurable tuning metrics
   and support for grid, random, and custom search strategies
   ([\#618](https://github.com/OHDSI/PatientLevelPrediction/issues/618)).
@@ -28,6 +31,14 @@ CRAN release: 2026-03-09
 
 ### Bug fixes
 
+- Fixed cross-validation prediction generation for iterative hard
+  thresholding models by reusing fitted per-covariate prior variances.
+- Restored intercept fitting for iterative hard thresholding logistic
+  models.
+- Fixed simulation profile outcome models so generated coefficients only
+  reference covariates available in the profile, added support for
+  user-supplied outcome models, and invalid custom profiles now fail
+  early instead of silently dropping outcome signal.
 - Improved upload of hyperparameter metadata and robustness of model
   settings persistence for database viewers and downstream tools
   ([\#628](https://github.com/OHDSI/PatientLevelPrediction/issues/628),
