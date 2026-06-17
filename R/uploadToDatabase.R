@@ -738,7 +738,9 @@ insertModelInDatabase <- function(
   )
   hyperparameterSettings <- NULL
   if (!is.null(model$modelDesign) && is.list(model$modelDesign)) {
-    hyperparameterSettings <- model$modelDesign$hyperparameterSettings
+    hyperparameterSettings <- sanitizeHyperparameterSettingsForDatabase(
+      model$modelDesign$hyperparameterSettings
+    )
   }
   trainDetails <- list(
     hyperParamSearch = hyperParamSearch,
@@ -811,6 +813,67 @@ normalizeHyperParamSearchForDatabase <- function(hyperParamSearch) {
     "Unable to coerce hyperParamSearch to data.frame; storing empty table for compatibility."
   )
   data.frame()
+}
+
+sanitizeObjectForDatabaseJson <- function(x) {
+  if (is.null(x)) {
+    return(NULL)
+  }
+  if (is.function(x)) {
+    return(list(type = "function"))
+  }
+  if (is.environment(x)) {
+    return(list(type = "environment"))
+  }
+  if (is.atomic(x)) {
+    return(x)
+  }
+  if (is.data.frame(x)) {
+    return(as.data.frame(lapply(x, sanitizeObjectForDatabaseJson), stringsAsFactors = FALSE))
+  }
+  if (is.list(x)) {
+    return(lapply(x, sanitizeObjectForDatabaseJson))
+  }
+  as.character(x)
+}
+
+sanitizeTuningMetricForDatabase <- function(tuningMetric) {
+  if (is.null(tuningMetric)) {
+    return(NULL)
+  }
+
+  list(
+    name = tuningMetric$name,
+    maximize = tuningMetric$maximize,
+    funArgs = sanitizeObjectForDatabaseJson(tuningMetric$funArgs)
+  )
+}
+
+sanitizeGeneratorForDatabase <- function(generator) {
+  if (is.null(generator)) {
+    return(NULL)
+  }
+  if (is.function(generator)) {
+    return(list(type = "function"))
+  }
+  list(
+    type = paste(class(generator), collapse = "/"),
+    methods = intersect(c("initialize", "getNext", "finalize"), names(generator))
+  )
+}
+
+sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
+  if (is.null(hyperparameterSettings)) {
+    return(NULL)
+  }
+
+  list(
+    search = hyperparameterSettings$search,
+    tuningMetric = sanitizeTuningMetricForDatabase(hyperparameterSettings$tuningMetric),
+    sampleSize = hyperparameterSettings$sampleSize,
+    randomSeed = hyperparameterSettings$randomSeed,
+    generator = sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
+  )
 }
 
 addModel <- function(

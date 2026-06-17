@@ -384,6 +384,31 @@ test_that("normalizeHyperParamSearchForDatabase handles all supported shapes", {
   expect_equal(nrow(normalizedUnknown), 0)
 })
 
+test_that("sanitizeHyperparameterSettingsForDatabase stores metric metadata only", {
+  capturedData <- seq_len(10000)
+  metric <- createTuningMetric(
+    fun = function(prediction) mean(prediction$value) + length(capturedData),
+    maximize = FALSE,
+    name = "CustomLargeClosure",
+    funArgs = list(cutoff = 0.75)
+  )
+  settings <- createHyperparameterSettings(
+    tuningMetric = metric,
+    generator = function(definition, expanded, settings) expanded[1]
+  )
+
+  sanitized <- PatientLevelPrediction:::sanitizeHyperparameterSettingsForDatabase(settings)
+  json <- as.character(ParallelLogger::convertSettingsToJson(sanitized))
+
+  expect_equal(sanitized$search, "custom")
+  expect_equal(sanitized$tuningMetric$name, "CustomLargeClosure")
+  expect_false(sanitized$tuningMetric$maximize)
+  expect_equal(sanitized$tuningMetric$funArgs$cutoff, 0.75)
+  expect_null(sanitized$tuningMetric[["fun", exact = TRUE]])
+  expect_equal(sanitized$generator$type, "function")
+  expect_lt(nchar(json), 1000)
+})
+
 test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in runPlp model", {
   skip_if_not_installed(c("ResultModelManager", "Eunomia"))
   skip_if_offline()
