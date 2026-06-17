@@ -37,5 +37,9 @@ createHyperparameterSettings(
 
 - generator:
 
-  An object with `initialize`, `getNext` and `finalize` methods for
-  custom flexible hyperparameter tuning.
+  Optional custom hyperparameter generator. This can be either a
+  function with arguments `definition`, `expanded`, and `settings` that
+  returns a finite list of named parameter lists, or an object with
+  lifecycle methods. Lifecycle generator objects must provide
+  `initialize(definition, settings)` and `getNext(history)` methods, and
+  may provide an optional `finalize(history)` method.

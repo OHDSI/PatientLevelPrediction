@@ -95,8 +95,12 @@ choices include <code>aucMetric</code> and <code>auprcMetric</code>.</p></dd>
 
 
 <dt id="arg-generator">generator<a class="anchor" aria-label="anchor" href="#arg-generator"></a></dt>
-<dd><p>An object with <code>initialize</code>, <code>getNext</code> and <code>finalize</code> methods
-for custom flexible hyperparameter tuning.</p></dd>
+<dd><p>Optional custom hyperparameter generator. This can be either
+a function with arguments <code>definition</code>, <code>expanded</code>, and <code>settings</code> that
+returns a finite list of named parameter lists, or an object with lifecycle
+methods. Lifecycle generator objects must provide <code>initialize(definition,
+settings)</code> and <code>getNext(history)</code> methods, and may provide an optional
+<code>finalize(history)</code> method.</p></dd>
 
 </dl></div>
 
