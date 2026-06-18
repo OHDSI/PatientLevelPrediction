@@ -123,6 +123,31 @@ test_that("createDefaultSplitSetting", {
   )
 })
 
+test_that("createOutcomeLimitedSplitSettings", {
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 50,
+    splitSeed = 123,
+    nfold = 5,
+    type = "subject"
+  )
+
+  expect_s3_class(splitSettings, "splitSettings")
+  expect_equal(attr(splitSettings, "fun"), "outcomeLimitedSplitter")
+  expect_equal(splitSettings$maxTrainingOutcomes, 50)
+  expect_equal(splitSettings$seed, 123)
+  expect_equal(splitSettings$nfold, 5)
+  expect_equal(splitSettings$type, "subject")
+
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 0))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = "50"))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10.5))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, splitSeed = NULL))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 1))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 2.5))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10, nfold = 3))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, type = "time"))
+})
+
 
 
 test_that("Main split function: splitData", {
@@ -226,6 +251,150 @@ test_that("Main split function: splitData", {
     splitData$Train$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(),
     plpData$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
   )
+})
+
+test_that("outcome-limited row splitting caps training outcomes", {
+  dsPopulation <- data.frame(
+    rowId = 1:400,
+    outcomeCount = c(rep(1, 100), rep(0, 300))
+  )
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 40,
+    splitSeed = 1,
+    nfold = 4,
+    type = "stratified"
+  )
+
+  split <- outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings)
+  splitRepeat <- outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings)
+  test <- dsPopulation %>%
+    dplyr::inner_join(split, by = "rowId")
+
+  expect_equal(sum(test$index > 0 & test$outcomeCount == 1), 40)
+  expect_equal(sum(test$index > 0 & test$outcomeCount == 0), 120)
+  expect_equal(sum(test$index < 0), 240)
+  expect_equal(sum(test$index == 0), 0)
+  expect_equal(sort(unique(test$index[test$index > 0])), 1:4)
+  expect_equal(as.integer(table(test$outcomeCount[test$index > 0])), c(120L, 40L))
+  expect_equal(split, splitRepeat)
+})
+
+test_that("outcome-limited subject splitting keeps subjects together", {
+  dsPopulation <- data.frame(
+    rowId = 1:300,
+    subjectId = rep(1:150, each = 2),
+    outcomeCount = c(rep(c(1, 0), 50), rep(0, 200))
+  )
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 20,
+    splitSeed = 1,
+    nfold = 4,
+    type = "subject"
+  )
+
+  split <- outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings)
+  test <- dsPopulation %>%
+    dplyr::inner_join(split, by = "rowId")
+  subjectIndexes <- test %>%
+    dplyr::group_by(.data$subjectId) %>%
+    dplyr::summarise(nIndexes = dplyr::n_distinct(.data$index), .groups = "drop")
+
+  expect_equal(sum(test$index > 0 & test$outcomeCount == 1), 20)
+  expect_equal(sum(test$index > 0 & test$outcomeCount == 0), 100)
+  expect_true(all(subjectIndexes$nIndexes == 1))
+  expect_equal(sum(test$index == 0), 0)
+  expect_equal(sort(unique(test$index[test$index > 0])), 1:4)
+})
+
+test_that("outcome-limited subject splitting fails without test outcomes", {
+  dsPopulation <- data.frame(
+    rowId = 1:125,
+    subjectId = c(rep(1, 25), 2:101),
+    outcomeCount = c(rep(1, 25), rep(0, 100))
+  )
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 20,
+    splitSeed = 1,
+    nfold = 4,
+    type = "subject"
+  )
+
+  expect_error(
+    outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings),
+    "would leave no outcome-positive rows in the test set"
+  )
+})
+
+test_that("outcome-limited subject splitting assigns folds by subject count", {
+  dsPopulation <- data.frame(
+    rowId = 1:330,
+    subjectId = c(rep(1, 10), rep(2, 10), rep(3, 10), 4:303),
+    outcomeCount = c(rep(1, 30), rep(0, 300))
+  )
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 20,
+    splitSeed = 1,
+    nfold = 4,
+    type = "subject"
+  )
+
+  split <- outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings)
+  test <- dsPopulation %>%
+    dplyr::inner_join(split, by = "rowId")
+  outcomeSubjectFolds <- test %>%
+    dplyr::filter(.data$index > 0, .data$outcomeCount > 0) %>%
+    dplyr::distinct(.data$subjectId, .data$index)
+
+  expect_equal(nrow(outcomeSubjectFolds), 2)
+  expect_equal(sort(outcomeSubjectFolds$index), c(1, 2))
+})
+
+test_that("outcome-limited splitting falls back when outcome cap is not triggered", {
+  dsPopulation <- data.frame(
+    rowId = 1:200,
+    outcomeCount = c(rep(1, 40), rep(0, 160))
+  )
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 100,
+    splitSeed = 1,
+    nfold = 4,
+    type = "stratified"
+  )
+  fallbackSettings <- createDefaultSplitSetting(
+    testFraction = 0.25,
+    trainFraction = 0.75,
+    splitSeed = 1,
+    nfold = 4,
+    type = "stratified"
+  )
+
+  expect_equal(
+    outcomeLimitedSplitter(population = dsPopulation, splitSettings = splitSettings),
+    randomSplitter(population = dsPopulation, splitSettings = fallbackSettings)
+  )
+})
+
+test_that("splitData supports outcome-limited split settings", {
+  skip_if_offline()
+  splitSettings <- createOutcomeLimitedSplitSettings(
+    maxTrainingOutcomes = 10,
+    splitSeed = 42,
+    nfold = 2,
+    type = "stratified"
+  )
+
+  splitData <- splitData(
+    plpData = plpData,
+    population = populationT,
+    splitSettings = splitSettings
+  )
+
+  expect_s3_class(splitData, "splitData")
+  expect_equal(names(splitData), c("Train", "Test"))
+  expect_s4_class(splitData$Train$covariateData, "CovariateData")
+  expect_s4_class(splitData$Test$covariateData, "CovariateData")
+  expect_equal(sum(splitData$Train$labels$outcomeCount > 0), 10)
+  expect_equal(attr(splitData$Train, "metaData")$splitSettings, splitSettings)
 })
 
 test_that("dataSummary works", {

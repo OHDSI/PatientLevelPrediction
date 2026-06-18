@@ -72,8 +72,21 @@ test_that("checkIsClass", {
   expect_equal(checkIsClass("dsdsds", "character"), TRUE)
 })
 
+test_that("checkIsWholeNumber", {
+  expect_error(checkIsWholeNumber(1.5))
+  expect_error(checkIsWholeNumber(c(1, 2)))
+  expect_error(checkIsWholeNumber("1"))
+  expect_error(checkIsWholeNumber(NA_real_))
+  expect_error(checkIsWholeNumber(Inf))
+
+  expect_equal(checkIsWholeNumber(1), TRUE)
+  expect_equal(checkIsWholeNumber(1L), TRUE)
+})
+
 test_that("checkInStringVector", {
   expect_error(checkInStringVector("dsdsds", c("dsds", "double")))
+  expect_error(checkInStringVector(c("dsdsds", "double"), c("dsdsds", "double")))
+  expect_error(checkInStringVector(NA_character_, c("dsdsds", "double")))
 
   expect_equal(checkInStringVector("dsdsds", c("dsdsds", "double")), TRUE)
 })
