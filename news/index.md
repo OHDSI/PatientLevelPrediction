@@ -28,6 +28,9 @@ CRAN release: 2026-03-09
   model to improve downstream model identification and viewing
   ([\#633](https://github.com/OHDSI/PatientLevelPrediction/issues/633),
   [\#632](https://github.com/OHDSI/PatientLevelPrediction/issues/632)).
+- Added outcome-limited split settings for large data sets where model
+  training should use a target number of outcome-positive rows
+  ([\#396](https://github.com/OHDSI/PatientLevelPrediction/issues/396)).
 
 ### Bug fixes
 

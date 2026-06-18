@@ -46,6 +46,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createLogSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createModelDesign.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createNormalizer.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createOutcomeLimitedSplitSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createPlpResultTables.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createPreprocessSettings.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/createRandomForestFeatureSelection.html</loc></url>

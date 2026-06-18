@@ -43,12 +43,12 @@ plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 saveLoc <- file.path(tempdir(), "savePlpData")
 savePlpData(plpData, saveLoc)
 dir(saveLoc, full.names = TRUE)
-#> [1] "/tmp/RtmphVamTI/savePlpData/cohorts.rds"        
-#> [2] "/tmp/RtmphVamTI/savePlpData/covariates"         
-#> [3] "/tmp/RtmphVamTI/savePlpData/metaData.rds"       
-#> [4] "/tmp/RtmphVamTI/savePlpData/outcomes.rds"       
-#> [5] "/tmp/RtmphVamTI/savePlpData/simulationTruth.rds"
-#> [6] "/tmp/RtmphVamTI/savePlpData/timeRef.rds"        
+#> [1] "/tmp/RtmpsfwXou/savePlpData/cohorts.rds"        
+#> [2] "/tmp/RtmpsfwXou/savePlpData/covariates"         
+#> [3] "/tmp/RtmpsfwXou/savePlpData/metaData.rds"       
+#> [4] "/tmp/RtmpsfwXou/savePlpData/outcomes.rds"       
+#> [5] "/tmp/RtmpsfwXou/savePlpData/simulationTruth.rds"
+#> [6] "/tmp/RtmpsfwXou/savePlpData/timeRef.rds"        
 
 # clean up
 unlink(saveLoc, recursive = TRUE)

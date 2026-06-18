@@ -210,6 +210,9 @@ Design settings required when developing a model.
   test/validation/train sets using default splitting functions (either
   random stratified by outcome, time or subject splitting)
 
+- [`createOutcomeLimitedSplitSettings()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createOutcomeLimitedSplitSettings.md)
+  : Create outcome-limited split settings
+
 - [`createExistingSplitSettings()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createExistingSplitSettings.md)
   : Create the settings for defining how the plpData are split into
   test/validation/train sets using an existing split - good to use for
