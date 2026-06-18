@@ -81,9 +81,19 @@ checkIsClass <- function(parameter, classes) {
   return(TRUE)
 }
 
+checkIsWholeNumber <- function(parameter) {
+  name <- deparse(substitute(parameter))
+  if (length(parameter) != 1 || !is.numeric(parameter) || is.na(parameter) ||
+    !is.finite(parameter) || parameter != floor(parameter)) {
+    ParallelLogger::logError(paste0(name, " must be a single whole number"))
+    stop(paste0(name, " must be a single whole number"))
+  }
+  return(TRUE)
+}
+
 checkInStringVector <- function(parameter, values) {
   name <- deparse(substitute(parameter))
-  if (!parameter %in% values) {
+  if (length(parameter) != 1 || is.na(parameter) || !parameter %in% values) {
     ParallelLogger::logError(paste0(name, " should be ", paste0(as.character(values), collapse = " or ")))
     stop(paste0(name, " has incorrect value"))
   }

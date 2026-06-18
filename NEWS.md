@@ -9,6 +9,7 @@ PatientLevelPrediction 6.6.0
 - Expanded imputation support and hardened the missing-indicator and predictive mean matching workflow (#622).
 - Added support for using logits / linear predictors in rank-based metrics (#615).
 - Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (#633, #632).
+- Added outcome-limited split settings for large data sets where model training should use a target number of outcome-positive rows (#396).
 
 ## Bug fixes
 - Fixed cross-validation prediction generation for iterative hard thresholding models by reusing fitted per-covariate prior variances.
