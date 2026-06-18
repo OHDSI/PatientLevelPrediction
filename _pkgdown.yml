@@ -98,6 +98,7 @@ reference:
     contents:
       - createStudyPopulationSettings
       - createDefaultSplitSetting
+      - createOutcomeLimitedSplitSettings
       - createExistingSplitSettings
       - createSampleSettings
       - createFeatureEngineeringSettings
