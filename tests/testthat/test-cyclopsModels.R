@@ -374,6 +374,45 @@ test_that("BAR penalty grid starts at log(n) / 2", {
   expect_equal(grid[3], 0.1 * log(100) / 2)
 })
 
+test_that("BAR prior parameters resolve auto values", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  outcomes <- data.frame(rowId = seq_len(20), y = rep(c(0, 1), 10))
+  covariates <- data.frame(
+    rowId = seq_len(20),
+    covariateId = rep(100, 20),
+    covariateValue = seq(-1, 1, length.out = 20)
+  )
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = outcomes,
+    covariates = covariates,
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+  modelSettings <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = "auto",
+    penalty = "logN",
+    seed = 42,
+    threads = 1,
+    maxIterations = 1000
+  )
+
+  param <- suppressWarnings(resolveCyclopsPriorParams(
+    param = modelSettings$param,
+    cyclopsData = cyclopsData,
+    labels = outcomes,
+    folds = data.frame(rowId = seq_len(20), index = rep(1, 20)),
+    settings = modelSettings$settings
+  ))
+
+  expect_equal(param$priorParams$penalty, log(nrow(outcomes)) / 2)
+  expect_type(param$priorParams$initialRidgeVariance, "double")
+  expect_true(is.finite(param$priorParams$initialRidgeVariance))
+})
+
 
 
 # ================ FUNCTION TESTING
@@ -549,6 +588,34 @@ test_that("test BAR automatic penalty search runs", {
   expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
   expect_type(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "double")
   expect_false(identical(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto"))
+})
+
+test_that("test BAR fixed logN penalty runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = "logN",
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barFixedTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
+  expect_equal(
+    fitModel$modelDesign$modelSettings$param$priorParams$penalty,
+    log(nrow(tinyTrainData$labels)) / 2
+  )
 })
 
 test_that("test logistic regression runs", {
