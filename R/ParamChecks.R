@@ -81,6 +81,15 @@ checkIsClass <- function(parameter, classes) {
   return(TRUE)
 }
 
+checkSingleFiniteNumeric <- function(parameter) {
+  name <- deparse(substitute(parameter))
+  if (length(parameter) != 1 || !is.numeric(parameter) || is.na(parameter) || !is.finite(parameter)) {
+    ParallelLogger::logError(paste0(name, " must be a single finite numeric value"))
+    stop(paste0(name, " must be a single finite numeric value"))
+  }
+  return(TRUE)
+}
+
 checkIsWholeNumber <- function(parameter) {
   name <- deparse(substitute(parameter))
   if (length(parameter) != 1 || !is.numeric(parameter) || is.na(parameter) ||
