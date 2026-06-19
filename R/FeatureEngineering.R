@@ -557,14 +557,14 @@ randomForestFeatureSelection <- function(
   return(trainData)
 }
 
-#' Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
-#' @return An object of class \code{featureEngineeringSettings}
+#' Create the settings for normalizing the data
+#'
 #' @param type The type of normalization to use, either "minmax" or "robust"
 #' @param settings A list of settings for the normalization. 
 #' For robust normalization, the settings list can contain a boolean value for 
 #' clip, which clips the values to be between -3 and 3 after normalization. See 
 #' https://arxiv.org/abs/2407.04491 
-#' @return An object of class \code{featureEngineeringSettings}'
+#' @return An object of class \code{featureEngineeringSettings}
 #' @examples
 #' # create a minmax normalizer that normalizes the data between 0 and 1
 #' normalizer <- createNormalizer(type = "minmax")

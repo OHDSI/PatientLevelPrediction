@@ -102,16 +102,18 @@ listAppend <- function(a, b) {
 }
 
 
-#' Sets up a python environment to use for PLP (can be conda or venv)
+#' Configure a Python environment manually
 #'
 #' @details
-#' This function creates a python environment that can be used by PatientLevelPrediction
-#' and installs all the required package dependancies. 
+#' PatientLevelPrediction normally lets `reticulate` manage Python requirements
+#' automatically when Python-backed models are used. This helper is retained for
+#' users who need to create a conda or virtualenv environment manually, for
+#' example in offline or locked-down environments.
 #'
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
-#' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
+#' @param envtype   An option for specifying the environment as 'conda' or 'python'. If NULL then the default is 'conda' for Windows users and 'python' for non-Windows users
 #' @param condaPythonVersion String, Python version to use when creating a conda environment
-#' @return location of the created conda or virtual python environment
+#' @return Location of the created conda or virtual Python environment
 #' @examples
 #' \dontshow{ # dontrun reason: don't modify environment in examples }
 #' \dontrun{ 
@@ -137,7 +139,7 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
       location <- reticulate::conda_create(envname = envname, packages = paste0("python==", condaPythonVersion), conda = "auto")
     }
     packages <- c("numpy", "scipy", "scikit-learn", "pandas", "pydotplus", "joblib")
-    ParallelLogger::logInfo(paste0("Adding python dependancies to ", envname))
+    ParallelLogger::logInfo(paste0("Adding python dependencies to ", envname))
     reticulate::conda_install(
       envname = envname, packages = packages, forge = TRUE, pip = FALSE,
       pip_ignore_installed = TRUE, conda = "auto"
@@ -152,7 +154,7 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
       location <- reticulate::virtualenv_create(envname = envname)
     }
     packages <- c("numpy", "scikit-learn", "scipy", "pandas", "pydotplus")
-    ParallelLogger::logInfo(paste0("Adding python dependancies to ", envname))
+    ParallelLogger::logInfo(paste0("Adding python dependencies to ", envname))
     reticulate::virtualenv_install(
       envname = envname, packages = packages,
       ignore_installed = TRUE
@@ -162,27 +164,29 @@ configurePython <- function(envname = "PLP", envtype = NULL, condaPythonVersion 
   return(invisible(location))
 }
 
-#' Use the python environment created using configurePython()
+#' Select a manually configured Python environment
 #'
 #' @details
-#' This function sets PatientLevelPrediction to use a python environment
+#' This function sets PatientLevelPrediction to use a Python environment created
+#' using `configurePython()` or another manual environment setup.
 #'
 #' @param envname   A string for the name of the virtual environment (default is 'PLP')
-#' @param envtype   An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users
+#' @param envtype   An option for specifying the environment as 'conda' or 'python'. If NULL then the default is 'conda' for Windows users and 'python' for non-Windows users
 #'
-#' @return A string indicating the which python environment will be used
+#' @return A string indicating which Python environment will be used
 #' @examples
 #' \dontshow{ # dontrun reason: don't modify environment in examples }
-#' \dontrun{ #' # create a conda environment named PLP
+#' \dontrun{
+#' # create a conda environment named PLP
 #' configurePython(envname="PLP", envtype="conda")
 #' }
 #' @export
 setPythonEnvironment <- function(envname = "PLP", envtype = NULL) {
   if (is.null(envtype)) {
     if (getOs() == "windows") {
-      envtype == "conda"
+      envtype <- "conda"
     } else {
-      envtype == "python"
+      envtype <- "python"
     }
   }
 

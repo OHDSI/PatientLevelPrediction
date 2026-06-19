@@ -217,13 +217,17 @@ diagnoseMultiplePlp <- function(
 #' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
 #'                                   target population who must have a covariate for it to be included in the model training
 #'                                   and whether to normalise the covariates before training
-#' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
+#' @param modelSettings              An object of class \code{modelSettings}, usually created using one of the model setting functions:
 #'                                         \itemize{
 #'                                         \item setLassoLogisticRegression() A lasso logistic regression model
 #'                                         \item setGradientBoostingMachine() A gradient boosting machine
 #'                                         \item setAdaBoost() An ada boost model
 #'                                         \item setRandomForest() A random forest model
 #'                                         \item setDecisionTree() A decision tree model
+#'                                         \item setSVM() A support vector machine model
+#'                                         \item setMLP() A neural network model
+#'                                         \item setNaiveBayes() A naive Bayes model
+#'                                         \item setLightGBM() A LightGBM model
 #'                                         }
 #' @param logSettings           An object of \code{logSettings} created using \code{createLogSettings}
 #'                              specifying how the logging is done

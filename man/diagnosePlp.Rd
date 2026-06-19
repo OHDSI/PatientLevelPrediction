@@ -42,13 +42,17 @@ The default is none.}
 
 \item{featureEngineeringSettings}{An object of \code{featureEngineeringSettings} specifying any feature engineering to be learned (using the train data)}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
+\item{modelSettings}{An object of class \code{modelSettings}, usually created using one of the model setting functions:
 \itemize{
 \item setLassoLogisticRegression() A lasso logistic regression model
 \item setGradientBoostingMachine() A gradient boosting machine
 \item setAdaBoost() An ada boost model
 \item setRandomForest() A random forest model
 \item setDecisionTree() A decision tree model
+\item setSVM() A support vector machine model
+\item setMLP() A neural network model
+\item setNaiveBayes() A naive Bayes model
+\item setLightGBM() A LightGBM model
 }}
 
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
