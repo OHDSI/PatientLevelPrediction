@@ -142,6 +142,7 @@ reference:
       - setGradientBoostingMachine
       - setLassoLogisticRegression
       - setRidgeRegression
+      - setBrokenAdaptiveRidge
       - setMLP
       - setNaiveBayes
       - setRandomForest

@@ -297,6 +297,122 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(seed = "F"))
 })
 
+test_that("set BAR inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  modelSet <- setBrokenAdaptiveRidge(seed = 42)
+  expect_s3_class(modelSet, "modelSettings")
+  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
+  expect_equal(modelSet$settings$modelName, "brokenAdaptiveRidge")
+  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
+  expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, TRUE)
+  expect_equal(modelSet$settings$manualPenaltyCvWarmStart, TRUE)
+  expect_equal(modelSet$settings$useControl, FALSE)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, "auto")
+  expect_equal(modelSet$param$priorParams$penalty, "auto")
+
+  modelSet <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = 0.5,
+    penalty = "logN",
+    penaltyRatio = 0.2,
+    penaltyGridSize = 5,
+    seed = 42
+  )
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, FALSE)
+  expect_equal(modelSet$settings$useControl, TRUE)
+  expect_equal(modelSet$settings$penaltyRatio, 0.2)
+  expect_equal(modelSet$settings$penaltyGridSize, 5)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
+  expect_equal(modelSet$param$priorParams$penalty, "logN")
+  expect_equal(modelSet$param$priorParams$maxIterations, 3000)
+})
+
+test_that("test BAR incorrect inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = "bad"))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = Inf))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = 0))
+  expect_error(setBrokenAdaptiveRidge(penalty = "bad"))
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_character_))
+  expect_error(setBrokenAdaptiveRidge(penalty = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penalty = Inf))
+  expect_error(setBrokenAdaptiveRidge(penalty = 0))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = Inf))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = 1))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = Inf))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5))
+  expect_error(setBrokenAdaptiveRidge(lowerLimit = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(upperLimit = Inf))
+  expect_error(setBrokenAdaptiveRidge(tolerance = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(tolerance = Inf))
+  expect_error(setBrokenAdaptiveRidge(tolerance = 0))
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 1.5))
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 0))
+  expect_error(setBrokenAdaptiveRidge(threshold = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(threshold = Inf))
+  expect_error(setBrokenAdaptiveRidge(threshold = 0))
+})
+
+test_that("BAR penalty grid starts at log(n) / 2", {
+  labels <- data.frame(rowId = seq_len(100))
+
+  grid <- createBarPenaltyGrid(labels, penaltyRatio = 0.1, penaltyGridSize = 3)
+
+  expect_equal(length(grid), 3)
+  expect_equal(grid[1], log(100) / 2)
+  expect_equal(grid[3], 0.1 * log(100) / 2)
+})
+
+test_that("BAR prior parameters resolve auto values", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  outcomes <- data.frame(rowId = seq_len(20), y = rep(c(0, 1), 10))
+  covariates <- data.frame(
+    rowId = seq_len(20),
+    covariateId = rep(100, 20),
+    covariateValue = seq(-1, 1, length.out = 20)
+  )
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = outcomes,
+    covariates = covariates,
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+  modelSettings <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = "auto",
+    penalty = "logN",
+    seed = 42,
+    threads = 1,
+    maxIterations = 1000
+  )
+
+  param <- suppressWarnings(resolveCyclopsPriorParams(
+    param = modelSettings$param,
+    cyclopsData = cyclopsData,
+    labels = outcomes,
+    folds = data.frame(rowId = seq_len(20), index = rep(1, 20)),
+    settings = modelSettings$settings
+  ))
+
+  expect_equal(param$priorParams$penalty, log(nrow(outcomes)) / 2)
+  expect_type(param$priorParams$initialRidgeVariance, "double")
+  expect_true(is.finite(param$priorParams$initialRidgeVariance))
+})
+
 
 
 # ================ FUNCTION TESTING
@@ -443,6 +559,63 @@ test_that("test IHT returns CV predictions", {
   expect_true("(Intercept)" %in% fitModel$model$coefficients$covariateIds)
   expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
   expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+})
+
+test_that("test BAR automatic penalty search runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = "auto",
+        penaltyGridSize = 2,
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
+  expect_true("penalty" %in% colnames(fitModel$trainDetails$hyperParamSearch))
+  expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+  expect_type(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "double")
+  expect_false(identical(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto"))
+})
+
+test_that("test BAR fixed logN penalty runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = "logN",
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barFixedTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
+  expect_equal(
+    fitModel$modelDesign$modelSettings$param$priorParams$penalty,
+    log(nrow(tinyTrainData$labels)) / 2
+  )
 })
 
 test_that("test logistic regression runs", {
