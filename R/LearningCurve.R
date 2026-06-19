@@ -46,14 +46,17 @@
 #' @param preprocessSettings         An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
 #'                                   target population who must have a covariate for it to be included in the model training
 #'                                   and whether to normalise the covariates before training
-#' @param modelSettings              An object of class \code{modelSettings} created using one of the function:
+#' @param modelSettings              An object of class \code{modelSettings}, usually created using one of the model setting functions:
 #'                                         \itemize{
 #'                                         \item \code{setLassoLogisticRegression()} A lasso logistic regression model
 #'                                         \item \code{setGradientBoostingMachine()} A gradient boosting machine
 #'                                         \item \code{setAdaBoost()} An ada boost model
 #'                                         \item \code{setRandomForest()} A random forest model
 #'                                         \item \code{setDecisionTree()} A decision tree model
-#'                                         \item \code{setKNN()} A KNN model
+#'                                         \item \code{setSVM()} A support vector machine model
+#'                                         \item \code{setMLP()} A neural network model
+#'                                         \item \code{setNaiveBayes()} A naive Bayes model
+#'                                         \item \code{setLightGBM()} A LightGBM model
 #'                                         }
 #' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings}
 #'                                   specifying how the logging is done

@@ -2,27 +2,29 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{setPythonEnvironment}
 \alias{setPythonEnvironment}
-\title{Use the python environment created using configurePython()}
+\title{Select a manually configured Python environment}
 \usage{
 setPythonEnvironment(envname = "PLP", envtype = NULL)
 }
 \arguments{
 \item{envname}{A string for the name of the virtual environment (default is 'PLP')}
 
-\item{envtype}{An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users}
+\item{envtype}{An option for specifying the environment as 'conda' or 'python'. If NULL then the default is 'conda' for Windows users and 'python' for non-Windows users}
 }
 \value{
-A string indicating the which python environment will be used
+A string indicating which Python environment will be used
 }
 \description{
-Use the python environment created using configurePython()
+Select a manually configured Python environment
 }
 \details{
-This function sets PatientLevelPrediction to use a python environment
+This function sets PatientLevelPrediction to use a Python environment created
+using \code{configurePython()} or another manual environment setup.
 }
 \examples{
 \dontshow{ # dontrun reason: don't modify environment in examples }
-\dontrun{ #' # create a conda environment named PLP
+\dontrun{
+# create a conda environment named PLP
 configurePython(envname="PLP", envtype="conda")
 }
 }

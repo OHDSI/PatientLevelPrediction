@@ -975,7 +975,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 
 
 #' @title Imputation
-#' @description This function does single imputation with predictive mean matchin
+#' @description This function does single imputation with predictive mean matching
 #' @param trainData The data to be imputed
 #' @param featureEngineeringSettings The settings for the imputation
 #' @param done Whether the imputation has already been done (bool)
