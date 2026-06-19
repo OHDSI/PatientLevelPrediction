@@ -3,7 +3,7 @@
 ## Introduction
 
 This vignette describes how you can add your own custom algorithms in
-the Observational Health Data Sciencs and Informatics (OHDSI)
+the Observational Health Data Sciences and Informatics (OHDSI)
 [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction)
 package. This allows you to fully leverage the OHDSI
 PatientLevelPrediction framework for model development and validation.
@@ -18,9 +18,9 @@ repository](https://github.com/OHDSI/PatientLevelPrediction).**
 ## Algorithm Code Structure
 
 Each algorithm in the package should be implemented in its own
-\<Name\>.R file, e.g. KNN.R, containing a set\<Name\> function, a
-fit\<Name\> function and a predict\<Name\> function. Occasionally the
-fit and prediction functions may be reused (if using an R classifier see
+\<Name\>.R file containing a set\<Name\> function, a fit\<Name\>
+function and a predict\<Name\> function. Occasionally the fit and
+prediction functions may be reused (if using an R classifier see
 RClassifier.R or if using a scikit-learn classifier see
 SklearnClassifier.R). We will now describe each of these functions in
 more detail below.

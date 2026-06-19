@@ -87,7 +87,8 @@ runPlp(
 
 - modelSettings:
 
-  An object of class `modelSettings` created using one of the function:
+  An object of class `modelSettings`, usually created using one of the
+  model setting functions:
 
   - setLassoLogisticRegression() A lasso logistic regression model
 
@@ -99,7 +100,13 @@ runPlp(
 
   - setDecisionTree() A decision tree model
 
-  - setKNN() A KNN model
+  - setSVM() A support vector machine model
+
+  - setMLP() A neural network model
+
+  - setNaiveBayes() A naive Bayes model
+
+  - setLightGBM() A LightGBM model
 
 - hyperparameterSettings:
 

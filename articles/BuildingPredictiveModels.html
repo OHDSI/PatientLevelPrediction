@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2026-06-18</h4>
+            <h4 data-toc-skip class="date">2026-06-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/BuildingPredictiveModels.Rmd" class="external-link"><code>vignettes/BuildingPredictiveModels.Rmd</code></a></small>
       <div class="d-none name"><code>BuildingPredictiveModels.Rmd</code></div>
@@ -306,8 +306,8 @@ lunch). In our package we therefore aim to implement many algorithms.
 Furthermore, we made the system modular so you can add your own custom
 algorithms as described in more detail in
 <code><a href="../articles/AddingCustomModels.html">vignette('AddingCustomModels')</a></code>.</p>
-<p>Our package currently contains the following algorithms to choose
-from:</p>
+<p>Our package contains several algorithms to choose from,
+including:</p>
 <table class="table">
 <colgroup>
 <col width="11%">
@@ -315,7 +315,7 @@ from:</p>
 <col width="27%">
 </colgroup>
 <thead><tr class="header">
-<th>Algorihm</th>
+<th>Algorithm</th>
 <th>Description</th>
 <th>Hyper-parameters</th>
 </tr></thead>
@@ -356,8 +356,8 @@ overfitting, by using weak classifiers, but combining multiple diverse
 weak classifiers into a strong classifier. Random forest accomplishes
 this by training multiple decision trees but only using a subset of the
 variables in each tree and the subset of variables differ between trees.
-Our packages uses the sklearn learn implementation of Random Forest in
-python.</td>
+The implementation uses scikit-learn’s RandomForestClassifier in
+Python.</td>
 <td>mtry (number of features in each tree),ntree (number of trees),
 maxDepth (max levels in tree), minRows (minimum data points in in
 node),balance (balance class labels), seed</td>
@@ -400,20 +400,33 @@ threshold, otherwise it is a leaf.), seed,classWeight (‘Balance’ or
 ‘None’)</td>
 </tr>
 <tr class="odd">
-<td>Multilayer Perception</td>
+<td>Multilayer Perceptron</td>
 <td>Neural networks contain multiple layers that weight their inputs
 using a non-linear function. The first layer is the input layer, the
-last layer is the output layer the between are the hidden layers. Neural
-networks are generally trained using feed forward back-propagation. This
-is when you go through the network with a data-point and calculate the
-error between the true label and predicted label, then go backwards
-through the network and update the linear function weights based on the
-error.</td>
+last layer is the output layer, and the layers between are the hidden
+layers. Neural networks are generally trained using feed forward
+back-propagation. This is when you go through the network with a
+data-point and calculate the error between the true label and predicted
+label, then go backwards through the network and update the linear
+function weights based on the error.</td>
 <td>size (the number of hidden nodes), alpha (the l2 regularisation),
 seed</td>
 </tr>
 <tr class="even">
-<td>Deep Learning (now in seperate DeepPatientLevelPrediction R
+<td>Support vector machine</td>
+<td>Support vector machines learn a separating hyperplane between
+outcome classes and can use kernels to capture non-linear relationships.
+The implementation uses scikit-learn’s SVC in Python.</td>
+<td>C, gamma, kernel, classWeight, seed</td>
+</tr>
+<tr class="odd">
+<td>LightGBM</td>
+<td>LightGBM is a gradient boosting framework based on decision trees
+and can be efficient for large sparse data sets.</td>
+<td>numLeaves, learningRate, minDataInLeaf, nrounds, seed</td>
+</tr>
+<tr class="even">
+<td>Deep Learning (now in separate DeepPatientLevelPrediction R
 package)</td>
 <td>Deep learning such as deep nets, convolutional neural networks or
 recurrent neural networks are similar to a neural network but have
@@ -882,9 +895,8 @@ cohort database schema needs to be selected. There are many additional
 parameters for the <code><a href="../reference/getPlpData.html">getPlpData()</a></code> function which are all
 documented in the <code>PatientLevelPrediction</code> manual. The
 resulting <code>plpData</code> object uses the package
-<code>Andromeda</code> (which uses <a href="https://www.sqlite.org/index.html" class="external-link">SQLite</a>) to store
-information in a way that ensures R does not run out of memory, even
-when the data are large.</p>
+<code>Andromeda</code> to store information on disk in a way that
+ensures R does not run out of memory, even when the data are large.</p>
 <p>Creating the <code>plpData</code> object can take considerable
 computing time, and it is probably a good idea to save it for future
 sessions. Because <code>plpData</code> uses <code>Andromeda</code>, we
@@ -1420,8 +1432,8 @@ defined earlier.</p>
 <h4 id="data-extraction-1">Data extraction<a class="anchor" aria-label="anchor" href="#data-extraction-1"></a>
 </h4>
 <p>Now we can tell <code>PatientLevelPrediction</code> to extract all
-necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link"><code>FeatureExtractionPackage</code></a>.
-In short the FeatureExtractionPackage allows you to specify which
+necessary data for our analysis. This is done using the <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link"><code>FeatureExtraction</code></a>
+package. In short, FeatureExtraction allows you to specify which
 features (covariates) need to be extracted, e.g. all conditions and drug
 exposures. It also supports the creation of custom covariates. For more
 detailed information on the FeatureExtraction package see its <a href="https://github.com/OHDSI/FeatureExtraction" class="external-link">vignettes</a>. For our
@@ -1999,7 +2011,7 @@ community. The table below provides an overview:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Builing Multiple Models</td>
+<td>Building Multiple Models</td>
 <td>This vignette describes how you can run multiple models
 automatically</td>
 <td><code><a href="../articles/BuildingMultiplePredictiveModels.html">vignette('BuildingMultiplePredictiveModels')</a></code></td>

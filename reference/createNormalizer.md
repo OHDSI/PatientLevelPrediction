@@ -1,7 +1,6 @@
-# Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
+# Create the settings for normalizing the data
 
-Create the settings for normalizing the data @param type The type of
-normalization to use, either "minmax" or "robust"
+Create the settings for normalizing the data
 
 ## Usage
 
@@ -25,8 +24,6 @@ createNormalizer(type = "minmax", settings = list())
 ## Value
 
 An object of class `featureEngineeringSettings`
-
-An object of class `featureEngineeringSettings`'
 
 ## Examples
 

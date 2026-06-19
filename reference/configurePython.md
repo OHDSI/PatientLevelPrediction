@@ -1,6 +1,6 @@
-# Sets up a python environment to use for PLP (can be conda or venv)
+# Configure a Python environment manually
 
-Sets up a python environment to use for PLP (can be conda or venv)
+Configure a Python environment manually
 
 ## Usage
 
@@ -16,9 +16,9 @@ configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 
 - envtype:
 
-  An option for specifying the environment as'conda' or 'python'. If
-  NULL then the default is 'conda' for windows users and 'python' for
-  non-windows users
+  An option for specifying the environment as 'conda' or 'python'. If
+  NULL then the default is 'conda' for Windows users and 'python' for
+  non-Windows users
 
 - condaPythonVersion:
 
@@ -26,12 +26,14 @@ configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 
 ## Value
 
-location of the created conda or virtual python environment
+Location of the created conda or virtual Python environment
 
 ## Details
 
-This function creates a python environment that can be used by
-PatientLevelPrediction and installs all the required package
-dependancies.
+PatientLevelPrediction normally lets `reticulate` manage Python
+requirements automatically when Python-backed models are used. This
+helper is retained for users who need to create a conda or virtualenv
+environment manually, for example in offline or locked-down
+environments.
 
 ## Examples

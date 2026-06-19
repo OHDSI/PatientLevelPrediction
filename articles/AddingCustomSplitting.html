@@ -79,7 +79,7 @@
       <h1>Adding Custom Data Splitting</h1>
                         <h4 data-toc-skip class="author">Jenna Reps</h4>
             
-            <h4 data-toc-skip class="date">2026-06-18</h4>
+            <h4 data-toc-skip class="date">2026-06-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/AddingCustomSplitting.Rmd" class="external-link"><code>vignettes/AddingCustomSplitting.Rmd</code></a></small>
       <div class="d-none name"><code>AddingCustomSplitting.Rmd</code></div>
@@ -97,10 +97,10 @@
 </h2>
 <p>This vignette describes how you can add your own custom function for
 splitting the labelled data into training data and validation data in
-the Observational Health Data Sciencs and Informatics (OHDSI) <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
+the Observational Health Data Sciences and Informatics (OHDSI) <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This vignette assumes you have read and are comfortable with
 building single patient level prediction models as described in the
-<code>vignette('BuildingPredictiveModels)</code>. <strong>We invite you
+<code><a href="../articles/BuildingPredictiveModels.html">vignette('BuildingPredictiveModels')</a></code>. <strong>We invite you
 to share your new data splitting functions with the OHDSI community
 through our <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link">GitHub
 repository</a>.</strong></p>
@@ -118,11 +118,12 @@ input, checks these are valid and outputs these as a list of class
 function to call.</p>
 <p>The ‘implement’ function, e.g.,
 implement&lt;DataSplittingFunction&gt;, must take as input: *
-population: a data frame that contain rowId (patient identifier),
-ageYear, gender and outcomeCount (the class labels) * splitSettings -
-the output of your create&lt;DataSplittingFunction&gt;</p>
+population: a data frame containing the study population, including
+rowId and outcomeCount, plus any fields needed by the custom split *
+splitSettings - the output of your
+create&lt;DataSplittingFunction&gt;</p>
 <p>The ‘implement’ function then needs to implement code to assign each
-rowId in the population to a splitId (&lt;0 means in the train data, 0
+rowId in the population to a splitId (&lt;0 means in the test data, 0
 means not used and &gt;0 means in the training data with the value
 defining the cross validation fold).</p>
 </div>

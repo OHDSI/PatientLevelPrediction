@@ -53,8 +53,8 @@ below (T=green, O=red).
 - Includes a large number of state-of-the-art machine learning
   algorithms that can be used to develop predictive models, including
   Regularized logistic regression, Random forest, Gradient boosting
-  machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural
-  network, AdaBoost and Support vector machines.
+  machines, Decision tree, Naive Bayes, Neural network, AdaBoost and
+  Support vector machines.
 - Allows you to add custom algorithms.
 - Allows you to add custom feature engineering
 - Allows you to add custom under/over sampling (or any other sampling)
@@ -88,16 +88,17 @@ through reticulate.
 
 # System Requirements
 
-Requires R (version 4.0 or higher). Installation on Windows requires
-[RTools](https://cran.r-project.org/bin/windows/Rtools/). Libraries used
-in PatientLevelPrediction require Java and Python.
+Requires R (version 4.1 or higher). Installation on Windows requires
+[RTools](https://cran.r-project.org/bin/windows/Rtools/). Some optional
+functionality requires Java or Python.
 
-Some machine learning algorithms require python. Reticulate will manage
-python automatically using uv
+Some machine learning algorithms require Python. Reticulate will manage
+Python automatically using uv
 (<https://docs.astral.sh/uv/getting-started/>). If you’re in an offline
-environment you can manage python in any way you want and set the
-`RETICULATE_PYTYHON` environment variable to the python binary. You will
-only need to install `scikit-learn` into that environment.
+environment you can manage Python in any way you want and set the
+`RETICULATE_PYTHON` environment variable to the Python binary. The
+Python environment must include the packages needed by the selected
+model, including `scikit-learn`.
 
 # Getting Started
 

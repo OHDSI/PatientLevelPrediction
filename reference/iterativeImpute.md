@@ -1,6 +1,6 @@
 # Imputation
 
-This function does single imputation with predictive mean matchin
+This function does single imputation with predictive mean matching
 
 ## Usage
 

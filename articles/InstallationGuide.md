@@ -14,7 +14,7 @@ package under Windows, Mac, and Linux.
 Under Windows the OHDSI Patient Level Prediction (PLP) package requires
 installing:
 
-- R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is
+- R (<https://cran.r-project.org/> ) - (R \>= 4.1.0, but latest is
   recommended)
 - Rstudio (<https://posit.co/> )
 - Java
@@ -25,7 +25,7 @@ installing:
 Under Mac and Linux the OHDSI Patient Level Prediction (PLP) package
 requires installing:
 
-- R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is
+- R (<https://cran.r-project.org/> ) - (R \>= 4.1.0, but latest is
   recommended)
 - Rstudio (<https://posit.co/> )
 - Java
@@ -58,17 +58,24 @@ When installing make sure to close any other Rstudio sessions that are
 using `PatientLevelPrediction` or any dependency. Keeping Rstudio
 sessions open can cause locks that prevent the package installing.
 
-## Creating Python Reticulate Environment
+## Python environment
 
-Many of the classifiers in the `PatientLevelPrediction` use a Python
-backend. To set up a python environment run:
+Some classifiers in `PatientLevelPrediction` use a Python backend. In a
+standard online environment, `reticulate` will manage the Python
+requirements automatically when a Python model is used.
+
+If you are in an offline or locked-down environment, configure Python
+outside `PatientLevelPrediction` and point `reticulate` to that Python
+binary before loading the package:
 
 ``` r
 
+Sys.setenv(RETICULATE_PYTHON = "/path/to/python")
 library(PatientLevelPrediction)
-reticulate::install_miniconda()
-configurePython(envname = "r-reticulate", envtype = "conda")
 ```
+
+The Python environment must include the packages needed by the selected
+model, including `scikit-learn`.
 
 ## Installation issues
 
@@ -89,36 +96,11 @@ The list below provides solutions for some common issues:
 
 ### Common issues
 
-#### python environment Mac/linux users:
+#### Python environment Mac/Linux users
 
-to make sure R uses the r-reticulate python environment you may need to
-edit your .Rprofile with the location of the python binary for the PLP
-environment. Edit the .Rprofile by running:
-
-``` r
-
-usethis::edit_r_profile()
-```
-
-and add
-
-``` r
-
-Sys.setenv(PATH = paste("your python bin location", Sys.getenv("PATH"), sep = ":"))
-```
-
-to the file then save. Where your python bin location is the location
-returned by
-
-``` r
-
-reticulate::conda_list()
-```
-
-e.g., My PLP virtual environment location was
-/anaconda3/envs/PLP/bin/python so I added:  
-Sys.setenv(PATH = paste(“/anaconda3/envs/PLP/bin”, Sys.getenv(“PATH”),
-sep=“:”))
+If `reticulate` is not selecting the intended Python environment, set
+the `RETICULATE_PYTHON` environment variable to the full path of the
+Python binary before loading `PatientLevelPrediction`.
 
 ## Acknowledgments
 

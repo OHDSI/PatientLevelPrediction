@@ -4,12 +4,13 @@
 
 This vignette describes how you can add your own custom function for
 splitting the labelled data into training data and validation data in
-the Observational Health Data Sciencs and Informatics (OHDSI)
+the Observational Health Data Sciences and Informatics (OHDSI)
 [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction)
 package. This vignette assumes you have read and are comfortable with
 building single patient level prediction models as described in the
-`vignette('BuildingPredictiveModels)`. **We invite you to share your new
-data splitting functions with the OHDSI community through our [GitHub
+[`vignette('BuildingPredictiveModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingPredictiveModels.md).
+**We invite you to share your new data splitting functions with the
+OHDSI community through our [GitHub
 repository](https://github.com/OHDSI/PatientLevelPrediction).**
 
 ## Data Splitting Function Code Structure
@@ -24,12 +25,13 @@ these are valid and outputs these as a list of class ‘splitSettings’
 with the ‘fun’ attribute specifying the ‘implement’ function to call.
 
 The ‘implement’ function, e.g., implement\<DataSplittingFunction\>, must
-take as input: \* population: a data frame that contain rowId (patient
-identifier), ageYear, gender and outcomeCount (the class labels) \*
-splitSettings - the output of your create\<DataSplittingFunction\>
+take as input: \* population: a data frame containing the study
+population, including rowId and outcomeCount, plus any fields needed by
+the custom split \* splitSettings - the output of your
+create\<DataSplittingFunction\>
 
 The ‘implement’ function then needs to implement code to assign each
-rowId in the population to a splitId (\<0 means in the train data, 0
+rowId in the population to a splitId (\<0 means in the test data, 0
 means not used and \>0 means in the training data with the value
 defining the cross validation fold).
 

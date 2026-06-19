@@ -80,7 +80,7 @@
                         <h4 data-toc-skip class="author">Jenna Reps,
 Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
             
-            <h4 data-toc-skip class="date">2026-06-18</h4>
+            <h4 data-toc-skip class="date">2026-06-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/vignettes/AddingCustomModels.Rmd" class="external-link"><code>vignettes/AddingCustomModels.Rmd</code></a></small>
       <div class="d-none name"><code>AddingCustomModels.Rmd</code></div>
@@ -97,7 +97,7 @@ Martijn J. Schuemie, Patrick B. Ryan, Peter R. Rijnbeek</h4>
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
 <p>This vignette describes how you can add your own custom algorithms in
-the Observational Health Data Sciencs and Informatics (OHDSI) <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
+the Observational Health Data Sciences and Informatics (OHDSI) <a href="https://github.com/OHDSI/PatientLevelPrediction" class="external-link"><code>PatientLevelPrediction</code></a>
 package. This allows you to fully leverage the OHDSI
 PatientLevelPrediction framework for model development and validation.
 This vignette assumes you have read and are comfortable with building
@@ -111,8 +111,8 @@ repository</a>.</strong></p>
 <h2 id="algorithm-code-structure">Algorithm Code Structure<a class="anchor" aria-label="anchor" href="#algorithm-code-structure"></a>
 </h2>
 <p>Each algorithm in the package should be implemented in its own
-&lt;Name&gt;.R file, e.g. KNN.R, containing a set&lt;Name&gt; function,
-a fit&lt;Name&gt; function and a predict&lt;Name&gt; function.
+&lt;Name&gt;.R file containing a set&lt;Name&gt; function, a
+fit&lt;Name&gt; function and a predict&lt;Name&gt; function.
 Occasionally the fit and prediction functions may be reused (if using an
 R classifier see RClassifier.R or if using a scikit-learn classifier see
 SklearnClassifier.R). We will now describe each of these functions in

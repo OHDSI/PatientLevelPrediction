@@ -83,8 +83,7 @@ Settings for optional steps that can be used in the PLP pipeline
 - [`createStratifiedImputationSettings()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createStratifiedImputationSettings.md)
   : Create the settings for using stratified imputation.
 - [`createNormalizer()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createNormalizer.md)
-  : Create the settings for normalizing the data @param type The type of
-  normalization to use, either "minmax" or "robust"
+  : Create the settings for normalizing the data
 - [`createSimpleImputer()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createSimpleImputer.md)
   : Create Simple Imputer settings
 - [`createIterativeImputer()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createIterativeImputer.md)
@@ -353,9 +352,9 @@ Functions for manipulating data
 - [`createTempModelLoc()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createTempModelLoc.md)
   : Create a temporary model location
 - [`configurePython()`](https://ohdsi.github.io/PatientLevelPrediction/reference/configurePython.md)
-  : Sets up a python environment to use for PLP (can be conda or venv)
+  : Configure a Python environment manually
 - [`setPythonEnvironment()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setPythonEnvironment.md)
-  : Use the python environment created using configurePython()
+  : Select a manually configured Python environment
 
 ## Evaluation measures
 

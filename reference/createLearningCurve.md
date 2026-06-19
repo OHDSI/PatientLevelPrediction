@@ -50,7 +50,8 @@ createLearningCurve(
 
 - modelSettings:
 
-  An object of class `modelSettings` created using one of the function:
+  An object of class `modelSettings`, usually created using one of the
+  model setting functions:
 
   - [`setLassoLogisticRegression()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setLassoLogisticRegression.md)
     A lasso logistic regression model
@@ -67,7 +68,17 @@ createLearningCurve(
   - [`setDecisionTree()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setDecisionTree.md)
     A decision tree model
 
-  - `setKNN()` A KNN model
+  - [`setSVM()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setSVM.md)
+    A support vector machine model
+
+  - [`setMLP()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setMLP.md)
+    A neural network model
+
+  - [`setNaiveBayes()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setNaiveBayes.md)
+    A naive Bayes model
+
+  - [`setLightGBM()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setLightGBM.md)
+    A LightGBM model
 
 - saveDirectory:
 

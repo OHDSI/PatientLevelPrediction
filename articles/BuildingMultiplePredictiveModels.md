@@ -10,15 +10,16 @@ framework is the first to enforce existing best practice guidelines and
 will enable open dissemination of models that can be extensively
 validated across the network of OHDSI collaborators.
 
-One our best practices is that we see the selection of models and all
-study setting as an emperical question, i.e. we should use a data-driven
-approach in which we try many settings. This vignette describes how you
-can use the Observational Health Data Sciencs and Informatics (OHDSI)
+One of our best practices is that we see the selection of models and all
+study settings as an empirical question, i.e. we should use a
+data-driven approach in which we try many settings. This vignette
+describes how you can use the Observational Health Data Sciences and
+Informatics (OHDSI)
 [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction)
 package to automatically build multiple patient-level predictive models,
-e.g. different population settings, covariate settings, and
-modelsetting. This vignette assumes you have read and are comfortable
-with building single patient level prediction models as described in the
+e.g. different population settings, covariate settings, and model
+settings. This vignette assumes you have read and are comfortable with
+building single patient level prediction models as described in the
 [`vignette('BuildingPredictiveModels')`](https://ohdsi.github.io/PatientLevelPrediction/articles/BuildingPredictiveModels.md).
 
 Note that it is also possible to generate a Study Package directly in

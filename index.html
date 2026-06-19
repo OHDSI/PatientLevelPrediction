@@ -97,7 +97,7 @@
 <li>Extracts the necessary data from a database in OMOP Common Data Model format for multiple covariate settings.</li>
 <li>Uses a large set of covariates including for example all drugs, diagnoses, procedures, as well as age, comorbidity indexes, and custom covariates.</li>
 <li>Allows you to add custom covariates or cohort covariates.</li>
-<li>Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, K-nearest neighbours, Neural network, AdaBoost and Support vector machines.</li>
+<li>Includes a large number of state-of-the-art machine learning algorithms that can be used to develop predictive models, including Regularized logistic regression, Random forest, Gradient boosting machines, Decision tree, Naive Bayes, Neural network, AdaBoost and Support vector machines.</li>
 <li>Allows you to add custom algorithms.</li>
 <li>Allows you to add custom feature engineering</li>
 <li>Allows you to add custom under/over sampling (or any other sampling) [note: based on existing research this is not recommended]</li>
@@ -144,8 +144,8 @@ ROC Plot
 <div class="section level1">
 <h1 id="system-requirements">System Requirements<a class="anchor" aria-label="anchor" href="#system-requirements"></a>
 </h1>
-<p>Requires R (version 4.0 or higher). Installation on Windows requires <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">RTools</a>. Libraries used in PatientLevelPrediction require Java and Python.</p>
-<p>Some machine learning algorithms require python. Reticulate will manage python automatically using uv (<a href="https://docs.astral.sh/uv/getting-started/" class="external-link uri">https://docs.astral.sh/uv/getting-started/</a>). If you’re in an offline environment you can manage python in any way you want and set the <code>RETICULATE_PYTYHON</code> environment variable to the python binary. You will only need to install <code>scikit-learn</code> into that environment.</p>
+<p>Requires R (version 4.1 or higher). Installation on Windows requires <a href="https://cran.r-project.org/bin/windows/Rtools/" class="external-link">RTools</a>. Some optional functionality requires Java or Python.</p>
+<p>Some machine learning algorithms require Python. Reticulate will manage Python automatically using uv (<a href="https://docs.astral.sh/uv/getting-started/" class="external-link uri">https://docs.astral.sh/uv/getting-started/</a>). If you’re in an offline environment you can manage Python in any way you want and set the <code>RETICULATE_PYTHON</code> environment variable to the Python binary. The Python environment must include the packages needed by the selected model, including <code>scikit-learn</code>.</p>
 </div>
 <div class="section level1">
 <h1 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>

@@ -1,6 +1,6 @@
-# Use the python environment created using configurePython()
+# Select a manually configured Python environment
 
-Use the python environment created using configurePython()
+Select a manually configured Python environment
 
 ## Usage
 
@@ -16,16 +16,19 @@ setPythonEnvironment(envname = "PLP", envtype = NULL)
 
 - envtype:
 
-  An option for specifying the environment as'conda' or 'python'. If
-  NULL then the default is 'conda' for windows users and 'python' for
-  non-windows users
+  An option for specifying the environment as 'conda' or 'python'. If
+  NULL then the default is 'conda' for Windows users and 'python' for
+  non-Windows users
 
 ## Value
 
-A string indicating the which python environment will be used
+A string indicating which Python environment will be used
 
 ## Details
 
-This function sets PatientLevelPrediction to use a python environment
+This function sets PatientLevelPrediction to use a Python environment
+created using
+[`configurePython()`](https://ohdsi.github.io/PatientLevelPrediction/reference/configurePython.md)
+or another manual environment setup.
 
 ## Examples
