@@ -18,8 +18,7 @@ setBrokenAdaptiveRidge(
   lowerLimit = 0.01,
   tolerance = 2e-06,
   maxIterations = 3000,
-  threshold = 1e-06,
-  prior = "regular"
+  threshold = 1e-06
 )
 }
 \arguments{
@@ -56,8 +55,6 @@ from successive iterations to achieve convergence.}
 returning a failed-to-converge error.}
 
 \item{threshold}{Numeric BAR threshold.}
-
-\item{prior}{Which BAR prior implementation to use: \code{"regular"} or \code{"fast"}.}
 }
 \value{
 \code{modelSettings} object
