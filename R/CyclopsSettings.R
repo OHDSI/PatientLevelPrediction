@@ -403,7 +403,6 @@ setIterativeHardThresholding <- function(
 #' @param maxIterations Integer: maximum iterations of Cyclops to attempt before
 #'   returning a failed-to-converge error.
 #' @param threshold Numeric BAR threshold.
-#' @param prior Which BAR prior implementation to use: `"regular"` or `"fast"`.
 #'
 #' @return `modelSettings` object
 #'
@@ -424,8 +423,7 @@ setBrokenAdaptiveRidge <- function(
     lowerLimit = 0.01,
     tolerance = 2e-06,
     maxIterations = 3000,
-    threshold = 1e-06,
-    prior = "regular") {
+    threshold = 1e-06) {
   rlang::check_installed("BrokenAdaptiveRidge")
 
   checkIsClass(seed, c("numeric", "NULL", "integer"))
@@ -433,45 +431,53 @@ setBrokenAdaptiveRidge <- function(
     seed <- as.integer(sample(100000000, 1))
   }
   checkIsClass(threads, c("numeric", "integer"))
+  checkSingleFiniteNumeric(threads)
   checkIsClass(initialRidgeVariance, c("numeric", "integer", "character"))
   if (length(initialRidgeVariance) != 1) {
     stop("initialRidgeVariance must be a single value")
   }
-  if (inherits(initialRidgeVariance, "character") && !identical(initialRidgeVariance, "auto")) {
-    stop('initialRidgeVariance must be numeric or "auto"')
+  if (inherits(initialRidgeVariance, "character")) {
+    checkInStringVector(initialRidgeVariance, "auto")
+  } else {
+    checkSingleFiniteNumeric(initialRidgeVariance)
+    checkHigher(initialRidgeVariance, 0)
   }
   checkIsClass(penalty, c("numeric", "integer", "character"))
   if (length(penalty) != 1) {
     stop("penalty must be a single value")
   }
-  if (inherits(penalty, "character") && !penalty %in% c("auto", "logN")) {
-    stop('penalty must be numeric, "auto", or "logN"')
+  if (inherits(penalty, "character")) {
+    checkInStringVector(penalty, c("auto", "logN"))
+  } else {
+    checkSingleFiniteNumeric(penalty)
+    checkHigher(penalty, 0)
   }
   checkIsClass(penaltyRatio, c("numeric", "integer"))
+  checkSingleFiniteNumeric(penaltyRatio)
   checkHigherEqual(penaltyRatio, 0)
   if (length(penaltyRatio) != 1 || penaltyRatio <= 0 || penaltyRatio >= 1) {
     stop("penaltyRatio must be a single value greater than 0 and less than 1")
   }
   checkIsClass(penaltyGridSize, c("numeric", "integer"))
-  if (length(penaltyGridSize) != 1 || penaltyGridSize < 1 || penaltyGridSize != floor(penaltyGridSize)) {
-    stop("penaltyGridSize must be a single positive whole number")
-  }
+  checkIsWholeNumber(penaltyGridSize)
+  checkHigher(penaltyGridSize, 0)
   checkIsClass(lowerLimit, c("numeric", "integer"))
   checkIsClass(upperLimit, c("numeric", "integer"))
+  checkSingleFiniteNumeric(lowerLimit)
+  checkSingleFiniteNumeric(upperLimit)
   checkHigherEqual(upperLimit, lowerLimit)
   if (!is.logical(forceIntercept)) {
     stop("forceIntercept must be of type: logical")
   }
-
-  prior <- tolower(prior[1])
-  if (!prior %in% c("regular", "fast")) {
-    stop('prior must be "regular" or "fast"')
-  }
-  priorFunction <- if (identical(prior, "fast")) {
-    "BrokenAdaptiveRidge::createFastBarPrior"
-  } else {
-    "BrokenAdaptiveRidge::createBarPrior"
-  }
+  checkIsClass(tolerance, c("numeric", "integer"))
+  checkSingleFiniteNumeric(tolerance)
+  checkHigher(tolerance, 0)
+  checkIsClass(maxIterations, c("numeric", "integer"))
+  checkIsWholeNumber(maxIterations)
+  checkHigher(maxIterations, 0)
+  checkIsClass(threshold, c("numeric", "integer"))
+  checkSingleFiniteNumeric(threshold)
+  checkHigher(threshold, 0)
 
   param <- list(
     priorParams = list(
@@ -492,7 +498,7 @@ setBrokenAdaptiveRidge <- function(
     modelName = "brokenAdaptiveRidge",
     modelType = "binary",
     cyclopsModelType = "logistic",
-    priorfunction = priorFunction,
+    priorfunction = "BrokenAdaptiveRidge::createBarPrior",
     selectorType = "byPid",
     crossValidationInPrior = FALSE,
     addIntercept = TRUE,

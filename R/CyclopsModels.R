@@ -618,10 +618,17 @@ resolveCyclopsPriorParams <- function(
       useCrossValidation = max(folds$index) > 1
     )
     normalControl <- Cyclops::createControl(
+      cvType = "auto",
       fold = max(folds$index),
+      lowerLimit = param$lowerLimit,
+      upperLimit = param$upperLimit,
+      tolerance = settings$tolerance,
+      cvRepetitions = 1,
+      selectorType = settings$selectorType,
+      noiseLevel = "silent",
       threads = settings$threads,
-      seed = settings$seed,
-      noiseLevel = "silent"
+      maxIterations = settings$maxIterations,
+      seed = settings$seed
     )
 
     ridgeFit <- tryCatch(
@@ -656,6 +663,13 @@ doCyclopsCvPenalty <- function(
     penaltyRatio = modelSettings$settings$penaltyRatio,
     penaltyGridSize = modelSettings$settings$penaltyGridSize
   )
+  control <- Cyclops::createControl(
+    tolerance = modelSettings$settings$tolerance,
+    noiseLevel = "silent",
+    threads = modelSettings$settings$threads,
+    maxIterations = modelSettings$settings$maxIterations,
+    seed = modelSettings$settings$seed
+  )
 
   ParallelLogger::logInfo("Performing hyperparameter tuning to determine best BAR penalty")
   labels <- merge(trainData$covariateData$labels, trainData$folds, by = "rowId")
@@ -678,6 +692,7 @@ doCyclopsCvPenalty <- function(
       subsetFit <- suppressWarnings(Cyclops::fitCyclopsModel(
         cyclopsData,
         prior = cvPrior,
+        control = control,
         weights = weights,
         fixedCoefficients = fixedCoefficients,
         startingCoefficients = foldStartingCoefficients
@@ -745,6 +760,7 @@ doCyclopsCvPenalty <- function(
       Cyclops::fitCyclopsModel(
         cyclopsData = cyclopsData,
         prior = prior,
+        control = control,
         fixedCoefficients = fixedCoefficients,
         startingCoefficients = startingCoefficients
       )
