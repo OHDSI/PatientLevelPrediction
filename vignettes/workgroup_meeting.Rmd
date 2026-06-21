@@ -1,0 +1,25 @@
+---
+title: "Workgroup Meeting"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+---
+
+# PatientLevelPrediction calendar workgroup meetings 
+Meeting occurs on the 2nd wednesday of each month at 11am ET.
+
+## 9-Apr 2025
+[tentative] presentation by Sahar Hanifi
+
+## 12-Mar 2025
+[tentative] Lightning talks on collaborative research ideas
+
+## 12-Feb 2025
+Presentation by Jared Houghtaling: "End-to-End Workflow for Integrating GIS-Specific Data into Patient-Level Prediction Models"
+
+## 8-Jan 2025
+Discussion on ORKs for 2025
+
+# To join the meeting
+[Please use this meeting link](https://nam04.safelinks.protection.outlook.com/ap/t-59584e83/?url=https%3A%2F%2Fteams.microsoft.com%2Fl%2Fmeetup-join%2F19%253ajYxQC7CUsmEGeyr1NfblldusRp3BHD7OO1O5InU-n0k1%2540thread.tacv2%2F1667903573785%3Fcontext%3D%257b%2522Tid%2522%253a%2522a30f0094-9120-4aab-ba4c-e5509023b2d5%2522%252c%2522Oid%2522%253a%25227be9640a-6928-4630-ab41-04daf3afc603%2522%257d&data=05%7C01%7Cjreps%40its.jnj.com%7C68aa07478333476ac2bc08dade7ab590%7C3ac94b33913548219502eafda6592a35%7C0%7C0%7C638066915887283005%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000%7C%7C%7C&sdata=dT%2FeuDAzBE6riutMZrkOSfRR%2B7GW2cMwZJ5dyARgWKs%3D&reserved=0)
