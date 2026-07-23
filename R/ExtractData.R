@@ -32,12 +32,23 @@
 #'                                     beyond the study end date will be considered.
 #' @param firstExposureOnly            Should only the first exposure per subject be included? Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
-#'                                     but can already be done here for efficiency reasons.
-#' @param washoutPeriod                The mininum required continuous observation time prior to index
+#'                                     but can already be done here for efficiency reasons. Deprecated:
+#'                                     use \code{limitToFirstInNDays} instead.
+#' @param limitToFirstInNDays          Restrict repeated target entries per person by only keeping the first
+#'                                     entry within each N-day window. If this is set, it takes precedence
+#'                                     over \code{firstExposureOnly}.
+#' @param minPriorObservation          The minimum required continuous observation time prior to index
 #'                                     date for a person to be included in the at risk cohort. Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
-#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
+#' @param washoutPeriod                Deprecated: use \code{minPriorObservation}. Kept for backward
+#'                                     compatibility.
+#' @param minAge                       Minimum age (inclusive) at index date.
+#' @param maxAge                       Maximum age (inclusive) at index date.
+#' @param genderConceptIds             Optional vector of OMOP gender concept IDs to include.
+#' @param nestingCohortId              Optional cohort definition ID used as a nesting cohort. Target entries
+#'                                     are retained only when they occur within this nesting cohort period.
+#' @param sampleSize                   If not NULL, the number of people to sample from the target cohort
 #'
 #' @return
 #' A setting object of class \code{restrictPlpDataSettings} containing a list of
@@ -45,20 +56,32 @@
 #' \item{`studyStartDate`: A calendar date specifying the minimum date that a cohort index date can appear}
 #' \item{`studyEndDate`: A calendar date specifying the maximum date that a cohort index date can appear}
 #' \item{`firstExposureOnly`: Should only the first exposure per subject be included}
-#' \item{`washoutPeriod`: The mininum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+#' \item{`limitToFirstInNDays`: Keep only the first target entry in each N-day window per person}
+#' \item{`minPriorObservation`: The minimum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+#' \item{`washoutPeriod`: Deprecated alias of `minPriorObservation` for backward compatibility}
+#' \item{`minAge`: Minimum age (inclusive) at index date}
+#' \item{`maxAge`: Maximum age (inclusive) at index date}
+#' \item{`genderConceptIds`: Optional vector of OMOP gender concept IDs to include}
+#' \item{`nestingCohortId`: Optional cohort definition ID used as a nesting cohort}
 #' \item{`sampleSize`: If not NULL, the number of people to sample from the target cohort}
 #' }
 #' @examples
-#' # restrict to 2010, first exposure only, require washout period of 365 day
+#' # restrict to 2010, first exposure only, require 365 days of prior observation
 #' # and sample 1000 people
 #' createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
-#' firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)
+#' firstExposureOnly = TRUE, minPriorObservation = 365, sampleSize = 1000)
 #' @export
 createRestrictPlpDataSettings <- function(
     studyStartDate = "",
     studyEndDate = "",
     firstExposureOnly = FALSE,
-    washoutPeriod = 0,
+    limitToFirstInNDays = NULL,
+    minPriorObservation = 0,
+    washoutPeriod = NULL,
+    minAge = NULL,
+    maxAge = NULL,
+    genderConceptIds = NULL,
+    nestingCohortId = NULL,
     sampleSize = NULL) {
   if (studyStartDate != "" && regexpr("^[12][0-9]{3}[01][0-9][0-3][0-9]$", studyStartDate) == -1) {
     stop("Study start date must have format YYYYMMDD")
@@ -68,13 +91,63 @@ createRestrictPlpDataSettings <- function(
   }
 
   # add input checks
+  if (!is.null(limitToFirstInNDays)) {
+    checkIsClass(limitToFirstInNDays, c("integer", "numeric"))
+    if (limitToFirstInNDays <= 0) {
+      stop("limitToFirstInNDays must be > 0 when specified")
+    }
+  }
+  checkIsClass(minPriorObservation, c("integer", "numeric"))
+  if (!is.null(minAge)) {
+    checkIsClass(minAge, c("integer", "numeric"))
+  }
+  if (!is.null(maxAge)) {
+    checkIsClass(maxAge, c("integer", "numeric"))
+  }
+  if (!is.null(minAge) && !is.null(maxAge) && minAge > maxAge) {
+    stop("minAge must be <= maxAge")
+  }
+  if (!is.null(genderConceptIds)) {
+    checkIsClass(genderConceptIds, c("integer", "numeric"))
+    if (length(genderConceptIds) == 0) {
+      genderConceptIds <- NULL
+    }
+  }
+  if (!is.null(nestingCohortId)) {
+    checkIsClass(nestingCohortId, c("integer", "numeric"))
+    if (length(nestingCohortId) != 1) {
+      stop("nestingCohortId must be a single integer")
+    }
+  }
+  if (!is.null(washoutPeriod)) {
+    checkIsClass(washoutPeriod, c("integer", "numeric"))
+    warning("washoutPeriod is deprecated and will be removed in a future release. Please use minPriorObservation instead.", call. = FALSE)
+    if (!identical(minPriorObservation, 0)) {
+      warning("Both minPriorObservation and washoutPeriod were specified. minPriorObservation will be used and washoutPeriod ignored.", call. = FALSE)
+    } else {
+      minPriorObservation <- washoutPeriod
+    }
+  }
   checkIsClass(sampleSize, c("integer", "numeric", "NULL"))
+
+  if (isTRUE(firstExposureOnly)) {
+    warning("firstExposureOnly is deprecated and will be removed in a future release. Please use limitToFirstInNDays instead.", call. = FALSE)
+  }
+  if (!is.null(limitToFirstInNDays) && isTRUE(firstExposureOnly)) {
+    warning("Both limitToFirstInNDays and firstExposureOnly were specified. limitToFirstInNDays will be used and firstExposureOnly ignored.", call. = FALSE)
+  }
 
   result <- list(
     studyStartDate = studyStartDate,
     studyEndDate = studyEndDate,
     firstExposureOnly = firstExposureOnly,
-    washoutPeriod = washoutPeriod,
+    limitToFirstInNDays = limitToFirstInNDays,
+    minPriorObservation = minPriorObservation,
+    washoutPeriod = minPriorObservation,
+    minAge = minAge,
+    maxAge = maxAge,
+    genderConceptIds = genderConceptIds,
+    nestingCohortId = nestingCohortId,
     sampleSize = sampleSize
   )
 
@@ -106,6 +179,9 @@ createRestrictPlpDataSettings <- function(
 #' @param cohortTable                    The tablename that contains the target cohorts.  Expectation is cohortTable
 #'                                       has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID,
 #'                                       COHORT_START_DATE, COHORT_END_DATE.
+#' @param nestingCohortSchema            The database schema containing the nesting cohort table. Defaults to
+#'                                       \code{cohortDatabaseSchema}.
+#' @param nestingCohortTable             The table containing nesting cohorts. Defaults to \code{cohortTable}.
 #' @param outcomeDatabaseSchema          The name of the database schema that is the location where the
 #'                                       data used to define the outcome cohorts is available. Requires read permissions to
 #'                                       this database.
@@ -126,6 +202,8 @@ createRestrictPlpDataSettings <- function(
 #' \item{`tempEmulationSchema`: The name of a databae schema where you want all temporary tables to be managed. Requires create/insert permissions to this database.}
 #' \item{`cohortDatabaseSchema`: The name of the database schema that is the location where the target cohorts are available. Requires read permissions to this schema.}
 #' \item{`cohortTable`: The tablename that contains the target cohorts. Expectation is cohortTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+#' \item{`nestingCohortSchema`: The name of the database schema that contains nesting cohorts. Defaults to cohortDatabaseSchema.}
+#' \item{`nestingCohortTable`: The table that contains nesting cohorts. Defaults to cohortTable.}
 #' \item{`outcomeDatabaseSchema`: The name of the database schema that is the location where the data used to define the outcome cohorts is available. Requires read permissions to this database.}
 #' \item{`outcomeTable`: The tablename that contains the outcome cohorts. Expectation is outcomeTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 #' \item{`targetId`: An integer specifying the cohort id for the target cohort}
@@ -142,6 +220,8 @@ createRestrictPlpDataSettings <- function(
 #'   cdmDatabaseName = "main",
 #'   cohortDatabaseSchema = "main",
 #'   cohortTable = "cohort",
+#'   nestingCohortSchema = "main",
+#'   nestingCohortTable = "cohort",
 #'   outcomeDatabaseSchema = "main",
 #'   outcomeTable = "cohort",
 #'   targetId = 1, # users of celecoxib
@@ -157,6 +237,8 @@ createDatabaseDetails <- function(
     tempEmulationSchema = cdmDatabaseSchema,
     cohortDatabaseSchema = cdmDatabaseSchema,
     cohortTable = "cohort",
+    nestingCohortSchema = cohortDatabaseSchema,
+    nestingCohortTable = cohortTable,
     outcomeDatabaseSchema = cohortDatabaseSchema,
     outcomeTable = cohortTable,
     targetId = NULL,
@@ -197,6 +279,8 @@ createDatabaseDetails <- function(
     tempEmulationSchema = tempEmulationSchema,
     cohortDatabaseSchema = cohortDatabaseSchema,
     cohortTable = cohortTable,
+    nestingCohortSchema = nestingCohortSchema,
+    nestingCohortTable = nestingCohortTable,
     outcomeDatabaseSchema = outcomeDatabaseSchema,
     outcomeTable = outcomeTable,
     targetId = targetId,
@@ -338,15 +422,33 @@ getPlpData <- function(
     cdm_database_schema = databaseDetails$cdmDatabaseSchema,
     cohort_database_schema = databaseDetails$cohortDatabaseSchema,
     cohort_table = databaseDetails$cohortTable,
+    nesting_cohort_schema = databaseDetails$nestingCohortSchema,
+    nesting_cohort_table = databaseDetails$nestingCohortTable,
     cdm_version = databaseDetails$cdmVersion,
     target_id = databaseDetails$targetId
   )
 
   if (!is.null(restrictPlpDataSettings)) {
+    useLimitToFirstInNDays <- !is.null(restrictPlpDataSettings$limitToFirstInNDays)
+
     renderArgs$study_start_date <- restrictPlpDataSettings$studyStartDate
     renderArgs$study_end_date <- restrictPlpDataSettings$studyEndDate
-    renderArgs$first_only <- restrictPlpDataSettings$firstExposureOnly
-    renderArgs$washout_period <- restrictPlpDataSettings$washoutPeriod
+    renderArgs$first_only <- isTRUE(restrictPlpDataSettings$firstExposureOnly) && !useLimitToFirstInNDays
+    renderArgs$use_limit_to_first_n_days <- useLimitToFirstInNDays
+    renderArgs$limit_to_first_n_days <- restrictPlpDataSettings$limitToFirstInNDays
+    if (!is.null(restrictPlpDataSettings$minPriorObservation)) {
+      renderArgs$washout_period <- restrictPlpDataSettings$minPriorObservation
+    } else {
+      renderArgs$washout_period <- restrictPlpDataSettings$washoutPeriod
+    }
+    renderArgs$use_min_age <- !is.null(restrictPlpDataSettings$minAge)
+    renderArgs$min_age <- restrictPlpDataSettings$minAge
+    renderArgs$use_max_age <- !is.null(restrictPlpDataSettings$maxAge)
+    renderArgs$max_age <- restrictPlpDataSettings$maxAge
+    renderArgs$use_gender <- !is.null(restrictPlpDataSettings$genderConceptIds)
+    renderArgs$gender_concept_ids <- restrictPlpDataSettings$genderConceptIds
+    renderArgs$use_nesting_cohort <- !is.null(restrictPlpDataSettings$nestingCohortId)
+    renderArgs$nesting_cohort_id <- restrictPlpDataSettings$nestingCohortId
     renderArgs$use_sample <- !is.null(restrictPlpDataSettings$sampleSize)
     renderArgs$sample_number <- restrictPlpDataSettings$sampleSize
   }
@@ -624,6 +726,8 @@ getEunomiaPlpData <- function(covariateSettings = NULL) {
     cdmDatabaseName = "main",
     cohortDatabaseSchema = "main",
     cohortTable = "cohort",
+    nestingCohortSchema = "main",
+    nestingCohortTable = "cohort",
     outcomeDatabaseSchema = "main",
     outcomeTable = "cohort",
     targetId = 1,

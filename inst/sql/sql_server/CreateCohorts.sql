@@ -16,12 +16,24 @@ limitations under the License.
 {DEFAULT @cdm_database_schema = 'CDM_SIM' }
 {DEFAULT @cohort_database_schema = 'CDM_SIM' }
 {DEFAULT @cohort_table = 'drug_era' }
+{DEFAULT @nesting_cohort_schema = @cohort_database_schema }
+{DEFAULT @nesting_cohort_table = @cohort_table }
 {DEFAULT @cdm_version = '5'}
 {DEFAULT @target_id = '' }
 {DEFAULT @study_start_date = '' }
 {DEFAULT @study_end_date = '' }
 {DEFAULT @first_only = FALSE}
+{DEFAULT @use_limit_to_first_n_days = FALSE}
+{DEFAULT @limit_to_first_n_days = 0}
 {DEFAULT @washout_period = 0}
+{DEFAULT @use_min_age = FALSE}
+{DEFAULT @min_age = 0}
+{DEFAULT @use_max_age = FALSE}
+{DEFAULT @max_age = 0}
+{DEFAULT @use_gender = FALSE}
+{DEFAULT @gender_concept_ids = ''}
+{DEFAULT @use_nesting_cohort = FALSE}
+{DEFAULT @nesting_cohort_id = ''}
 {DEFAULT @use_sample = FALSE}
 {DEFAULT @sample_number = 100000}
 
@@ -87,6 +99,34 @@ FROM ( -- raw_cohorts
 } : {
 	WHERE cohort_definition_id IN (@target_id)
 }
+{@use_limit_to_first_n_days} ? {
+	AND NOT EXISTS (
+		SELECT 1
+		FROM @cohort_database_schema.@cohort_table cohort_table_prior
+		WHERE cohort_table_prior.subject_id = cohort_table.subject_id
+{@cdm_version == "4"} ? {
+			AND cohort_table_prior.cohort_concept_id IN (@target_id)
+} : {
+			AND cohort_table_prior.cohort_definition_id IN (@target_id)
+}
+			AND cohort_table_prior.cohort_start_date <= cohort_table.cohort_start_date
+			AND DATEDIFF(DAY, cohort_table_prior.cohort_end_date, cohort_table.cohort_start_date) < @limit_to_first_n_days
+	)
+}
+{@use_nesting_cohort} ? {
+	AND EXISTS (
+		SELECT 1
+		FROM @nesting_cohort_schema.@nesting_cohort_table nesting_cohort
+		WHERE nesting_cohort.subject_id = cohort_table.subject_id
+{@cdm_version == "4"} ? {
+			AND nesting_cohort.cohort_concept_id = @nesting_cohort_id
+} : {
+			AND nesting_cohort.cohort_definition_id = @nesting_cohort_id
+}
+			AND cohort_table.cohort_start_date >= nesting_cohort.cohort_start_date
+			AND cohort_table.cohort_start_date <= nesting_cohort.cohort_end_date
+	)
+}
 	) raw_cohorts
 {@first_only} ? {
   GROUP BY subject_id,
@@ -104,6 +144,9 @@ WHERE cohort_start_date <= op.observation_period_end_date
 {@study_start_date != '' } ? {AND cohort_start_date >= CAST('@study_start_date' AS DATE) } 
 {@study_end_date != '' } ? {AND cohort_start_date < CAST('@study_end_date' AS DATE) }
 {@washout_period != 0} ? {AND DATEDIFF(DAY, observation_period_start_date, cohort_start_date) >= @washout_period}
+{@use_min_age} ? {AND YEAR(cohort_start_date) - year_of_birth >= @min_age}
+{@use_max_age} ? {AND YEAR(cohort_start_date) - year_of_birth <= @max_age}
+{@use_gender} ? {AND p.gender_concept_id IN (@gender_concept_ids)}
 
 {@use_sample}?{) alldata where rn <= @sample_number) sampdata } 
 ;

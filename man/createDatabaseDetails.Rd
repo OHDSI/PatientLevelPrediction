@@ -12,6 +12,8 @@ createDatabaseDetails(
   tempEmulationSchema = cdmDatabaseSchema,
   cohortDatabaseSchema = cdmDatabaseSchema,
   cohortTable = "cohort",
+  nestingCohortSchema = cohortDatabaseSchema,
+  nestingCohortTable = cohortTable,
   outcomeDatabaseSchema = cohortDatabaseSchema,
   outcomeTable = cohortTable,
   targetId = NULL,
@@ -46,6 +48,11 @@ permissions to this database.}
 has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID,
 COHORT_START_DATE, COHORT_END_DATE.}
 
+\item{nestingCohortSchema}{The database schema containing the nesting cohort table. Defaults to
+\code{cohortDatabaseSchema}.}
+
+\item{nestingCohortTable}{The table containing nesting cohorts. Defaults to \code{cohortTable}.}
+
 \item{outcomeDatabaseSchema}{The name of the database schema that is the location where the
 data used to define the outcome cohorts is available. Requires read permissions to
 this database.}
@@ -71,6 +78,8 @@ A list with the the database specific settings: \itemize{
 \item{\code{tempEmulationSchema}: The name of a databae schema where you want all temporary tables to be managed. Requires create/insert permissions to this database.}
 \item{\code{cohortDatabaseSchema}: The name of the database schema that is the location where the target cohorts are available. Requires read permissions to this schema.}
 \item{\code{cohortTable}: The tablename that contains the target cohorts. Expectation is cohortTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
+\item{\code{nestingCohortSchema}: The name of the database schema that contains nesting cohorts. Defaults to cohortDatabaseSchema.}
+\item{\code{nestingCohortTable}: The table that contains nesting cohorts. Defaults to cohortTable.}
 \item{\code{outcomeDatabaseSchema}: The name of the database schema that is the location where the data used to define the outcome cohorts is available. Requires read permissions to this database.}
 \item{\code{outcomeTable}: The tablename that contains the outcome cohorts. Expectation is outcomeTable has format of COHORT table: COHORT_DEFINITION_ID, SUBJECT_ID, COHORT_START_DATE, COHORT_END_DATE.}
 \item{\code{targetId}: An integer specifying the cohort id for the target cohort}
@@ -96,6 +105,8 @@ createDatabaseDetails(
   cdmDatabaseName = "main",
   cohortDatabaseSchema = "main",
   cohortTable = "cohort",
+  nestingCohortSchema = "main",
+  nestingCohortTable = "cohort",
   outcomeDatabaseSchema = "main",
   outcomeTable = "cohort",
   targetId = 1, # users of celecoxib

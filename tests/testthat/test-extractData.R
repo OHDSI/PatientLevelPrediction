@@ -181,6 +181,96 @@ test_that("getPlpData with restrict by dates only", {
   )
 })
 
+test_that("getPlpData with date restriction plus age and gender filters", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+
+  ageMin <- floor(stats::quantile(plpData$cohorts$ageYear, probs = 0.10))
+  ageMax <- ceiling(stats::quantile(plpData$cohorts$ageYear, probs = 0.90))
+  genderId <- unique(plpData$cohorts$gender)[1]
+
+  restrictSettings <- createRestrictPlpDataSettings(
+    studyStartDate = "20150101",
+    studyEndDate = "20200101",
+    minAge = ageMin,
+    maxAge = ageMax,
+    genderConceptIds = genderId
+  )
+
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  plpRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = restrictSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_gt(nrow(plpRestricted$cohorts), 0)
+  expect_true(max(plpRestricted$cohorts$cohortStartDate) <= "2020-01-01")
+  expect_true(min(plpRestricted$cohorts$cohortStartDate) >= "2015-01-01")
+  expect_true(min(plpRestricted$cohorts$ageYear) >= ageMin)
+  expect_true(max(plpRestricted$cohorts$ageYear) <= ageMax)
+  expect_true(all(plpRestricted$cohorts$gender == genderId))
+})
+
+test_that("getPlpData with date restriction and nestingCohortId", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  baseSettings <- createRestrictPlpDataSettings(
+    studyStartDate = "20150101",
+    studyEndDate = "20200101"
+  )
+  nestedSettings <- createRestrictPlpDataSettings(
+    studyStartDate = "20150101",
+    studyEndDate = "20200101",
+    nestingCohortId = databaseDetails$targetId
+  )
+
+  baseRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = baseSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  nestedRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = nestedSettings,
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_equal(nrow(nestedRestricted$cohorts), nrow(baseRestricted$cohorts))
+})
+
+test_that("getPlpData with limitToFirstInNDays", {
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+
+  covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
+    useDemographicsAge = TRUE
+  )
+
+  baselineRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    covariateSettings = covAgeOnlySettings
+  )
+
+  limitRestricted <- getPlpData(
+    databaseDetails = databaseDetails,
+    restrictPlpDataSettings = createRestrictPlpDataSettings(limitToFirstInNDays = 99999),
+    covariateSettings = covAgeOnlySettings
+  )
+
+  expect_lte(nrow(limitRestricted$cohorts), nrow(baselineRestricted$cohorts))
+})
+
 test_that("getPlpData with restrict by sample size", {
   skip_if_offline()
   skip_if_not_installed("Eunomia")
@@ -227,11 +317,11 @@ test_that("getPlpData with restrict by sampleSize and dates", {
   expect_true(nrow(plpSampleSizeAndDateRestricted$cohorts) == 100)
 })
 
-test_that("getPlpData with restrict by washoutPeriod", {
+test_that("getPlpData with restrict by minPriorObservation", {
   skip_if_offline()
   skip_if_not_installed("Eunomia")
   restrictWashoutSettings <- createRestrictPlpDataSettings(
-    washoutPeriod = 15000
+    minPriorObservation = 15000
   )
   covAgeOnlySettings <- FeatureExtraction::createCovariateSettings(
     useDemographicsAge = TRUE
@@ -245,5 +335,12 @@ test_that("getPlpData with restrict by washoutPeriod", {
 
   expect_true(
     min(plpWashoutRestricted$cohorts$daysFromObsStart) >= 15000
+  )
+})
+
+test_that("createRestrictPlpDataSettings warns on deprecated washoutPeriod", {
+  expect_warning(
+    createRestrictPlpDataSettings(washoutPeriod = 365),
+    regexp = "deprecated"
   )
 })

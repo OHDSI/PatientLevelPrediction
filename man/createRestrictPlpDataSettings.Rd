@@ -8,7 +8,13 @@ createRestrictPlpDataSettings(
   studyStartDate = "",
   studyEndDate = "",
   firstExposureOnly = FALSE,
-  washoutPeriod = 0,
+  limitToFirstInNDays = NULL,
+  minPriorObservation = 0,
+  washoutPeriod = NULL,
+  minAge = NULL,
+  maxAge = NULL,
+  genderConceptIds = NULL,
+  nestingCohortId = NULL,
   sampleSize = NULL
 )
 }
@@ -23,12 +29,29 @@ beyond the study end date will be considered.}
 
 \item{firstExposureOnly}{Should only the first exposure per subject be included? Note that
 this is typically done in the \code{createStudyPopulation} function,
-but can already be done here for efficiency reasons.}
+but can already be done here for efficiency reasons. Deprecated:
+use \code{limitToFirstInNDays} instead.}
 
-\item{washoutPeriod}{The mininum required continuous observation time prior to index
+\item{limitToFirstInNDays}{Restrict repeated target entries per person by only keeping the first
+entry within each N-day window. If this is set, it takes precedence
+over \code{firstExposureOnly}.}
+
+\item{minPriorObservation}{The minimum required continuous observation time prior to index
 date for a person to be included in the at risk cohort. Note that
 this is typically done in the \code{createStudyPopulation} function,
 but can already be done here for efficiency reasons.}
+
+\item{washoutPeriod}{Deprecated: use \code{minPriorObservation}. Kept for backward
+compatibility.}
+
+\item{minAge}{Minimum age (inclusive) at index date.}
+
+\item{maxAge}{Maximum age (inclusive) at index date.}
+
+\item{genderConceptIds}{Optional vector of OMOP gender concept IDs to include.}
+
+\item{nestingCohortId}{Optional cohort definition ID used as a nesting cohort. Target entries
+are retained only when they occur within this nesting cohort period.}
 
 \item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
 }
@@ -38,7 +61,13 @@ the settings: \itemize{
 \item{\code{studyStartDate}: A calendar date specifying the minimum date that a cohort index date can appear}
 \item{\code{studyEndDate}: A calendar date specifying the maximum date that a cohort index date can appear}
 \item{\code{firstExposureOnly}: Should only the first exposure per subject be included}
-\item{\code{washoutPeriod}: The mininum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+\item{\code{limitToFirstInNDays}: Keep only the first target entry in each N-day window per person}
+\item{\code{minPriorObservation}: The minimum required continuous observation time prior to index date for a person to be included in the at risk cohort}
+\item{\code{washoutPeriod}: Deprecated alias of \code{minPriorObservation} for backward compatibility}
+\item{\code{minAge}: Minimum age (inclusive) at index date}
+\item{\code{maxAge}: Maximum age (inclusive) at index date}
+\item{\code{genderConceptIds}: Optional vector of OMOP gender concept IDs to include}
+\item{\code{nestingCohortId}: Optional cohort definition ID used as a nesting cohort}
 \item{\code{sampleSize}: If not NULL, the number of people to sample from the target cohort}
 }
 }
@@ -49,8 +78,8 @@ This function creates the settings used to restrict the target cohort when calli
 Users need to specify the extra restrictions to apply when downloading the target cohort
 }
 \examples{
-# restrict to 2010, first exposure only, require washout period of 365 day
+# restrict to 2010, first exposure only, require 365 days of prior observation
 # and sample 1000 people
 createRestrictPlpDataSettings(studyStartDate = "20100101", studyEndDate = "20101231", 
-firstExposureOnly = TRUE, washoutPeriod = 365, sampleSize = 1000)
+firstExposureOnly = TRUE, minPriorObservation = 365, sampleSize = 1000)
 }
