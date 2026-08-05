@@ -20,7 +20,7 @@ This vignette describes how you need to install the Observational Health Data Sc
 Under Windows the OHDSI Patient Level Prediction (PLP) package requires installing:
 
 -   R (<https://cran.r-project.org/> ) - (R \>= 4.0.0, but latest is recommended)
--   Rstudio (<https://posit.co/> )
+-   RStudio (<https://posit.co/products/open-source/rstudio> )
 -   Java 
 -   RTools (<https://cran.r-project.org/bin/windows/Rtools/>)
 
