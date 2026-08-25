@@ -99,14 +99,38 @@ model <- createGlmModel(coefficients, intercept = -2.5)
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 #> Generating covariates
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating cohorts
 #> Generating outcomes
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> did FE
 #> did tidy
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.13 secs
-#> Prediction done in: 0.136 secs
+#> Prediction took 0.144 secs
+#> Prediction done in: 0.315 secs
 # see the predicted risk values
 prediction$value
 #>  [1] 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644 0.3543437 0.3318122

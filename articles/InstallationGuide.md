@@ -27,7 +27,7 @@ requires installing:
 
 - R (<https://cran.r-project.org/> ) - (R \>= 4.1.0, but latest is
   recommended)
-- Rstudio (<https://posit.co/> )
+- RStudio (<https://posit.co/products/open-source/rstudio>)
 - Java
 - Xcode command line tools(run in terminal: xcode-select –install) \[MAC
   USERS ONLY\]

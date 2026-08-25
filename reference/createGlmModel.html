@@ -158,14 +158,38 @@ and the prediction function.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"simulationProfile"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span><span class="va">simulationProfile</span>, n <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating covariates</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> duckdb keeps downloaded extensions and secrets in a temporary directory:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> /tmp/Rtmp5fcPNF/duckdb</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> This is removed when the R session ends.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Extensions are re-downloaded each session.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Secrets are lost.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> See ?duckdb_storage for details and alternatives.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> duckdb keeps downloaded extensions and secrets in a temporary directory:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> /tmp/Rtmp5fcPNF/duckdb</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> This is removed when the R session ends.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Extensions are re-downloaded each session.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Secrets are lost.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> See ?duckdb_storage for details and alternatives.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> duckdb keeps downloaded extensions and secrets in a temporary directory:</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> /tmp/Rtmp5fcPNF/duckdb</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> This is removed when the R session ends.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Extensions are re-downloaded each session.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Secrets are lost.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> See ?duckdb_storage for details and alternatives.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating cohorts</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu"><a href="predictPlp.html">predictPlp</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> did FE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> did tidy</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.13 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.136 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.144 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.315 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="va">prediction</span><span class="op">$</span><span class="va">value</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644 0.3543437 0.3318122</span>
@@ -187,7 +211,7 @@ and the prediction function.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
