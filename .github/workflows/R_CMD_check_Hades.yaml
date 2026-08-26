@@ -133,96 +133,104 @@ jobs:
         run: covr::codecov(token = "${{ secrets.CODECOV_TOKEN }}")
         shell: Rscript {0}
 
-
-  Release:
-    needs: R-CMD-Check
-    
-    runs-on: macOS-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-
+  release_metadata:
+    name: Validate release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.metadata.outputs.new_version }}
     steps:
-      
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0    
+          fetch-depth: 0
 
-      - name: Check if version has increased
-        run: |
-          echo "new_version="$(perl compare_versions --tag) >> $GITHUB_ENV
-          
-      - name: Display new version number
-        if: ${{ env.new_version != '' }}
-        run: |
-          echo "${{ env.new_version }}" 
-      
-      - name: Extract release notes
-        if: ${{ env.new_version != '' }}
-        id: extract_release_notes
-        run: |
-          version="${{ env.new_version }}"
-          version="${version#v}"
-          notes=$(awk -v ver=$version '
-          $0=="PatientLevelPrediction "ver {
-            getline
-            printing=1
-            next
-          }
-          printing && /^PatientLevelPrediction / { exit }
-          printing { print }
-          ' NEWS.md)
-          if [ -z "$notes" ]; then
-            echo "ERROR: No release notes found for version $version" >&2
-            exit 1
-          fi
-          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$notes" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-        shell: bash
-
-      - name: Create release
-        if: ${{ env.new_version != '' }}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 
-        with:
-          tag_name: ${{ env.new_version }}
-          release_name: Release ${{ env.new_version }}
-          body: |
-            ${{ steps.extract_release_notes.outputs.notes }}
-          draft: false
-          prerelease: false
-          
       - uses: r-lib/actions/setup-r@v2
-        if: ${{ env.new_version != '' }}
-        
+
+      - name: Test semantic version handling
+        run: Rscript .github/scripts/releaseMetadata.R --self-test
+
+      - name: Validate version and NEWS
+        id: metadata
+        run: Rscript .github/scripts/releaseMetadata.R "$GITHUB_OUTPUT" release-notes.md
+
+      - name: Summarize release detection
+        run: |
+          echo "Package version: ${{ steps.metadata.outputs.package_version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Latest tag: ${{ steps.metadata.outputs.latest_version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "New release: ${{ steps.metadata.outputs.new_version || 'none' }}" >> "$GITHUB_STEP_SUMMARY"
+
+  Release:
+    needs: [R-CMD-check, release_metadata]
+    runs-on: macOS-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.release_metadata.outputs.new_version }}
+    if: >-
+      github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main' &&
+      needs.release_metadata.outputs.new_version != ''
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - name: Recreate validated release notes
+        run: Rscript .github/scripts/releaseMetadata.R "$GITHUB_OUTPUT" release-notes.md
+
       - name: Install drat
-        if: ${{ env.new_version != '' }}
-        run: |
-          install.packages('drat')
+        run: install.packages("drat")
         shell: Rscript {0}
-        
-      - name: Remove any tarballs that already exists
-        if: ${{ env.new_version != '' }}
-        run: |
-          rm -f *.tar.gz
-          
+
       - name: Download package tarball
-        if: ${{ env.new_version != '' }}
         uses: actions/download-artifact@v4
         with:
-          name: package_tarball    
-          
-      - name: Push to drat
-        if: ${{ env.new_version != '' }}
+          name: package_tarball
+          path: dist
+
+      - name: Locate checked source package
         run: |
-          bash deploy.sh
+          tarballs=(dist/PatientLevelPrediction_*.tar.gz)
+          if [[ ${#tarballs[@]} -ne 1 ]]; then
+            echo "Expected exactly one source package, found ${#tarballs[@]}" >&2
+            exit 1
+          fi
+          echo "PACKAGE_TARBALL=${tarballs[0]}" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Create or refresh draft release
+        id: draft_release
+        run: |
+          if state=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [[ "$state" != "true" ]]; then
+              echo "already_published=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            gh release edit "$RELEASE_TAG" --title "Release $RELEASE_TAG" --notes-file release-notes.md
+            gh release upload "$RELEASE_TAG" "$PACKAGE_TARBALL" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$PACKAGE_TARBALL" \
+              --draft \
+              --title "Release $RELEASE_TAG" \
+              --notes-file release-notes.md
+          fi
+          echo "already_published=false" >> "$GITHUB_OUTPUT"
+
+      - name: Push to drat
+        if: steps.draft_release.outputs.already_published != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash deploy.sh
 
       - name: Push to BroadSea
-        if: ${{ env.new_version != '' }}
-        run: |
-          curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
-          
+        if: steps.draft_release.outputs.already_published != 'true'
+        env:
+          BROADSEA_TRIGGER_URL: ${{ secrets.BROADSEA_TRIGGER_URL }}
+        run: curl --fail --show-error --silent --data "build=true" -X POST "$BROADSEA_TRIGGER_URL"
+
+      - name: Publish GitHub release
+        if: steps.draft_release.outputs.already_published != 'true'
+        run: gh release edit "$RELEASE_TAG" --draft=false

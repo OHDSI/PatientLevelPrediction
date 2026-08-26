@@ -1,31 +1,37 @@
 #!/bin/bash
-set -o errexit -o nounset
-addToDrat(){
-  PKG_REPO=$PWD
+set -o errexit -o nounset -o pipefail
 
-  ## Build package tar ball
-  export PKG_TARBALL=$(ls *.tar.gz)
+if [[ -z "${GH_TOKEN:-}" ]]; then
+  echo "GH_TOKEN is required to publish to OHDSI/drat" >&2
+  exit 1
+fi
 
-  cd ..; mkdir drat; cd drat
+shopt -s nullglob
+tarballs=(dist/PatientLevelPrediction_*.tar.gz)
+if [[ ${#tarballs[@]} -ne 1 ]]; then
+  echo "Expected exactly one PatientLevelPrediction source tarball in dist" >&2
+  exit 1
+fi
 
-  ## Set up Repo parameters
-  git init
-  git config user.name "Martijn Schuemie"
-  git config user.email "schuemie@ohdsi.org"
-  git config --global push.default simple
+package_tarball="${tarballs[0]}"
+package_filename=$(basename "$package_tarball")
+temp_dir=$(mktemp -d)
+trap 'rm -rf "$temp_dir"' EXIT
 
-  ## Get drat repo
-  git remote add upstream "https://$GH_TOKEN@github.com/OHDSI/drat.git"
-  git fetch upstream 2>err.txt
-  git checkout gh-pages
-  
-  ## Link to local R packages  
-  echo 'R_LIBS=~/Rlib' > .Renviron
- 
-  Rscript -e "drat::insertPackage('$PKG_REPO/$PKG_TARBALL', \
-    repodir = '.', \
-    commit='GitHub Actions release: $PKG_TARBALL run $GITHUB_RUN_ID')"
-  git push
+gh repo clone OHDSI/drat "$temp_dir/drat" -- --depth 1 --branch gh-pages
+target="$temp_dir/drat/src/contrib/$package_filename"
+if [[ -f "$target" ]]; then
+  if cmp --silent "$package_tarball" "$target"; then
+    echo "$package_filename is already present in drat with identical contents"
+    exit 0
+  fi
+  echo "$package_filename already exists in drat with different contents" >&2
+  exit 1
+fi
 
-}
-addToDrat
+git -C "$temp_dir/drat" config user.name "github-actions[bot]"
+git -C "$temp_dir/drat" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+Rscript -e "drat::insertPackage('$PWD/$package_tarball', repodir = '$temp_dir/drat', commit = FALSE)"
+git -C "$temp_dir/drat" add .
+git -C "$temp_dir/drat" commit -m "Release $package_filename from run $GITHUB_RUN_ID"
+git -C "$temp_dir/drat" push origin gh-pages
