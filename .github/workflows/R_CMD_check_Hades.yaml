@@ -143,14 +143,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: r-lib/actions/setup-r@v2
-
       - name: Test semantic version handling
-        run: Rscript .github/scripts/releaseMetadata.R --self-test
+        run: python3 .github/scripts/release_metadata.py --self-test
 
       - name: Validate version and NEWS
         id: metadata
-        run: Rscript .github/scripts/releaseMetadata.R "$GITHUB_OUTPUT" release-notes.md
+        run: python3 .github/scripts/release_metadata.py "$GITHUB_OUTPUT" release-notes.md
 
       - name: Summarize release detection
         run: |
@@ -179,7 +177,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - name: Recreate validated release notes
-        run: Rscript .github/scripts/releaseMetadata.R "$GITHUB_OUTPUT" release-notes.md
+        run: python3 .github/scripts/release_metadata.py "$GITHUB_OUTPUT" release-notes.md
 
       - name: Install drat
         run: install.packages("drat")
