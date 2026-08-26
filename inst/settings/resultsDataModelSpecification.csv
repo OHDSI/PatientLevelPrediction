@@ -69,6 +69,7 @@ diagnostic_predictors,diagnostic_id,int,Yes,No,No,No,the identifier for the diag
 diagnostic_predictors,days_to_event,int,Yes,No,No,No,the time between index to the day of interest
 diagnostic_predictors,outcome_at_time,int,Yes,No,No,Yes,the number of outcomes on the day of interest
 diagnostic_predictors,observed_at_start_of_day,bigint,Yes,No,No,Yes,the number of people observed up to the day of interest
+diagnostic_predictors,probast_id,varchar,Yes,No,No,No,the corresponding probast id
 diagnostic_predictors,input_type,varchar,Yes,No,No,No,the setting id the results are for
 diagnostic_participants,diagnostic_id,int,Yes,No,No,No,the identifier for the diagnostics
 diagnostic_participants,design,varchar,Yes,No,No,No,the inclusion criteria of interest
