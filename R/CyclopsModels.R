@@ -101,12 +101,30 @@ fitCyclopsModel <- function(
     folds = trainData$folds,
     settings = settings
   )
-  modelSettings$param <- param
   hyperParamSearch <- data.frame()
+  cvPrior <- NULL
+
+  isBar <- identical(
+    settings$priorfunction,
+    "BrokenAdaptiveRidge::createBarPrior"
+  )
+  finalBarPenalty <- NULL
+  finalBarInitialRidgeVariance <- NULL
+  if (isBar) {
+    finalBarInitialRidgeVariance <- param$priorParams$initialRidgeVariance
+    if (identical(param$priorParams$penalty, "bic")) {
+      finalBarPenalty <- log(Cyclops::getNumberOfRows(cyclopsData)) / 2
+    } else if (is.numeric(param$priorParams$penalty)) {
+      finalBarPenalty <- param$priorParams$penalty
+    }
+  }
 
   prior <- NULL
   if (!isTRUE(settings$manualPenaltyCv)) {
     prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
+    if (isBar) {
+      cvPrior <- prior
+    }
   }
 
   if (settings$useControl) {
@@ -147,12 +165,14 @@ fitCyclopsModel <- function(
       trainData = trainData,
       cyclopsData = cyclopsData,
       modelSettings = modelSettings,
+      priorParams = param$priorParams,
       fixedCoefficients = fixedCoefficients,
       startingCoefficients = startingCoefficients
     )
     fit <- result$modelFit
     hyperParamSearch <- result$hyperParamSearch
-    modelSettings <- result$modelSettings
+    cvPrior <- result$prior
+    finalBarPenalty <- result$penalty
   } else {
     fit <- tryCatch(
       {
@@ -173,7 +193,8 @@ fitCyclopsModel <- function(
     folds = trainData$folds,
     modelSettings = modelSettings,
     covariateData  = trainData$covariateData,
-    control = createCyclopsRefitControl(modelSettings)
+    control = createCyclopsRefitControl(modelSettings),
+    cvPrior = cvPrior
   )
 
   if (!is.null(param$priorCoefs)) {
@@ -237,6 +258,15 @@ fitCyclopsModel <- function(
   }
   hyperParamSearch <- dplyr::bind_rows(hyperParamSearch, cvPerFold)
 
+  finalModelParameters <- list(
+    variance = modelTrained$priorVariance,
+    log_likelihood = modelTrained$log_likelihood
+  )
+  if (isBar) {
+    finalModelParameters$initialRidgeVariance <- finalBarInitialRidgeVariance
+    finalModelParameters$penalty <- finalBarPenalty
+  }
+
   result <- list(
     model = modelTrained,
     preprocessing = list(
@@ -266,10 +296,7 @@ fitCyclopsModel <- function(
       trainingTime = paste(as.character(abs(comp)), attr(comp, "units")),
       trainingDate = Sys.Date(),
       modelName = settings$modelName,
-      finalModelParameters = list(
-        variance = modelTrained$priorVariance,
-        log_likelihood = modelTrained$log_likelihood
-      ),
+      finalModelParameters = finalModelParameters,
       hyperParamSearch = hyperParamSearch
     ),
     covariateImportance = variableImportance
@@ -408,7 +435,8 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
-                               modelSettings, covariateData = NULL, control = NULL) {
+                               modelSettings, covariateData = NULL, control = NULL,
+                               cvPrior = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -461,11 +489,13 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
 
   # get CV - added && status == "OK" to only run if the model fit sucsessfully
   if (modelType == "logistic" && useCrossValidation && status == "OK") {
-    cvPrior <- createCyclopsCvPrior(
-      modelSettings = modelSettings,
-      fit = fit,
-      cyclopsData = cyclopsData
-    )
+    if (is.null(cvPrior)) {
+      cvPrior <- createCyclopsCvPrior(
+        modelSettings = modelSettings,
+        fit = fit,
+        cyclopsData = cyclopsData
+      )
+    }
     outcomeModel$cv <- getCV(
       cyclopsData, 
       labels,
@@ -644,6 +674,7 @@ doCyclopsCvPenalty <- function(
     trainData,
     cyclopsData,
     modelSettings,
+    priorParams,
     fixedCoefficients = NULL,
     startingCoefficients = NULL) {
   if (max(trainData$folds$index) < 2) {
@@ -668,9 +699,12 @@ doCyclopsCvPenalty <- function(
     foldSearch <- vector("list", length(penalties))
     for (penaltyIndex in seq_along(penalties)) {
       penalty <- penalties[penaltyIndex]
-      priorParams <- modelSettings$param$priorParams
-      priorParams$penalty <- penalty
-      cvPrior <- do.call(BrokenAdaptiveRidge::createBarPrior, priorParams)
+      candidatePriorParams <- priorParams
+      candidatePriorParams$penalty <- penalty
+      cvPrior <- do.call(
+        BrokenAdaptiveRidge::createBarPrior,
+        candidatePriorParams
+      )
 
       subsetFit <- suppressWarnings(Cyclops::fitCyclopsModel(
         cyclopsData,
@@ -729,10 +763,10 @@ doCyclopsCvPenalty <- function(
   bestPenalty <- bestRow$penalty
   ParallelLogger::logInfo(paste0("Best BAR penalty: ", signif(bestPenalty, 4)))
 
-  modelSettings$param$priorParams$penalty <- bestPenalty
+  priorParams$penalty <- bestPenalty
   prior <- do.call(
     BrokenAdaptiveRidge::createBarPrior,
-    modelSettings$param$priorParams
+    priorParams
   )
 
   modelFit <- tryCatch(
@@ -751,7 +785,8 @@ doCyclopsCvPenalty <- function(
 
   list(
     modelFit = modelFit,
-    modelSettings = modelSettings,
+    prior = prior,
+    penalty = bestPenalty,
     hyperParamSearch = hyperParamSearch
   )
 }

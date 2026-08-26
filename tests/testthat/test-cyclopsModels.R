@@ -377,6 +377,16 @@ test_that("test BAR incorrect inputs", {
   expect_error(setBrokenAdaptiveRidge(penaltyGridSize = NA_real_))
   expect_error(setBrokenAdaptiveRidge(penaltyGridSize = Inf))
   expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5))
+  expect_error(setBrokenAdaptiveRidge(seed = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(seed = Inf))
+  expect_error(setBrokenAdaptiveRidge(seed = 1.5))
+  expect_error(setBrokenAdaptiveRidge(seed = c(1, 2)))
+  expect_error(setBrokenAdaptiveRidge(threads = 0))
+  expect_error(setBrokenAdaptiveRidge(threads = -2))
+  expect_error(setBrokenAdaptiveRidge(threads = 1.5))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = NA))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = logical(0)))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = c(TRUE, FALSE)))
   expect_error(setBrokenAdaptiveRidge(lowerLimit = NA_real_))
   expect_error(setBrokenAdaptiveRidge(upperLimit = Inf))
   expect_error(setBrokenAdaptiveRidge(tolerance = NA_real_))
@@ -594,8 +604,6 @@ test_that("test BAR automatic penalty search runs", {
     fitPlp(
       trainData = tinyTrainData,
       modelSettings = setBrokenAdaptiveRidge(
-        initialRidgeVariance = 0.5,
-        penalty = "auto",
         penaltyGridSize = 2,
         seed = 42,
         threads = 1
@@ -610,8 +618,21 @@ test_that("test BAR automatic penalty search runs", {
   expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
   expect_true("penalty" %in% colnames(fitModel$trainDetails$hyperParamSearch))
   expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
-  expect_type(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "double")
-  expect_false(identical(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto"))
+  expect_equal(fitModel$modelDesign$modelSettings$param$priorParams$initialRidgeVariance, "auto")
+  expect_equal(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto")
+  expect_true(fitModel$modelDesign$modelSettings$settings$manualPenaltyCv)
+  expect_false(fitModel$modelDesign$modelSettings$settings$useControl)
+
+  finalParameters <- fitModel$trainDetails$finalModelParameters
+  expect_type(finalParameters$initialRidgeVariance, "double")
+  expect_true(is.finite(finalParameters$initialRidgeVariance))
+  expect_type(finalParameters$penalty, "double")
+  expect_true(is.finite(finalParameters$penalty))
+
+  cvSearch <- fitModel$trainDetails$hyperParamSearch %>%
+    dplyr::filter(.data$fold == "CV", !is.na(.data$penalty)) %>%
+    dplyr::arrange(dplyr::desc(.data$value), dplyr::desc(.data$penalty))
+  expect_equal(finalParameters$penalty, cvSearch$penalty[1])
 })
 
 test_that("test BAR fixed BIC penalty runs", {
@@ -639,6 +660,10 @@ test_that("test BAR fixed BIC penalty runs", {
   expect_equal(
     fitModel$modelDesign$modelSettings$param$priorParams$penalty,
     "bic"
+  )
+  expect_equal(
+    fitModel$trainDetails$finalModelParameters$penalty,
+    log(nrow(tinyTrainData$labels)) / 2
   )
 })
 
