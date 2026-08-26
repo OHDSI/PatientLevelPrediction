@@ -34,9 +34,6 @@ CRAN release: 2026-03-09
 
 ### Bug fixes
 
-- Ensured Cyclops cross-validation refits honor configured thread, seed,
-  tolerance, and iteration settings
-  ([\#672](https://github.com/OHDSI/PatientLevelPrediction/issues/672)).
 - Added the existing diagnostic predictor `probast_id` column to the
   results data model specification
   ([\#674](https://github.com/OHDSI/PatientLevelPrediction/issues/674)).

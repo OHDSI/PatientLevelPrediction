@@ -39,7 +39,7 @@ covariateData <- Andromeda::andromeda(
                                                  "covariateB"),
                               analysisId = c(1, 1)))
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -49,7 +49,7 @@ covariateData <- Andromeda::andromeda(
 mappedData <- MapIds(covariateData)
 #> starting to map the columns and rows
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -57,7 +57,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -65,7 +65,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -73,7 +73,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -81,7 +81,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -89,7 +89,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -97,7 +97,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -105,7 +105,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -113,7 +113,7 @@ mappedData <- MapIds(covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmph87Ai6/duckdb
+#> ℹ /tmp/Rtmp7KXb1s/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -124,12 +124,12 @@ mappedData <- MapIds(covariateData)
 # columnId and rowId are now starting from 1 and are consecutive
 mappedData$covariates
 #> # A query:  ?? x 4
-#> # Database: DuckDB 1.5.5 [unknown@Linux 6.17.0-1022-azure:R 4.6.1//tmp/Rtmph87Ai6/file1d205b94949e.duckdb]
+#> # Database: DuckDB 1.5.5 [unknown@Linux 6.17.0-1022-azure:R 4.6.1//tmp/Rtmp7KXb1s/file1d511484bc1d.duckdb]
 #>   covariateId covariateValue columnId rowId
 #>         <dbl>          <dbl>    <int> <int>
-#> 1          10              1        1     3
-#> 2          20              1        2     1
-#> 3          10              1        1     4
-#> 4          10              1        1     5
-#> 5          20              1        2     2
+#> 1          10              1        1     1
+#> 2          20              1        2     4
+#> 3          10              1        1     2
+#> 4          10              1        1     3
+#> 5          20              1        2     5
 ```
