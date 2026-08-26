@@ -69,6 +69,17 @@ out-of-fold AUC. Automatic penalty tuning fits one model per fold and grid
 value, in addition to the final model and cross-validation refits, so it can
 be substantially slower than using a fixed penalty.
 }
+\references{
+Fridgeirsson EA, Williams R, Rijnbeek P, Suchard MA, Reps JM. Comparing
+penalization methods for linear models on large observational health data.
+Journal of the American Medical Informatics Association. 2024;31(7):1514-1521.
+\doi{10.1093/jamia/ocae109}
+
+Li N, Peng X, Kawaguchi E, Suchard MA, Li G. A scalable surrogate L0 sparse
+regression method for generalized linear models with applications to large
+scale data. Journal of Statistical Planning and Inference. 2021;213:262-281.
+\doi{10.1016/j.jspi.2020.12.001}
+}
 \examples{
 \dontshow{if (rlang::is_installed("BrokenAdaptiveRidge")) withAutoprint(\{ # examplesIf}
 modelBar <- setBrokenAdaptiveRidge(seed = 42)
