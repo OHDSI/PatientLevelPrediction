@@ -408,6 +408,17 @@ setIterativeHardThresholding <- function(
 #'
 #' @return `modelSettings` object
 #'
+#' @references
+#' Fridgeirsson EA, Williams R, Rijnbeek P, Suchard MA, Reps JM. Comparing
+#' penalization methods for linear models on large observational health data.
+#' Journal of the American Medical Informatics Association. 2024;31(7):1514-1521.
+#' \doi{10.1093/jamia/ocae109}
+#'
+#' Li N, Peng X, Kawaguchi E, Suchard MA, Li G. A scalable surrogate L0 sparse
+#' regression method for generalized linear models with applications to large
+#' scale data. Journal of Statistical Planning and Inference. 2021;213:262-281.
+#' \doi{10.1016/j.jspi.2020.12.001}
+#'
 #' @examplesIf rlang::is_installed("BrokenAdaptiveRidge")
 #' modelBar <- setBrokenAdaptiveRidge(seed = 42)
 #' @export
