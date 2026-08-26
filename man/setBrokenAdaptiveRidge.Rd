@@ -32,7 +32,7 @@ estimate this using ridge cross-validation.}
 \item{noShrinkage}{A set of covariates which are forced into the model. The
 default is the intercept.}
 
-\item{penalty}{Numeric BAR penalty, \code{"logN"} to use \code{log(n) / 2}, or \code{"auto"}
+\item{penalty}{Numeric BAR penalty, \code{"bic"} to use \code{log(n) / 2}, or \code{"auto"}
 to cross-validate over a penalty grid.}
 
 \item{penaltyRatio}{Minimum penalty in the automatic grid as a ratio of the
@@ -65,7 +65,9 @@ Cyclops and the BrokenAdaptiveRidge prior. \code{initialRidgeVariance = "auto"}
 first fits a ridge model with Cyclops cross-validation and uses the selected
 ridge variance to initialize BAR. \code{penalty = "auto"} cross-validates over a
 BAR penalty grid and refits using the penalty with the highest mean
-out-of-fold AUC.
+out-of-fold AUC. Automatic penalty tuning fits one model per fold and grid
+value, in addition to the final model and cross-validation refits, so it can
+be substantially slower than using a fixed penalty.
 }
 \examples{
 \dontshow{if (rlang::is_installed("BrokenAdaptiveRidge")) withAutoprint(\{ # examplesIf}

@@ -335,14 +335,13 @@ test_that("set BAR inputs", {
   expect_equal(modelSet$settings$modelType, "binary")
   expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
   expect_equal(modelSet$settings$manualPenaltyCv, TRUE)
-  expect_equal(modelSet$settings$manualPenaltyCvWarmStart, TRUE)
   expect_equal(modelSet$settings$useControl, FALSE)
   expect_equal(modelSet$param$priorParams$initialRidgeVariance, "auto")
   expect_equal(modelSet$param$priorParams$penalty, "auto")
 
   modelSet <- setBrokenAdaptiveRidge(
     initialRidgeVariance = 0.5,
-    penalty = "logN",
+    penalty = "bic",
     penaltyRatio = 0.2,
     penaltyGridSize = 5,
     seed = 42
@@ -353,7 +352,7 @@ test_that("set BAR inputs", {
   expect_equal(modelSet$settings$penaltyRatio, 0.2)
   expect_equal(modelSet$settings$penaltyGridSize, 5)
   expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
-  expect_equal(modelSet$param$priorParams$penalty, "logN")
+  expect_equal(modelSet$param$priorParams$penalty, "bic")
   expect_equal(modelSet$param$priorParams$maxIterations, 3000)
 })
 
@@ -420,7 +419,7 @@ test_that("BAR prior parameters resolve auto values", {
   )
   modelSettings <- setBrokenAdaptiveRidge(
     initialRidgeVariance = "auto",
-    penalty = "logN",
+    penalty = "bic",
     seed = 42,
     threads = 1,
     maxIterations = 1000
@@ -429,12 +428,11 @@ test_that("BAR prior parameters resolve auto values", {
   param <- suppressWarnings(resolveCyclopsPriorParams(
     param = modelSettings$param,
     cyclopsData = cyclopsData,
-    labels = outcomes,
     folds = data.frame(rowId = seq_len(20), index = rep(1, 20)),
     settings = modelSettings$settings
   ))
 
-  expect_equal(param$priorParams$penalty, log(nrow(outcomes)) / 2)
+  expect_equal(param$priorParams$penalty, "bic")
   expect_type(param$priorParams$initialRidgeVariance, "double")
   expect_true(is.finite(param$priorParams$initialRidgeVariance))
 })
@@ -616,7 +614,7 @@ test_that("test BAR automatic penalty search runs", {
   expect_false(identical(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto"))
 })
 
-test_that("test BAR fixed logN penalty runs", {
+test_that("test BAR fixed BIC penalty runs", {
   skip_if_offline()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
@@ -626,7 +624,7 @@ test_that("test BAR fixed logN penalty runs", {
       trainData = tinyTrainData,
       modelSettings = setBrokenAdaptiveRidge(
         initialRidgeVariance = 0.5,
-        penalty = "logN",
+        penalty = "bic",
         seed = 42,
         threads = 1
       ),
@@ -640,7 +638,7 @@ test_that("test BAR fixed logN penalty runs", {
   expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
   expect_equal(
     fitModel$modelDesign$modelSettings$param$priorParams$penalty,
-    log(nrow(tinyTrainData$labels)) / 2
+    "bic"
   )
 })
 
