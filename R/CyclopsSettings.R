@@ -442,9 +442,14 @@ setBrokenAdaptiveRidge <- function(
   checkIsClass(seed, c("numeric", "NULL", "integer"))
   if (is.null(seed[1])) {
     seed <- as.integer(sample(100000000, 1))
+  } else {
+    checkIsWholeNumber(seed)
   }
   checkIsClass(threads, c("numeric", "integer"))
-  checkSingleFiniteNumeric(threads)
+  checkIsWholeNumber(threads)
+  if (threads != -1 && threads < 1) {
+    stop("threads must be -1 or a positive whole number")
+  }
   checkIsClass(initialRidgeVariance, c("numeric", "integer", "character"))
   if (length(initialRidgeVariance) != 1) {
     stop("initialRidgeVariance must be a single value")
@@ -478,8 +483,8 @@ setBrokenAdaptiveRidge <- function(
   checkSingleFiniteNumeric(lowerLimit)
   checkSingleFiniteNumeric(upperLimit)
   checkHigherEqual(upperLimit, lowerLimit)
-  if (!is.logical(forceIntercept)) {
-    stop("forceIntercept must be of type: logical")
+  if (length(forceIntercept) != 1 || !is.logical(forceIntercept) || is.na(forceIntercept)) {
+    stop("forceIntercept must be a single non-missing logical value")
   }
   checkIsClass(tolerance, c("numeric", "integer"))
   checkSingleFiniteNumeric(tolerance)
