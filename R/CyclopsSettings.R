@@ -381,7 +381,9 @@ setIterativeHardThresholding <- function(
 #' first fits a ridge model with Cyclops cross-validation and uses the selected
 #' ridge variance to initialize BAR. `penalty = "auto"` cross-validates over a
 #' BAR penalty grid and refits using the penalty with the highest mean
-#' out-of-fold AUC.
+#' out-of-fold AUC. Automatic penalty tuning fits one model per fold and grid
+#' value, in addition to the final model and cross-validation refits, so it can
+#' be substantially slower than using a fixed penalty.
 #'
 #' @param initialRidgeVariance Numeric prior starting variance, or `"auto"` to
 #'   estimate this using ridge cross-validation.
@@ -389,7 +391,7 @@ setIterativeHardThresholding <- function(
 #' @param includeCovariateIds A set of covariateIds to limit the analysis to.
 #' @param noShrinkage A set of covariates which are forced into the model. The
 #'   default is the intercept.
-#' @param penalty Numeric BAR penalty, `"logN"` to use `log(n) / 2`, or `"auto"`
+#' @param penalty Numeric BAR penalty, `"bic"` to use `log(n) / 2`, or `"auto"`
 #'   to cross-validate over a penalty grid.
 #' @param penaltyRatio Minimum penalty in the automatic grid as a ratio of the
 #'   `log(n) / 2` starting penalty.
@@ -447,15 +449,14 @@ setBrokenAdaptiveRidge <- function(
     stop("penalty must be a single value")
   }
   if (inherits(penalty, "character")) {
-    checkInStringVector(penalty, c("auto", "logN"))
+    checkInStringVector(penalty, c("auto", "bic"))
   } else {
     checkSingleFiniteNumeric(penalty)
     checkHigher(penalty, 0)
   }
   checkIsClass(penaltyRatio, c("numeric", "integer"))
   checkSingleFiniteNumeric(penaltyRatio)
-  checkHigherEqual(penaltyRatio, 0)
-  if (length(penaltyRatio) != 1 || penaltyRatio <= 0 || penaltyRatio >= 1) {
+  if (penaltyRatio <= 0 || penaltyRatio >= 1) {
     stop("penaltyRatio must be a single value greater than 0 and less than 1")
   }
   checkIsClass(penaltyGridSize, c("numeric", "integer"))
@@ -504,7 +505,6 @@ setBrokenAdaptiveRidge <- function(
     addIntercept = TRUE,
     useControl = !identical(penalty, "auto"),
     manualPenaltyCv = identical(penalty, "auto"),
-    manualPenaltyCvWarmStart = TRUE,
     penaltyRatio = penaltyRatio[1],
     penaltyGridSize = penaltyGridSize[1],
     seed = seed[1],
