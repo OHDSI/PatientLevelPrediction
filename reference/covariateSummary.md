@@ -65,7 +65,7 @@ data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> Generating covariates
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -74,7 +74,7 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> Loading required namespace: FeatureExtraction
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -82,7 +82,7 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -92,12 +92,12 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> Generating cohorts
 #> Generating outcomes
 covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
-#> Calculating covariate summary @ 2026-08-25 13:38:52.965823
+#> Calculating covariate summary @ 2026-08-26 12:07:17.481246
 #> This can take a while...
 #> calculating subset of strata 1
 #> Restricting to subgroup
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -105,7 +105,7 @@ covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -113,7 +113,7 @@ covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -121,7 +121,7 @@ covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -129,7 +129,7 @@ covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -138,8 +138,8 @@ covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> Calculating summary for subgroup 
 #> Aggregating with no labels or strata
-#> Finished covariate summary @ 2026-08-25 13:38:53.610512
-#> Time to calculate covariate summary: 0.645 secs
+#> Finished covariate summary @ 2026-08-26 12:07:17.927905
+#> Time to calculate covariate summary: 0.447 secs
 head(covariateSummary)
 #> # A tibble: 6 × 9
 #>   covariateId covariateName     analysisId conceptId valueAsConceptId collisions

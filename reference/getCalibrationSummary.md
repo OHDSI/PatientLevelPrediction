@@ -56,7 +56,7 @@ data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #> Generating covariates
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -64,7 +64,7 @@ plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -72,7 +72,7 @@ plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -102,7 +102,7 @@ population <- createStudyPopulation(plpData, outcomeId = 3)
 #> Removing non outcome subjects with insufficient time at risk (if any)
 #> Outcome is 0 or 1
 #> Population created with: 481 observations, 481 unique subjects and 249 outcomes
-#> Population created in 0.0425 secs
+#> Population created in 0.0435 secs
 data <- splitData(plpData, population, createDefaultSplitSetting())
 #> test: 0.25
 #> train: 0.75
@@ -112,7 +112,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> Data split into 120 test cases and 361 train cases (121, 120, 120)
 #> Starting to limit covariate data to population...
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -120,7 +120,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -128,7 +128,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -136,7 +136,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -144,7 +144,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -152,7 +152,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -160,7 +160,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -168,7 +168,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -176,7 +176,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -184,7 +184,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -194,7 +194,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> Finished limiting covariate data to population...
 #> Starting to limit covariate data to population...
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -202,7 +202,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -210,7 +210,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -218,7 +218,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -226,7 +226,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -234,7 +234,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -242,7 +242,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -250,7 +250,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -258,7 +258,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -266,7 +266,7 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -274,13 +274,13 @@ data <- splitData(plpData, population, createDefaultSplitSetting())
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> Finished limiting covariate data to population...
-#> Data split in 2.13 secs
+#> Data split in 1.31 secs
 data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> minFraction: 0.001
 #> normalize: TRUE
 #> removeRedundancy: TRUE
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -288,7 +288,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -296,7 +296,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -304,7 +304,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -312,7 +312,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -320,7 +320,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -328,7 +328,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -336,7 +336,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -344,7 +344,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -352,7 +352,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -360,7 +360,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -368,7 +368,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -376,7 +376,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -387,7 +387,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -395,7 +395,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -403,7 +403,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp5fcPNF/duckdb
+#> ℹ /tmp/Rtmph87Ai6/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -411,7 +411,7 @@ data$Train$covariateData <- preprocessData(data$Train$covariateData)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> ℹ This message has been shown 60 times and will not be shown again this session.
-#> Tidying covariates took 2.07 secs
+#> Tidying covariates took 1.35 secs
 saveLoc <- file.path(tempdir(), "calibrationSummary")
 # fit a lasso logistic regression model using the training data
 plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42),
@@ -427,9 +427,9 @@ plpModel <- fitPlp(data$Train, modelSettings=setLassoLogisticRegression(seed=42)
 #> Getting predictions on train set
 #> predictProbabilities - predictAndromeda start
 #> Warning: Model had no non-zero coefficients so predicted same for all population...
-#> Prediction took 0.000635 secs
+#> Prediction took 0.000623 secs
 #> Returned from classifier function
-#> Time to fit model: 0.152 secs
+#> Time to fit model: 0.151 secs
 calibrationSummary <- getCalibrationSummary(plpModel$prediction, 
                                             "binary", 
                                             numberOfStrata = 10,
