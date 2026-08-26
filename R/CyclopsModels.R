@@ -95,14 +95,13 @@ fitCyclopsModel <- function(
     param$priorParams$useCrossValidation <- max(trainData$folds$index) > 1
   }
 
-  modelSettingsForFit <- modelSettings
   param <- resolveCyclopsPriorParams(
     param = param,
     cyclopsData = cyclopsData,
     folds = trainData$folds,
     settings = settings
   )
-  modelSettingsForFit$param <- param
+  modelSettings$param <- param
   hyperParamSearch <- data.frame()
 
   prior <- NULL
@@ -147,13 +146,13 @@ fitCyclopsModel <- function(
     result <- doCyclopsCvPenalty(
       trainData = trainData,
       cyclopsData = cyclopsData,
-      modelSettings = modelSettingsForFit,
+      modelSettings = modelSettings,
       fixedCoefficients = fixedCoefficients,
       startingCoefficients = startingCoefficients
     )
     fit <- result$modelFit
     hyperParamSearch <- result$hyperParamSearch
-    modelSettingsForFit <- result$modelSettings
+    modelSettings <- result$modelSettings
   } else {
     fit <- tryCatch(
       {
@@ -172,9 +171,9 @@ fitCyclopsModel <- function(
     cyclopsData = cyclopsData,
     labels = trainData$covariateData$labels,
     folds = trainData$folds,
-    modelSettings = modelSettingsForFit,
+    modelSettings = modelSettings,
     covariateData  = trainData$covariateData,
-    control = createCyclopsRefitControl(modelSettingsForFit)
+    control = createCyclopsRefitControl(modelSettings)
   )
 
   if (!is.null(param$priorCoefs)) {
@@ -254,7 +253,7 @@ fitCyclopsModel <- function(
       populationSettings = attr(trainData, "metaData")$populationSettings,
       featureEngineeringSettings = attr(trainData, "metaData")$featureEngineeringSettings,
       preprocessSettings = attr(trainData$covariateData, "metaData")$preprocessSettings,
-      modelSettings = modelSettingsForFit, # modified
+      modelSettings = modelSettings,
       splitSettings = attr(trainData, "metaData")$splitSettings,
       sampleSettings = attr(trainData, "metaData")$sampleSettings
     ),
@@ -530,8 +529,8 @@ createCyclopsCvPrior <- function(modelSettings, fit, cyclopsData) {
       forceIntercept = isTRUE(priorParams$forceIntercept)
     ))
   }
-  if (grepl("^BrokenAdaptiveRidge::create", priorFunction)) {
-    return(do.call(eval(parse(text = priorFunction)), priorParams))
+  if (identical(priorFunction, "BrokenAdaptiveRidge::createBarPrior")) {
+    return(do.call(BrokenAdaptiveRidge::createBarPrior, priorParams))
   }
 
   stop(
@@ -671,10 +670,7 @@ doCyclopsCvPenalty <- function(
       penalty <- penalties[penaltyIndex]
       priorParams <- modelSettings$param$priorParams
       priorParams$penalty <- penalty
-      cvPrior <- do.call(
-        eval(parse(text = modelSettings$settings$priorfunction)),
-        priorParams
-      )
+      cvPrior <- do.call(BrokenAdaptiveRidge::createBarPrior, priorParams)
 
       subsetFit <- suppressWarnings(Cyclops::fitCyclopsModel(
         cyclopsData,
@@ -735,7 +731,7 @@ doCyclopsCvPenalty <- function(
 
   modelSettings$param$priorParams$penalty <- bestPenalty
   prior <- do.call(
-    eval(parse(text = modelSettings$settings$priorfunction)),
+    BrokenAdaptiveRidge::createBarPrior,
     modelSettings$param$priorParams
   )
 
