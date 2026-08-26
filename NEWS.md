@@ -28,7 +28,6 @@ PatientLevelPrediction 6.7.0
 - Reduced hyperparameter database serialization overhead.
 - Raised and tested minimum dependency versions and added an R 4.1.3 dependency
   floor check.
-- Expanded cross-platform coverage and refreshed package documentation.
 - Modernized release detection and downstream publication (#637).
 
 PatientLevelPrediction 6.6.0
