@@ -99,7 +99,6 @@ fitCyclopsModel <- function(
   param <- resolveCyclopsPriorParams(
     param = param,
     cyclopsData = cyclopsData,
-    labels = trainData$labels,
     folds = trainData$folds,
     settings = settings
   )
@@ -150,8 +149,7 @@ fitCyclopsModel <- function(
       cyclopsData = cyclopsData,
       modelSettings = modelSettingsForFit,
       fixedCoefficients = fixedCoefficients,
-      startingCoefficients = startingCoefficients,
-      warmStart = isTRUE(settings$manualPenaltyCvWarmStart)
+      startingCoefficients = startingCoefficients
     )
     fit <- result$modelFit
     hyperParamSearch <- result$hyperParamSearch
@@ -605,12 +603,8 @@ createCyclopsRefitControl <- function(modelSettings) {
 resolveCyclopsPriorParams <- function(
     param,
     cyclopsData,
-    labels,
     folds,
     settings) {
-  if (!is.null(param$priorParams$penalty) && identical(param$priorParams$penalty, "logN")) {
-    param$priorParams$penalty <- log(nrow(labels)) / 2
-  }
   if (!is.null(param$priorParams$initialRidgeVariance) &&
       identical(param$priorParams$initialRidgeVariance, "auto")) {
     normalPrior <- Cyclops::createPrior(
@@ -652,8 +646,7 @@ doCyclopsCvPenalty <- function(
     cyclopsData,
     modelSettings,
     fixedCoefficients = NULL,
-    startingCoefficients = NULL,
-    warmStart = TRUE) {
+    startingCoefficients = NULL) {
   if (max(trainData$folds$index) < 2) {
     stop('penalty = "auto" requires at least two training folds')
   }
@@ -663,13 +656,7 @@ doCyclopsCvPenalty <- function(
     penaltyRatio = modelSettings$settings$penaltyRatio,
     penaltyGridSize = modelSettings$settings$penaltyGridSize
   )
-  control <- Cyclops::createControl(
-    tolerance = modelSettings$settings$tolerance,
-    noiseLevel = "silent",
-    threads = modelSettings$settings$threads,
-    maxIterations = modelSettings$settings$maxIterations,
-    seed = modelSettings$settings$seed
-  )
+  control <- createCyclopsRefitControl(modelSettings)
 
   ParallelLogger::logInfo("Performing hyperparameter tuning to determine best BAR penalty")
   labels <- merge(trainData$covariateData$labels, trainData$folds, by = "rowId")
@@ -682,11 +669,11 @@ doCyclopsCvPenalty <- function(
     foldSearch <- vector("list", length(penalties))
     for (penaltyIndex in seq_along(penalties)) {
       penalty <- penalties[penaltyIndex]
-      candidateSettings <- modelSettings
-      candidateSettings$param$priorParams$penalty <- penalty
+      priorParams <- modelSettings$param$priorParams
+      priorParams$penalty <- penalty
       cvPrior <- do.call(
-        eval(parse(text = candidateSettings$settings$priorfunction)),
-        candidateSettings$param$priorParams
+        eval(parse(text = modelSettings$settings$priorfunction)),
+        priorParams
       )
 
       subsetFit <- suppressWarnings(Cyclops::fitCyclopsModel(
@@ -698,9 +685,7 @@ doCyclopsCvPenalty <- function(
         startingCoefficients = foldStartingCoefficients
       ))
       coefficients <- stats::coef(subsetFit)
-      if (isTRUE(warmStart)) {
-        foldStartingCoefficients <- as.numeric(coefficients)
-      }
+      foldStartingCoefficients <- as.numeric(coefficients)
 
       coefDf <- data.frame(
         betas = as.numeric(coefficients),
@@ -711,7 +696,7 @@ doCyclopsCvPenalty <- function(
         coefficients = coefDf,
         population = labels,
         covariateData = trainData$covariateData,
-        modelType = candidateSettings$settings$cyclopsModelType
+        modelType = modelSettings$settings$cyclopsModelType
       )
       auc <- aucWithoutCi(predAll$rawValue[holdOut], labels$y[holdOut])
       foldSearch[[penaltyIndex]] <- data.frame(
