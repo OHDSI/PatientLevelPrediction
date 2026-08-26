@@ -12,6 +12,8 @@ PatientLevelPrediction 6.6.0
 - Added outcome-limited split settings for large data sets where model training should use a target number of outcome-positive rows (#396).
 
 ## Bug fixes
+- Added the existing diagnostic predictor `probast_id` column to the results
+  data model specification (#674).
 - Fixed cross-validation prediction generation for iterative hard thresholding models by reusing fitted per-covariate prior variances.
 - Restored intercept fitting for iterative hard thresholding logistic models.
 - Fixed simulation profile outcome models so generated coefficients only reference covariates available in the profile, added support for user-supplied outcome models, and invalid custom profiles now fail early instead of silently dropping outcome signal.
