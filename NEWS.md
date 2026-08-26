@@ -1,20 +1,48 @@
+PatientLevelPrediction 6.7.0
+============================
+
+## New features
+- Added `simulatePlpBenchmarkData()` to generate semi-synthetic benchmark data
+  from covariate profiles or fitted PLP models.
+- Added outcome-limited split settings for large data sets where training should
+  use a target number of outcome-positive rows (#396).
+- Added Broken Adaptive Ridge logistic regression with automatic ridge
+  initialization and out-of-fold penalty selection (#673).
+- Added lifecycle-style custom hyperparameter generators.
+- Persisted model names in the results data model for downstream viewers.
+
+## Bug fixes
+- Generated iterative hard thresholding CV predictions using fitted prior
+  variances and restored intercept fitting.
+- Ensured Cyclops CV refits honor thread, seed, tolerance, and iteration
+  settings (#672).
+- Validated simulation outcome covariates and added support for user-supplied
+  PLP outcome models.
+- Restored scikit-learn SVC probability prediction after JSON loading.
+- Defaulted missing evaluation types in `evaluatePlp()`.
+- Corrected imputation messages for the number of missing features.
+- Added `diagnostic_predictors.probast_id` to the results data model
+  specification (#674).
+
+## Performance and maintenance
+- Reduced hyperparameter database serialization overhead.
+- Raised and tested minimum dependency versions and added an R 4.1.3 dependency
+  floor check.
+- Expanded cross-platform coverage and refreshed package documentation.
+- Modernized release detection and downstream publication (#637).
+
 PatientLevelPrediction 6.6.0
 ======================
 
 ## New features
-- Added `simulatePlpBenchmarkData()` to generate semi-synthetic PLP benchmark data with known outcome risk.
 - Added flexible hyperparameter tuning with configurable tuning metrics and support for grid, random, and custom search strategies (#618).
 - Standardized the non-Cyclops modeling interface to simplify tuning and maintenance of classification models (#618).
 - Added ridge logistic regression settings via Cyclops with `setRidgeRegression()` (#621).
 - Expanded imputation support and hardened the missing-indicator and predictive mean matching workflow (#622).
 - Added support for using logits / linear predictors in rank-based metrics (#615).
 - Persisted hyperparameter settings and model names in the results data model to improve downstream model identification and viewing (#633, #632).
-- Added outcome-limited split settings for large data sets where model training should use a target number of outcome-positive rows (#396).
 
 ## Bug fixes
-- Fixed cross-validation prediction generation for iterative hard thresholding models by reusing fitted per-covariate prior variances.
-- Restored intercept fitting for iterative hard thresholding logistic models.
-- Fixed simulation profile outcome models so generated coefficients only reference covariates available in the profile, added support for user-supplied outcome models, and invalid custom profiles now fail early instead of silently dropping outcome signal.
 - Improved upload of hyperparameter metadata and robustness of model settings persistence for database viewers and downstream tools (#628, #623).
 - Ensured existing GLM and scikit-learn model settings retain model identity so uploads generate distinct model design records (#614).
 - Fixed evaluation when outcomes are single-class (#624).
