@@ -297,6 +297,32 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(seed = "F"))
 })
 
+test_that("Cyclops CV refit controls preserve model settings", {
+  lassoControl <- createCyclopsRefitControl(setLassoLogisticRegression(
+    seed = 42,
+    threads = 2,
+    tolerance = 1e-5,
+    maxIterations = 17
+  ))
+
+  expect_equal(lassoControl$seed, 42)
+  expect_equal(lassoControl$threads, 2)
+  expect_equal(lassoControl$tolerance, 1e-5)
+  expect_equal(lassoControl$maxIterations, 17)
+  expect_equal(lassoControl$noiseLevel, "silent")
+
+  skip_if_not_installed("IterativeHardThresholding")
+  ihtControl <- createCyclopsRefitControl(setIterativeHardThresholding(
+    seed = 43,
+    tolerance = 2e-5,
+    maxIterations = 19
+  ))
+
+  expect_equal(ihtControl$seed, 43)
+  expect_equal(ihtControl$tolerance, 2e-5)
+  expect_equal(ihtControl$maxIterations, 19)
+})
+
 
 
 # ================ FUNCTION TESTING
