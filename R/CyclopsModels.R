@@ -144,7 +144,8 @@ fitCyclopsModel <- function(
     labels = trainData$covariateData$labels,
     folds = trainData$folds,
     modelSettings = modelSettings,
-    covariateData  = trainData$covariateData
+    covariateData  = trainData$covariateData,
+    control = createCyclopsRefitControl(modelSettings)
   )
 
   if (!is.null(param$priorCoefs)) {
@@ -378,7 +379,7 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
-                               modelSettings, covariateData = NULL) {
+                               modelSettings, covariateData = NULL, control = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -442,7 +443,8 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
       cvPrior = cvPrior,
       folds = folds,
       covariateData = covariateData,
-      modelType = modelType
+      modelType = modelType,
+      control = control
     )
   }
 
@@ -552,6 +554,19 @@ checkCyclopsCovariates <- function(cyclopsData, covariates) {
   covariates
 }
 
+createCyclopsRefitControl <- function(modelSettings) {
+  settings <- modelSettings$settings
+  priorParams <- modelSettings$param$priorParams
+  values <- list(
+    tolerance = settings$tolerance %||% priorParams$tolerance,
+    threads = settings$threads,
+    maxIterations = settings$maxIterations %||% priorParams$maxIterations,
+    seed = settings$seed
+  )
+  values <- values[!vapply(values, is.null, logical(1))]
+  do.call(Cyclops::createControl, c(list(noiseLevel = "silent"), values))
+}
+
 
 
 getCV <- function(
@@ -560,7 +575,8 @@ getCV <- function(
     cvPrior,
     folds,
     covariateData = NULL,
-    modelType = "logistic"
+    modelType = "logistic",
+    control = NULL
 ) {
   # add the index to the labels
   labels <- merge(labels, folds, by = "rowId")
@@ -571,7 +587,8 @@ getCV <- function(
     weights[hold_out] <- 0.0
     subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
       prior = cvPrior,
-      weights = weights
+      weights = weights,
+      control = control
     ))
     coefficients <- stats::coef(subset_fit)
     coefDf <- data.frame(

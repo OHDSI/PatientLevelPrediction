@@ -12,6 +12,8 @@ PatientLevelPrediction 6.6.0
 - Added outcome-limited split settings for large data sets where model training should use a target number of outcome-positive rows (#396).
 
 ## Bug fixes
+- Ensured Cyclops cross-validation refits honor configured thread, seed,
+  tolerance, and iteration settings (#672).
 - Fixed cross-validation prediction generation for iterative hard thresholding models by reusing fitted per-covariate prior variances.
 - Restored intercept fitting for iterative hard thresholding logistic models.
 - Fixed simulation profile outcome models so generated coefficients only reference covariates available in the profile, added support for user-supplied outcome models, and invalid custom profiles now fail early instead of silently dropping outcome signal.
