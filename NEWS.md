@@ -28,6 +28,8 @@ PatientLevelPrediction 6.6.0
 - Limited `batchRestrict` handling to SQLite-backed data to avoid incorrect behavior on other backends (#612).
 
 ## Performance and maintenance
+- Modernized release version detection and made GitHub, drat, and BroadSea
+  publication recoverable and idempotent (#637).
 - Improved `simpleImpute` performance for large feature sets (#629).
 - Reduced GitHub Actions `R CMD check` runtime in CI (#625).
 

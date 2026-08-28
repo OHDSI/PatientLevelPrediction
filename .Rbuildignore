@@ -9,7 +9,6 @@ standalone
 deploy.sh
 extras/*
 man-roxygen
-compare_versions
 .github
 docs/*
 ^pyproject.toml$

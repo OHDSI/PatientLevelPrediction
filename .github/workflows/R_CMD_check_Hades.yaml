@@ -133,96 +133,115 @@ jobs:
         run: covr::codecov(token = "${{ secrets.CODECOV_TOKEN }}")
         shell: Rscript {0}
 
-
   Release:
-    needs: R-CMD-Check
-    
+    needs: R-CMD-check
     runs-on: macOS-latest
-
+    permissions:
+      contents: write
     env:
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      GH_TOKEN: ${{ github.token }}
+    if: >-
+      github.event_name != 'pull_request' &&
+      github.ref == 'refs/heads/main'
 
     steps:
-      
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0    
+          fetch-depth: 0
 
-      - name: Check if version has increased
-        run: |
-          echo "new_version="$(perl compare_versions --tag) >> $GITHUB_ENV
-          
-      - name: Display new version number
-        if: ${{ env.new_version != '' }}
-        run: |
-          echo "${{ env.new_version }}" 
-      
-      - name: Extract release notes
-        if: ${{ env.new_version != '' }}
-        id: extract_release_notes
-        run: |
-          version="${{ env.new_version }}"
-          version="${version#v}"
-          notes=$(awk -v ver=$version '
-          $0=="PatientLevelPrediction "ver {
-            getline
-            printing=1
-            next
-          }
-          printing && /^PatientLevelPrediction / { exit }
-          printing { print }
-          ' NEWS.md)
-          if [ -z "$notes" ]; then
-            echo "ERROR: No release notes found for version $version" >&2
-            exit 1
-          fi
-          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$notes" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-        shell: bash
+      - name: Read release metadata
+        id: metadata
+        run: python3 .github/scripts/release_metadata.py "$GITHUB_OUTPUT" release-notes.md
 
-      - name: Create release
-        if: ${{ env.new_version != '' }}
-        uses: actions/create-release@v1
+      - name: Decide whether to create or resume a release
+        id: release_state
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }} 
-        with:
-          tag_name: ${{ env.new_version }}
-          release_name: Release ${{ env.new_version }}
-          body: |
-            ${{ steps.extract_release_notes.outputs.notes }}
-          draft: false
-          prerelease: false
-          
+          RELEASE_TAG: ${{ steps.metadata.outputs.release_tag }}
+        run: |
+          action=skip
+          if [[ -n "$RELEASE_TAG" ]]; then
+            if release=$(gh release view "$RELEASE_TAG" --json isDraft,targetCommitish --jq '"\(.isDraft) \(.targetCommitish)"' 2>/dev/null); then
+              read -r state target_commit <<< "$release"
+              if [[ "$state" == "true" ]]; then
+                if [[ "$target_commit" != "$GITHUB_SHA" ]]; then
+                  echo "$RELEASE_TAG targets $target_commit, not checked commit $GITHUB_SHA" >&2
+                  exit 1
+                fi
+                action=resume
+              fi
+            elif git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+              echo "$RELEASE_TAG exists without a GitHub release" >&2
+              exit 1
+            else
+              action=create
+            fi
+          fi
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize release decision
+        run: |
+          echo "Package version: ${{ steps.metadata.outputs.package_version }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Latest tag: ${{ steps.metadata.outputs.latest_version || 'none' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release action: ${{ steps.release_state.outputs.action }}" >> "$GITHUB_STEP_SUMMARY"
+
       - uses: r-lib/actions/setup-r@v2
-        if: ${{ env.new_version != '' }}
-        
+        if: steps.release_state.outputs.action != 'skip'
+
       - name: Install drat
-        if: ${{ env.new_version != '' }}
-        run: |
-          install.packages('drat')
+        if: steps.release_state.outputs.action != 'skip'
+        run: install.packages("drat")
         shell: Rscript {0}
-        
-      - name: Remove any tarballs that already exists
-        if: ${{ env.new_version != '' }}
-        run: |
-          rm -f *.tar.gz
-          
+
       - name: Download package tarball
-        if: ${{ env.new_version != '' }}
+        if: steps.release_state.outputs.action != 'skip'
         uses: actions/download-artifact@v4
         with:
-          name: package_tarball    
-          
-      - name: Push to drat
-        if: ${{ env.new_version != '' }}
+          name: package_tarball
+          path: dist
+
+      - name: Locate checked source package
+        if: steps.release_state.outputs.action != 'skip'
         run: |
-          bash deploy.sh
+          tarballs=(dist/PatientLevelPrediction_*.tar.gz)
+          if [[ ${#tarballs[@]} -ne 1 ]]; then
+            echo "Expected exactly one source package, found ${#tarballs[@]}" >&2
+            exit 1
+          fi
+          echo "PACKAGE_TARBALL=${tarballs[0]}" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Create or refresh draft release
+        if: steps.release_state.outputs.action != 'skip'
+        env:
+          RELEASE_TAG: ${{ steps.release_state.outputs.tag }}
+          RELEASE_ACTION: ${{ steps.release_state.outputs.action }}
+        run: |
+          if [[ "$RELEASE_ACTION" == "resume" ]]; then
+            gh release edit "$RELEASE_TAG" --title "Release $RELEASE_TAG" --notes-file release-notes.md
+            gh release upload "$RELEASE_TAG" "$PACKAGE_TARBALL" --clobber
+          else
+            gh release create "$RELEASE_TAG" "$PACKAGE_TARBALL" \
+              --draft \
+              --target "$GITHUB_SHA" \
+              --title "Release $RELEASE_TAG" \
+              --notes-file release-notes.md
+          fi
+
+      - name: Push to drat
+        if: steps.release_state.outputs.action != 'skip'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: bash deploy.sh
 
       - name: Push to BroadSea
-        if: ${{ env.new_version != '' }}
-        run: |
-          curl --data "build=true" -X POST https://registry.hub.docker.com/u/ohdsi/broadsea-methodslibrary/trigger/f0b51cec-4027-4781-9383-4b38b42dd4f5/
-          
+        if: steps.release_state.outputs.action != 'skip'
+        env:
+          BROADSEA_TRIGGER_URL: ${{ secrets.BROADSEA_TRIGGER_URL }}
+        run: curl --fail --show-error --silent --data "build=true" -X POST "$BROADSEA_TRIGGER_URL"
+
+      - name: Publish GitHub release
+        if: steps.release_state.outputs.action != 'skip'
+        env:
+          RELEASE_TAG: ${{ steps.release_state.outputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false
