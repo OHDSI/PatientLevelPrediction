@@ -400,10 +400,12 @@ setIterativeHardThresholding <- function(
 #' @param forceIntercept Logical: Force intercept coefficient into prior.
 #' @param upperLimit Numeric: Upper prior variance limit for grid-search.
 #' @param lowerLimit Numeric: Lower prior variance limit for grid-search.
-#' @param tolerance Numeric: maximum relative change in convergence criterion
-#'   from successive iterations to achieve convergence.
-#' @param maxIterations Integer: maximum iterations of Cyclops to attempt before
-#'   returning a failed-to-converge error.
+#' @param tolerance Numeric convergence tolerance passed to both Cyclops and BAR.
+#'   In Cyclops, this controls the maximum relative change in its convergence
+#'   criterion; in BAR, it controls the maximum absolute coefficient change
+#'   between outer iterations.
+#' @param maxIterations Integer maximum iteration count passed to both the Cyclops
+#'   optimizer and the BAR outer loop.
 #' @param threshold Numeric BAR threshold.
 #'
 #' @return `modelSettings` object

@@ -48,11 +48,13 @@ to cross-validate over a penalty grid.}
 
 \item{lowerLimit}{Numeric: Lower prior variance limit for grid-search.}
 
-\item{tolerance}{Numeric: maximum relative change in convergence criterion
-from successive iterations to achieve convergence.}
+\item{tolerance}{Numeric convergence tolerance passed to both Cyclops and BAR.
+In Cyclops, this controls the maximum relative change in its convergence
+criterion; in BAR, it controls the maximum absolute coefficient change
+between outer iterations.}
 
-\item{maxIterations}{Integer: maximum iterations of Cyclops to attempt before
-returning a failed-to-converge error.}
+\item{maxIterations}{Integer maximum iteration count passed to both the Cyclops
+optimizer and the BAR outer loop.}
 
 \item{threshold}{Numeric BAR threshold.}
 }
