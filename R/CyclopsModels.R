@@ -39,6 +39,9 @@ fitCyclopsModel <- function(
   }
 
   settings <- modelSettings$settings
+  if (isTRUE(settings$manualPenaltyCv) && max(trainData$folds$index) < 2) {
+    stop('penalty = "auto" requires at least two training folds')
+  }
 
   trainData$covariateData$labels <- trainData$labels %>%
     dplyr::mutate(
@@ -121,9 +124,11 @@ fitCyclopsModel <- function(
 
   prior <- NULL
   if (!isTRUE(settings$manualPenaltyCv)) {
-    prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
     if (isBar) {
+      prior <- do.call(BrokenAdaptiveRidge::createBarPrior, param$priorParams)
       cvPrior <- prior
+    } else {
+      prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
     }
   }
 
@@ -677,10 +682,6 @@ doCyclopsCvPenalty <- function(
     priorParams,
     fixedCoefficients = NULL,
     startingCoefficients = NULL) {
-  if (max(trainData$folds$index) < 2) {
-    stop('penalty = "auto" requires at least two training folds')
-  }
-
   penalties <- createBarPenaltyGrid(
     labels = trainData$labels,
     penaltyRatio = modelSettings$settings$penaltyRatio,
