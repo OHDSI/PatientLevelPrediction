@@ -356,6 +356,27 @@ test_that("set BAR inputs", {
   expect_equal(modelSet$param$priorParams$maxIterations, 3000)
 })
 
+test_that("BAR noShrinkage takes precedence over forceIntercept", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  modelSet <- setBrokenAdaptiveRidge(forceIntercept = TRUE, seed = 42)
+  prior <- do.call(BrokenAdaptiveRidge::createBarPrior, modelSet$param$priorParams)
+
+  expect_true(prior$forceIntercept)
+  expect_equal(prior$exclude, "(Intercept)")
+
+  modelSet <- setBrokenAdaptiveRidge(
+    noShrinkage = c(),
+    forceIntercept = TRUE,
+    seed = 42
+  )
+  prior <- do.call(BrokenAdaptiveRidge::createBarPrior, modelSet$param$priorParams)
+
+  expect_true(prior$forceIntercept)
+  expect_length(prior$exclude, 0)
+})
+
 test_that("test BAR incorrect inputs", {
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
@@ -445,6 +466,27 @@ test_that("BAR prior parameters resolve auto values", {
   expect_equal(param$priorParams$penalty, "bic")
   expect_type(param$priorParams$initialRidgeVariance, "double")
   expect_true(is.finite(param$priorParams$initialRidgeVariance))
+})
+
+test_that("BAR automatic penalty validates folds before resolving its prior", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  singleFoldData <- tinyTrainData
+  singleFoldData$folds <- dplyr::mutate(singleFoldData$folds, index = 1L)
+  testthat::local_mocked_bindings(
+    resolveCyclopsPriorParams = function(...) stop("prior resolution started"),
+    .package = "PatientLevelPrediction"
+  )
+
+  expect_error(
+    fitCyclopsModel(
+      trainData = singleFoldData,
+      modelSettings = setBrokenAdaptiveRidge(seed = 42),
+      analysisId = "barSingleFoldTest"
+    ),
+    'penalty = "auto" requires at least two training folds'
+  )
 })
 
 
@@ -665,6 +707,33 @@ test_that("test BAR fixed BIC penalty runs", {
     fitModel$trainDetails$finalModelParameters$penalty,
     log(nrow(tinyTrainData$labels)) / 2
   )
+})
+
+test_that("test BAR fixed numeric penalty runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  penalty <- 0.75
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = penalty,
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barNumericTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(
+    fitModel$modelDesign$modelSettings$param$priorParams$penalty,
+    penalty
+  )
+  expect_equal(fitModel$trainDetails$finalModelParameters$penalty, penalty)
 })
 
 test_that("test logistic regression runs", {
