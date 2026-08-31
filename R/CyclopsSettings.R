@@ -390,14 +390,18 @@ setIterativeHardThresholding <- function(
 #' @param seed An option to add a seed when training the model.
 #' @param includeCovariateIds A set of covariateIds to limit the analysis to.
 #' @param noShrinkage A set of covariates which are forced into the model. The
-#'   default is the intercept.
+#'   default is the intercept. This takes precedence over `forceIntercept`: a
+#'   covariate listed here is excluded from the prior even when
+#'   `forceIntercept = TRUE`.
 #' @param penalty Numeric BAR penalty, `"bic"` to use `log(n) / 2`, or `"auto"`
 #'   to cross-validate over a penalty grid.
 #' @param penaltyRatio Minimum penalty in the automatic grid as a ratio of the
 #'   `log(n) / 2` starting penalty.
 #' @param penaltyGridSize Number of penalties to evaluate when `penalty = "auto"`.
 #' @param threads An option to set number of threads when training model.
-#' @param forceIntercept Logical: Force intercept coefficient into prior.
+#' @param forceIntercept Logical: Include the intercept coefficient in the prior,
+#'   unless it is listed in `noShrinkage`. To penalize the intercept, set this to
+#'   `TRUE` and remove the intercept from `noShrinkage`.
 #' @param upperLimit Numeric: Upper prior variance limit for grid-search.
 #' @param lowerLimit Numeric: Lower prior variance limit for grid-search.
 #' @param tolerance Numeric convergence tolerance passed to both Cyclops and BAR.

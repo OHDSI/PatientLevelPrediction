@@ -30,7 +30,9 @@ estimate this using ridge cross-validation.}
 \item{includeCovariateIds}{A set of covariateIds to limit the analysis to.}
 
 \item{noShrinkage}{A set of covariates which are forced into the model. The
-default is the intercept.}
+default is the intercept. This takes precedence over \code{forceIntercept}: a
+covariate listed here is excluded from the prior even when
+\code{forceIntercept = TRUE}.}
 
 \item{penalty}{Numeric BAR penalty, \code{"bic"} to use \code{log(n) / 2}, or \code{"auto"}
 to cross-validate over a penalty grid.}
@@ -42,7 +44,9 @@ to cross-validate over a penalty grid.}
 
 \item{threads}{An option to set number of threads when training model.}
 
-\item{forceIntercept}{Logical: Force intercept coefficient into prior.}
+\item{forceIntercept}{Logical: Include the intercept coefficient in the prior,
+unless it is listed in \code{noShrinkage}. To penalize the intercept, set this to
+\code{TRUE} and remove the intercept from \code{noShrinkage}.}
 
 \item{upperLimit}{Numeric: Upper prior variance limit for grid-search.}
 
