@@ -83,6 +83,16 @@ test_that("checkIsWholeNumber", {
   expect_equal(checkIsWholeNumber(1L), TRUE)
 })
 
+test_that("checkSingleFiniteNumeric", {
+  expect_error(checkSingleFiniteNumeric(c(1, 2)))
+  expect_error(checkSingleFiniteNumeric("1"))
+  expect_error(checkSingleFiniteNumeric(NA_real_))
+  expect_error(checkSingleFiniteNumeric(Inf))
+
+  expect_equal(checkSingleFiniteNumeric(1), TRUE)
+  expect_equal(checkSingleFiniteNumeric(1L), TRUE)
+})
+
 test_that("checkInStringVector", {
   expect_error(checkInStringVector("dsdsds", c("dsds", "double")))
   expect_error(checkInStringVector(c("dsdsds", "double"), c("dsdsds", "double")))

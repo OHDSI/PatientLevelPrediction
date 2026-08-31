@@ -41,6 +41,7 @@ Imports:
     tidyr,
     utils
 Suggests:
+    BrokenAdaptiveRidge,
     curl,
     Eunomia (>= 2.0.0),
     glmnet,
