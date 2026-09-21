@@ -1,19 +1,57 @@
 # Changelog
 
+## PatientLevelPrediction 6.7.0
+
+### New features
+
+- Added
+  [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
+  to generate semi-synthetic benchmark data from covariate profiles or
+  fitted PLP models.
+- Added outcome-limited split settings for large data sets where
+  training should use a target number of outcome-positive rows
+  ([\#396](https://github.com/OHDSI/PatientLevelPrediction/issues/396)).
+- Added Broken Adaptive Ridge logistic regression via
+  [`setBrokenAdaptiveRidge()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setBrokenAdaptiveRidge.md),
+  including automatic ridge initialization and out-of-fold penalty
+  selection
+  ([\#673](https://github.com/OHDSI/PatientLevelPrediction/issues/673)).
+- Added lifecycle-style custom hyperparameter generators.
+- Persisted model names in the results data model for downstream
+  viewers.
+
+### Bug fixes
+
+- Generated iterative hard thresholding CV predictions using fitted
+  prior variances and restored intercept fitting.
+- Ensured Cyclops CV refits honor thread, seed, tolerance, and iteration
+  settings
+  ([\#672](https://github.com/OHDSI/PatientLevelPrediction/issues/672)).
+- Validated simulation outcome covariates and added support for
+  user-supplied PLP outcome models.
+- Fixed scikit-learn SVC JSON loading to restore probability prediction,
+  preserve sparse-model predictions, support dense models, and retain
+  all-zero columns in sparse matrices
+  ([\#682](https://github.com/OHDSI/PatientLevelPrediction/issues/682)).
+- Defaulted missing evaluation types in
+  [`evaluatePlp()`](https://ohdsi.github.io/PatientLevelPrediction/reference/evaluatePlp.md).
+- Corrected imputation messages for the number of missing features.
+- Added the existing `diagnostic_predictors.probast_id` column to the
+  results data model specification
+  ([\#674](https://github.com/OHDSI/PatientLevelPrediction/issues/674)).
+
+### Performance and maintenance
+
+- Reduced hyperparameter database serialization overhead.
+- Raised and tested minimum dependency versions and added an R 4.1.3
+  dependency floor check.
+
 ## PatientLevelPrediction 6.6.0
 
 CRAN release: 2026-03-09
 
 ### New features
 
-- Added Broken Adaptive Ridge logistic regression via
-  [`setBrokenAdaptiveRidge()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setBrokenAdaptiveRidge.md),
-  including automatic ridge initialization and out-of-fold penalty
-  selection
-  ([\#673](https://github.com/OHDSI/PatientLevelPrediction/issues/673)).
-- Added
-  [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
-  to generate semi-synthetic PLP benchmark data with known outcome risk.
 - Added flexible hyperparameter tuning with configurable tuning metrics
   and support for grid, random, and custom search strategies
   ([\#618](https://github.com/OHDSI/PatientLevelPrediction/issues/618)).
@@ -33,28 +71,9 @@ CRAN release: 2026-03-09
   model to improve downstream model identification and viewing
   ([\#633](https://github.com/OHDSI/PatientLevelPrediction/issues/633),
   [\#632](https://github.com/OHDSI/PatientLevelPrediction/issues/632)).
-- Added outcome-limited split settings for large data sets where model
-  training should use a target number of outcome-positive rows
-  ([\#396](https://github.com/OHDSI/PatientLevelPrediction/issues/396)).
 
 ### Bug fixes
 
-- Fixed SVM JSON loading to preserve sparse-model predictions, support
-  dense models, and retain all-zero columns in sparse matrices.
-- Ensured Cyclops cross-validation refits honor configured thread, seed,
-  tolerance, and iteration settings
-  ([\#672](https://github.com/OHDSI/PatientLevelPrediction/issues/672)).
-- Added the existing diagnostic predictor `probast_id` column to the
-  results data model specification
-  ([\#674](https://github.com/OHDSI/PatientLevelPrediction/issues/674)).
-- Fixed cross-validation prediction generation for iterative hard
-  thresholding models by reusing fitted per-covariate prior variances.
-- Restored intercept fitting for iterative hard thresholding logistic
-  models.
-- Fixed simulation profile outcome models so generated coefficients only
-  reference covariates available in the profile, added support for
-  user-supplied outcome models, and invalid custom profiles now fail
-  early instead of silently dropping outcome signal.
 - Improved upload of hyperparameter metadata and robustness of model
   settings persistence for database viewers and downstream tools
   ([\#628](https://github.com/OHDSI/PatientLevelPrediction/issues/628),

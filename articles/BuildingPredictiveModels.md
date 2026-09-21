@@ -716,8 +716,7 @@ to be bootstrapping. However, in big data (many patients and many
 features) bootstrapping is generally not feasible. In big data our
 research has shown that it is adequate to have some form of fair
 evaluation (use a test set or cross validation). For full details see
-[our BMJ open
-paper](https://bmjopen.bmj.com/content/11/12/e050146.abstract).
+[our BMJ Open paper](https://doi.org/10.1136/bmjopen-2021-050146).
 
 In the `PatientLevelPrediction` package, the `splitSettings` define how
 the `plpData` are partitioned into training/validation/testing data.
@@ -1310,8 +1309,7 @@ to be bootstrapping. However, in big data (many patients and many
 features) bootstrapping is generally not feasible. In big data our
 research has shown that it is just important to have some form of fair
 evaluation (use a test set or cross validation). For full details see
-[our BMJ open
-paper](https://bmjopen.bmj.com/content/11/12/e050146.long).
+[our BMJ Open paper](https://doi.org/10.1136/bmjopen-2021-050146).
 
 In the PatientLevelPrediction package, the splitSettings define how the
 plpData are partitioned into training/validation/testing data. Cross

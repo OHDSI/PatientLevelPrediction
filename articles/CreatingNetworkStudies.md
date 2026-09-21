@@ -14,7 +14,7 @@ package.
 
 The open access publication [A standardized analytics pipeline for
 reliable and rapid development and validation of prediction models using
-observational health data](https://pubmed.ncbi.nlm.nih.gov/34560604/)
+observational health data](https://doi.org/10.1016/j.cmpb.2021.106394)
 details the process used to develop and validate prediction models using
 the OHDSI prediction framework and tools. This publication describes
 each of the steps and then demonstrates these by focusing on predicting
