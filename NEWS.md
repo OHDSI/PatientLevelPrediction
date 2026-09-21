@@ -12,6 +12,8 @@ PatientLevelPrediction 6.6.0
 - Added outcome-limited split settings for large data sets where model training should use a target number of outcome-positive rows (#396).
 
 ## Bug fixes
+- Fixed SVM JSON loading to preserve sparse-model predictions, support dense
+  models, and retain all-zero columns in sparse matrices.
 - Ensured Cyclops cross-validation refits honor configured thread, seed,
   tolerance, and iteration settings (#672).
 - Added the existing diagnostic predictor `probast_id` column to the results

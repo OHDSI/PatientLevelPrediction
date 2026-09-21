@@ -515,24 +515,25 @@ deSerializeSVM <- function(model_dict) {
     model$n_iter_ <- np$array(model_dict["n_iter_"])$astype(np$int32)
   }
 
-  if (reticulate::py_bool((model_dict$support_vectors_["meta"] != reticulate::py_none())) &
-    (reticulate::py_bool(model_dict$support_vectors_["meta"] == "csr"))) {
+  if (inherits(model_dict$support_vectors_, "python.builtin.dict") &&
+    reticulate::py_bool(model_dict$support_vectors_["meta"] == "csr")) {
     model$support_vectors_ <- deSerializeCsrMatrix(model_dict$support_vectors_)
     model$`_sparse` <- TRUE
   } else {
     model$support_vectors_ <- np$array(model_dict$support_vectors_)$astype(np$float64)
     model$`_sparse` <- FALSE
   }
-  if (reticulate::py_bool((model_dict$dual_coef_["meta"] != reticulate::py_none())) &
-    (reticulate::py_bool(model_dict$dual_coef_["meta"] == "csr"))) {
+  if (inherits(model_dict$dual_coef_, "python.builtin.dict") &&
+    reticulate::py_bool(model_dict$dual_coef_["meta"] == "csr")) {
     model$dual_coef_ <- deSerializeCsrMatrix(model_dict$dual_coef_)
   } else {
     model$dual_coef_ <- np$array(model_dict$dual_coef_)$astype(np$float64)
   }
 
-  if (reticulate::py_bool((model_dict$`_dual_coef_`["meta"] != reticulate::py_none())) &
-    (reticulate::py_bool(model_dict$`_dual_coef_`["meta"] == "csr"))) {
-    model$`_dual_coef_` <- deSerializeCsrMatrix(model_dict$`dual_coef_`)
+  # Binary SVC uses opposite signs for its public and internal coefficients.
+  if (inherits(model_dict$`_dual_coef_`, "python.builtin.dict") &&
+    reticulate::py_bool(model_dict$`_dual_coef_`["meta"] == "csr")) {
+    model$`_dual_coef_` <- deSerializeCsrMatrix(model_dict$`_dual_coef_`)
   } else {
     model$`_dual_coef_` <- np$array(model_dict$`_dual_coef_`)$astype(np$float64)
   }
@@ -562,7 +563,7 @@ deSerializeCsrMatrix <- function(csr_dict,
       np$array(csr_dict["indices"])$astype(indices_type),
       np$array(csr_dict["indptr"])$astype(indptr_type)
     )),
-    shape = csr_dict["shape"]
+    shape = csr_dict["_shape"]
   )
   return(csr_matrix)
 }
