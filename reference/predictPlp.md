@@ -53,8 +53,8 @@ plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 #> Generating outcomes
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.121 secs
-#> Prediction done in: 0.125 secs
+#> Prediction took 0.128 secs
+#> Prediction done in: 0.133 secs
 # see the predicted risk values
 head(prediction)
 #>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd

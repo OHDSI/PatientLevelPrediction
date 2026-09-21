@@ -41,22 +41,22 @@ prediction <- data.frame(
 )
 saveLoc <- file.path(tempdir())
 savePrediction(prediction, saveLoc)
-#> [1] "/tmp/Rtmp7KXb1s/prediction.json"
+#> [1] "/tmp/RtmpTLnJi6/prediction.json"
 dir(saveLoc)
 #>  [1] "bslib-596ae0e61b03dfeeffb4bf83f997516c"
 #>  [2] "downlit"                               
-#>  [3] "file1d511484bc1d.duckdb"               
-#>  [4] "file1d511484bc1d.duckdb.wal"           
-#>  [5] "file1d5123acb847"                      
-#>  [6] "file1d5143f2687a.duckdb"               
-#>  [7] "file1d5143f2687a.duckdb.wal"           
-#>  [8] "file1d514fb679d0"                      
-#>  [9] "file1d5152fc4d37"                      
-#> [10] "file1d515f2fb73e"                      
-#> [11] "file1d51d273998.duckdb"                
-#> [12] "file1d51d273998.duckdb.wal"            
+#>  [3] "file1e96137c2ac6"                      
+#>  [4] "file1e9625346524.duckdb"               
+#>  [5] "file1e9625346524.duckdb.wal"           
+#>  [6] "file1e9646d7792e.duckdb"               
+#>  [7] "file1e9646d7792e.duckdb.wal"           
+#>  [8] "file1e967891cecf.duckdb"               
+#>  [9] "file1e967891cecf.duckdb.wal"           
+#> [10] "file1e967d3a866"                       
+#> [11] "file1e967dd50655"                      
+#> [12] "file1e96a8fb6ae"                       
 #> [13] "prediction.json"                       
-#> [14] "temp_libpath1d51413e13dc"              
+#> [14] "temp_libpath1e964a89d8e9"              
 
 # clean up
 unlink(file.path(saveLoc, "prediction.json"))
