@@ -141,6 +141,9 @@ Functions for creating binary models
 - [`setRidgeRegression()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setRidgeRegression.md)
   : Create modelSettings for ridge logistic regression
 
+- [`setBrokenAdaptiveRidge()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setBrokenAdaptiveRidge.md)
+  : Create setting for Broken Adaptive Ridge logistic regression
+
 - [`setMLP()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setMLP.md)
   :
 

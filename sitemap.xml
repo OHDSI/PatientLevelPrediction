@@ -132,6 +132,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/savePlpShareable.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/savePrediction.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setAdaBoost.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setBrokenAdaptiveRidge.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setCoxModel.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setDecisionTree.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/setGradientBoostingMachine.html</loc></url>

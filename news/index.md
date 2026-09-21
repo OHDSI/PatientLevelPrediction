@@ -6,6 +6,11 @@ CRAN release: 2026-03-09
 
 ### New features
 
+- Added Broken Adaptive Ridge logistic regression via
+  [`setBrokenAdaptiveRidge()`](https://ohdsi.github.io/PatientLevelPrediction/reference/setBrokenAdaptiveRidge.md),
+  including automatic ridge initialization and out-of-fold penalty
+  selection
+  ([\#673](https://github.com/OHDSI/PatientLevelPrediction/issues/673)).
 - Added
   [`simulatePlpBenchmarkData()`](https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpBenchmarkData.md)
   to generate semi-synthetic PLP benchmark data with known outcome risk.
