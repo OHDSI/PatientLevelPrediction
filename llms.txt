@@ -76,11 +76,6 @@ below (T=green, O=red).
 | ![Calibration plot](articles/images/sparseCalibration.avif "Calibration plot") | ![ROC plot](articles/images/sparseRoc.avif "ROC plot") |
 | Calibration Plot | ROC Plot |
 
-Demo of the Shiny Apps can be found here:
-
-- [Multiple Prediction Viewer Shiny
-  App](https://data.ohdsi.org/smokingPhenotypeExplorer/)
-
 # Technology
 
 PatientLevelPrediction is an R package, with some functions using python
