@@ -6,8 +6,9 @@ PatientLevelPrediction 6.7.0
   from covariate profiles or fitted PLP models.
 - Added outcome-limited split settings for large data sets where training should
   use a target number of outcome-positive rows (#396).
-- Added Broken Adaptive Ridge logistic regression with automatic ridge
-  initialization and out-of-fold penalty selection (#673).
+- Added Broken Adaptive Ridge logistic regression via
+  `setBrokenAdaptiveRidge()`, including automatic ridge initialization and
+  out-of-fold penalty selection (#673).
 - Added lifecycle-style custom hyperparameter generators.
 - Persisted model names in the results data model for downstream viewers.
 
@@ -18,17 +19,18 @@ PatientLevelPrediction 6.7.0
   settings (#672).
 - Validated simulation outcome covariates and added support for user-supplied
   PLP outcome models.
-- Restored scikit-learn SVC probability prediction after JSON loading.
+- Fixed scikit-learn SVC JSON loading to restore probability prediction,
+  preserve sparse-model predictions, support dense models, and retain all-zero
+  columns in sparse matrices (#682).
 - Defaulted missing evaluation types in `evaluatePlp()`.
 - Corrected imputation messages for the number of missing features.
-- Added `diagnostic_predictors.probast_id` to the results data model
-  specification (#674).
+- Added the existing `diagnostic_predictors.probast_id` column to the results
+  data model specification (#674).
 
 ## Performance and maintenance
 - Reduced hyperparameter database serialization overhead.
 - Raised and tested minimum dependency versions and added an R 4.1.3 dependency
   floor check.
-- Modernized release detection and downstream publication (#637).
 
 PatientLevelPrediction 6.6.0
 ======================
