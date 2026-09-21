@@ -17,6 +17,6 @@ iterativeImpute(trainData, featureEngineeringSettings, done = FALSE)
 The imputed data
 }
 \description{
-This function does single imputation with predictive mean matchin
+This function does single imputation with predictive mean matching
 }
 \keyword{internal}

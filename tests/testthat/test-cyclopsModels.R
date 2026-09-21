@@ -244,7 +244,7 @@ test_that("set IHT inputs", {
   expect_equal(modelSet$settings$cyclopsModelType, "logistic")
   expect_equal(modelSet$settings$modelType, "binary")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
-  expect_equal(modelSet$settings$addIntercept, FALSE)
+  expect_equal(modelSet$settings$addIntercept, TRUE)
   expect_equal(modelSet$settings$useControl, FALSE)
   expect_equal(modelSet$settings$crossValidationInPrior, FALSE)
 
@@ -297,9 +297,444 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(seed = "F"))
 })
 
+test_that("Cyclops CV refit controls preserve model settings", {
+  lassoControl <- createCyclopsRefitControl(setLassoLogisticRegression(
+    seed = 42,
+    threads = 2,
+    tolerance = 1e-5,
+    maxIterations = 17
+  ))
+
+  expect_equal(lassoControl$seed, 42)
+  expect_equal(lassoControl$threads, 2)
+  expect_equal(lassoControl$tolerance, 1e-5)
+  expect_equal(lassoControl$maxIterations, 17)
+  expect_equal(lassoControl$noiseLevel, "silent")
+
+  skip_if_not_installed("IterativeHardThresholding")
+  ihtControl <- createCyclopsRefitControl(setIterativeHardThresholding(
+    seed = 43,
+    tolerance = 2e-5,
+    maxIterations = 19
+  ))
+
+  expect_equal(ihtControl$seed, 43)
+  expect_equal(ihtControl$tolerance, 2e-5)
+  expect_equal(ihtControl$maxIterations, 19)
+})
+
+test_that("set BAR inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  modelSet <- setBrokenAdaptiveRidge(seed = 42)
+  expect_s3_class(modelSet, "modelSettings")
+  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
+  expect_equal(modelSet$settings$modelName, "brokenAdaptiveRidge")
+  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
+  expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, TRUE)
+  expect_equal(modelSet$settings$useControl, FALSE)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, "auto")
+  expect_equal(modelSet$param$priorParams$penalty, "auto")
+
+  modelSet <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = 0.5,
+    penalty = "bic",
+    penaltyRatio = 0.2,
+    penaltyGridSize = 5,
+    seed = 42
+  )
+  expect_equal(modelSet$settings$priorfunction, "BrokenAdaptiveRidge::createBarPrior")
+  expect_equal(modelSet$settings$manualPenaltyCv, FALSE)
+  expect_equal(modelSet$settings$useControl, TRUE)
+  expect_equal(modelSet$settings$penaltyRatio, 0.2)
+  expect_equal(modelSet$settings$penaltyGridSize, 5)
+  expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
+  expect_equal(modelSet$param$priorParams$penalty, "bic")
+  expect_equal(modelSet$param$priorParams$maxIterations, 3000)
+})
+
+test_that("BAR noShrinkage takes precedence over forceIntercept", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  modelSet <- setBrokenAdaptiveRidge(forceIntercept = TRUE, seed = 42)
+  prior <- do.call(BrokenAdaptiveRidge::createBarPrior, modelSet$param$priorParams)
+
+  expect_true(prior$forceIntercept)
+  expect_equal(prior$exclude, "(Intercept)")
+
+  modelSet <- setBrokenAdaptiveRidge(
+    noShrinkage = c(),
+    forceIntercept = TRUE,
+    seed = 42
+  )
+  prior <- do.call(BrokenAdaptiveRidge::createBarPrior, modelSet$param$priorParams)
+
+  expect_true(prior$forceIntercept)
+  expect_length(prior$exclude, 0)
+})
+
+test_that("test BAR incorrect inputs", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = "bad"))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = Inf))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = 0))
+  expect_error(setBrokenAdaptiveRidge(penalty = "bad"))
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_character_))
+  expect_error(setBrokenAdaptiveRidge(penalty = c(0.1, 0.2)))
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penalty = Inf))
+  expect_error(setBrokenAdaptiveRidge(penalty = 0))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = Inf))
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = 1))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = Inf))
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5))
+  expect_error(setBrokenAdaptiveRidge(seed = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(seed = Inf))
+  expect_error(setBrokenAdaptiveRidge(seed = 1.5))
+  expect_error(setBrokenAdaptiveRidge(seed = c(1, 2)))
+  expect_error(setBrokenAdaptiveRidge(threads = 0))
+  expect_error(setBrokenAdaptiveRidge(threads = -2))
+  expect_error(setBrokenAdaptiveRidge(threads = 1.5))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = NA))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = logical(0)))
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = c(TRUE, FALSE)))
+  expect_error(setBrokenAdaptiveRidge(lowerLimit = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(upperLimit = Inf))
+  expect_error(setBrokenAdaptiveRidge(tolerance = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(tolerance = Inf))
+  expect_error(setBrokenAdaptiveRidge(tolerance = 0))
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 1.5))
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 0))
+  expect_error(setBrokenAdaptiveRidge(threshold = NA_real_))
+  expect_error(setBrokenAdaptiveRidge(threshold = Inf))
+  expect_error(setBrokenAdaptiveRidge(threshold = 0))
+})
+
+test_that("BAR penalty grid starts at log(n) / 2", {
+  labels <- data.frame(rowId = seq_len(100))
+
+  grid <- createBarPenaltyGrid(labels, penaltyRatio = 0.1, penaltyGridSize = 3)
+
+  expect_equal(length(grid), 3)
+  expect_equal(grid[1], log(100) / 2)
+  expect_equal(grid[3], 0.1 * log(100) / 2)
+})
+
+test_that("BAR prior parameters resolve auto values", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  outcomes <- data.frame(rowId = seq_len(20), y = rep(c(0, 1), 10))
+  covariates <- data.frame(
+    rowId = seq_len(20),
+    covariateId = rep(100, 20),
+    covariateValue = seq(-1, 1, length.out = 20)
+  )
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = outcomes,
+    covariates = covariates,
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+  modelSettings <- setBrokenAdaptiveRidge(
+    initialRidgeVariance = "auto",
+    penalty = "bic",
+    seed = 42,
+    threads = 1,
+    maxIterations = 1000
+  )
+
+  param <- suppressWarnings(resolveCyclopsPriorParams(
+    param = modelSettings$param,
+    cyclopsData = cyclopsData,
+    folds = data.frame(rowId = seq_len(20), index = rep(1, 20)),
+    settings = modelSettings$settings
+  ))
+
+  expect_equal(param$priorParams$penalty, "bic")
+  expect_type(param$priorParams$initialRidgeVariance, "double")
+  expect_true(is.finite(param$priorParams$initialRidgeVariance))
+})
+
+test_that("BAR automatic penalty validates folds before resolving its prior", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  singleFoldData <- tinyTrainData
+  singleFoldData$folds <- dplyr::mutate(singleFoldData$folds, index = 1L)
+  testthat::local_mocked_bindings(
+    resolveCyclopsPriorParams = function(...) stop("prior resolution started"),
+    .package = "PatientLevelPrediction"
+  )
+
+  expect_error(
+    fitCyclopsModel(
+      trainData = singleFoldData,
+      modelSettings = setBrokenAdaptiveRidge(seed = 42),
+      analysisId = "barSingleFoldTest"
+    ),
+    'penalty = "auto" requires at least two training folds'
+  )
+})
+
 
 
 # ================ FUNCTION TESTING
+
+test_that("Cyclops CV prior uses fitted standard variance", {
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  cvPrior <- createCyclopsCvPrior(
+    modelSettings = setRidgeRegression(variance = 0.01),
+    fit = list(variance = 0.25),
+    cyclopsData = cyclopsData
+  )
+
+  expect_s3_class(cvPrior, "cyclopsPrior")
+  expect_equal(cvPrior$priorType, "normal")
+  expect_equal(cvPrior$variance, 0.25)
+  expect_false(cvPrior$useCrossValidation)
+})
+
+test_that("Cyclops CV prior supports fitted final variances", {
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = FALSE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+  finalVariance <- c(0.2, 0.3)
+  modelSettings <- setIterativeHardThresholding()
+
+  cvPrior <- createCyclopsCvPrior(
+    modelSettings = modelSettings,
+    fit = list(ihtFinalPriorVariance = finalVariance),
+    cyclopsData = cyclopsData
+  )
+
+  expect_s3_class(cvPrior, "cyclopsPrior")
+  expect_equal(length(cvPrior$priorType), length(finalVariance))
+  expect_equal(cvPrior$variance, finalVariance)
+})
+
+test_that("Cyclops CV prior maps per-covariate prior exclusions", {
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = 100)
+  expect_equal(priorType$types, c("none", "none", "normal"))
+  expect_equal(as.numeric(priorType$excludeCovariateIds), c(0, 100))
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = c("(Intercept)", "200"))
+  expect_equal(priorType$types, c("none", "normal", "none"))
+  expect_equal(as.numeric(priorType$excludeCovariateIds), c(0, 200))
+
+  priorType <- createNormalPriorType(cyclopsData, exclude = c(), forceIntercept = TRUE)
+  expect_equal(priorType$types, c("normal", "normal", "normal"))
+  expect_null(priorType$excludeCovariateIds)
+})
+
+test_that("Cyclops CV prior fails clearly for invalid per-covariate prior inputs", {
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = data.frame(rowId = 1:4, y = c(0, 1, 0, 1)),
+    covariates = data.frame(
+      rowId = c(1, 2, 3, 4),
+      covariateId = c(100, 100, 200, 200),
+      covariateValue = c(1, 1, 1, 1)
+    ),
+    addIntercept = FALSE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    quiet = TRUE
+  )
+
+  expect_error(
+    createNormalPriorType(cyclopsData, exclude = "unknown"),
+    "Unable to match all covariates: unknown"
+  )
+  expect_error(
+    createCyclopsCvPrior(
+      modelSettings = setIterativeHardThresholding(),
+      fit = list(ihtFinalPriorVariance = c(0.2)),
+      cyclopsData = cyclopsData
+    ),
+    "Fitted prior variance length does not match the number of Cyclops covariates"
+  )
+  expect_error(
+    createCyclopsCvPrior(
+      modelSettings = setIterativeHardThresholding(),
+      fit = list(),
+      cyclopsData = cyclopsData
+    ),
+    "Cyclops fit did not return fitted final prior variances for CV refitting"
+  )
+})
+
+test_that("test IHT returns CV predictions", {
+  skip_if_offline()
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = trainData,
+      modelSettings = setIterativeHardThresholding(K = 5, seed = 42, maxIterations = 100),
+      analysisId = "ihtTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
+  expect_true("(Intercept)" %in% fitModel$model$coefficients$covariateIds)
+  expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
+  expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+})
+
+test_that("test BAR automatic penalty search runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        penaltyGridSize = 2,
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
+  expect_true("penalty" %in% colnames(fitModel$trainDetails$hyperParamSearch))
+  expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+  expect_equal(fitModel$modelDesign$modelSettings$param$priorParams$initialRidgeVariance, "auto")
+  expect_equal(fitModel$modelDesign$modelSettings$param$priorParams$penalty, "auto")
+  expect_true(fitModel$modelDesign$modelSettings$settings$manualPenaltyCv)
+  expect_false(fitModel$modelDesign$modelSettings$settings$useControl)
+
+  finalParameters <- fitModel$trainDetails$finalModelParameters
+  expect_type(finalParameters$initialRidgeVariance, "double")
+  expect_true(is.finite(finalParameters$initialRidgeVariance))
+  expect_type(finalParameters$penalty, "double")
+  expect_true(is.finite(finalParameters$penalty))
+
+  cvSearch <- fitModel$trainDetails$hyperParamSearch %>%
+    dplyr::filter(.data$fold == "CV", !is.na(.data$penalty)) %>%
+    dplyr::arrange(dplyr::desc(.data$value), dplyr::desc(.data$penalty))
+  expect_equal(finalParameters$penalty, cvSearch$penalty[1])
+})
+
+test_that("test BAR fixed BIC penalty runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = "bic",
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barFixedTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  expect_true("CV" %in% fitModel$prediction$evaluationType)
+  expect_equal(nrow(fitModel$prediction), nrow(tinyTrainData$labels) * 2)
+  expect_equal(
+    fitModel$modelDesign$modelSettings$param$priorParams$penalty,
+    "bic"
+  )
+  expect_equal(
+    fitModel$trainDetails$finalModelParameters$penalty,
+    log(nrow(tinyTrainData$labels)) / 2
+  )
+})
+
+test_that("test BAR fixed numeric penalty runs", {
+  skip_if_offline()
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+
+  penalty <- 0.75
+  fitModel <- suppressWarnings(
+    fitPlp(
+      trainData = tinyTrainData,
+      modelSettings = setBrokenAdaptiveRidge(
+        initialRidgeVariance = 0.5,
+        penalty = penalty,
+        seed = 42,
+        threads = 1
+      ),
+      analysisId = "barNumericTest",
+      analysisPath = tempdir()
+    )
+  )
+
+  expect_equal(
+    fitModel$modelDesign$modelSettings$param$priorParams$penalty,
+    penalty
+  )
+  expect_equal(fitModel$trainDetails$finalModelParameters$penalty, penalty)
+})
 
 test_that("test logistic regression runs", {
   skip_if_offline()

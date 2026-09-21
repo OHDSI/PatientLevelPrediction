@@ -22,8 +22,12 @@ choices include \code{aucMetric} and \code{auprcMetric}.}
 
 \item{randomSeed}{Random seed for random sampling}
 
-\item{generator}{An object with \code{initialize}, \code{getNext} and \code{finalize} methods
-for custom flexible hyperparameter tuning.}
+\item{generator}{Optional custom hyperparameter generator. This can be either
+a function with arguments \code{definition}, \code{expanded}, and \code{settings} that
+returns a finite list of named parameter lists, or an object with lifecycle
+methods. Lifecycle generator objects must provide \code{initialize(definition,
+settings)} and \code{getNext(history)} methods, and may provide an optional
+\code{finalize(history)} method.}
 }
 \description{
 Create Hyperparameter Settings

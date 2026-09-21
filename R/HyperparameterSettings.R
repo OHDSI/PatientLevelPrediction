@@ -4,8 +4,12 @@
 #'   choices include `aucMetric` and `auprcMetric`.
 #' @param sampleSize Sample size in case of random sampling
 #' @param randomSeed Random seed for random sampling
-#' @param generator An object with `initialize`, `getNext` and `finalize` methods 
-#' for custom flexible hyperparameter tuning.
+#' @param generator Optional custom hyperparameter generator. This can be either
+#' a function with arguments `definition`, `expanded`, and `settings` that
+#' returns a finite list of named parameter lists, or an object with lifecycle
+#' methods. Lifecycle generator objects must provide `initialize(definition,
+#' settings)` and `getNext(history)` methods, and may provide an optional
+#' `finalize(history)` method.
 #' @export
 createHyperparameterSettings <- function(
   search = "grid",
@@ -19,7 +23,12 @@ createHyperparameterSettings <- function(
     stopifnot(length(sampleSize) == 1, is.numeric(sampleSize))
   }
   if (!is.null(generator)) {
-    stopifnot(is.function(generator))
+    if (!isHyperparameterGenerator(generator)) {
+      stop(
+        "`generator` must be a function or an object with initialize and getNext methods; finalize is optional.",
+        call. = FALSE
+      )
+    }
     search <- "custom"
   }
 
@@ -33,6 +42,24 @@ createHyperparameterSettings <- function(
     ),
     class = "hyperparameterSettings"
   )
+}
+
+isHyperparameterGenerator <- function(generator) {
+  if (is.function(generator)) {
+    return(TRUE)
+  }
+
+  getMember <- function(name) {
+    tryCatch(generator[[name]], error = function(e) NULL)
+  }
+
+  initialize <- getMember("initialize")
+  getNext <- getMember("getNext")
+  finalize <- getMember("finalize")
+
+  is.function(initialize) &&
+    is.function(getNext) &&
+    (is.null(finalize) || is.function(finalize))
 }
 
 

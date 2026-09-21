@@ -131,37 +131,66 @@ test_that("MLP to json is correct", {
   expect_true(all.equal(predictions, loadedPredictions))
 })
 
-test_that("SVM to json is correct", {
+for (inputFormat in c("dense", "sparse")) {
+  test_that(paste(inputFormat, "SVM predictions survive current and legacy JSON round trips"), {
+    skip_if_not_installed("reticulate")
+    skip_on_cran()
+    classifier <- sklearn$svm$SVC(probability = TRUE, random_state = 42L)
+    xTrain <- X
+    if (inputFormat == "sparse") {
+      sp <- reticulate::import("scipy.sparse", convert = FALSE)
+      xTrain <- sp$csr_matrix(X)
+    }
+
+    model <- classifier$fit(xTrain, y)
+    predictions <- reticulate::py_to_r(model$predict_proba(xUnseen))
+    decisions <- reticulate::py_to_r(model$decision_function(xUnseen))
+    # Uninformative data can produce constant probabilities that hide coefficient errors.
+    expect_gt(diff(range(predictions[, 2])), 0.5)
+    path <- tempfile(fileext = ".json")
+    sklearnToJson(model, path)
+
+    py <- reticulate::import_builtins(convert = FALSE)
+    json <- reticulate::import("json", convert = FALSE)
+    with(py$open(path, "r"), as = file, {
+      legacyModelDict <- json$load(fp = file)
+    })
+    for (key in c(
+      "n_features_in_",
+      "_effective_probability",
+      "fit_status_",
+      "_num_iter",
+      "n_iter_"
+    )) {
+      if (reticulate::py_bool(legacyModelDict$`__contains__`(key))) {
+        invisible(legacyModelDict$pop(key))
+      }
+    }
+    legacyPath <- tempfile(fileext = ".json")
+    with(py$open(legacyPath, "w"), as = file, {
+      json$dump(legacyModelDict, fp = file)
+    })
+
+    for (modelPath in c(path, legacyPath)) {
+      loadedModel <- sklearnFromJson(modelPath)
+      expect_true(reticulate::py_has_attr(loadedModel, "_effective_probability"))
+      expect_equal(reticulate::py_to_r(loadedModel$n_features_in_), ncol(reticulate::py_to_r(X)))
+      expect_equal(reticulate::py_to_r(loadedModel$predict_proba(xUnseen)), predictions)
+      expect_equal(reticulate::py_to_r(loadedModel$decision_function(xUnseen)), decisions)
+    }
+  })
+}
+
+test_that("CSR serialization preserves trailing zero columns and all-zero matrices", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  classifier <- sklearn$svm$SVC(probability = TRUE)
+  sp <- reticulate::import("scipy.sparse", convert = FALSE)
+  json <- reticulate::import("json", convert = FALSE)
 
-  # create sparse data because then some of the internal fields in the
-  # SVM will be sparse
-  featureHasher <- sklearn$feature_extraction$FeatureHasher(n_features = 3L)
-  random <- reticulate::import("random", convert = FALSE)
-  features <- list()
-  ySparse <- np$empty(100L)
-  for (i in 1:100) {
-    row <- reticulate::dict(
-      a = random$randint(0L, 2L),
-      b = random$randint(3L, 5L),
-      c = random$randint(6L, 8L)
-    )
-    features <- c(features, row)
-    reticulate::py_set_item(ySparse, i - 1L, random$randint(0L, 2L))
+  for (values in list(cbind(diag(2), 0), matrix(0, nrow = 2, ncol = 3))) {
+    csrMatrix <- sp$csr_matrix(values)
+    serializedMatrix <- json$loads(json$dumps(serializeCsrMatrix(csrMatrix)))
+    loadedMatrix <- deSerializeCsrMatrix(serializedMatrix)
+    expect_equal(reticulate::py_to_r(loadedMatrix$toarray()), values)
   }
-  xSparse <- featureHasher$transform(features)
-
-  model <- classifier$fit(xSparse, ySparse)
-  predictions <- reticulate::py_to_r(model$predict_proba(xUnseen))
-  path <- file.path(tempdir(), "model.json")
-
-  sklearnToJson(model, path)
-
-  loadedModel <- sklearnFromJson(path)
-
-  loadedPredictions <- reticulate::py_to_r(loadedModel$predict_proba(xUnseen))
-
-  expect_true(all.equal(predictions, loadedPredictions))
 })

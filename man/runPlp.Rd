@@ -50,14 +50,17 @@ The default is none.}
 target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
+\item{modelSettings}{An object of class \code{modelSettings}, usually created using one of the model setting functions:
 \itemize{
 \item setLassoLogisticRegression() A lasso logistic regression model
 \item setGradientBoostingMachine() A gradient boosting machine
 \item setAdaBoost() An ada boost model
 \item setRandomForest() A random forest model
 \item setDecisionTree() A decision tree model
-\item setKNN() A KNN model
+\item setSVM() A support vector machine model
+\item setMLP() A neural network model
+\item setNaiveBayes() A naive Bayes model
+\item setLightGBM() A LightGBM model
 }}
 
 \item{hyperparameterSettings}{An object of \code{hyperparameterSettings} created using \code{createHyperparameterSettings}}

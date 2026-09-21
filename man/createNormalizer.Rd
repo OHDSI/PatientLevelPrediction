@@ -2,7 +2,7 @@
 % Please edit documentation in R/FeatureEngineering.R
 \name{createNormalizer}
 \alias{createNormalizer}
-\title{Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"}
+\title{Create the settings for normalizing the data}
 \usage{
 createNormalizer(type = "minmax", settings = list())
 }
@@ -16,11 +16,9 @@ https://arxiv.org/abs/2407.04491}
 }
 \value{
 An object of class \code{featureEngineeringSettings}
-
-An object of class \code{featureEngineeringSettings}'
 }
 \description{
-Create the settings for normalizing the data @param type The type of normalization to use, either "minmax" or "robust"
+Create the settings for normalizing the data
 }
 \examples{
 # create a minmax normalizer that normalizes the data between 0 and 1

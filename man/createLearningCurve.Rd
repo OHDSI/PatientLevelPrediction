@@ -35,14 +35,17 @@ data extracted from the CDM.}
 
 \item{cores}{The number of computer cores to use if running in parallel}
 
-\item{modelSettings}{An object of class \code{modelSettings} created using one of the function:
+\item{modelSettings}{An object of class \code{modelSettings}, usually created using one of the model setting functions:
 \itemize{
 \item \code{setLassoLogisticRegression()} A lasso logistic regression model
 \item \code{setGradientBoostingMachine()} A gradient boosting machine
 \item \code{setAdaBoost()} An ada boost model
 \item \code{setRandomForest()} A random forest model
 \item \code{setDecisionTree()} A decision tree model
-\item \code{setKNN()} A KNN model
+\item \code{setSVM()} A support vector machine model
+\item \code{setMLP()} A neural network model
+\item \code{setNaiveBayes()} A naive Bayes model
+\item \code{setLightGBM()} A LightGBM model
 }}
 
 \item{saveDirectory}{The path to the directory where the results will be saved (if NULL uses working directory)}

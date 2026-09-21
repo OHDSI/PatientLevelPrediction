@@ -130,13 +130,13 @@ test_that("LightGBM working checks", {
 
   loadedBooster <- lightgbm::lgb.load(model_str = serialized$model)
   expect_equal(class(loadedBooster), c("lgb.Booster", "R6"))
-  expect_equal(loadedBooster$num_trees(), fitModel$model$num_trees())
+  expect_equal(loadedBooster$current_iter(), fitModel$model$current_iter())
 
   loadModel <- loadPlpModel(savePath)
 
   expect_s3_class(loadModel, "plpModel")
   expect_equal(class(loadModel$model), c("lgb.Booster", "R6"))
-  expect_equal(loadModel$model$num_trees(), fitModel$model$num_trees())
+  expect_equal(loadModel$model$current_iter(), fitModel$model$current_iter())
 
   predFit <- predictPlp(
     plpModel = fitModel,

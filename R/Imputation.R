@@ -608,10 +608,11 @@ addMissingIndicators <- function(outputData,
       featureEngineeringSettings = featureEngineeringSettings
     ))
   }
+  missingThreshold <- featureEngineeringSettings$missingThreshold
 
   if (!done) {
     sourceCovariateIds <- outputData$covariateData$missingInfo %>%
-      dplyr::filter(.data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(.data$missing <= !!missingThreshold) %>%
       dplyr::pull(.data$covariateId) %>%
       unique()
     indicatorInfo <- createMissingIndicatorInfo(outputData, sourceCovariateIds)
@@ -848,11 +849,11 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    missingThreshold <- featureEngineeringSettings$missingThreshold
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(is.na(.data$missing) |
-        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE)) %>%
       dplyr::select(-"missing")
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
     outputData <- missingIndicatorResults$outputData
@@ -916,10 +917,10 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       "missingInfo"
     )
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    missingThreshold <- featureEngineeringSettings$missingThreshold
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(is.na(.data$missing) ||
-        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE)) %>%
       dplyr::select(-"missing")
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
     outputData <- missingIndicatorResults$outputData
@@ -974,7 +975,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 
 
 #' @title Imputation
-#' @description This function does single imputation with predictive mean matchin
+#' @description This function does single imputation with predictive mean matching
 #' @param trainData The data to be imputed
 #' @param featureEngineeringSettings The settings for the imputation
 #' @param done Whether the imputation has already been done (bool)
@@ -1001,11 +1002,11 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    missingThreshold <- featureEngineeringSettings$missingThreshold
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(is.na(.data$missing) ||
-        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE)) %>%
       dplyr::select(-"missing")
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
     outputData <- missingIndicatorResults$outputData
@@ -1080,12 +1081,12 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       "missingInfo"
     )
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    missingThreshold <- featureEngineeringSettings$missingThreshold
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
       # Keep test-path covariates with the same missing-threshold rule as training.
       # This preserves non-imputed feature parity between train and test.
-      dplyr::filter(is.na(.data$missing) ||
-        .data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE)) %>%
       dplyr::select(-"missing")
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = TRUE)
     outputData <- missingIndicatorResults$outputData
@@ -1267,13 +1268,11 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     on.exit(outputData$covariateData$missingInfo <- NULL, add = TRUE)
+    missingThreshold <- featureEngineeringSettings$missingThreshold
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
-      dplyr::filter(
-        is.na(.data$missing) ||
-          .data$missing <= featureEngineeringSettings$missingThreshold
-      ) %>%
+      dplyr::filter(dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE)) %>%
       dplyr::select(-"missing")
 
     missingIndicatorResults <- addMissingIndicators(outputData, featureEngineeringSettings, done = FALSE)
@@ -1285,7 +1284,7 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
       unique() %>%
       sort()
     targetCovariateIds <- outputData$covariateData$missingInfo %>%
-      dplyr::filter(.data$missing <= featureEngineeringSettings$missingThreshold) %>%
+      dplyr::filter(.data$missing <= !!missingThreshold) %>%
       dplyr::pull(.data$covariateId) %>%
       unique()
     targetCovariateIds <- targetCovariateIds[targetCovariateIds %in% predictorCovariateIds]
@@ -1387,12 +1386,12 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
     if (is.null(targetCovariateIds)) {
       targetCovariateIds <- numeric(0)
     }
+    missingThreshold <- featureEngineeringSettings$missingThreshold
 
     outputData$covariateData$covariates <- outputData$covariateData$covariates %>%
       dplyr::left_join(outputData$covariateData$missingInfo, by = "covariateId") %>%
       dplyr::filter(
-        (is.na(.data$missing) ||
-          .data$missing <= featureEngineeringSettings$missingThreshold) &&
+        dplyr::coalesce(.data$missing <= !!missingThreshold, TRUE) &
           .data$covariateId %in% !!predictorCovariateIds
       ) %>%
       dplyr::select(-"missing")
@@ -1701,7 +1700,7 @@ extractMissingInfo <- function(trainData) {
     "missingInfo" = missingInfo,
     "continuousFeatures" = continuousFeatures
   )
-  ParallelLogger::logInfo("Found ", nrow(missingInfo), " features with missing values")
+  ParallelLogger::logInfo("Found ", nrow(missingInfo$missing > 0), " features with missing values")
 
   return(results)
 }

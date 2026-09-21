@@ -19,7 +19,7 @@ library(PatientLevelPrediction)
 # Introduction
 
 This vignette describes how you can add your own custom function for
-sampling the target population in the Observational Health Data Sciencs
+sampling the target population in the Observational Health Data Sciences
 and Informatics (OHDSI)
 [`PatientLevelPrediction`](https://github.com/OHDSI/PatientLevelPrediction)
 package. This vignette assumes you have read and are comfortable with

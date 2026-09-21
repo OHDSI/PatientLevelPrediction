@@ -2,26 +2,28 @@
 % Please edit documentation in R/HelperFunctions.R
 \name{configurePython}
 \alias{configurePython}
-\title{Sets up a python environment to use for PLP (can be conda or venv)}
+\title{Configure a Python environment manually}
 \usage{
 configurePython(envname = "PLP", envtype = NULL, condaPythonVersion = "3.11")
 }
 \arguments{
 \item{envname}{A string for the name of the virtual environment (default is 'PLP')}
 
-\item{envtype}{An option for specifying the environment as'conda' or 'python'.  If NULL then the default is 'conda' for windows users and 'python' for non-windows users}
+\item{envtype}{An option for specifying the environment as 'conda' or 'python'. If NULL then the default is 'conda' for Windows users and 'python' for non-Windows users}
 
 \item{condaPythonVersion}{String, Python version to use when creating a conda environment}
 }
 \value{
-location of the created conda or virtual python environment
+Location of the created conda or virtual Python environment
 }
 \description{
-Sets up a python environment to use for PLP (can be conda or venv)
+Configure a Python environment manually
 }
 \details{
-This function creates a python environment that can be used by PatientLevelPrediction
-and installs all the required package dependancies.
+PatientLevelPrediction normally lets \code{reticulate} manage Python requirements
+automatically when Python-backed models are used. This helper is retained for
+users who need to create a conda or virtualenv environment manually, for
+example in offline or locked-down environments.
 }
 \examples{
 \dontshow{ # dontrun reason: don't modify environment in examples }

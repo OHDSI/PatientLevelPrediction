@@ -26,5 +26,5 @@ _pkgdown.yml
 ^.venv$
 ^.notVenv$
 .cache
-^\\.git$
+^\.git$
 ^results$

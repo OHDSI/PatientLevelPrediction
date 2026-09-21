@@ -22,6 +22,7 @@ concurrency:
 
 env:
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  NOT_CRAN: true
   R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
   _R_CHECK_FORCE_SUGGESTS_: ${{ inputs.install_suggests }}
   DEPENDENCY_FLOOR_CACHE_VERSION: v3
@@ -30,7 +31,13 @@ env:
   R_LIBS_USER: ${{ github.workspace }}/.cache/r-library
   EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.cache/eunomia
   UV_CACHE_DIR: ${{ github.workspace }}/.cache/uv
+  RETICULATE_PYTHON: /usr/bin/python3
   RETICULATE_PY_VERSION: 3.11
+  CDM5_POSTGRESQL_CDM_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_CDM_SCHEMA }}
+  CDM5_POSTGRESQL_OHDSI_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_OHDSI_SCHEMA }}
+  CDM5_POSTGRESQL_PASSWORD: ${{ secrets.CDM5_POSTGRESQL_PASSWORD }}
+  CDM5_POSTGRESQL_SERVER: ${{ secrets.CDM5_POSTGRESQL_SERVER }}
+  CDM5_POSTGRESQL_USER: ${{ secrets.CDM5_POSTGRESQL_USER }}
 
 jobs:
   dependency-floor:
@@ -71,6 +78,7 @@ jobs:
             pandoc \
             pkg-config \
             python3 \
+            python3-dev \
             python3-pip \
             python3-venv \
             zlib1g-dev
@@ -79,6 +87,11 @@ jobs:
       - name: Prepare caches
         run: |
           mkdir -p "${R_LIBS_USER}" "${EUNOMIA_DATA_FOLDER}" "${UV_CACHE_DIR}"
+
+      - name: Install Python test dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install "scikit-learn==1.3.2"
 
       - name: Restore R library cache
         id: cache-r-library-restore
@@ -204,16 +217,26 @@ jobs:
             }
           }
 
+          sourceFloorPackages <- c("Andromeda", "FeatureExtraction")
+          sourceRepos <- "https://cloud.r-project.org"
           for (i in seq_len(nrow(floorDependencies))) {
             package <- floorDependencies$package[[i]]
             version <- floorDependencies$version[[i]]
-            message("Installing floor dependency: ", package, " ", version)
+            useSource <- package %in% sourceFloorPackages
+            message(
+              "Installing floor dependency: ",
+              package,
+              " ",
+              version,
+              if (useSource) " from source" else ""
+            )
             remotes::install_version(
               package = package,
               version = version,
-              repos = repos,
+              repos = if (useSource) sourceRepos else repos,
               dependencies = FALSE,
-              upgrade = "never"
+              upgrade = "never",
+              type = if (useSource) "source" else getOption("pkgType")
             )
           }
 

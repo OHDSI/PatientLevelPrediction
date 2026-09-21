@@ -71,6 +71,12 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
+  if (!is.null(plpData$simulationSettings)) {
+    saveRDS(plpData$simulationSettings, file = file.path(file, "simulationSettings.rds"))
+  }
+  if (!is.null(plpData$simulationTruth)) {
+    saveRDS(plpData$simulationTruth, file = file.path(file, "simulationTruth.rds"))
+  }
 }
 
 #' Load the plpData from a folder
@@ -111,6 +117,15 @@ loadPlpData <- function(file, readOnly = TRUE) {
     outcomes = readRDS(file.path(file, "outcomes.rds")),
     metaData = readRDS(file.path(file, "metaData.rds"))
   )
+
+  simulationSettingsFile <- file.path(file, "simulationSettings.rds")
+  if (file.exists(simulationSettingsFile)) {
+    result$simulationSettings <- readRDS(simulationSettingsFile)
+  }
+  simulationTruthFile <- file.path(file, "simulationTruth.rds")
+  if (file.exists(simulationTruthFile)) {
+    result$simulationTruth <- readRDS(simulationTruthFile)
+  }
 
   class(result) <- "plpData"
 

@@ -26,6 +26,12 @@ test_that("listAppend", {
   expect_equal(length(listAppend(list1, list2)), 3)
 })
 
+test_that("null-default operator uses right-hand side only for NULL", {
+  expect_equal(NULL %||% "fallback", "fallback")
+  expect_equal(FALSE %||% "fallback", FALSE)
+  expect_equal(0 %||% "fallback", 0)
+})
+
 # how to test configurePython?
 
 test_that("setPythonEnvironment", {
