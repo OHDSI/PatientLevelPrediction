@@ -159,6 +159,7 @@ fitCyclopsModel <- function(
           cyclopsData = cyclopsData,
           prior = prior,
           control = control,
+          forceNewObject = isBar,
           fixedCoefficients = fixedCoefficients,
           startingCoefficients = startingCoefficients
         )
@@ -508,7 +509,11 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
       folds = folds,
       covariateData = covariateData,
       modelType = modelType,
-      control = control
+      control = control,
+      forceNewObject = identical(
+        modelSettings$settings$priorfunction,
+        "BrokenAdaptiveRidge::createBarPrior"
+      )
     )
   }
 
@@ -695,7 +700,6 @@ doCyclopsCvPenalty <- function(
     holdOut <- labels$index == i
     weights <- rep(1.0, Cyclops::getNumberOfRows(cyclopsData))
     weights[holdOut] <- 0.0
-    foldStartingCoefficients <- startingCoefficients
 
     foldSearch <- vector("list", length(penalties))
     for (penaltyIndex in seq_along(penalties)) {
@@ -712,11 +716,12 @@ doCyclopsCvPenalty <- function(
         prior = cvPrior,
         control = control,
         weights = weights,
+        # BAR fixes eliminated coefficients at zero; do not carry that state to another fit.
+        forceNewObject = TRUE,
         fixedCoefficients = fixedCoefficients,
-        startingCoefficients = foldStartingCoefficients
+        startingCoefficients = startingCoefficients
       ))
       coefficients <- stats::coef(subsetFit)
-      foldStartingCoefficients <- as.numeric(coefficients)
 
       coefDf <- data.frame(
         betas = as.numeric(coefficients),
@@ -777,6 +782,8 @@ doCyclopsCvPenalty <- function(
         cyclopsData = cyclopsData,
         prior = prior,
         control = control,
+        weights = rep(1.0, Cyclops::getNumberOfRows(cyclopsData)),
+        forceNewObject = TRUE,
         fixedCoefficients = fixedCoefficients,
         startingCoefficients = startingCoefficients
       )
@@ -810,7 +817,8 @@ getCV <- function(
     folds,
     covariateData = NULL,
     modelType = "logistic",
-    control = NULL
+    control = NULL,
+    forceNewObject = FALSE
 ) {
   # add the index to the labels
   labels <- merge(labels, folds, by = "rowId")
@@ -822,7 +830,8 @@ getCV <- function(
     subset_fit <- suppressWarnings(Cyclops::fitCyclopsModel(cyclopsData,
       prior = cvPrior,
       weights = weights,
-      control = control
+      control = control,
+      forceNewObject = forceNewObject
     ))
     coefficients <- stats::coef(subset_fit)
     coefDf <- data.frame(
