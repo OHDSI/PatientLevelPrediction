@@ -468,6 +468,13 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 }
 
 
+getCyclopsCoefficientNames <- function(cyclopsData) {
+  # Read native IDs because formatted coefficient names can round large IDs together.
+  coefficientNames <- as.character(Cyclops::getCovariateIds(cyclopsData))
+  coefficientNames[coefficientNames == "0"] <- "(Intercept)"
+  return(coefficientNames)
+}
+
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
                                modelSettings, covariateData = NULL, control = NULL,
                                cvPrior = NULL, fixedCoefficients = NULL,
@@ -489,6 +496,9 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   } else {
     status <- "OK"
     coefficients <- stats::coef(fit) # not sure this is stats??
+    if (!is.null(transferMap)) {
+      names(coefficients) <- getCyclopsCoefficientNames(cyclopsData)
+    }
     ParallelLogger::logInfo(paste("GLM fit status: ", status))
   }
 
@@ -877,6 +887,9 @@ getCV <- function(
       startingCoefficients = startingCoefficients
     ))
     coefficients <- stats::coef(subset_fit)
+    if (!is.null(transferMap)) {
+      names(coefficients) <- getCyclopsCoefficientNames(cyclopsData)
+    }
     coefDf <- data.frame(
       betas = as.numeric(coefficients),
       covariateIds = names(coefficients),
@@ -913,7 +926,7 @@ getCV <- function(
       predCV = predCV,
       log_likelihood = subset_fit$log_likelihood,
       log_prior = subset_fit$log_prior,
-      coef = stats::coef(subset_fit)
+      coef = coefficients
     ))
   })
 

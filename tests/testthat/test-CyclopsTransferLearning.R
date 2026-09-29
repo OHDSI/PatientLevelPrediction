@@ -342,3 +342,48 @@ test_that("transfer ID validation detects aliases without rounding large IDs", {
     "full integer strings"
   )
 })
+
+test_that("large transfer covariate IDs survive Cyclops coefficient formatting", {
+  train <- makeTransferFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  covariates <- dplyr::collect(train$covariateData$covariates)
+  covariateRef <- dplyr::collect(train$covariateData$covariateRef)
+  # These distinct numeric IDs can have identical formatted coefficient names.
+  ids <- c("10000000000000000", "10000000000000002")
+  largeCovariates <- covariates
+  largeCovariates$covariateId <- as.numeric(ids)[match(covariates$covariateId, c(10, 20))]
+  largeCovariateRef <- covariateRef
+  largeCovariateRef$covariateId <- as.numeric(ids)
+
+  for (constructor in list(setLassoLogisticRegression, setRidgeRegression)) {
+    for (nfold in c(1, 3)) {
+      train$folds$index <- rep(seq_len(nfold), length.out = nrow(train$labels))
+      train$covariateData$covariates <- covariates
+      train$covariateData$covariateRef <- covariateRef
+      settings <- constructor(
+        priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
+        variance = 1, lowerLimit = 1, upperLimit = 1, threads = 1, seed = 42
+      )
+      reference <- fitCyclopsModel(train, settings, analysisId = "test")
+
+      train$covariateData$covariates <- largeCovariates
+      train$covariateData$covariateRef <- largeCovariateRef
+      settings$param$priorCoefs$covariateIds <- ids
+      scientific <- withr::with_options(
+        list(scipen = 0), fitCyclopsModel(train, settings, analysisId = "test")
+      )
+      decimal <- withr::with_options(
+        list(scipen = 999), fitCyclopsModel(train, settings, analysisId = "test")
+      )
+      expect_equal(scientific$prediction, reference$prediction, tolerance = 1e-8)
+      expect_equal(scientific$prediction, decimal$prediction, tolerance = 1e-8)
+      expect_equal(scientific$model$coefficients, decimal$model$coefficients, tolerance = 1e-8)
+      expect_setequal(scientific$model$coefficients$covariateIds, c("(Intercept)", ids))
+      expect_equal(nrow(scientific$model$coefficients), 3)
+      expect_equal(
+        scientific$model$coefficients$betas, reference$model$coefficients$betas,
+        tolerance = 1e-8
+      )
+    }
+  }
+})
