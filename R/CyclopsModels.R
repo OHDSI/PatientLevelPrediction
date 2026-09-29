@@ -68,7 +68,7 @@ fitCyclopsModel <- function(
       excludeCovariateIds = param$excludeCovariateIds
     )
     if (nrow(transferMap) > 0) {
-      matchedIds <- match(as.character(covariateIds), transferMap$covariateIds)
+      matchedIds <- match(normalizeTransferCovariateIds(covariateIds), transferMap$covariateIds)
       present <- !is.na(matchedIds)
       fitData$transferIds <- data.frame(
         covariateId = covariateIds[present],
@@ -963,14 +963,33 @@ filterCovariateIds <- function(param, covariateData) {
   return(covariates)
 }
 
-# Keep covariate IDs as characters to avoid converting them to 32-bit integers.
+normalizeTransferCovariateIds <- function(ids) {
+  missing <- is.na(ids)
+  if (is.numeric(ids) && !inherits(ids, "integer64")) {
+    ids <- format(ids, scientific = FALSE, trim = TRUE, digits = 22)
+  } else {
+    ids <- as.character(ids)
+  }
+  values <- suppressWarnings(as.numeric(ids))
+  # Expand scientific notation only within the exact integer range of doubles.
+  # Keep larger integer strings intact so distinct IDs do not get rounded together.
+  exact <- is.finite(values) & abs(values) < 2^53
+  ids[exact] <- format(values[exact], scientific = FALSE, trim = TRUE, digits = 22)
+  if (any(is.finite(values) & !exact & !grepl("^[+]?[0-9]+$", ids))) {
+    stop("Supply covariate IDs at or above 2^53 as full integer strings")
+  }
+  ids <- sub("^[+]?0*(?=[0-9])", "", ids, perl = TRUE)
+  ids[missing] <- NA_character_
+  return(ids)
+}
+
 createTransferMap <- function(priorCoefs, covariateIds,
                               includeCovariateIds = NULL, excludeCovariateIds = NULL) {
   if (!is.data.frame(priorCoefs) ||
       !all(c("betas", "covariateIds") %in% names(priorCoefs))) {
     stop("priorCoefs must contain betas and covariateIds")
   }
-  priorCoefs$covariateIds <- as.character(priorCoefs$covariateIds)
+  priorCoefs$covariateIds <- normalizeTransferCovariateIds(priorCoefs$covariateIds)
   if (!is.numeric(priorCoefs$betas) || any(!is.finite(priorCoefs$betas)) ||
       anyNA(priorCoefs$covariateIds) || anyDuplicated(priorCoefs$covariateIds)) {
     stop("Source coefficients must have unique IDs and finite betas")
@@ -979,12 +998,12 @@ createTransferMap <- function(priorCoefs, covariateIds,
   # Apply covariate selection even when a covariate is absent from training.
   if (length(includeCovariateIds) > 0) {
     priorCoefs <- priorCoefs[
-      priorCoefs$covariateIds %in% as.character(includeCovariateIds), , drop = FALSE
+      priorCoefs$covariateIds %in% normalizeTransferCovariateIds(includeCovariateIds), , drop = FALSE
     ]
   }
   if (length(excludeCovariateIds) > 0) {
     priorCoefs <- priorCoefs[
-      !priorCoefs$covariateIds %in% as.character(excludeCovariateIds), , drop = FALSE
+      !priorCoefs$covariateIds %in% normalizeTransferCovariateIds(excludeCovariateIds), , drop = FALSE
     ]
   }
   ids <- suppressWarnings(as.numeric(c(as.character(covariateIds), priorCoefs$covariateIds)))
@@ -998,6 +1017,7 @@ createTransferMap <- function(priorCoefs, covariateIds,
 
 reparamTransferCoefs <- function(inCoefs, transferMap) {
   coefs <- inCoefs[!inCoefs$covariateIds %in% transferMap$syntheticId, ]
+  coefs$covariateIds <- normalizeTransferCovariateIds(coefs$covariateIds)
   coefs <- rbind(coefs, transferMap[, c("betas", "covariateIds"), drop = FALSE])
   coefs <- rowsum(coefs$betas, group = coefs$covariateIds)
   coefs <- data.frame(betas = coefs[, 1], covariateIds = rownames(coefs), row.names = NULL)

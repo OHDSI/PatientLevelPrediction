@@ -43,7 +43,9 @@ from successive iterations to achieve convergence}
 before returning a failed-to-converge error}
 
 \item{priorCoefs}{A data frame with \code{covariateIds} and \code{betas} from a previous
-model. Coefficients must use the same covariate scaling as the training data.
+model. Numeric and character covariate IDs are matched by value. Supply IDs at
+or above \code{2^53} as full integer strings. Coefficients must use the same covariate
+scaling as the training data.
 Changes from these coefficients are penalized; the intercept is estimated
 separately and any supplied intercept is ignored. \code{includeCovariateIds} also
 applies to these coefficients. Covariates absent from training retain their
