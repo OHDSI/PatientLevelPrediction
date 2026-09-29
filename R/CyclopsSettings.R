@@ -32,7 +32,9 @@
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt 
 #' before returning a failed-to-converge error
 #' @param priorCoefs A data frame with `covariateIds` and `betas` from a previous
-#' model. Coefficients must use the same covariate scaling as the training data.
+#' model. Numeric and character covariate IDs are matched by value. Supply IDs at
+#' or above `2^53` as full integer strings. Coefficients must use the same covariate
+#' scaling as the training data.
 #' Changes from these coefficients are penalized; the intercept is estimated
 #' separately and any supplied intercept is ignored. `includeCovariateIds` also
 #' applies to these coefficients. Covariates absent from training retain their
@@ -127,7 +129,9 @@ setLassoLogisticRegression <- function(
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt
 #' before returning a failed-to-converge error
 #' @param priorCoefs A data frame with `covariateIds` and `betas` from a previous
-#' model. Coefficients must use the same covariate scaling as the training data.
+#' model. Numeric and character covariate IDs are matched by value. Supply IDs at
+#' or above `2^53` as full integer strings. Coefficients must use the same covariate
+#' scaling as the training data.
 #' Changes from these coefficients are penalized; the intercept is estimated
 #' separately and any supplied intercept is ignored. `includeCovariateIds` also
 #' applies to these coefficients. Covariates absent from training retain their

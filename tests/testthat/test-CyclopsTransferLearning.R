@@ -231,8 +231,8 @@ test_that("ridge transfer also matches source coefficients by ID", {
   expect_equal(fit$prediction$value, shuffled$prediction$value, tolerance = 1e-8)
 })
 
-test_that("numeric covariate IDs in scientific notation are accepted", {
-  train <- makeTransferFixture(nfold = 1)
+test_that("transfer predictions do not depend on covariate ID formatting", {
+  train <- makeTransferFixture()
   on.exit(Andromeda::close(train$covariateData))
   covariates <- dplyr::collect(train$covariateData$covariates)
   covariates$covariateId <- covariates$covariateId * 1e8
@@ -240,11 +240,73 @@ test_that("numeric covariate IDs in scientific notation are accepted", {
   covariateRef <- dplyr::collect(train$covariateData$covariateRef)
   covariateRef$covariateId <- covariateRef$covariateId * 1e8
   train$covariateData$covariateRef <- covariateRef
-  source <- data.frame(covariateIds = c(1e9, 2e9), betas = c(1, -2))
-  settings <- setLassoLogisticRegression(
-    priorCoefs = source, variance = 0.001, threads = 1, seed = 42
+  source <- data.frame(covariateIds = c(1e9, 2e9, 3e9), betas = c(1, -2, 0.7))
+  ids <- c("1000000000", "2000000000", "3000000000")
+  for (nfold in c(1, 3)) {
+    train$folds$index <- rep(seq_len(nfold), length.out = nrow(train$labels))
+    for (variance in c(0.001, 1)) {
+      settings <- setLassoLogisticRegression(
+        priorCoefs = source, includeCovariateIds = source$covariateIds,
+        variance = variance, lowerLimit = variance, upperLimit = variance,
+        threads = 1, seed = 42
+      )
+      reference <- fitCyclopsModel(train, settings, analysisId = "test")
+      settings$param$priorCoefs$covariateIds <- c(ids[1], "2e+09", ids[3])
+      fit <- fitCyclopsModel(train, settings, analysisId = "test")
+      expect_equal(fit$prediction, reference$prediction, tolerance = 1e-8)
+      expect_equal(fit$model$coefficients, reference$model$coefficients, tolerance = 1e-8)
+      coefs <- fit$model$coefficients
+      expect_setequal(coefs$covariateIds, c("(Intercept)", ids))
+      expect_equal(nrow(coefs), 4)
+      expect_equal(coefs$betas[coefs$covariateIds == ids[3]], 0.7)
+      if (variance == 0.001) {
+        expect_equal(coefs$betas[match(ids, coefs$covariateIds)], source$betas)
+      } else {
+        expect_gt(max(abs(coefs$betas[match(ids, coefs$covariateIds)] - source$betas)), 0.01)
+      }
+    }
+  }
+
+  settings$param$includeCovariateIds <- c(1e9, 3e9)
+  included <- fitCyclopsModel(train, settings, analysisId = "test")
+  settings$param$includeCovariateIds <- NULL
+  settings$param$excludeCovariateIds <- 2e9
+  settings$param$priorCoefs$covariateIds <- ids
+  excluded <- fitCyclopsModel(train, settings, analysisId = "test")
+  expect_equal(included$prediction, excluded$prediction, tolerance = 1e-8)
+  expect_setequal(excluded$model$coefficients$covariateIds, c("(Intercept)", ids[c(1, 3)]))
+
+  withr::local_options(scipen = 999)
+  decimal <- fitCyclopsModel(train, settings, analysisId = "test")
+  expect_equal(decimal$prediction, excluded$prediction, tolerance = 1e-8)
+  expect_equal(decimal$model$coefficients, excluded$model$coefficients, tolerance = 1e-8)
+})
+
+test_that("transfer ID validation detects aliases without rounding large IDs", {
+  expect_error(
+    createTransferMap(
+      priorCoefs = data.frame(covariateIds = c("1e+09", "1000000000"), betas = c(1, 2)),
+      covariateIds = 1e9
+    ),
+    "unique IDs and finite betas"
   )
-  fit <- fitCyclopsModel(train, settings, analysisId = "test")
-  coefs <- fit$model$coefficients
-  expect_equal(coefs$betas[match(as.character(source$covariateIds), coefs$covariateIds)], c(1, -2))
+  ids <- c("9007199254740992", "9007199254740993")
+  map <- createTransferMap(
+    priorCoefs = data.frame(covariateIds = ids, betas = c(1, 2)),
+    covariateIds = ids,
+    includeCovariateIds = ids
+  )
+  combined <- reparamTransferCoefs(
+    inCoefs = data.frame(betas = c(0.1, 0.2), covariateIds = ids),
+    transferMap = map
+  )
+  expect_equal(combined$covariateIds, ids)
+  expect_equal(combined$betas, c(1.1, 2.2))
+  expect_error(
+    createTransferMap(
+      priorCoefs = data.frame(covariateIds = "9.007199254740993e15", betas = 1),
+      covariateIds = ids
+    ),
+    "full integer strings"
+  )
 })
