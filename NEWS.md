@@ -1,3 +1,11 @@
+PatientLevelPrediction development
+=================================
+
+- Fixed coefficient matching and cross-validation refits when using `priorCoefs`
+  with lasso or ridge logistic regression. Fitting no longer adds covariates to
+  the input data. Coefficients for covariates absent from training are retained,
+  subject to covariate selection.
+
 PatientLevelPrediction 6.7.0
 ============================
 
