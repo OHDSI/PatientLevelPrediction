@@ -103,7 +103,7 @@ test_that("no overlapping source covariates gives a target-only model", {
   for (nfold in c(1, 3)) {
     train$folds$index <- rep(seq_len(nfold), length.out = nrow(train$labels))
     settings <- setLassoLogisticRegression(
-      variance = 1, lowerLimit = 1, upperLimit = 1,
+      variance = 1,
       threads = 1, seed = 42, tolerance = 1e-10
     )
     reference <- fitCyclopsModel(train, settings, analysisId = "test")
@@ -137,7 +137,7 @@ test_that("native CV transfer fits preserve caller data and source predictions",
   before <- dplyr::collect(train$covariateData$covariates)
   settings <- setLassoLogisticRegression(
     priorCoefs = data.frame(covariateIds = c("10", "20", "30"), betas = c(1, -2, 0.7)),
-    variance = 0.001, lowerLimit = 0.001, upperLimit = 0.001, threads = 1, seed = 42
+    variance = 0.001, threads = 1, seed = 42
   )
   fit <- fitCyclopsModel(train, settings, analysisId = "test")
   cv <- fit$prediction[fit$prediction$evaluationType == "CV", ]
@@ -145,16 +145,24 @@ test_that("native CV transfer fits preserve caller data and source predictions",
   expect_false("30" %in% fit$model$coefficients$covariateIds)
   expect_equal(dplyr::collect(train$covariateData$covariates), before)
 
-  # Strong shrinkage leaves corrections at zero. Within each fold, subtracting
-  # the known source contribution must leave only its fitted target intercept.
-  sourceContribution <- before %>%
-    dplyr::mutate(contribution = .data$covariateValue * ifelse(.data$covariateId == 10, 1, -2)) %>%
-    dplyr::group_by(.data$rowId) %>%
-    dplyr::summarise(value = sum(.data$contribution))
-  residual <- cv$rawValue - sourceContribution$value[match(cv$rowId, sourceContribution$rowId)]
-  fold <- train$folds$index[match(cv$rowId, train$folds$rowId)]
+  # Refit each training fold at the variance selected by CV.
+  settings$param$priorParams$variance <- fit$model$priorVariance
+  foldTrain <- makeTransferFixture(nfold = 1)
+  on.exit(Andromeda::close(foldTrain$covariateData), add = TRUE)
   for (i in 1:3) {
-    expect_lt(diff(range(residual[fold == i])), 1e-8)
+    holdout <- train$folds$rowId[train$folds$index == i]
+    foldTrain$labels <- train$labels[!train$labels$rowId %in% holdout, ]
+    foldTrain$folds <- data.frame(rowId = foldTrain$labels$rowId, index = 1L)
+    foldTrain$covariateData$covariates <- before[!before$rowId %in% holdout, ]
+    foldFit <- fitCyclopsModel(foldTrain, settings, analysisId = "test")
+    expected <- predictCyclops(
+      plpModel = foldFit, data = train,
+      cohort = train$labels[train$labels$rowId %in% holdout, ]
+    )
+    expect_equal(
+      cv$rawValue[match(expected$rowId, cv$rowId)], expected$rawValue,
+      tolerance = 1e-8
+    )
   }
 })
 
@@ -189,7 +197,7 @@ test_that("CV predictions are invariant to label and fold row order", {
   on.exit(Andromeda::close(train$covariateData))
   for (source in list(NULL, data.frame(covariateIds = c("10", "20"), betas = c(1, -2)))) {
     settings <- setLassoLogisticRegression(
-      priorCoefs = source, variance = 1, lowerLimit = 1, upperLimit = 1,
+      priorCoefs = source, variance = 1,
       threads = 1, seed = 42
     )
     fit <- fitCyclopsModel(train, settings, analysisId = "test")
@@ -279,7 +287,7 @@ test_that("transfer predictions do not depend on covariate ID formatting", {
     for (variance in c(0.001, 1)) {
       settings <- setLassoLogisticRegression(
         priorCoefs = source, includeCovariateIds = source$covariateIds,
-        variance = variance, lowerLimit = variance, upperLimit = variance,
+        variance = variance,
         threads = 1, seed = 42
       )
       reference <- fitCyclopsModel(train, settings, analysisId = "test")
@@ -291,10 +299,14 @@ test_that("transfer predictions do not depend on covariate ID formatting", {
       expect_setequal(coefs$covariateIds, c("(Intercept)", ids[1:2]))
       expect_equal(nrow(coefs), 3)
       expect_false(ids[3] %in% coefs$covariateIds)
-      if (variance == 0.001) {
-        expect_equal(coefs$betas[match(ids[1:2], coefs$covariateIds)], source$betas[1:2])
-      } else {
-        expect_gt(max(abs(coefs$betas[match(ids[1:2], coefs$covariateIds)] - source$betas[1:2])), 0.01)
+      # A single training fold fits the supplied variance without tuning.
+      if (nfold == 1) {
+        expect_equal(fit$model$priorVariance, variance)
+        if (variance == 0.001) {
+          expect_equal(coefs$betas[match(ids[1:2], coefs$covariateIds)], source$betas[1:2])
+        } else {
+          expect_gt(max(abs(coefs$betas[match(ids[1:2], coefs$covariateIds)] - source$betas[1:2])), 0.01)
+        }
       }
     }
   }
@@ -362,7 +374,7 @@ test_that("large transfer covariate IDs survive Cyclops coefficient formatting",
       train$covariateData$covariateRef <- covariateRef
       settings <- constructor(
         priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
-        variance = 1, lowerLimit = 1, upperLimit = 1, threads = 1, seed = 42
+        variance = 1, threads = 1, seed = 42
       )
       reference <- fitCyclopsModel(train, settings, analysisId = "test")
 
