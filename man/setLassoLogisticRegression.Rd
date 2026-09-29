@@ -42,8 +42,13 @@ from successive iterations to achieve convergence}
 \item{maxIterations}{Integer: maximum iterations of Cyclops to attempt
 before returning a failed-to-converge error}
 
-\item{priorCoefs}{Use coefficients from a previous model as starting
-points for model fit (transfer learning)}
+\item{priorCoefs}{A data frame with \code{covariateIds} and \code{betas} from a previous
+model. Coefficients must use the same covariate scaling as the training data.
+Changes from these coefficients are penalized; the intercept is estimated
+separately and any supplied intercept is ignored. \code{includeCovariateIds} also
+applies to these coefficients. Covariates absent from training retain their
+supplied coefficients; prediction preprocessing must provide their normalization
+factors when normalization is used.}
 }
 \value{
 \code{modelSettings} object

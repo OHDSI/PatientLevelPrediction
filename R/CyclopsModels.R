@@ -52,18 +52,38 @@ fitCyclopsModel <- function(
 
   covariates <- filterCovariateIds(param, trainData$covariateData)
 
+  transferMap <- NULL
   if (!is.null(param$priorCoefs)) {
-    sourceCoefs <- param$priorCoefs %>%
-      dplyr::filter(abs(.data$betas) > 0 & .data$covariateIds != "(Intercept)")
-
-    newCovariates <- covariates %>%
-      dplyr::filter(.data$covariateId %in% !!sourceCoefs$covariateIds) %>%
-      dplyr::mutate(newCovariateId = .data$covariateId * -1) %>%
-      dplyr::select(-"covariateId") %>%
-      dplyr::rename(covariateId = .data$newCovariateId) %>%
-      dplyr::collect()
-
-    Andromeda::appendToTable(covariates, newCovariates)
+    # Andromeda tables share storage; append transfer covariates to a separate table.
+    fitData <- Andromeda::andromeda(covariates = covariates)
+    on.exit(Andromeda::close(fitData), add = TRUE)
+    covariates <- fitData$covariates
+    covariateIds <- covariates %>%
+      dplyr::distinct(.data$covariateId) %>%
+      dplyr::pull()
+    transferMap <- createTransferMap(
+      priorCoefs = param$priorCoefs,
+      covariateIds = covariateIds,
+      includeCovariateIds = param$includeCovariateIds,
+      excludeCovariateIds = param$excludeCovariateIds
+    )
+    if (nrow(transferMap) > 0) {
+      matchedIds <- match(as.character(covariateIds), transferMap$covariateIds)
+      present <- !is.na(matchedIds)
+      fitData$transferIds <- data.frame(
+        covariateId = covariateIds[present],
+        syntheticId = as.integer(transferMap$syntheticId[matchedIds[present]])
+      )
+      # Rename rowId before joining: DuckDB also has an implicit rowid column.
+      fitData$transferCovariates <- covariates %>%
+        dplyr::semi_join(fitData$transferIds, by = "covariateId") %>%
+        dplyr::rename(patientRowId = "rowId")
+      newCovariates <- fitData$transferCovariates %>%
+        dplyr::inner_join(fitData$transferIds, by = "covariateId") %>%
+        dplyr::select(-"covariateId") %>%
+        dplyr::rename(covariateId = "syntheticId", rowId = "patientRowId")
+      Andromeda::appendToTable(tbl = covariates, data = newCovariates)
+    }
   }
 
   start <- Sys.time()
@@ -78,22 +98,19 @@ fitCyclopsModel <- function(
     quiet = TRUE
   )
 
-  if (!is.null(param$priorCoefs)) {
-    fixedCoefficients <- c(
-      FALSE,
-      rep(TRUE, nrow(sourceCoefs)),
-      rep(FALSE, length(cyclopsData$coefficientNames) - (nrow(sourceCoefs) + 1))
-    )
-
-    startingCoefficients <- rep(0, length(fixedCoefficients))
-
-    # skip intercept index
-    startingCoefficients[2:(nrow(sourceCoefs) + 1)] <- sourceCoefs$betas
-  } else {
-    startingCoefficients <- NULL
-    fixedCoefficients <- NULL
+  startingCoefficients <- NULL
+  fixedCoefficients <- NULL
+  if (!is.null(transferMap)) {
+    matches <- match(cyclopsData$coefficientNames, transferMap$syntheticId)
+    fixedCoefficients <- !is.na(matches)
+    startingCoefficients <- numeric(length(matches))
+    startingCoefficients[fixedCoefficients] <- transferMap$betas[matches[fixedCoefficients]]
+    # Only the changes to the source coefficients should be penalized.
+    param$priorParams$exclude <- unique(c(
+      param$priorParams$exclude,
+      as.integer(cyclopsData$coefficientNames[fixedCoefficients])
+    ))
   }
-
   if (settings$crossValidationInPrior) {
     param$priorParams$useCrossValidation <- max(trainData$folds$index) > 1
   }
@@ -183,7 +200,12 @@ fitCyclopsModel <- function(
     fit <- tryCatch(
       {
         ParallelLogger::logInfo("Running Cyclops with fixed varience")
-        Cyclops::fitCyclopsModel(cyclopsData, prior = prior)
+        Cyclops::fitCyclopsModel(
+          cyclopsData = cyclopsData,
+          prior = prior,
+          fixedCoefficients = fixedCoefficients,
+          startingCoefficients = startingCoefficients
+        )
       },
       finally = ParallelLogger::logInfo("Done.")
     )
@@ -200,11 +222,17 @@ fitCyclopsModel <- function(
     modelSettings = modelSettings,
     covariateData  = trainData$covariateData,
     control = createCyclopsRefitControl(modelSettings),
-    cvPrior = cvPrior
+    cvPrior = cvPrior,
+    fixedCoefficients = fixedCoefficients,
+    startingCoefficients = startingCoefficients,
+    transferMap = transferMap
   )
 
   if (!is.null(param$priorCoefs)) {
-    modelTrained$coefficients <- reparamTransferCoefs(modelTrained$coefficients)
+    modelTrained$coefficients <- reparamTransferCoefs(
+      inCoefs = modelTrained$coefficients,
+      transferMap = transferMap
+    )
   }
 
   # TODO get optimal lambda value
@@ -442,7 +470,8 @@ predictCyclopsType <- function(coefficients, population, covariateData, modelTyp
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
                                modelSettings, covariateData = NULL, control = NULL,
-                               cvPrior = NULL) {
+                               cvPrior = NULL, fixedCoefficients = NULL,
+                               startingCoefficients = NULL, transferMap = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -502,6 +531,12 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
         cyclopsData = cyclopsData
       )
     }
+    if (!is.null(transferMap)) {
+      cvPrior$exclude <- unique(c(
+        cvPrior$exclude,
+        as.integer(cyclopsData$coefficientNames[fixedCoefficients])
+      ))
+    }
     outcomeModel$cv <- getCV(
       cyclopsData, 
       labels,
@@ -510,7 +545,10 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
       covariateData = covariateData,
       modelType = modelType,
       control = control,
-      forceNewObject = identical(
+      fixedCoefficients = fixedCoefficients,
+      startingCoefficients = startingCoefficients,
+      transferMap = transferMap,
+      forceNewObject = !is.null(transferMap) || identical(
         modelSettings$settings$priorfunction,
         "BrokenAdaptiveRidge::createBarPrior"
       )
@@ -818,9 +856,12 @@ getCV <- function(
     covariateData = NULL,
     modelType = "logistic",
     control = NULL,
-    forceNewObject = FALSE
+    forceNewObject = FALSE,
+    fixedCoefficients = NULL,
+    startingCoefficients = NULL,
+    transferMap = NULL
 ) {
-  # add the index to the labels
+  # merge sorts by rowId, matching Cyclops' ordering of logistic outcomes.
   labels <- merge(labels, folds, by = "rowId")
 
   result <- lapply(1:max(labels$index), function(i) {
@@ -831,7 +872,9 @@ getCV <- function(
       prior = cvPrior,
       weights = weights,
       control = control,
-      forceNewObject = forceNewObject
+      forceNewObject = forceNewObject,
+      fixedCoefficients = fixedCoefficients,
+      startingCoefficients = startingCoefficients
     ))
     coefficients <- stats::coef(subset_fit)
     coefDf <- data.frame(
@@ -839,6 +882,9 @@ getCV <- function(
       covariateIds = names(coefficients),
       stringsAsFactors = FALSE
     )
+    if (!is.null(transferMap)) {
+      coefDf <- reparamTransferCoefs(inCoefs = coefDf, transferMap = transferMap)
+    }
     if (!is.null(covariateData)) {
       predAll <- predictCyclopsType(
         coefficients = coefDf,
@@ -846,8 +892,9 @@ getCV <- function(
         covariateData = covariateData,
         modelType = modelType
       )
-      probsAll <- predAll$value
-      rawValueAll <- predAll$rawValue
+      rowOrder <- match(labels$rowId, predAll$rowId)
+      probsAll <- predAll$value[rowOrder]
+      rawValueAll <- predAll$rawValue[rowOrder]
     } else {
       probsAll <- stats::predict(subset_fit)
       probsAllClipped <- pmin(pmax(probsAll, 1e-15), 1 - 1e-15)
@@ -916,18 +963,43 @@ filterCovariateIds <- function(param, covariateData) {
   return(covariates)
 }
 
-reparamTransferCoefs <- function(inCoefs) {
-  transferCoefs <- inCoefs %>%
-    dplyr::filter(grepl("-", .data$covariateIds))
+# Keep covariate IDs as characters to avoid converting them to 32-bit integers.
+createTransferMap <- function(priorCoefs, covariateIds,
+                              includeCovariateIds = NULL, excludeCovariateIds = NULL) {
+  if (!is.data.frame(priorCoefs) ||
+      !all(c("betas", "covariateIds") %in% names(priorCoefs))) {
+    stop("priorCoefs must contain betas and covariateIds")
+  }
+  priorCoefs$covariateIds <- as.character(priorCoefs$covariateIds)
+  if (!is.numeric(priorCoefs$betas) || any(!is.finite(priorCoefs$betas)) ||
+      anyNA(priorCoefs$covariateIds) || anyDuplicated(priorCoefs$covariateIds)) {
+    stop("Source coefficients must have unique IDs and finite betas")
+  }
+  priorCoefs <- priorCoefs[priorCoefs$covariateIds != "(Intercept)", , drop = FALSE]
+  # Apply covariate selection even when a covariate is absent from training.
+  if (length(includeCovariateIds) > 0) {
+    priorCoefs <- priorCoefs[
+      priorCoefs$covariateIds %in% as.character(includeCovariateIds), , drop = FALSE
+    ]
+  }
+  if (length(excludeCovariateIds) > 0) {
+    priorCoefs <- priorCoefs[
+      !priorCoefs$covariateIds %in% as.character(excludeCovariateIds), , drop = FALSE
+    ]
+  }
+  ids <- suppressWarnings(as.numeric(c(as.character(covariateIds), priorCoefs$covariateIds)))
+  if (any(!is.finite(ids) | ids <= 0 | ids != floor(ids))) {
+    stop("Transfer requires positive integer covariate IDs; negative IDs are reserved")
+  }
+  priorCoefs <- priorCoefs[priorCoefs$betas != 0, c("covariateIds", "betas"), drop = FALSE]
+  priorCoefs$syntheticId <- as.character(-seq_len(nrow(priorCoefs)))
+  return(priorCoefs)
+}
 
-  transferCoefs$covariateIds <- substring(transferCoefs$covariateIds, 2)
-
-  originalCoefs <- inCoefs %>%
-    dplyr::filter(!grepl("-", .data$covariateIds))
-
-  coefs <- rbind(originalCoefs, transferCoefs)
-  coefs <- rowsum(coefs$betas, coefs$covariateIds)
-  coefs <- data.frame(betas = coefs, covariateIds = rownames(coefs), row.names = NULL)
-
+reparamTransferCoefs <- function(inCoefs, transferMap) {
+  coefs <- inCoefs[!inCoefs$covariateIds %in% transferMap$syntheticId, ]
+  coefs <- rbind(coefs, transferMap[, c("betas", "covariateIds"), drop = FALSE])
+  coefs <- rowsum(coefs$betas, group = coefs$covariateIds)
+  coefs <- data.frame(betas = coefs[, 1], covariateIds = rownames(coefs), row.names = NULL)
   return(coefs)
 }
