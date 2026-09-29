@@ -2,6 +2,8 @@
 
 ## PatientLevelPrediction 6.7.0
 
+CRAN release: 2026-09-21
+
 ### New features
 
 - Added

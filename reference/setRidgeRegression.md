@@ -67,8 +67,14 @@ setRidgeRegression(
 
 - priorCoefs:
 
-  Use coefficients from a previous model as starting points for model
-  fit (transfer learning)
+  A data frame with `covariateIds` and `betas` from a previous model.
+  Numeric and character covariate IDs are matched by value. Supply IDs
+  at or above `2^53` as full integer strings. Coefficients must use the
+  same covariate scaling as the training data. Changes from these
+  coefficients are penalized; the intercept is estimated separately and
+  any supplied intercept is ignored. `includeCovariateIds` also applies
+  to these coefficients. Source coefficients for covariates absent from
+  the target training data are dropped, and their count is logged.
 
 ## Value
 

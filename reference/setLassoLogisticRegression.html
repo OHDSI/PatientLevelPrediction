@@ -127,8 +127,14 @@ before returning a failed-to-converge error</p></dd>
 
 
 <dt id="arg-priorcoefs">priorCoefs<a class="anchor" aria-label="anchor" href="#arg-priorcoefs"></a></dt>
-<dd><p>Use coefficients from a previous model as starting
-points for model fit (transfer learning)</p></dd>
+<dd><p>A data frame with <code>covariateIds</code> and <code>betas</code> from a previous
+model. Numeric and character covariate IDs are matched by value. Supply IDs at
+or above <code>2^53</code> as full integer strings. Coefficients must use the same covariate
+scaling as the training data.
+Changes from these coefficients are penalized; the intercept is estimated
+separately and any supplied intercept is ignored. <code>includeCovariateIds</code> also
+applies to these coefficients. Source coefficients for covariates absent from
+the target training data are dropped, and their count is logged.</p></dd>
 
 </dl></div>
     <div class="section level2">
