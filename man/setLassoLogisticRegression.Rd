@@ -48,9 +48,8 @@ or above \code{2^53} as full integer strings. Coefficients must use the same cov
 scaling as the training data.
 Changes from these coefficients are penalized; the intercept is estimated
 separately and any supplied intercept is ignored. \code{includeCovariateIds} also
-applies to these coefficients. Covariates absent from training retain their
-supplied coefficients; prediction preprocessing must provide their normalization
-factors when normalization is used.}
+applies to these coefficients. Source coefficients for covariates absent from
+the target training data are dropped, and their count is logged.}
 }
 \value{
 \code{modelSettings} object

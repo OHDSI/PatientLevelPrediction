@@ -995,7 +995,7 @@ createTransferMap <- function(priorCoefs, covariateIds,
     stop("Source coefficients must have unique IDs and finite betas")
   }
   priorCoefs <- priorCoefs[priorCoefs$covariateIds != "(Intercept)", , drop = FALSE]
-  # Apply covariate selection even when a covariate is absent from training.
+  # Respect covariate selection before reporting missing source covariates.
   if (length(includeCovariateIds) > 0) {
     priorCoefs <- priorCoefs[
       priorCoefs$covariateIds %in% normalizeTransferCovariateIds(includeCovariateIds), , drop = FALSE
@@ -1011,6 +1011,14 @@ createTransferMap <- function(priorCoefs, covariateIds,
     stop("Transfer requires positive integer covariate IDs; negative IDs are reserved")
   }
   priorCoefs <- priorCoefs[priorCoefs$betas != 0, c("covariateIds", "betas"), drop = FALSE]
+  present <- priorCoefs$covariateIds %in% normalizeTransferCovariateIds(covariateIds)
+  if (any(!present)) {
+    ParallelLogger::logInfo(
+      "Source covariates absent from target training data: ", sum(!present),
+      ". Dropping their coefficients."
+    )
+    priorCoefs <- priorCoefs[present, , drop = FALSE]
+  }
   priorCoefs$syntheticId <- as.character(-seq_len(nrow(priorCoefs)))
   return(priorCoefs)
 }

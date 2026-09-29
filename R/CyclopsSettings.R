@@ -37,9 +37,8 @@
 #' scaling as the training data.
 #' Changes from these coefficients are penalized; the intercept is estimated
 #' separately and any supplied intercept is ignored. `includeCovariateIds` also
-#' applies to these coefficients. Covariates absent from training retain their
-#' supplied coefficients; prediction preprocessing must provide their normalization
-#' factors when normalization is used.
+#' applies to these coefficients. Source coefficients for covariates absent from
+#' the target training data are dropped, and their count is logged.
 #'
 #' @return `modelSettings` object
 #'
@@ -134,9 +133,8 @@ setLassoLogisticRegression <- function(
 #' scaling as the training data.
 #' Changes from these coefficients are penalized; the intercept is estimated
 #' separately and any supplied intercept is ignored. `includeCovariateIds` also
-#' applies to these coefficients. Covariates absent from training retain their
-#' supplied coefficients; prediction preprocessing must provide their normalization
-#' factors when normalization is used.
+#' applies to these coefficients. Source coefficients for covariates absent from
+#' the target training data are dropped, and their count is logged.
 #'
 #' @return `modelSettings` object
 #'
