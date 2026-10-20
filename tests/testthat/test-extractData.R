@@ -42,6 +42,7 @@ test_that("getPlpData errors", {
 test_that("getPlpData works", {
   skip_if_offline()
   expect_true(is(plpData, "plpData"))
+  expect_false("timeRef" %in% names(plpData))
 })
 
 test_that("getCovariateData", {
