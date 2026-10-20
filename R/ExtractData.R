@@ -503,9 +503,12 @@ getPlpData <- function(
     cohorts = cohorts,
     outcomes = outcomes,
     covariateData = covariateData,
-    timeRef = timeReference,
     metaData = metaData
   )
+
+  if (!is.null(timeReference)) {
+    result$timeRef <- timeReference
+  }
 
   class(result) <- "plpData"
   return(result)
