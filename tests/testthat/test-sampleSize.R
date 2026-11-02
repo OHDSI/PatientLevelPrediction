@@ -157,40 +157,101 @@ test_that("sampleSize is deterministic and smaller samples are nested", {
   expect_true(all(small$subjectId %in% large$subjectId))
 })
 
-# The database servers are only available in CI in the main repository, through
-# the OHDSI organization secrets.
-serverPrefixes <- c(
-  "oracle" = "CDM5_ORACLE",
-  "postgresql" = "CDM5_POSTGRESQL",
-  "sql server" = "CDM5_SQL_SERVER"
+# The database servers are reached through the OHDSI organization secrets. These
+# tests only run in .github/workflows/database-tests.yaml, which is much faster
+# than the full check because it skips R CMD check and tests/testthat/setup.R.
+databaseServers <- list(
+  "oracle" = list(prefix = "CDM5_ORACLE", connection = "SERVER"),
+  "postgresql" = list(prefix = "CDM5_POSTGRESQL", connection = "SERVER"),
+  "sql server" = list(prefix = "CDM5_SQL_SERVER", connection = "SERVER"),
+  "redshift" = list(prefix = "CDM5_REDSHIFT", connection = "SERVER"),
+  "spark" = list(prefix = "CDM5_SPARK", connection = "CONNECTION_STRING"),
+  "snowflake" = list(
+    prefix = "CDM_SNOWFLAKE",
+    connection = "CONNECTION_STRING",
+    cdmSchema = "CDM53_SCHEMA"
+  ),
+  "iris" = list(prefix = "CDM_IRIS", connection = "CONNECTION_STRING"),
+  "bigquery" = list(prefix = "CDM_BIG_QUERY", connection = "CONNECTION_STRING"),
+  "duckdb" = list(local = TRUE)
 )
 
-serverIsAvailable <- function(dbms) {
-  settings <- paste(
-    serverPrefixes[[dbms]],
-    c("CDM_SCHEMA", "OHDSI_SCHEMA", "PASSWORD", "SERVER", "USER"),
-    sep = "_"
-  )
-  Sys.getenv("CI") == "true" &&
-    Sys.getenv("GITHUB_REPOSITORY") == "OHDSI/PatientLevelPrediction" &&
-    all(nzchar(Sys.getenv(settings)))
+serverSetting <- function(dbms, name) {
+  Sys.getenv(paste(databaseServers[[dbms]]$prefix, name, sep = "_"))
 }
 
-for (serverDbms in names(serverPrefixes)) {
+serverCdmSchema <- function(dbms) {
+  schema <- databaseServers[[dbms]]$cdmSchema
+  serverSetting(dbms, if (is.null(schema)) "CDM_SCHEMA" else schema)
+}
+
+serverIsAvailable <- function(dbms) {
+  if (Sys.getenv("PLP_TEST_DATABASES") != "true") {
+    return(FALSE)
+  }
+  server <- databaseServers[[dbms]]
+  if (isTRUE(server$local)) {
+    return(requireNamespace(dbms, quietly = TRUE))
+  }
+  credentials <- if (dbms == "bigquery") "KEY_FILE" else c("USER", "PASSWORD")
+  settings <- c(server$connection, "OHDSI_SCHEMA", credentials)
+  nzchar(serverCdmSchema(dbms)) &&
+    all(vapply(settings, function(name) nzchar(serverSetting(dbms, name)), TRUE))
+}
+
+createServerConnectionDetails <- function(dbms) {
+  if (isTRUE(databaseServers[[dbms]]$local)) {
+    return(Eunomia::getEunomiaConnectionDetails(
+      databaseFile = tempfile(fileext = ".duckdb"),
+      dbms = dbms
+    ))
+  }
+  DatabaseConnector::downloadJdbcDrivers(dbms)
+  if (dbms == "bigquery") {
+    keyFile <- tempfile(fileext = ".json")
+    writeLines(serverSetting(dbms, "KEY_FILE"), keyFile)
+    connectionString <- gsub(
+      "<keyfile path>",
+      normalizePath(keyFile, winslash = "/"),
+      serverSetting(dbms, "CONNECTION_STRING"),
+      fixed = TRUE
+    )
+    return(DatabaseConnector::createConnectionDetails(
+      dbms = dbms,
+      user = "",
+      password = "",
+      connectionString = !!connectionString
+    ))
+  }
+  user <- serverSetting(dbms, "USER")
+  password <- URLdecode(serverSetting(dbms, "PASSWORD"))
+  if (databaseServers[[dbms]]$connection == "SERVER") {
+    server <- serverSetting(dbms, "SERVER")
+    return(DatabaseConnector::createConnectionDetails(
+      dbms = dbms,
+      user = !!user,
+      password = !!password,
+      server = !!server
+    ))
+  }
+  connectionString <- serverSetting(dbms, "CONNECTION_STRING")
+  DatabaseConnector::createConnectionDetails(
+    dbms = dbms,
+    user = !!user,
+    password = !!password,
+    connectionString = !!connectionString
+  )
+}
+
+for (serverDbms in names(databaseServers)) {
   test_that(paste("sampleSize runs on", serverDbms), {
     dbms <- serverDbms
-    skip_if_not(serverIsAvailable(dbms), paste(dbms, "server is not configured"))
-    prefix <- serverPrefixes[[dbms]]
-    cdmSchema <- Sys.getenv(paste0(prefix, "_CDM_SCHEMA"))
-    ohdsiSchema <- Sys.getenv(paste0(prefix, "_OHDSI_SCHEMA"))
+    skip_if_not(serverIsAvailable(dbms), paste(dbms, "is not configured"))
+    isLocal <- isTRUE(databaseServers[[dbms]]$local)
+    cdmSchema <- if (isLocal) "main" else serverCdmSchema(dbms)
+    ohdsiSchema <- if (isLocal) "main" else serverSetting(dbms, "OHDSI_SCHEMA")
 
-    DatabaseConnector::downloadJdbcDrivers(dbms)
-    connectionDetails <- DatabaseConnector::createConnectionDetails(
-      dbms = dbms,
-      user = Sys.getenv(paste0(prefix, "_USER")),
-      password = URLdecode(Sys.getenv(paste0(prefix, "_PASSWORD"))),
-      server = Sys.getenv(paste0(prefix, "_SERVER"))
-    )
+    connectionDetails <- createServerConnectionDetails(dbms)
     connection <- DatabaseConnector::connect(connectionDetails)
     # Other jobs may run at the same time on the same server
     cohortTable <- paste0(
@@ -203,6 +264,7 @@ for (serverDbms in names(serverPrefixes)) {
         "DROP TABLE @schema.@table;",
         schema = ohdsiSchema,
         table = cohortTable,
+        tempEmulationSchema = ohdsiSchema,
         progressBar = FALSE,
         reportOverallTime = FALSE
       )
