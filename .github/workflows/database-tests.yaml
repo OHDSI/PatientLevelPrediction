@@ -28,7 +28,9 @@ jobs:
           - sql server
           - redshift
           - spark
-          - snowflake
+          # Add snowflake back when the test account works without a password login.
+          # It fails with "Multi-factor authentication is required for this account",
+          # and DatabaseConnector disabled its Snowflake tests for this too (849dc8dc).
           - iris
           - bigquery
 
