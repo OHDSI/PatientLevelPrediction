@@ -322,8 +322,9 @@ for (serverDbms in names(databaseServers)) {
       format(Sys.time(), "%m%d%H%M%S"), sample.int(99L, 1L)
     )
     withr::defer({
+      cleanupConnection <- DatabaseConnector::connect(connectionDetails)
       DatabaseConnector::renderTranslateExecuteSql(
-        connection,
+        cleanupConnection,
         "DROP TABLE @schema.@table;",
         schema = ohdsiSchema,
         table = cohortTable,
@@ -331,7 +332,7 @@ for (serverDbms in names(databaseServers)) {
         progressBar = FALSE,
         reportOverallTime = FALSE
       )
-      DatabaseConnector::disconnect(connection)
+      DatabaseConnector::disconnect(cleanupConnection)
     })
     DatabaseConnector::renderTranslateExecuteSql(
       connection,
@@ -357,6 +358,50 @@ for (serverDbms in names(databaseServers)) {
       progressBar = FALSE,
       reportOverallTime = FALSE
     )
+
+    # The sampling SQL on its own, without the covariate extraction below
+    DatabaseConnector::renderTranslateExecuteSql(
+      connection,
+      SqlRender::readSql(system.file(
+        "sql/sql_server/CreateCohorts.sql",
+        package = "PatientLevelPrediction"
+      )),
+      cdm_database_schema = cdmSchema,
+      cohort_database_schema = ohdsiSchema,
+      cohort_table = cohortTable,
+      cdm_version = 5,
+      target_id = 1,
+      study_start_date = "",
+      study_end_date = "",
+      first_only = TRUE,
+      washout_period = 0,
+      use_sample = TRUE,
+      sample_number = 100,
+      person_hash = PatientLevelPrediction:::personHashSql("p.person_id", dbms),
+      tempEmulationSchema = ohdsiSchema,
+      progressBar = FALSE,
+      reportOverallTime = FALSE
+    )
+    nPersons <- DatabaseConnector::renderTranslateQuerySql(
+      connection,
+      "SELECT COUNT(DISTINCT subject_id) AS n_persons FROM #cohort_person;",
+      tempEmulationSchema = ohdsiSchema
+    )
+    expect_equal(as.numeric(nPersons[[1]]), 100)
+    DatabaseConnector::renderTranslateExecuteSql(
+      connection,
+      "DROP TABLE #cohort_person;",
+      tempEmulationSchema = ohdsiSchema,
+      progressBar = FALSE,
+      reportOverallTime = FALSE
+    )
+    # An idle connection can time out during the slow extractions on Spark
+    DatabaseConnector::disconnect(connection)
+
+    # FeatureExtraction truncates its temp tables, which needs the %NOTRIGGER
+    # privilege that the IRIS test account doesn't have
+    skip_if(dbms == "iris", "IRIS test account cannot run FeatureExtraction")
+
     databaseDetails <- createDatabaseDetails(
       connectionDetails = connectionDetails,
       cdmDatabaseSchema = cdmSchema,
