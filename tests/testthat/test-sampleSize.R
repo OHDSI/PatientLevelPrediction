@@ -99,12 +99,21 @@ extractCohorts <- function(databaseDetails, ...) {
   plpData$cohorts
 }
 
+# In .github/workflows/database-tests.yaml, each job tests one database
+skip_if_testing_another_database <- function() {
+  skip_if(
+    !Sys.getenv("PLP_TEST_DATABASE") %in% c("", "sqlite"),
+    "Only tested on SQLite"
+  )
+}
+
 topYearShare <- function(cohorts) {
   years <- format(as.Date(cohorts$cohortStartDate), "%Y")
   max(table(years)) / length(years)
 }
 
 test_that("sampleSize is representative of the target cohort", {
+  skip_if_testing_another_database()
   skip_if_offline()
   skip_if_not_installed("Eunomia")
   cdm <- createSamplingCdm()
@@ -132,6 +141,7 @@ test_that("sampleSize is representative of the target cohort", {
 })
 
 test_that("sampleSize counts people and keeps all their entries", {
+  skip_if_testing_another_database()
   skip_if_offline()
   skip_if_not_installed("Eunomia")
   cdm <- createSamplingCdm(nPersons = 5000L, maxEntriesPerPerson = 3L)
@@ -145,6 +155,7 @@ test_that("sampleSize counts people and keeps all their entries", {
 })
 
 test_that("sampleSize is deterministic and smaller samples are nested", {
+  skip_if_testing_another_database()
   skip_if_offline()
   skip_if_not_installed("Eunomia")
   cdm <- createSamplingCdm(nPersons = 2000L)
@@ -160,6 +171,8 @@ test_that("sampleSize is deterministic and smaller samples are nested", {
 # The database servers are reached through the OHDSI organization secrets. These
 # tests only run in .github/workflows/database-tests.yaml, which is much faster
 # than the full check because it skips R CMD check and tests/testthat/setup.R.
+# Each database needs an R process of its own: JDBC drivers share one JVM, and
+# loading the Snowflake driver after others crashed R.
 databaseServers <- list(
   "oracle" = list(prefix = "CDM5_ORACLE", connection = "SERVER"),
   "postgresql" = list(prefix = "CDM5_POSTGRESQL", connection = "SERVER"),
@@ -186,7 +199,7 @@ serverCdmSchema <- function(dbms) {
 }
 
 serverIsAvailable <- function(dbms) {
-  if (Sys.getenv("PLP_TEST_DATABASES") != "true") {
+  if (Sys.getenv("PLP_TEST_DATABASE") != dbms) {
     return(FALSE)
   }
   server <- databaseServers[[dbms]]

@@ -1,5 +1,5 @@
-# Runs tests/testthat/test-sampleSize.R on the OHDSI test databases, without
-# R CMD check or tests/testthat/setup.R, so it takes minutes instead of hours.
+# Runs tests/testthat/test-sampleSize.R on the OHDSI test databases, one job per
+# database, without R CMD check or tests/testthat/setup.R.
 on:
   push:
     paths:
@@ -15,12 +15,28 @@ jobs:
   database-tests:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    name: ${{ matrix.database }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        database:
+          - sqlite
+          - duckdb
+          - oracle
+          - postgresql
+          - sql server
+          - redshift
+          - spark
+          - snowflake
+          - iris
+          - bigquery
 
     env:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
       RSPM: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"
       NOT_CRAN: "true"
-      PLP_TEST_DATABASES: "true"
+      PLP_TEST_DATABASE: ${{ matrix.database }}
       DATABASECONNECTOR_JAR_FOLDER: ${{ github.workspace }}/.jdbc
       EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.eunomia
       CDM5_ORACLE_CDM_SCHEMA: ${{ secrets.CDM5_ORACLE_CDM_SCHEMA }}
