@@ -37,7 +37,14 @@
 #'                                     date for a person to be included in the at risk cohort. Note that
 #'                                     this is typically done in the \code{createStudyPopulation} function,
 #'                                     but can already be done here for efficiency reasons.
-#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort
+#' @param sampleSize                       If not NULL, the number of people to sample from the target cohort.
+#'                                     People are chosen by a fixed hash of their person ID, so the same
+#'                                     settings give the same people and a smaller sample is part of a
+#'                                     larger one. All entries of a sampled person are kept, so with
+#'                                     \code{firstExposureOnly = FALSE} there can be more rows than
+#'                                     \code{sampleSize}. The sample is taken before
+#'                                     \code{createStudyPopulation} is applied, so the final population
+#'                                     can be smaller.
 #'
 #' @return
 #' A setting object of class \code{restrictPlpDataSettings} containing a list of
@@ -349,6 +356,7 @@ getPlpData <- function(
     renderArgs$washout_period <- restrictPlpDataSettings$washoutPeriod
     renderArgs$use_sample <- !is.null(restrictPlpDataSettings$sampleSize)
     renderArgs$sample_number <- restrictPlpDataSettings$sampleSize
+    renderArgs$person_hash <- personHashSql("p.person_id", dbms)
   }
 
   renderedSql <- do.call(SqlRender::render, renderArgs)
@@ -543,6 +551,28 @@ mergeDuplicateAnalysisRef <- function(covariateData) {
   })
   covariateData$analysisRef <- do.call(rbind, unname(merged))
   invisible(covariateData)
+}
+
+# SQL for the hash that orders people when sampling the target cohort:
+# h(id) = ((|id| mod m) * a + seed) mod m, with m = 2^31 - 1. Multiplying by a,
+# about 0.618 * 2^31, spreads consecutive IDs evenly. Products stay below 2^62.
+personHashSql <- function(personId, dbms) {
+  modulus <- "2147483647"
+  multiplier <- "1327217885"
+  seed <- "20261031"
+  modSql <- function(x) {
+    # SqlRender does not translate % on these dialects, and Oracle doesn't have it
+    if (dbms %in% c("oracle", "iris")) {
+      return(sprintf("MOD(%s, %s)", x, modulus))
+    }
+    sprintf("CAST(%s AS BIGINT) %% %s", x, modulus)
+  }
+  modSql(sprintf(
+    "(%s) * %s + %s",
+    modSql(sprintf("ABS(%s)", personId)),
+    multiplier,
+    seed
+  ))
 }
 
 #' Print a plpData object

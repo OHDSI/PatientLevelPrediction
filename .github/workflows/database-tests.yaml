@@ -99,8 +99,13 @@ jobs:
         shell: Rscript {0}
         run: |
           # A folder of its own, because setup.R in tests/testthat fits models
-          testFolder <- tempfile("databaseTests")
+          testFolder <- file.path(Sys.getenv("RUNNER_TEMP"), "databaseTests")
           dir.create(testFolder)
           file.copy("tests/testthat/test-sampleSize.R", testFolder)
           library(PatientLevelPrediction)
           testthat::test_dir(testFolder, reporter = "summary", stop_on_failure = TRUE)
+
+      # In the log and not as an artifact, so that secrets like schema names are masked
+      - name: Show SQL error reports
+        if: failure()
+        run: find "$RUNNER_TEMP/databaseTests" -name errorReportSql.txt -exec cat {} +
