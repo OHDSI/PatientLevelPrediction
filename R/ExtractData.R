@@ -519,13 +519,19 @@ getPlpData <- function(
   return(result)
 }
 
-# SQL for the hash that orders people when sampling the target cohort:
-# h(id) = ((|id| mod m) * a + seed) mod m, with m = 2^31 - 1. Multiplying by a,
-# about 0.618 * 2^31, spreads consecutive IDs evenly. Products stay below 2^62.
+# SQL for the hash that orders people when sampling the target cohort, with
+# m = 2^31 - 1 and only integer arithmetic, so that it works on all dialects:
+#   y = ((|id| mod m) * a + seed) mod m
+#   z = (y * y + c) mod m
+#   h = (z * z + d) mod m
+# The squares make it non-linear. A linear hash selects IDs at fixed intervals,
+# which could line up with patterns in the IDs. Products stay below 2^63.
 personHashSql <- function(personId, dbms) {
   modulus <- "2147483647"
   multiplier <- "1327217885"
   seed <- "20261031"
+  firstShift <- "914237"
+  secondShift <- "2718281"
   modSql <- function(x) {
     # SqlRender does not translate % on these dialects, and Oracle doesn't have it
     if (dbms %in% c("oracle", "iris")) {
@@ -533,12 +539,16 @@ personHashSql <- function(personId, dbms) {
     }
     sprintf("CAST(%s AS BIGINT) %% %s", x, modulus)
   }
-  modSql(sprintf(
+  squareSql <- function(x, shift) {
+    modSql(sprintf("(%s) * (%s) + %s", x, x, shift))
+  }
+  linear <- modSql(sprintf(
     "(%s) * %s + %s",
     modSql(sprintf("ABS(%s)", personId)),
     multiplier,
     seed
   ))
+  squareSql(squareSql(linear, firstShift), secondShift)
 }
 
 #' Print a plpData object

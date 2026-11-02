@@ -106,8 +106,8 @@ expectExactPersonHashes <- function(connection, cdmSchema, dbms) {
     "9876543210123", "-5"
   )
   expected <- c(
-    1347478916, 527213154, 1854431039, 749103141, 59303714, 840526793, 20261031,
-    1347478916, 1251708369, 213899515
+    1336803046, 1291209903, 986201256, 1468070621, 1547973436,
+    1764037554, 2102416845, 1336803046, 1800987649, 990296103
   )
   columns <- vapply(seq_along(personIds), function(i) {
     hash <- PatientLevelPrediction:::personHashSql(personIds[i], dbms)
@@ -149,6 +149,8 @@ test_that("sampleSize is representative of the target cohort", {
   expect_lt(mean(small$subjectId %% 41 == 0), 0.06)
   days <- as.integer(format(as.Date(small$cohortStartDate), "%d"))
   expect_lt(mean(days %% 3 == 0), 0.42)
+  # About 3% of a random 3% sample also has the next ID, and a linear hash has none
+  expect_gt(mean((small$subjectId + 1) %in% small$subjectId), 0.01)
 
   large <- extractCohorts(cdm$databaseDetails, sampleSize = 5000)
   expect_lt(topYearShare(large), 0.085)
