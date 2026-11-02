@@ -1,0 +1,113 @@
+# Runs tests/testthat/test-sampleSize.R on the OHDSI test databases, one job per
+# database, without R CMD check or tests/testthat/setup.R.
+on:
+  push:
+    paths:
+      - 'inst/sql/sql_server/CreateCohorts.sql'
+      - 'R/ExtractData.R'
+      - 'tests/testthat/test-sampleSize.R'
+      - '.github/workflows/database-tests.yaml'
+  workflow_dispatch:
+
+name: Database tests
+
+jobs:
+  database-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    name: ${{ matrix.database }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        database:
+          - sqlite
+          - duckdb
+          - oracle
+          - postgresql
+          - sql server
+          - redshift
+          - spark
+          # Add snowflake back when the test account works without a password login.
+          # It fails with "Multi-factor authentication is required for this account",
+          # and DatabaseConnector disabled its Snowflake tests for this too (849dc8dc).
+          - iris
+          - bigquery
+
+    env:
+      GITHUB_PAT: ${{ secrets.GH_TOKEN }}
+      RSPM: "https://packagemanager.rstudio.com/cran/__linux__/noble/latest"
+      NOT_CRAN: "true"
+      PLP_TEST_DATABASE: ${{ matrix.database }}
+      DATABASECONNECTOR_JAR_FOLDER: ${{ github.workspace }}/.jdbc
+      EUNOMIA_DATA_FOLDER: ${{ github.workspace }}/.eunomia
+      CDM5_ORACLE_CDM_SCHEMA: ${{ secrets.CDM5_ORACLE_CDM_SCHEMA }}
+      CDM5_ORACLE_OHDSI_SCHEMA: ${{ secrets.CDM5_ORACLE_OHDSI_SCHEMA }}
+      CDM5_ORACLE_PASSWORD: ${{ secrets.CDM5_ORACLE_PASSWORD }}
+      CDM5_ORACLE_SERVER: ${{ secrets.CDM5_ORACLE_SERVER }}
+      CDM5_ORACLE_USER: ${{ secrets.CDM5_ORACLE_USER }}
+      CDM5_POSTGRESQL_CDM_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_CDM_SCHEMA }}
+      CDM5_POSTGRESQL_OHDSI_SCHEMA: ${{ secrets.CDM5_POSTGRESQL_OHDSI_SCHEMA }}
+      CDM5_POSTGRESQL_PASSWORD: ${{ secrets.CDM5_POSTGRESQL_PASSWORD }}
+      CDM5_POSTGRESQL_SERVER: ${{ secrets.CDM5_POSTGRESQL_SERVER }}
+      CDM5_POSTGRESQL_USER: ${{ secrets.CDM5_POSTGRESQL_USER }}
+      CDM5_SQL_SERVER_CDM_SCHEMA: ${{ secrets.CDM5_SQL_SERVER_CDM_SCHEMA }}
+      CDM5_SQL_SERVER_OHDSI_SCHEMA: ${{ secrets.CDM5_SQL_SERVER_OHDSI_SCHEMA }}
+      CDM5_SQL_SERVER_PASSWORD: ${{ secrets.CDM5_SQL_SERVER_PASSWORD }}
+      CDM5_SQL_SERVER_SERVER: ${{ secrets.CDM5_SQL_SERVER_SERVER }}
+      CDM5_SQL_SERVER_USER: ${{ secrets.CDM5_SQL_SERVER_USER }}
+      CDM5_REDSHIFT_CDM_SCHEMA: ${{ secrets.CDM5_REDSHIFT_CDM_SCHEMA }}
+      CDM5_REDSHIFT_OHDSI_SCHEMA: ${{ secrets.CDM5_REDSHIFT_OHDSI_SCHEMA }}
+      CDM5_REDSHIFT_PASSWORD: ${{ secrets.CDM5_REDSHIFT_PASSWORD }}
+      CDM5_REDSHIFT_SERVER: ${{ secrets.CDM5_REDSHIFT_SERVER }}
+      CDM5_REDSHIFT_USER: ${{ secrets.CDM5_REDSHIFT_USER }}
+      CDM5_SPARK_CDM_SCHEMA: ${{ secrets.CDM5_SPARK_CDM_SCHEMA }}
+      CDM5_SPARK_CONNECTION_STRING: ${{ secrets.CDM5_SPARK_CONNECTION_STRING }}
+      CDM5_SPARK_OHDSI_SCHEMA: ${{ secrets.CDM5_SPARK_OHDSI_SCHEMA }}
+      CDM5_SPARK_PASSWORD: ${{ secrets.CDM5_SPARK_PASSWORD }}
+      CDM5_SPARK_USER: ${{ secrets.CDM5_SPARK_USER }}
+      CDM_SNOWFLAKE_CDM53_SCHEMA: ${{ secrets.CDM_SNOWFLAKE_CDM53_SCHEMA }}
+      CDM_SNOWFLAKE_CONNECTION_STRING: ${{ secrets.CDM_SNOWFLAKE_CONNECTION_STRING }}
+      CDM_SNOWFLAKE_OHDSI_SCHEMA: ${{ secrets.CDM_SNOWFLAKE_OHDSI_SCHEMA }}
+      CDM_SNOWFLAKE_PASSWORD: ${{ secrets.CDM_SNOWFLAKE_PASSWORD }}
+      CDM_SNOWFLAKE_USER: ${{ secrets.CDM_SNOWFLAKE_USER }}
+      CDM_IRIS_CDM_SCHEMA: ${{ secrets.CDM_IRIS_CDM_SCHEMA }}
+      CDM_IRIS_CONNECTION_STRING: ${{ secrets.CDM_IRIS_CONNECTION_STRING }}
+      CDM_IRIS_OHDSI_SCHEMA: ${{ secrets.CDM_IRIS_OHDSI_SCHEMA }}
+      CDM_IRIS_PASSWORD: ${{ secrets.CDM_IRIS_PASSWORD }}
+      CDM_IRIS_USER: ${{ secrets.CDM_IRIS_USER }}
+      CDM_BIG_QUERY_CDM_SCHEMA: ${{ secrets.CDM_BIG_QUERY_CDM_SCHEMA }}
+      CDM_BIG_QUERY_CONNECTION_STRING: ${{ secrets.CDM_BIG_QUERY_CONNECTION_STRING }}
+      CDM_BIG_QUERY_KEY_FILE: ${{ secrets.CDM_BIG_QUERY_KEY_FILE }}
+      CDM_BIG_QUERY_OHDSI_SCHEMA: ${{ secrets.CDM_BIG_QUERY_OHDSI_SCHEMA }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache: always
+          dependencies: '"hard"'
+          extra-packages: any::testthat, any::withr, any::curl, any::Eunomia, any::duckdb, local::.
+
+      - name: Prepare folders
+        run: mkdir -p "$DATABASECONNECTOR_JAR_FOLDER" "$EUNOMIA_DATA_FOLDER"
+
+      - name: Run tests
+        shell: Rscript {0}
+        run: |
+          # A folder of its own, because setup.R in tests/testthat fits models
+          testFolder <- file.path(Sys.getenv("RUNNER_TEMP"), "databaseTests")
+          dir.create(testFolder)
+          file.copy("tests/testthat/test-sampleSize.R", testFolder)
+          library(PatientLevelPrediction)
+          testthat::test_dir(testFolder, reporter = "summary", stop_on_failure = TRUE)
+
+      # In the log and not as an artifact, so that secrets like schema names are masked
+      - name: Show SQL error reports
+        if: failure()
+        run: find "$RUNNER_TEMP/databaseTests" -name errorReportSql.txt -exec cat {} +
