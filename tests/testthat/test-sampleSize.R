@@ -99,6 +99,30 @@ extractCohorts <- function(databaseDetails, ...) {
   plpData$cohorts
 }
 
+# Compares all IDs in one query to values computed with exact integer arithmetic
+expectExactPersonHashes <- function(connection, cdmSchema, dbms) {
+  personIds <- c(
+    "1", "2", "3", "41", "123", "2147483646", "2147483647", "2147483648",
+    "9876543210123", "-5"
+  )
+  expected <- c(
+    1347478916, 527213154, 1854431039, 749103141, 59303714, 840526793, 20261031,
+    1347478916, 1251708369, 213899515
+  )
+  columns <- vapply(seq_along(personIds), function(i) {
+    hash <- PatientLevelPrediction:::personHashSql(personIds[i], dbms)
+    sprintf("MIN(%s) AS h%d", hash, i)
+  }, "")
+  hashes <- DatabaseConnector::renderTranslateQuerySql(
+    connection,
+    "SELECT @columns FROM @schema.person;",
+    columns = paste(columns, collapse = ", "),
+    schema = cdmSchema,
+    tempEmulationSchema = cdmSchema
+  )
+  expect_equal(unname(vapply(hashes, as.numeric, 0)), expected)
+}
+
 # In .github/workflows/database-tests.yaml, each job tests one database
 skip_if_testing_another_database <- function() {
   skip_if(
@@ -138,6 +162,30 @@ test_that("sampleSize is representative of the target cohort", {
     sampleSize = 600
   )
   expect_lt(mean(recent$subjectId %% 41 == 0), 0.06)
+})
+
+test_that("person hash has exact values in SQL", {
+  skip_if_testing_another_database()
+  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  connection <- DatabaseConnector::connect(Eunomia::getEunomiaConnectionDetails())
+  withr::defer(DatabaseConnector::disconnect(connection))
+
+  expectExactPersonHashes(connection, "main", "sqlite")
+})
+
+test_that("person hash translates to all dialects", {
+  skip_if_testing_another_database()
+  for (dbms in SqlRender::listSupportedDialects()$dialect) {
+    translated <- SqlRender::translate(
+      PatientLevelPrediction:::personHashSql("p.person_id", dbms),
+      targetDialect = dbms
+    )
+    if (dbms %in% c("oracle", "iris", "bigquery")) {
+      expect_false(grepl("%", translated, fixed = TRUE), label = dbms)
+    }
+    expect_true(grepl("2147483647", translated, fixed = TRUE), label = dbms)
+  }
 })
 
 test_that("sampleSize counts people and keeps all their entries", {
@@ -266,6 +314,8 @@ for (serverDbms in names(databaseServers)) {
 
     connectionDetails <- createServerConnectionDetails(dbms)
     connection <- DatabaseConnector::connect(connectionDetails)
+    expectExactPersonHashes(connection, cdmSchema, dbms)
+
     # Other jobs may run at the same time on the same server
     cohortTable <- paste0(
       "plp_ss_", substr(.Platform$OS.type, 1, 3),

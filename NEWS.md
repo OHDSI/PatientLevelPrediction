@@ -5,6 +5,12 @@ PatientLevelPrediction development
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
   are dropped, with their count logged (#684).
+- Fixed `createRestrictPlpDataSettings(sampleSize = )`, which gave a biased sample
+  and failed on Oracle. It now orders people by a hash of their person ID, counts
+  people instead of cohort entries, and keeps all entries of a sampled person.
+  With `firstExposureOnly = FALSE`, the result can have more rows than
+  `sampleSize`. Any analysis using `sampleSize` will get a different sample than
+  before (#689).
 
 PatientLevelPrediction 6.7.0
 ============================
