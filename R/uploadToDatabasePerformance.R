@@ -607,6 +607,12 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
     tempEmulationSchema = tempEmulationSchema
   )
   isValid <- sum(colnames(value) %in% columnNames) == length(columnNames)
+  if (!isValid) {
+    ParallelLogger::logWarn(paste0(
+      "Calibration summary for performance ", performanceId, " was not uploaded. Missing columns: ",
+      paste(setdiff(columnNames, colnames(value)), collapse = ", ")
+    ))
+  }
 
   exists <- checkResultExists(
     conn = conn,

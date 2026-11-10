@@ -1124,3 +1124,82 @@ test_that("insertPerformanceInDatabase clears attrition and covariate summary wh
   expect_equal(count("attrition"), 0)
   expect_equal(count("covariate_summary"), 0)
 })
+
+test_that("addCalibrationSummary warns about calibration summaries it cannot store", {
+  skip_if_not_installed(c("ResultModelManager", "survival"))
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  logged <- character(0)
+  testthat::local_mocked_bindings(
+    logWarn = function(...) {
+      logged <<- c(logged, paste0(...))
+      invisible(NULL)
+    },
+    .package = "ParallelLogger"
+  )
+  upload <- function(calibration, performanceId) {
+    logged <<- character(0)
+    PatientLevelPrediction:::addCalibrationSummary(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+      performanceId = performanceId,
+      performanceEvaluation = list(calibrationSummary = calibration), overWriteIfExists = TRUE,
+      tempEmulationSchema = NULL
+    )
+    logged
+  }
+  stored <- function(performanceId) {
+    DatabaseConnector::querySql(conn, paste(
+      "select count(*) as n from main.calibration_summary where performance_id =", performanceId
+    ))[1, 1]
+  }
+
+  set.seed(1)
+  prediction <- data.frame(
+    rowId = 1:300, value = stats::runif(300, 0.01, 0.5),
+    outcomeCount = stats::rbinom(300, 1, 0.3), survivalTime = stats::rexp(300, 0.002),
+    evaluationType = "Test"
+  )
+  survivalCalibration <- PatientLevelPrediction:::getCalibrationSummary_survival(
+    prediction = prediction, evalColumn = "evaluationType", numberOfStrata = 10,
+    truncateFraction = 0.01, timepoint = 365
+  )
+  output <- upload(survivalCalibration, performanceId = 1)
+  expect_true(any(grepl("Calibration summary for performance 1 was not uploaded", output)))
+  expect_true(any(grepl("personCountWithOutcome", output)))
+  expect_equal(stored(1), 0)
+
+  binaryCalibration <- data.frame(
+    evaluation = "Test", predictionThreshold = 0.1, PersonCountAtRisk = 10, PersonCountWithOutcome = 1,
+    averagePredictedProbability = 0.1, StDevPredictedProbability = 0.1, MinPredictedProbability = 0.1,
+    P25PredictedProbability = 0.1, MedianPredictedProbability = 0.1, P75PredictedProbability = 0.1,
+    MaxPredictedProbability = 0.1, observedIncidence = 0.1
+  )
+  output <- upload(binaryCalibration, performanceId = 2)
+  expect_false(any(grepl("was not uploaded", output)))
+  expect_equal(stored(2), 1)
+})
+
+test_that("addCalibrationSummary stores survival calibration summaries", {
+  testthat::skip("Storing survival calibration needs a results schema migration, see issue #691")
+  skip_if_not_installed(c("ResultModelManager", "survival"))
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prediction <- data.frame(
+    rowId = 1:300, value = stats::runif(300, 0.01, 0.5),
+    outcomeCount = stats::rbinom(300, 1, 0.3), survivalTime = stats::rexp(300, 1 / 300) + 1,
+    evaluationType = "Test"
+  )
+  calibration <- PatientLevelPrediction:::getCalibrationSummary_survival(
+    prediction = prediction, evalColumn = "evaluationType", numberOfStrata = 10,
+    truncateFraction = 0.01, timepoint = 365
+  )
+  PatientLevelPrediction:::addCalibrationSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+    performanceEvaluation = list(calibrationSummary = calibration), overWriteIfExists = TRUE,
+    tempEmulationSchema = NULL
+  )
+  stored <- DatabaseConnector::querySql(conn, "select count(*) as n from main.calibration_summary;", snakeCaseToCamelCase = TRUE)$n
+  expect_equal(stored, nrow(calibration))
+})
