@@ -228,6 +228,19 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 }
 
 
+# Each method fits on the original predictions only, not on rows that another
+# recalibration added.
+getOriginalPredictions <- function(prediction, columnType) {
+  recalibrationTypes <- c("recalibrationInTheLarge", "weakRecalibration", "recalibrationRefit")
+  prediction[!prediction[[columnType]] %in% recalibrationTypes, , drop = FALSE]
+}
+
+# Re-running a method replaces its earlier rows.
+appendRecalibrated <- function(prediction, recalibrated, columnType, method) {
+  recalibrated[, columnType] <- method
+  rbind(prediction[!prediction[[columnType]] %in% method, , drop = FALSE], recalibrated)
+}
+
 #' recalibrationInTheLarge
 #'
 #' @description
@@ -242,26 +255,29 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' @keywords internal
 recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
   if (attr(prediction, "metaData")$modelType == "binary") {
-    misCal <- calibrationInLarge(prediction)
+    recalibrated <- getOriginalPredictions(prediction, columnType)
 
     eps <- .Machine$double.eps
-    obsRisk <- pmin(pmax(misCal$observedRisk, eps), 1 - eps)
-    predRisk <- pmin(pmax(misCal$meanPredictionRisk, eps), 1 - eps)
-    correctionFactor <- stats::qlogis(obsRisk) - stats::qlogis(predRisk)
-
-    recalibrated <- prediction
-
-    if ("rawValue" %in% names(recalibrated))  {
-      recalibrated$rawValue <- recalibrated$rawValue + correctionFactor
-      recalibrated$value <- stats::plogis(recalibrated$rawValue)
+    if ("rawValue" %in% names(recalibrated)) {
+      lp <- recalibrated$rawValue
     } else {
       p <- pmin(pmax(recalibrated$value, eps), 1 - eps)
-      lp <- stats::qlogis(p) + correctionFactor
-      recalibrated$value <- stats::plogis(lp)
+      lp <- stats::qlogis(p)
     }
+    y <- ifelse(recalibrated$outcomeCount > 0, 1, 0)
 
-    recalibrated[, columnType] <- "recalibrationInTheLarge"
-    prediction <- rbind(prediction, recalibrated)
+    # an intercept-only logistic model with the logits as offset is what makes
+    # mean recalibrated risk equal observed risk for heterogeneous predictions
+    refit <- suppressWarnings(stats::glm(y ~ 1, offset = lp, family = "binomial"))
+    correctionFactor <- unname(refit$coefficients[1])
+
+    newLp <- lp + correctionFactor
+    if ("rawValue" %in% names(recalibrated)) {
+      recalibrated$rawValue <- newLp
+    }
+    recalibrated$value <- stats::plogis(newLp)
+
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "recalibrationInTheLarge")
     attr(prediction, "metaData")$recalibrationInTheLarge <-
       list(correctionFactor = correctionFactor)
 

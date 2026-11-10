@@ -194,19 +194,14 @@ test_that("recalibrationInTheLarge adjusts raw values when available", {
   )
   attr(predictionWithRaw, "metaData") <- list(modelType = "binary")
 
-  observedRisk <- 0.35
-  meanRisk <- 0.25
-  correction <- stats::qlogis(observedRisk) - stats::qlogis(meanRisk)
+  correction <- unname(stats::coef(stats::glm(
+    outcomeCount ~ 1,
+    offset = rawValue,
+    family = "binomial",
+    data = predictionWithRaw
+  )))
 
-  recalibrated <- with_mocked_bindings(
-    PatientLevelPrediction:::recalibrationInTheLarge(predictionWithRaw),
-    calibrationInLarge = function(prediction) {
-      list(
-        observedRisk = observedRisk,
-        meanPredictionRisk = meanRisk
-      )
-    }
-  )
+  recalibrated <- PatientLevelPrediction:::recalibrationInTheLarge(predictionWithRaw)
 
   newRows <- recalibrated[recalibrated$evaluationType == "recalibrationInTheLarge", ]
   expect_equal(
