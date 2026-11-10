@@ -143,3 +143,25 @@ test_that("survival calibration without a timepoint uses each group's last follo
   ))
   expect_equal(unname(result$observedIncidence), c(1 / 2, 0))
 })
+
+test_that("survival calibration keeps bins with identical printed labels separate", {
+  values <- seq(0.12340, 0.12348, by = 1e-5)
+  prediction <- do.call(rbind, lapply(seq_along(values), function(i) {
+    data.frame(
+      value = values[i],
+      outcomeCount = c(rep(1, i - 1), rep(0, 11 - i)),
+      survivalTime = c(rep(100, i - 1), rep(500, 11 - i))
+    )
+  }))
+  prediction$rowId <- seq_len(nrow(prediction))
+  prediction$evaluation <- "Test"
+  attr(prediction, "metaData") <- list(timepoint = 365, modelType = "survival")
+
+  result <- suppressWarnings(getCalibrationSummary(
+    prediction, "survival", numberOfStrata = 10, truncateFraction = 0
+  ))
+  # by hand: no censoring before day 365, so incidence is the event fraction per bin
+  expect_equal(unname(result$observedIncidence), (seq_along(values) - 1) / 10)
+  expect_equal(unname(result$PersonCountAtRisk), rep(10, length(values)))
+  expect_equal(unname(result$averagePredictedProbability), values)
+})
