@@ -119,6 +119,47 @@ test_that("Brierscore", {
   expect_equal(as.double(brierScoring), (brierPlp))
 })
 
+test_that("scaled Brier score uses observed prevalence", {
+  prediction <- data.frame(
+    value = rep(c(0.19, 0.21), each = 10),
+    outcomeCount = rep(c(1, rep(0, 9)), 2)
+  )
+  # by hand: reference loss 0.1*0.9 = 0.09, model loss
+  # ((1-.19)^2 + 9*.19^2 + (1-.21)^2 + 9*.21^2)/20 = 0.1001
+  result <- brierScore(prediction)
+  expect_equal(result$brier, 0.1001)
+  expect_equal(result$brierScaled, 1 - 0.1001 / 0.09)
+  expect_lt(result$brierScaled, 0)
+
+  # predicting prevalence gives zero skill
+  calibrated <- data.frame(value = rep(0.1, 20), outcomeCount = prediction$outcomeCount)
+  expect_equal(brierScore(calibrated)$brierScaled, 0)
+  # perfect separation gives skill of one
+  perfect <- data.frame(value = c(0, 0, 1, 1), outcomeCount = c(0, 0, 1, 1))
+  expect_equal(brierScore(perfect)$brierScaled, 1)
+  # counts above one are still one outcome per person in the reference
+  counted <- data.frame(value = c(0.5, 0.5), outcomeCount = c(0, 2))
+  expect_equal(brierScore(counted)$brierScaled, 1 - brierScore(counted)$brier / 0.25)
+
+  # one class only: there is no reference loss to scale by
+  noEvents <- data.frame(value = c(0.1, 0.2), outcomeCount = c(0, 0))
+  allEvents <- data.frame(value = c(0.1, 0.2), outcomeCount = c(1, 1))
+  expect_true(is.na(brierScore(noEvents)$brierScaled))
+  expect_true(is.na(brierScore(allEvents)$brierScaled))
+})
+
+test_that("evaluation statistics report the observed-prevalence scaled Brier score", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = rep(c(0.19, 0.21), each = 10),
+    outcomeCount = rep(c(1, rep(0, 9)), 2),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  scaled <- as.numeric(stats$value[stats$metric == "brier score scaled"])
+  expect_equal(scaled, 1 - 0.1001 / 0.09)
+})
 test_that("Average precision", {
   skip_if_not_installed("Metrics")
   ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))

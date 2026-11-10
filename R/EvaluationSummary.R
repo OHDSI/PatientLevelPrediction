@@ -446,7 +446,9 @@ aucWithoutCi <- function(prediction, truth) {
 #' @export
 brierScore <- function(prediction) {
   brier <- sum((prediction$outcomeCount - prediction$value)^2) / nrow(prediction)
-  brierMax <- mean(prediction$value) * (1 - mean(prediction$value))
+  # the reference is the prevalence-only predictor, so it uses observed prevalence
+  prevalence <- mean(prediction$outcomeCount > 0)
+  brierMax <- prevalence * (1 - prevalence)
   brierScaled <- ifelse(is.finite(brierMax) && brierMax > 0, 1 - brier / brierMax, NA_real_)
   return(list(brier = brier, brierScaled = brierScaled))
 }
