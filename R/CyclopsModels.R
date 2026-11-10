@@ -394,14 +394,16 @@ predictCyclops <- function(plpModel, data, cohort) {
         attr(cohort, "timepoint")
       )
       baselineSurvival <- baselineSurvivalAt(plpModel$model$baselineSurvival, timepoint)
-      # 1- baseline survival(time)^ (exp(betas*values))
-      prediction$value <- 1 - baselineSurvival^prediction$value
+      # Models saved before the offset was stored have no value to apply here.
+      offset <- plpModel$model$baselineSurvival$offset %||% 0
+      # 1- baseline survival(time)^ (exp(betas*values - offset))
+      prediction$value <- 1 - baselineSurvival^(prediction$value * exp(-offset))
 
 
       metaData <- list()
       metaData$baselineSurvivalTimepoint <- timepoint
       metaData$baselineSurvival <- baselineSurvival
-      metaData$offset <- 0
+      metaData$offset <- offset
 
       attr(prediction, "metaData") <- metaData
     }
@@ -517,7 +519,10 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   if (modelType == "cox" || modelType == "survival") {
     baselineSurvival <- tryCatch(
       {
-        survival::survfit(fit, type = "aalen")
+        curve <- survival::survfit(fit, type = "aalen")
+        # Cyclops returns survival at the mean linear predictor, so risks need exp(xBeta - offset).
+        curve$offset <- Cyclops::meanLinearPredictor(fit)
+        curve
       },
       error = function(e) {
         ParallelLogger::logInfo(e)

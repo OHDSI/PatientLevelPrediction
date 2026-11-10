@@ -791,3 +791,166 @@ test_that("test ridge regression runs", {
   expect_equal(fitModel$modelDesign$outcomeId, attr(trainData, "metaData")$outcomeId)
   expect_equal(fitModel$modelDesign$targetId, attr(trainData, "metaData")$targetId)
 })
+
+createSyntheticTrain <- function(covariates, labels, folds, covariateIds) {
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = data.frame(
+      covariateId = covariateIds, covariateName = paste0("x", covariateIds),
+      analysisId = 1L, conceptId = covariateIds
+    ),
+    analysisRef = data.frame(
+      analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = nrow(labels))
+  train <- list(covariateData = covariateData, labels = labels, folds = folds)
+  class(train) <- "plpData"
+  attr(train, "metaData") <- list(
+    targetId = 1L, outcomeId = 2L,
+    populationSettings = createStudyPopulationSettings(),
+    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE),
+    splitSettings = createDefaultSplitSetting(splitSeed = 42),
+    cdmDatabaseId = "synthetic", cdmDatabaseName = "synthetic"
+  )
+  train
+}
+
+createCoxTrain <- function(timepoint = 100) {
+  set.seed(7)
+  n <- 300L
+  x <- cbind(rbinom(n, 1, 0.5), rbinom(n, 1, 0.3))
+  covariates <- rbind(
+    data.frame(rowId = which(x[, 1] == 1), covariateId = 11, covariateValue = 1),
+    data.frame(rowId = which(x[, 2] == 1), covariateId = 12, covariateValue = 1)
+  )
+  labels <- data.frame(
+    rowId = seq_len(n), subjectId = seq_len(n),
+    outcomeCount = rbinom(n, 1, 0.8),
+    survivalTime = rank(rexp(n, exp(-3 + 1.5 * x[, 1] + x[, 2])), ties.method = "first"),
+    cohortStartDate = as.Date("2000-01-01"), daysToCohortEnd = 365, daysToObsEnd = 365,
+    ageYear = 40, gender = 1
+  )
+  attr(labels, "timepoint") <- timepoint
+  train <- createSyntheticTrain(
+    covariates = covariates, labels = labels,
+    folds = data.frame(rowId = seq_len(n), index = 1L), covariateIds = c(11, 12)
+  )
+  train$x <- x
+  train
+}
+
+breslowRisk <- function(train, beta, timepoint) {
+  lp <- as.numeric(train$x %*% beta)
+  time <- train$labels$survivalTime
+  eventTimes <- sort(time[train$labels$outcomeCount == 1 & time <= timepoint])
+  increments <- vapply(eventTimes, function(u) 1 / sum(exp(lp[time >= u])), numeric(1))
+  -expm1(-sum(increments) * exp(lp))
+}
+
+test_that("fitted Cox risks use the zero-covariate baseline, not the mean linear predictor", {
+  skip_if_not_installed("polspline")
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- createCoxTrain()
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  settings <- setCoxModel(variance = 10, seed = 42, threads = 1)
+  fit <- fitCyclopsModel(train, settings, analysisId = "cox")
+
+  coefs <- fit$model$coefficients
+  beta <- coefs$betas[match(c("11", "12"), coefs$covariateIds)]
+  expected <- breslowRisk(train, beta, timepoint = 100)
+  predicted <- fit$prediction[fit$prediction$evaluationType == "Train", ]
+  predicted <- predicted[order(predicted$rowId), ]
+
+  offset <- fit$model$baselineSurvival$offset
+  expect_gt(abs(offset), 0.1)
+  expect_equal(offset, mean(train$x %*% beta), tolerance = 1e-8)
+  expect_equal(predicted$value, expected, tolerance = 1e-6)
+  expect_equal(attr(predictCyclops(fit, train, train$labels), "metaData")$offset, offset)
+})
+
+test_that("Cox risks agree with survival::coxph for an unpenalized Cyclops fit", {
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- data.frame(
+    rowId = 1:10, time = 1:10,
+    y = c(1, 1, 1, 1, 0, 1, 1, 0, 1, 0),
+    x = c(1, 1, 0, 1, 0, 1, 0, 0, 1, 0)
+  )
+  covariates <- data.frame(
+    rowId = train$rowId[train$x != 0], covariateId = 1, covariateValue = 1
+  )
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = train[c("rowId", "y", "time")], covariates = covariates,
+    addIntercept = FALSE, modelType = "cox", normalize = NULL, quiet = TRUE
+  )
+  fit <- Cyclops::fitCyclopsModel(
+    cyclopsData, prior = Cyclops::createPrior("none"),
+    control = Cyclops::createControl(tolerance = 1e-12, maxIterations = 3000, noiseLevel = "silent")
+  )
+  model <- createCyclopsModel(
+    fit = fit, modelType = "cox", useCrossValidation = FALSE,
+    cyclopsData = cyclopsData, labels = train, folds = NULL, modelSettings = NULL
+  )
+  plpModel <- structure(list(model = model), class = "plpModel", modelType = "survival")
+  newData <- FeatureExtraction::createEmptyCovariateData(1, FALSE, FALSE)
+  on.exit(Andromeda::close(newData), add = TRUE)
+  newData$covariates <- data.frame(rowId = 1:2, covariateId = 1, covariateValue = c(0, 1))
+  cohort <- data.frame(rowId = 1:2)
+  attr(cohort, "timepoint") <- 3
+  predicted <- predictCyclops(plpModel, list(covariateData = newData), cohort)
+
+  reference <- survival::coxph(
+    survival::Surv(time, y) ~ x, data = train, ties = "breslow",
+    control = survival::coxph.control(eps = 1e-12, toler.chol = 1e-14)
+  )
+  expected <- 1 - summary(
+    survival::survfit(reference, newdata = data.frame(x = c(0, 1))), times = 3
+  )$surv
+  expect_equal(predicted$value, as.numeric(expected), tolerance = 1e-6)
+})
+
+test_that("Cox offset survives saving and loading the model", {
+  skip_if_not_installed("polspline")
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- createCoxTrain()
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  fit <- fitCyclopsModel(
+    train, setCoxModel(variance = 10, seed = 42, threads = 1), analysisId = "cox"
+  )
+  savePath <- tempfile("coxModel")
+  on.exit(unlink(savePath, recursive = TRUE), add = TRUE)
+  savePlpModel(fit, savePath)
+  loaded <- loadPlpModel(savePath)
+
+  expect_true(is.numeric(fit$model$baselineSurvival$offset))
+  expect_equal(loaded$model$baselineSurvival$offset, fit$model$baselineSurvival$offset, tolerance = 1e-3)
+  expect_equal(
+    predictCyclops(loaded, train, train$labels)$value,
+    predictCyclops(fit, train, train$labels)$value,
+    tolerance = 1e-3
+  )
+})
+
+test_that("Cox models saved without an offset keep their stored survival curve", {
+  covariateData <- FeatureExtraction::createEmptyCovariateData(1, FALSE, FALSE)
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+  covariateData$covariates <- data.frame(rowId = 1:2, covariateId = 1, covariateValue = c(0, 1))
+  plpModel <- structure(
+    list(model = list(
+      modelType = "cox",
+      coefficients = data.frame(betas = 0.5, covariateIds = "1"),
+      baselineSurvival = list(time = 1:3, surv = c(0.9, 0.8, 0.7))
+    )),
+    class = "plpModel", modelType = "survival"
+  )
+  cohort <- data.frame(rowId = 1:2)
+  attr(cohort, "timepoint") <- 2
+  predicted <- predictCyclops(plpModel, list(covariateData = covariateData), cohort)
+
+  expect_equal(predicted$value, 1 - 0.8^exp(c(0, 0.5)))
+  expect_equal(attr(predicted, "metaData")$offset, 0)
+})
