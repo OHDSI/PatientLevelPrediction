@@ -274,3 +274,34 @@ def setAlgorithm(path, algorithm):
 ", local = TRUE, convert = TRUE)
   helper$setAlgorithm(path, algorithm)
 }
+
+test_that("AdaBoost models saved with SAMME keep their predictions", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  params <- list(n_estimators = 10L, random_state = 1L)
+  if ("algorithm" %in% names(reticulate::py_to_r(sklearn$ensemble$AdaBoostClassifier()$get_params()))) {
+    params$algorithm <- "SAMME"
+  }
+  model <- do.call(sklearn$ensemble$AdaBoostClassifier, params)$fit(X, y)
+  predictions <- reticulate::py_to_r(model$predict_proba(xUnseen))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  sklearnToJson(model, path)
+  setSavedAdaBoostAlgorithm(path, "SAMME")
+
+  loaded <- sklearnFromJson(path)
+  expect_equal(reticulate::py_to_r(loaded$predict_proba(xUnseen)), predictions)
+})
+
+test_that("AdaBoost models saved with SAMME.R are rejected when unsupported", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  skip_if(reticulate::py_has_attr(sklearn$ensemble$AdaBoostClassifier, "_boost_real"))
+  model <- sklearn$ensemble$AdaBoostClassifier(n_estimators = 5L, random_state = 1L)$fit(X, y)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  sklearnToJson(model, path)
+  setSavedAdaBoostAlgorithm(path, "SAMME.R")
+
+  expect_error(sklearnFromJson(path), "SAMME.R")
+})

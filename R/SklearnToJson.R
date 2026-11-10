@@ -311,7 +311,11 @@ serializeAdaboost <- function(model) {
 deSerializeAdaboost <- function(model_dict) {
   np <- reticulate::import("numpy", convert = FALSE)
   sklearn <- reticulate::import("sklearn", convert = FALSE)
-  params <- sanitizeSklearnAdaBoostParams(reticulate::py_to_r(model_dict["params"]))
+  params <- restoreAdaBoostAlgorithm(
+    reticulate::py_to_r(model_dict["params"]),
+    supportsSammeR = reticulate::py_has_attr(sklearn$ensemble$AdaBoostClassifier, "_boost_real"),
+    acceptsAlgorithm = "algorithm" %in% names(reticulate::py_to_r(sklearn$ensemble$AdaBoostClassifier()$get_params()))
+  )
   model <- do.call(
     sklearn$ensemble$AdaBoostClassifier,
     params
@@ -328,6 +332,28 @@ deSerializeAdaboost <- function(model_dict) {
   model$estimator_weights_ <- np$array(model_dict["estimator_weights_"])
 
   return(model)
+}
+
+# The saved algorithm decides how predictions are combined, so it is kept when the
+# runtime can use it. Recent scikit-learn only implements SAMME.
+restoreAdaBoostAlgorithm <- function(params, supportsSammeR, acceptsAlgorithm) {
+  algorithm <- if (is.list(params)) params$algorithm else NULL
+  params <- sanitizeSklearnAdaBoostParams(params)
+  if (is.null(algorithm)) {
+    return(params)
+  }
+  if (identical(algorithm, "SAMME.R") && !supportsSammeR) {
+    stop(
+      "This AdaBoost model was fitted with algorithm = 'SAMME.R', which the installed ",
+      "scikit-learn no longer supports. Refit the model, or load it with an older ",
+      "scikit-learn that still implements SAMME.R.",
+      call. = FALSE
+    )
+  }
+  if (acceptsAlgorithm) {
+    params$algorithm <- algorithm
+  }
+  params
 }
 
 sanitizeSklearnAdaBoostParams <- function(params) {
