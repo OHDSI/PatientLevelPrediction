@@ -49,6 +49,9 @@ insertRunPlpToSqlite <- function(
 
   # add validation results if entered
   if (!is.null(externalValidatePlp)) {
+    if (inherits(x = externalValidatePlp, what = "externalValidatePlp")) {
+      externalValidatePlp <- list(externalValidatePlp)
+    }
     if (inherits(x = externalValidatePlp, what = "list")) {
       for (i in 1:length(externalValidatePlp)) {
         tryCatch(

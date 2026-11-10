@@ -784,3 +784,51 @@ test_that("message if model is null", {
     )
   )
 })
+
+
+newUploadDb <- function(env = parent.frame()) {
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  createPlpResultTables(
+    connectionDetails = connectionDetails,
+    targetDialect = "sqlite",
+    resultSchema = "main",
+    deleteTables = TRUE,
+    createTables = TRUE,
+    tablePrefix = ""
+  )
+  withr::defer(unlink(sqliteFile), envir = env)
+  connectionDetails
+}
+
+test_that("insertRunPlpToSqlite stores a single externalValidatePlp result", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+  externalVal <- plpResult
+  externalVal$model$model <- "none"
+  externalVal$model$trainDetails <- NULL
+  externalVal$model$validationDetails <- list(
+    targetId = 1,
+    outcomeId = outcomeId,
+    developmentDatabase = "test",
+    validationDatabase = "test",
+    populationSettings = plpResult$model$modelDesign$populationSettings,
+    restrictPlpDataSettings = plpResult$model$modelDesign$restrictPlpDataSettings
+  )
+  class(externalVal) <- "externalValidatePlp"
+
+  # insertRunPlpToSqlite reuses one file per session
+  unlink(file.path(tempdir(), "databaseFile.sqlite"))
+  sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = externalVal)
+  conn <- DatabaseConnector::connect(
+    DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation)
+  )
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  res <- DatabaseConnector::querySql(
+    conn,
+    "select model_development as dev, count(*) as n from main.performances group by model_development;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(res$n[res$dev == 1], 1)
+  expect_equal(res$n[res$dev == 0], 1)
+})
