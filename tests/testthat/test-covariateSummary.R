@@ -184,3 +184,22 @@ test_that("covariateSummary works when a label group has no covariate rows", {
   expect_equal(result$WithOutcome_CovariateMean, 1)
   expect_equal(result$WithNoOutcome_CovariateMean, 0)
 })
+
+test_that("covariateSummary works with strata but no labels", {
+  sparseData <- Andromeda::andromeda()
+  sparseData$covariates <- data.frame(
+    rowId = c(1:4, 1:10),
+    covariateId = c(rep(1001, 4), rep(1002, 10)),
+    covariateValue = 1
+  )
+  sparseData$covariateRef <- data.frame(covariateId = c(1001, 1002), covariateName = c("rare", "common"))
+  strata <- data.frame(rowId = 1:10, strataName = rep(c("Train", "Test"), each = 5))
+  result <- covariateSummary(sparseData, data.frame(rowId = 1:10), strata = strata)
+  rare <- result[result$covariateId == 1001, ]
+  # by hand: 4 of 10 people, all in Train (5 people)
+  expect_equal(rare$CovariateMean, 0.4)
+  expect_equal(rare$Train_CovariateMean, 4 / 5)
+  expect_equal(rare$Test_CovariateMean, 0)
+  # no outcome groups, so no standardized mean difference
+  expect_false("StandardizedMeanDiff" %in% colnames(result))
+})

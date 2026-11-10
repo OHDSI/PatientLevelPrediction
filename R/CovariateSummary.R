@@ -208,8 +208,11 @@ aggregateCovariateSummaries <- function(
       values_fill = 0
     )
 
-    resultLabels <- resultLabels %>%
-      dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean) / sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2) / 2))
+    # the standardized mean difference compares the outcome groups, which only labels define
+    if (!is.null(labels)) {
+      resultLabels <- resultLabels %>%
+        dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean) / sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2) / 2))
+    }
 
 
     resultAll <- covariateSummariesPerStrata %>%
