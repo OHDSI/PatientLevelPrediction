@@ -635,3 +635,80 @@ test_that("Outcome options works", {
     expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3))
   })
 })
+
+# population with one row per subject and increasing cohort start dates
+createSplitPopulation <- function(outcomeCount) {
+  n <- length(outcomeCount)
+  data.frame(
+    rowId = seq_len(n),
+    subjectId = seq_len(n),
+    outcomeCount = outcomeCount,
+    cohortStartDate = as.Date("2020-01-01") + seq_len(n)
+  )
+}
+
+runSplitter <- function(population, settings) {
+  do.call(
+    eval(parse(text = attr(settings, "fun"))),
+    list(population = population, splitSettings = settings)
+  )
+}
+
+test_that("createDefaultSplitSetting defaults trainFraction to 1 - testFraction", {
+  expect_equal(createDefaultSplitSetting(testFraction = 0.5)$train, 0.5)
+  expect_equal(createDefaultSplitSetting(testFraction = 0.2)$train, 0.8)
+  expect_equal(createDefaultSplitSetting(testFraction = 0)$train, 1)
+
+  # controls: the no-argument default and explicit values do not change
+  defaults <- createDefaultSplitSetting()
+  expect_equal(defaults$test, 0.25)
+  expect_equal(defaults$train, 0.75)
+  explicit <- createDefaultSplitSetting(testFraction = 0.1, trainFraction = 0.5)
+  expect_equal(explicit$test, 0.1)
+  expect_equal(explicit$train, 0.5)
+})
+
+test_that("createDefaultSplitSetting rejects fractions that sum to more than 1", {
+  expect_error(
+    createDefaultSplitSetting(testFraction = 0.5, trainFraction = 0.75),
+    "needs to be <= 1"
+  )
+  expect_error(
+    createDefaultSplitSetting(testFraction = 0.25, trainFraction = 0.76),
+    "needs to be <= 1"
+  )
+
+  # fractions that add up to exactly 1 stay valid
+  for (test in (1:9) / 10) {
+    expect_s3_class(
+      createDefaultSplitSetting(testFraction = test, trainFraction = 1 - test),
+      "splitSettings"
+    )
+  }
+})
+
+test_that("setting only testFraction gives complementary partitions", {
+  population <- createSplitPopulation(rep(0:1, 40))
+  for (type in c("stratified", "subject", "time")) {
+    settings <- createDefaultSplitSetting(
+      testFraction = 0.5, nfold = 3, splitSeed = 42, type = type
+    )
+    split <- runSplitter(population, settings)
+    expect_equal(sum(split$index < 0), 40, info = type)
+    expect_equal(sum(split$index > 0), 40, info = type)
+    expect_equal(sum(split$index == 0), 0, info = type)
+    expect_setequal(split$index[split$index > 0], 1:3)
+  }
+})
+
+test_that("no test set uses all rows for training when only testFraction is set", {
+  population <- createSplitPopulation(rep(0:1, 40))
+  for (type in c("stratified", "subject")) {
+    settings <- createDefaultSplitSetting(
+      testFraction = 0, nfold = 3, splitSeed = 42, type = type
+    )
+    split <- runSplitter(population, settings)
+    expect_equal(sum(split$index > 0), 80, info = type)
+    expect_equal(sum(split$index == 0), 0, info = type)
+  }
+})

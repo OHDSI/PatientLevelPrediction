@@ -27,7 +27,8 @@
 #' @param testFraction  (numeric) A real number between 0 and 1
 #' indicating the test set fraction of the data
 #' @param trainFraction (numeric) A real number between 0 and 1 indicating the 
-#' train set fraction of the data. If not set train is equal to 1 - test
+#' train set fraction of the data. If not set train is equal to 1 - test. The
+#' sum of testFraction and trainFraction cannot exceed 1.
 #' @param nfold             (numeric) An integer > 1 specifying the number of
 #' folds used in cross validation
 #' @param splitSeed   (numeric) A seed to use when splitting the data for 
@@ -51,7 +52,7 @@
 #'                           splitSeed=42)
 #' @export
 createDefaultSplitSetting <- function(testFraction = 0.25,
-                                      trainFraction = 0.75,
+                                      trainFraction = 1 - testFraction,
                                       splitSeed = sample(100000, 1),
                                       nfold = 3,
                                       type = "stratified") {
@@ -62,6 +63,11 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
   checkIsClass(trainFraction, c("numeric", "integer"))
   checkHigher(trainFraction, 0)
   checkHigherEqual(-1 * trainFraction, -1)
+
+  if (testFraction + trainFraction > 1) {
+    ParallelLogger::logError("testFraction + trainFraction needs to be <= 1")
+    stop("testFraction + trainFraction needs to be <= 1")
+  }
 
   checkIsClass(nfold, c("numeric", "integer"))
   checkHigher(nfold, 1)
