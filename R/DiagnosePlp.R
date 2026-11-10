@@ -604,6 +604,18 @@ riskWindowAfterCovariates <- function(populationSettings, window) {
   return("Pass")
 }
 
+# survivalTime counts from the first day of the risk window but daysToEvent from index,
+# so convert each person's window to days from index before counting those at risk.
+getObservedAtStartOfDay <- function(population, populationSettings, days) {
+  tarStart <- populationSettings$riskWindowStart
+  if (populationSettings$startAnchor != "cohort start") {
+    tarStart <- tarStart + population$daysToCohortEnd
+  }
+  lastDay <- tarStart + population$survivalTime - 1
+  vapply(days, function(x) sum(tarStart <= x & lastDay >= x, na.rm = TRUE), integer(1))
+}
+
+
 
 probastPredictors <- function(
     plpData,
@@ -652,16 +664,10 @@ probastPredictors <- function(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
 
-  kmObservation$observedAtStartOfDay <- unlist(
-    lapply(
-      kmObservation$daysToEvent,
-      function(x) {
-        population %>%
-          dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>%
-          dplyr::select("n")
-      }
-    )
+  kmObservation$observedAtStartOfDay <- getObservedAtStartOfDay(
+    population,
+    populationSettings,
+    kmObservation$daysToEvent
   )
 
   kmObservation$probastId <- probastId
@@ -673,16 +679,10 @@ probastPredictors <- function(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
 
-  kmObservationFull$observedAtStartOfDay <- unlist(
-    lapply(
-      kmObservationFull$daysToEvent,
-      function(x) {
-        populationFull %>%
-          dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>%
-          dplyr::select("n")
-      }
-    )
+  kmObservationFull$observedAtStartOfDay <- getObservedAtStartOfDay(
+    populationFull,
+    populationSettingsFull,
+    kmObservationFull$daysToEvent
   )
 
   kmObservationFull$probastId <- probastId

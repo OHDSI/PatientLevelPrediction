@@ -368,3 +368,60 @@ test_that("leakage diagnostics fail covariates that use time after index", {
     -1
   )
 })
+
+test_that("probastPredictors counts risk sets on the index time axis", {
+  cohorts <- data.frame(
+    rowId = 1:3, subjectId = 1:3, targetId = 1, cohortStartDate = as.Date("2020-01-01"),
+    daysFromObsStart = 400, daysToCohortEnd = 0, daysToObsEnd = c(365, 40, 365),
+    ageYear = 60, gender = 8507
+  )
+  outcomes <- data.frame(rowId = 1, outcomeId = 1, outcomeCount = 1, daysToEvent = 30)
+  plpData <- makeDiagnosticPlpData(cohorts, outcomes, FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE))
+
+  delayed <- suppressWarnings(probastPredictors(plpData, 1, makeDiagnosticPopulationSettings(riskWindowStart = 30)))
+  full <- as.data.frame(delayed$diagnosticPredictorsFull)
+  day30 <- full[!is.na(full$daysToEvent) & full$daysToEvent == 30, ]
+  expect_equal(unname(day30$observedAtStartOfDay[day30$inputType == "populationSettings"]), 3)
+  expect_equal(unname(day30$observedAtStartOfDay[day30$inputType == "10-year"]), 3)
+  # the non-event row has no time and no risk set
+  noEvent <- full[is.na(full$daysToEvent), ]
+  expect_equal(unique(noEvent$observedAtStartOfDay), 0)
+})
+
+test_that("probastPredictors risk sets follow delayed entry from a cohort-end anchor", {
+  cohorts <- data.frame(
+    rowId = 1:3, subjectId = 1:3, targetId = 1, cohortStartDate = as.Date("2020-01-01"),
+    daysFromObsStart = 400, daysToCohortEnd = c(10, 0, 100), daysToObsEnd = c(365, 100, 150),
+    ageYear = 60, gender = 8507
+  )
+  # person 1 enters on day 40 (event day), person 2 on day 30, person 3 on day 130
+  outcomes <- data.frame(rowId = 1, outcomeId = 1, outcomeCount = 1, daysToEvent = 40)
+  plpData <- makeDiagnosticPlpData(cohorts, outcomes, FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE))
+
+  result <- suppressWarnings(probastPredictors(
+    plpData, 1,
+    makeDiagnosticPopulationSettings(riskWindowStart = 30, startAnchor = "cohort end")
+  ))
+  full <- as.data.frame(result$diagnosticPredictorsFull)
+  day40 <- full[!is.na(full$daysToEvent) & full$daysToEvent == 40 & full$inputType == "populationSettings", ]
+  expect_equal(unname(day40$observedAtStartOfDay), 2)
+})
+
+test_that("probastPredictors risk sets are unchanged for the default risk window", {
+  n <- 20
+  cohorts <- data.frame(
+    rowId = 1:n, subjectId = 1:n, targetId = 1, cohortStartDate = as.Date("2020-01-01"),
+    daysFromObsStart = 400, daysToCohortEnd = 0, daysToObsEnd = seq(40, 400, length.out = n),
+    ageYear = 60, gender = 8507
+  )
+  outcomes <- data.frame(rowId = 1:5, outcomeId = 1, outcomeCount = 1, daysToEvent = c(1, 10, 20, 30, 35))
+  plpData <- makeDiagnosticPlpData(cohorts, outcomes, FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE))
+
+  settings <- makeDiagnosticPopulationSettings(riskWindowStart = 1)
+  result <- suppressWarnings(probastPredictors(plpData, 1, settings))
+  full <- as.data.frame(result$diagnosticPredictorsFull)
+  full <- full[!is.na(full$daysToEvent) & full$inputType == "populationSettings", ]
+  population <- suppressWarnings(createStudyPopulation(plpData, 1, settings))
+  expected <- vapply(full$daysToEvent, function(x) sum(population$survivalTime >= x), integer(1))
+  expect_equal(unname(full$observedAtStartOfDay), expected)
+})
