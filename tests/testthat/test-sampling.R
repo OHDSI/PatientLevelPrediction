@@ -197,3 +197,259 @@ test_that("overSampleData works", {
   )
   # perhaps add manual data test
 })
+
+# synthetic train data for the oversampling and undersampling regressions
+createSamplingFixture <- function(labels, folds, covariates) {
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = data.frame(
+      covariateId = sort(unique(covariates$covariateId)),
+      covariateName = "covariate",
+      analysisId = 1,
+      conceptId = 0
+    ),
+    analysisRef = data.frame(
+      analysisId = 1,
+      analysisName = "analysis",
+      domainId = "domain",
+      isBinary = "N",
+      missingMeansZero = "Y"
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = nrow(labels))
+  fixture <- list(labels = labels, folds = folds, covariateData = covariateData)
+  class(fixture) <- "plpData"
+  return(fixture)
+}
+
+# subjectId is unique per original row, so it identifies the source of a copy
+expectCompleteCopies <- function(sampled, original) {
+  sampledCovariates <- sampled$covariateData$covariates %>%
+    dplyr::collect() %>%
+    as.data.frame()
+  originalCovariates <- original$covariateData$covariates %>%
+    dplyr::collect() %>%
+    as.data.frame()
+
+  expect_equal(anyDuplicated(sampled$labels$rowId), 0)
+  expect_equal(nrow(sampled$folds), nrow(sampled$labels))
+  expect_setequal(sampled$folds$rowId, sampled$labels$rowId)
+  expect_true(all(sampledCovariates$rowId %in% sampled$labels$rowId))
+
+  # original rows are untouched
+  kept <- sampled$labels[sampled$labels$rowId %in% original$labels$rowId, ]
+  expect_equal(nrow(kept), nrow(original$labels))
+  expect_equal(kept$subjectId, original$labels$subjectId)
+
+  copies <- sampled$labels[!sampled$labels$rowId %in% original$labels$rowId, ]
+  expect_true(all(copies$outcomeCount > 0))
+  for (i in seq_len(nrow(copies))) {
+    source <- original$labels[original$labels$subjectId == copies$subjectId[i], ]
+    expect_equal(copies$outcomeCount[i], source$outcomeCount)
+    expect_equal(copies$survivalTime[i], source$survivalTime)
+    expect_equal(
+      sampled$folds$index[sampled$folds$rowId == copies$rowId[i]],
+      original$folds$index[original$folds$rowId == source$rowId]
+    )
+    copyCovariates <- sampledCovariates[sampledCovariates$rowId == copies$rowId[i], ]
+    sourceCovariates <- originalCovariates[originalCovariates$rowId == source$rowId, ]
+    copyCovariates <- copyCovariates[order(copyCovariates$covariateId), ]
+    sourceCovariates <- sourceCovariates[order(sourceCovariates$covariateId), ]
+    expect_equal(copyCovariates$covariateId, sourceCovariates$covariateId)
+    expect_equal(copyCovariates$covariateValue, sourceCovariates$covariateValue)
+  }
+  return(invisible(copies))
+}
+
+test_that("overSampleData copies labels, folds and covariates with unique rowIds", {
+  labels <- data.frame(
+    rowId = 1:6, subjectId = 101:106,
+    outcomeCount = c(0, 0, 0, 0, 1, 1), survivalTime = 11:16
+  )
+  folds <- data.frame(rowId = 1:6, index = 1L)
+  covariates <- data.frame(
+    rowId = 1:6, covariateId = 10, covariateValue = c(1, 4, 2, 3, 2, 4)
+  )
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+  settings <- list(sampleSeed = 42, numberOutcomestoNonOutcomes = 1)
+
+  sampled <- overSampleData(original, settings)
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  expect_equal(nrow(sampled$labels), 8)
+  expect_equal(sum(sampled$labels$outcomeCount > 0), 4)
+  copies <- expectCompleteCopies(sampled, original)
+  expect_equal(nrow(copies), 2)
+  expect_equal(
+    attr(sampled$covariateData, "metaData")$populationSize,
+    nrow(sampled$labels)
+  )
+})
+
+test_that("overSampleData keeps rowIds unique across folds and repeated draws", {
+  # gaps in rowId, as after a train/test split, and more copies than cases
+  # so that a fold needs several draws
+  caseIds <- c(2, 4, 6, 8)
+  controlIds <- seq(10, 88, by = 2)
+  rowIds <- c(caseIds, controlIds)
+  labels <- data.frame(
+    rowId = rowIds, subjectId = rowIds + 1000,
+    outcomeCount = c(rep(1, 4), rep(0, length(controlIds))),
+    survivalTime = 1
+  )
+  folds <- data.frame(rowId = rowIds, index = rep_len(1:2, length(rowIds)))
+  # two covariates each, and case 8 has none
+  covariates <- rbind(
+    data.frame(rowId = rowIds[rowIds != 8], covariateId = 10, covariateValue = rowIds[rowIds != 8]),
+    data.frame(rowId = rowIds[rowIds != 8], covariateId = 20, covariateValue = rowIds[rowIds != 8] * 2)
+  )
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+
+  sampled <- overSampleData(original, list(sampleSeed = 7, numberOutcomestoNonOutcomes = 1))
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  copies <- expectCompleteCopies(sampled, original)
+  expect_gt(nrow(copies), length(caseIds))
+  expect_gt(min(copies$rowId), max(rowIds))
+  # the classes end up balanced in each fold
+  merged <- merge(sampled$labels, sampled$folds, by = "rowId")
+  byFold <- table(merged$index, merged$outcomeCount > 0)
+  expect_equal(unname(byFold[, "FALSE"]), unname(byFold[, "TRUE"]))
+})
+
+test_that("Cyclops fits oversampled data as complete patient copies", {
+  labels <- data.frame(
+    rowId = 1:6, subjectId = 101:106,
+    outcomeCount = c(0, 0, 0, 0, 1, 1), survivalTime = 1
+  )
+  covariates <- data.frame(
+    rowId = 1:6, covariateId = 10, covariateValue = c(1, 4, 2, 3, 2, 4)
+  )
+  original <- createSamplingFixture(labels, data.frame(rowId = 1:6, index = 1L), covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+  sampled <- overSampleData(original, list(sampleSeed = 42, numberOutcomestoNonOutcomes = 1))
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  fitData <- Andromeda::andromeda(
+    outcomes = sampled$labels %>%
+      dplyr::mutate(y = .data$outcomeCount, time = .data$survivalTime),
+    covariates = sampled$covariateData$covariates %>% dplyr::collect()
+  )
+  withr::defer(Andromeda::close(fitData))
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = fitData$outcomes,
+    covariates = fitData$covariates,
+    addIntercept = TRUE,
+    modelType = "lr",
+    checkRowIds = FALSE,
+    normalize = NULL,
+    quiet = TRUE
+  )
+  fit <- Cyclops::fitCyclopsModel(
+    cyclopsData,
+    prior = Cyclops::createPrior("none"),
+    control = Cyclops::createControl(tolerance = 1e-10, maxIterations = 10000)
+  )
+
+  # the reference model duplicates each selected case by subjectId
+  sourceRows <- match(sampled$labels$subjectId, labels$subjectId)
+  reference <- stats::glm(
+    y ~ x,
+    family = stats::binomial(),
+    data = data.frame(
+      y = labels$outcomeCount[sourceRows],
+      x = covariates$covariateValue[sourceRows]
+    )
+  )
+  expect_equal(unname(stats::coef(fit)), unname(stats::coef(reference)), tolerance = 1e-4)
+})
+
+test_that("toSparseM keeps oversampled rows aligned with their covariates", {
+  labels <- data.frame(
+    rowId = 1:6, subjectId = 101:106,
+    outcomeCount = c(0, 0, 0, 0, 1, 1), survivalTime = 1
+  )
+  covariates <- data.frame(
+    rowId = 1:6, covariateId = 10, covariateValue = c(1, 4, 2, 3, 2, 4)
+  )
+  original <- createSamplingFixture(labels, data.frame(rowId = 1:6, index = 1L), covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+  sampled <- overSampleData(original, list(sampleSeed = 42, numberOutcomestoNonOutcomes = 1))
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  mapped <- toSparseM(sampled, sampled$labels)
+
+  expect_equal(nrow(mapped$dataMatrix), 8)
+  sourceValue <- covariates$covariateValue[match(mapped$labels$subjectId, labels$subjectId)]
+  expect_equal(unname(as.numeric(mapped$dataMatrix[mapped$labels$rowId, 1])), sourceValue)
+})
+
+test_that("oversampled copies are not counted as test patients in the covariate summary", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  plpData <- simulatePlpData(simulationProfile, n = 500, seed = 42)
+  outcomeId <- plpData$metaData$databaseDetails$outcomeIds[1]
+  populationSettings <- createStudyPopulationSettings(
+    requireTimeAtRisk = FALSE,
+    riskWindowStart = 1,
+    riskWindowEnd = 365
+  )
+  population <- createStudyPopulation(
+    plpData,
+    outcomeId = outcomeId,
+    populationSettings = populationSettings
+  )
+
+  # every test rowId is above the largest train rowId, and few cases are kept
+  # in train, so that the new rowIds of the copies equal test rowIds
+  rowIds <- sort(population$rowId)
+  trainCandidates <- rowIds[seq_len(floor(length(rowIds) * 0.75))]
+  testIds <- setdiff(rowIds, trainCandidates)
+  cases <- intersect(trainCandidates, population$rowId[population$outcomeCount > 0])
+  trainIds <- setdiff(trainCandidates, cases[-(1:20)])
+  splitIds <- rbind(
+    data.frame(rowId = trainIds, index = rep_len(1:2, length(trainIds))),
+    data.frame(rowId = testIds, index = -1)
+  )
+
+  result <- runPlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    populationSettings = populationSettings,
+    splitSettings = createExistingSplitSettings(splitIds),
+    sampleSettings = createSampleSettings(
+      type = "overSample",
+      numberOutcomestoNonOutcomes = 1,
+      sampleSeed = 1
+    ),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE,
+      runSampleData = TRUE,
+      runCovariateSummary = TRUE
+    ),
+    saveDirectory = withr::local_tempdir()
+  )
+
+  summary <- as.data.frame(result$covariateSummary)
+  observed <- function(column) {
+    values <- summary[[column]]
+    values[is.na(values)] <- 0
+    return(values)
+  }
+  covariates <- plpData$covariateData$covariates %>% dplyr::collect()
+  countIn <- function(ids) {
+    vapply(summary$covariateId, function(covariateId) {
+      sum(covariates$covariateId == covariateId & covariates$rowId %in% ids)
+    }, numeric(1))
+  }
+  expect_equal(
+    observed("TrainWithOutcome_CovariateCount") + observed("TrainWithNoOutcome_CovariateCount"),
+    countIn(trainIds)
+  )
+  expect_equal(
+    observed("TestWithOutcome_CovariateCount") + observed("TestWithNoOutcome_CovariateCount"),
+    countIn(testIds)
+  )
+})

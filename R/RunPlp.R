@@ -359,13 +359,15 @@ runPlp <- function(
   if (executeSettings$runCovariateSummary) {
     
     if (!is.null(data$Test)) {
+      # oversampled train copies get new rowIds that can equal test rowIds
+      trainRowIds <- setdiff(data$Train$labels$rowId, data$Test$labels$rowId)
       strata <- data.frame(
         rowId = c(
-          data$Train$labels$rowId, 
+          trainRowIds, 
           data$Test$labels$rowId 
         ),
         strataName = c(
-          rep("Train", nrow(data$Train$labels)), 
+          rep("Train", length(trainRowIds)), 
           rep("Test", nrow(data$Test$labels))
         )
       )

@@ -186,6 +186,15 @@ underSampleData <- function(trainData, sampleSettings) {
   return(sampleTrainData)
 }
 
+# Rename rowId before joining: DuckDB also has an implicit rowid column.
+replaceRowIds <- function(data, rowIdMap) {
+  data %>%
+    dplyr::rename(originalRowId = "rowId") %>%
+    dplyr::inner_join(rowIdMap, by = "originalRowId") %>%
+    dplyr::rename(rowId = "newRowId") %>%
+    dplyr::select(dplyr::all_of(colnames(data)))
+}
+
 overSampleData <- function(trainData, sampleSettings) {
   ParallelLogger::logInfo(paste0("sampleSeed: ", sampleSettings$sampleSeed))
   ParallelLogger::logInfo(paste0("numberOutcomestoNonOutcomes: ", sampleSettings$numberOutcomestoNonOutcomes))
@@ -210,6 +219,8 @@ overSampleData <- function(trainData, sampleSettings) {
 
   sampleTrainData$covariateData <- Andromeda::copyAndromeda(trainData$covariateData)
 
+  lastRowId <- max(sampleTrainData$labels$rowId)
+
   for (i in unique(folds$index)) {
     outcomeIds <- population$rowId[population$outcomeCount > 0 & population$index == i]
     nonoutcomeIds <- population$rowId[population$outcomeCount == 0 & population$index == i]
@@ -230,35 +241,25 @@ overSampleData <- function(trainData, sampleSettings) {
       pplOfInterest <- unique(sampleOutcomeIds) # to enable oversampling with replacement
       sampleSize <- sampleSize - length(pplOfInterest)
 
-      addTrainData <- Andromeda::andromeda()
+      rowIdMap <- data.frame(
+        originalRowId = pplOfInterest,
+        newRowId = lastRowId + seq_along(pplOfInterest)
+      )
+      lastRowId <- lastRowId + length(pplOfInterest)
+
+      addTrainData <- Andromeda::andromeda(rowIdMap = rowIdMap)
       addTrainData$covariates <- trainData$covariateData$covariates %>%
         dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$folds <- trainData$folds %>%
-        dplyr::filter(.data$rowId %in% pplOfInterest)
+      addTrainData$covariates <- replaceRowIds(addTrainData$covariates, addTrainData$rowIdMap)
 
-      addTrainData$labels <- trainData$labels %>%
+      labels <- trainData$labels %>%
         dplyr::filter(.data$rowId %in% pplOfInterest) %>%
-        dplyr::mutate(newRowId = dplyr::row_number()) %>%
-        dplyr::mutate(rowId = .data$newRowId + max(sampleTrainData$labels$rowId))
-
-      addTrainData$folds <- addTrainData$folds %>%
-        dplyr::inner_join(addTrainData$labels %>% 
-          dplyr::select("rowId", "newRowId"), by = "rowId") %>%
-        dplyr::mutate(rowId = .data$newRowId) %>%
-        dplyr::select(-"newRowId")
-
-      addTrainData$covariates <- addTrainData$covariates %>%
-        dplyr::inner_join(addTrainData$labels %>% dplyr::select("rowId", "newRowId"),
-          by = "rowId"
-        ) %>%
-        dplyr::mutate(rowId = .data$newRowId) %>%
-        dplyr::select(-"newRowId")
-      labels <- addTrainData$labels %>% dplyr::collect()
-
-      labels <- labels %>%
         dplyr::collect() %>%
-        dplyr::mutate(rowId = .data$newRowId) %>%
-        dplyr::select(-"newRowId")
+        replaceRowIds(rowIdMap)
+      addFolds <- trainData$folds %>%
+        dplyr::filter(.data$rowId %in% pplOfInterest) %>%
+        dplyr::collect() %>%
+        replaceRowIds(rowIdMap)
 
       sampleTrainData$labels <- dplyr::bind_rows(
         sampleTrainData$labels,
@@ -266,7 +267,7 @@ overSampleData <- function(trainData, sampleSettings) {
       )
       sampleTrainData$folds <- dplyr::bind_rows(
         sampleTrainData$folds,
-        addTrainData$folds %>% dplyr::collect()
+        addFolds
       )
       Andromeda::appendToTable(
         sampleTrainData$covariateData$covariates,
