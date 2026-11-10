@@ -55,6 +55,19 @@ test_that("plots", {
 })
 
 
+test_that("calibration plots tolerate groups that are not estimable at the horizon", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  summary <- data.frame(
+    evaluation = "Test",
+    averagePredictedProbability = c(0.1, 0.2, 0.3, 0.4, 0.5),
+    observedIncidence = c(0.1, NA, 0.3, 0.35, 0.5),
+    PersonCountAtRisk = c(50, 50, 50, 50, 50)
+  )
+  result <- list(performanceEvaluation = list(calibrationSummary = summary))
+  expect_s3_class(plotSparseCalibration(result), "arrangelist")
+  expect_s3_class(plotSparseCalibration2(result), "arrangelist")
+})
 test_that("outcomeSurvivalPlot", {
   skip_if_not_installed("survminer")
   skip_on_cran()

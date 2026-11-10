@@ -376,6 +376,29 @@ cut2 <- function(x, g, m = 150, digits = 3) {
 }
 
 
+# Kaplan-Meier cumulative incidence and its confidence limits at a timepoint.
+# NA when follow-up ends before the timepoint and survival has not reached zero.
+kmIncidenceAtTimepoint <- function(time, event, timepoint) {
+  km <- tryCatch(
+    {
+      summary(
+        survival::survfit(survival::Surv(time, event) ~ 1),
+        times = timepoint,
+        extend = TRUE
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logError(e)
+      return(NULL)
+    }
+  )
+  if (is.null(km) || length(km$surv) != 1 ||
+    (max(time, na.rm = TRUE) < timepoint && km$surv > 0)) {
+    return(list(incidence = NA_real_, lower = NA_real_, upper = NA_real_))
+  }
+  return(list(incidence = 1 - km$surv, lower = 1 - km$upper, upper = 1 - km$lower))
+}
+
 functionExists <- function(name, envir = parent.frame()) {
   is.character(name) && length(name) == 1L && name != "file" &&
     exists(name, envir = envir, mode = "function", inherits = TRUE)

@@ -968,7 +968,7 @@ plotSparseCalibration <- function(
       dplyr::filter(.data[[typeColumn]] == evalType) %>%
       dplyr::select("averagePredictedProbability", "observedIncidence")
 
-    maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
+    maxVal <- max(x$averagePredictedProbability, x$observedIncidence, na.rm = TRUE)
     model <- stats::lm(observedIncidence ~ averagePredictedProbability, data = x)
     res <- model$coefficients
     names(res) <- c("Intercept", "Gradient")
@@ -1062,7 +1062,8 @@ plotSparseCalibration2 <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>%
       dplyr::filter(.data[[typeColumn]] == evalType) %>%
-      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
+      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk") %>%
+      dplyr::filter(!is.na(.data$observedIncidence))
 
     cis <- apply(x, 1, function(x) stats::binom.test(round(x[2] * x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
     x$lci <- cis[1, ]
@@ -1184,7 +1185,7 @@ plotSmoothCalibration <- function(plpResult,
 
       prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
 
-      maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))
+      maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence, na.rm = TRUE))
 
       if (smooth == "rcs") {
         if (missing(nKnots)) {
