@@ -233,7 +233,7 @@ test_that("createDownloadTasks handles single design correctly", {
   result <- createDownloadTasks(list(design))
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 1)
-  expect_equal(ncol(result), 4)
+  expect_equal(ncol(result), 5)
 })
 
 test_that("createDownloadTasks handles multiple designs correctly", {
@@ -254,7 +254,7 @@ test_that("createDownloadTasks handles multiple designs correctly", {
   result <- createDownloadTasks(list(design1, design2))
   expect_s3_class(result, "data.frame")
   expect_equal(nrow(result), 2)
-  expect_equal(ncol(result), 4)
+  expect_equal(ncol(result), 5)
 })
 
 test_that("createDownloadTasks handles duplicated designs correctly", {
@@ -373,4 +373,194 @@ test_that("createDownloadTasks when restrictSettings come from models", {
   )
   result <- createDownloadTasks(list(design1))
   expect_s3_class(result[1, ]$restrictPlpDataSettings[[1]], "restrictPlpDataSettings")
+})
+
+
+taskModel <- function(...) {
+  settings <- FeatureExtraction::createCovariateSettings(...)
+  structure(
+    list(modelDesign = list(
+      covariateSettings = list(settings),
+      restrictPlpDataSettings = createRestrictPlpDataSettings()
+    )),
+    class = "plpModel"
+  )
+}
+
+taskDesign <- function(models, outcomeId = 2) {
+  createValidationDesign(
+    targetId = 1,
+    outcomeId = outcomeId,
+    plpModelList = models,
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+}
+
+test_that("createDownloadTasks separates models that define a covariate differently", {
+  model365 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  model730 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -730)
+
+  # within one design
+  result <- createDownloadTasks(list(taskDesign(list(model365, model730))))
+  expect_equal(nrow(result), 2)
+  expect_equal(sapply(result$covariateSettings, length), c(1, 1))
+
+  # across designs
+  result <- createDownloadTasks(list(taskDesign(list(model365)), taskDesign(list(model730))))
+  expect_equal(nrow(result), 2)
+})
+
+test_that("createDownloadTasks separates models with different concept restrictions", {
+  modelA <- taskModel(useConditionOccurrenceLongTerm = TRUE, includedCovariateConceptIds = 101)
+  modelB <- taskModel(useConditionOccurrenceLongTerm = TRUE, includedCovariateConceptIds = 202)
+  result <- createDownloadTasks(list(taskDesign(list(modelA, modelB))))
+  expect_equal(nrow(result), 2)
+})
+
+test_that("createDownloadTasks keeps compatible models in one task", {
+  shared <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  sameDefinition <- taskModel(
+    useConditionOccurrenceLongTerm = TRUE, useDemographicsGender = TRUE, longTermStartDays = -365
+  )
+  otherWindowOtherAnalysis <- taskModel(useDrugExposureLongTerm = TRUE, longTermStartDays = -730)
+
+  result <- createDownloadTasks(list(taskDesign(list(shared, sameDefinition, otherWindowOtherAnalysis))))
+  expect_equal(nrow(result), 1)
+  expect_equal(length(result$covariateSettings[[1]]), 3)
+
+  # identical settings stay in one task and are not repeated
+  result <- createDownloadTasks(list(taskDesign(list(shared, shared))))
+  expect_equal(nrow(result), 1)
+  expect_equal(length(result$covariateSettings[[1]]), 1)
+})
+
+test_that("createDownloadTasks merges cohort covariates with different covariateIds", {
+  cohortModel <- function(cohortId) {
+    settings <- createCohortCovariateSettings(
+      cohortName = paste("cohort", cohortId), settingId = 1,
+      cohortDatabaseSchema = "s", cohortTable = "t", cohortId = cohortId
+    )
+    structure(
+      list(modelDesign = list(
+        covariateSettings = list(settings),
+        restrictPlpDataSettings = createRestrictPlpDataSettings()
+      )),
+      class = "plpModel"
+    )
+  }
+  result <- createDownloadTasks(list(taskDesign(list(cohortModel(1), cohortModel(2)))))
+  expect_equal(nrow(result), 1)
+
+  # the same cohort covariate with another window keeps its covariateId, so it conflicts
+  windowModel <- function(startDay) {
+    settings <- createCohortCovariateSettings(
+      cohortName = "cohort", settingId = 1,
+      cohortDatabaseSchema = "s", cohortTable = "t", cohortId = 1, startDay = startDay
+    )
+    structure(
+      list(modelDesign = list(
+        covariateSettings = list(settings),
+        restrictPlpDataSettings = createRestrictPlpDataSettings()
+      )),
+      class = "plpModel"
+    )
+  }
+  result <- createDownloadTasks(list(taskDesign(list(windowModel(-30), windowModel(-60)))))
+  expect_equal(nrow(result), 2)
+})
+
+test_that("splitDesignsByDownloadTask preserves model order and task assignment", {
+  model365a <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  model730 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -730)
+  model365b <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+
+  designs <- list(taskDesign(list(model365a, model730, model365b)))
+  tasks <- createDownloadTasks(designs)
+  splitDesigns <- splitDesignsByDownloadTask(designs, tasks)
+
+  expect_equal(nrow(tasks), 2)
+  expect_equal(length(splitDesigns), 3)
+  expect_equal(lengths(lapply(splitDesigns, `[[`, "plpModelList")), c(1, 1, 1))
+  expect_equal(
+    sapply(splitDesigns, function(x) x$downloadTaskId),
+    c(1L, 2L, 1L)
+  )
+  expect_s3_class(splitDesigns[[1]], "validationDesign")
+
+  # no conflicts: the design passes through unchanged
+  compatible <- list(taskDesign(list(model365a, model365b)))
+  compatibleTasks <- createDownloadTasks(compatible)
+  compatibleSplit <- splitDesignsByDownloadTask(compatible, compatibleTasks)
+  expect_equal(length(compatibleSplit), 1)
+  expect_equal(length(compatibleSplit[[1]]$plpModelList), 2)
+})
+
+test_that("getData extracts the covariate settings of the design's download task", {
+  model365 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  model730 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -730)
+  designs <- list(taskDesign(list(model365, model730)))
+  tasks <- createDownloadTasks(designs)
+  splitDesigns <- splitDesignsByDownloadTask(designs, tasks)
+  database <- list(cdmDatabaseName = "db")
+
+  folder <- withr::local_tempdir()
+  captured <- list()
+  with_mocked_bindings(
+    {
+      getData(splitDesigns[[1]], database, folder, tasks)
+      getData(splitDesigns[[2]], database, folder, tasks)
+    },
+    getPlpData = function(databaseDetails, restrictPlpDataSettings, covariateSettings) {
+      captured[[length(captured) + 1]] <<- covariateSettings
+      structure(list(covariateData = NULL, metaData = list()), class = "plpData")
+    },
+    savePlpData = function(plpData, file) invisible(NULL)
+  )
+
+  expect_equal(length(captured), 2)
+  expect_equal(captured[[1]][[1]]$longTermStartDays, -365)
+  expect_equal(captured[[2]][[1]]$longTermStartDays, -730)
+})
+
+test_that("validateExternal gives each model the extraction of its own task", {
+  model365 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  model730 <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -730)
+  model365b <- taskModel(useConditionOccurrenceLongTerm = TRUE, longTermStartDays = -365)
+  design <- taskDesign(list(model365, model730, model365b))
+  database <- structure(
+    list(cdmDatabaseName = "db", cdmDatabaseSchema = "s", cdmDatabaseId = "1"),
+    class = "databaseDetails"
+  )
+
+  validated <- list()
+  outputFolder <- withr::local_tempdir()
+  with_mocked_bindings(
+    validateExternal(
+      validationDesignList = design,
+      databaseDetails = database,
+      logSettings = createLogSettings(),
+      outputFolder = outputFolder
+    ),
+    getData = function(design, database, outputFolder, downloadTasks) {
+      list(taskId = design$downloadTaskId, settings = downloadTasks$covariateSettings[[design$downloadTaskId]])
+    },
+    getPopulation = function(validationDesign, modelDesigns, plpData) {
+      data.frame(outcomeCount = rep(1, 20))
+    },
+    validateModel = function(plpModel, plpData, population, recalibrate, runCovariateSummary,
+                             outputFolder, databaseName, analysisName) {
+      validated[[length(validated) + 1]] <<- list(
+        analysisName = analysisName,
+        taskId = plpData$taskId,
+        modelStart = plpModel$modelDesign$covariateSettings[[1]]$longTermStartDays
+      )
+      invisible(NULL)
+    },
+    insertResultsToSqlite = function(...) invisible(NULL),
+    createDatabaseList = function(...) invisible(NULL)
+  )
+
+  expect_equal(sapply(validated, `[[`, "analysisName"), c("Analysis_1", "Analysis_2", "Analysis_3"))
+  expect_equal(sapply(validated, `[[`, "modelStart"), c(-365, -730, -365))
+  expect_equal(sapply(validated, `[[`, "taskId"), c(1L, 2L, 1L))
 })
