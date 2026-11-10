@@ -1117,11 +1117,12 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     outputData <- missingIndicatorResults$outputData
     featureEngineeringSettings <- missingIndicatorResults$featureEngineeringSettings
 
-    continuousFeatures <- outputData$covariateData$analysisRef %>%
-      dplyr::filter(.data$isBinary == "N") %>%
-      dplyr::select("analysisId") %>%
-      dplyr::inner_join(outputData$covariateData$covariateRef, by = "analysisId") %>%
-      dplyr::pull(.data$covariateId)
+    # Use the numeric features seen in training, as columns can be absent from this batch.
+    initValues <- attr(featureEngineeringSettings, "initialValues")
+    continuousFeatures <- unique(c(
+      as.numeric(names(attr(featureEngineeringSettings, "imputer"))),
+      as.numeric(initValues$covariateId)
+    ))
     featureData <- separateFeatures(outputData, continuousFeatures)
     numericData <- featureData[[1]]
     binary <- featureData[[2]]
@@ -1129,10 +1130,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     on.exit(binary <- NULL, add = TRUE)
     # impute missing values
     allRowIds <- outputData$labels$rowId
-    allColumnIds <- numericData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      unique() %>%
-      sort()
+    allColumnIds <- sort(continuousFeatures)
     completeIds <- expand.grid(rowId = allRowIds, covariateId = allColumnIds)
     # now we have NAs for missing combinations
     numericData$covariates <- merge(completeIds, numericData$covariates,
@@ -1157,7 +1155,6 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       }
     }
 
-    initValues <- attr(featureEngineeringSettings, "initialValues")
     if (is.null(initValues)) {
       initValues <- numericData$covariates %>%
         dplyr::group_by(.data$covariateId) %>%
@@ -1203,6 +1200,10 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 
       imputer <-
         attr(featureEngineeringSettings, "imputer")[[as.character(varId)]]
+      if (is.null(imputer)) {
+        # Complete in training so no PMM model exists; keep the initial value.
+        next
+      }
       varStart <- Sys.time()
       kPmm <- featureEngineeringSettings$methodSettings$k
       if (is.null(kPmm)) {

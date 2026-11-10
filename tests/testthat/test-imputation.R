@@ -1355,6 +1355,103 @@ test_that("simpleImpute apply path imputes patients with no observed numeric val
   }
 })
 
+test_that("iterativeImpute apply path imputes a feature absent from the whole batch", {
+  skip_if_not_installed("glmnet")
+  settings <- makeSavedPmmSettings()
+  settings$addMissingIndicator <- TRUE
+  attr(settings, "missingIndicatorInfo") <- list(
+    map = data.frame(sourceCovariateId = 100, indicatorCovariateId = 1100),
+    covariateRef = data.frame(
+      covariateId = 1100,
+      covariateName = "feature100 missing indicator",
+      analysisId = 1100,
+      conceptId = 100
+    ),
+    analysisRef = data.frame(
+      analysisId = 1100,
+      analysisName = "indicator",
+      domainId = "feature engineering",
+      startDay = NA_real_,
+      endDay = NA_real_,
+      isBinary = "Y",
+      missingMeansZero = "Y"
+    )
+  )
+  test <- makeImputationFixture(
+    rowIds = 1:3,
+    covariates = data.frame(rowId = 1:3, covariateId = 200, covariateValue = c(10, 30, 30)),
+    numericIds = c(100, 200)
+  )
+  withr::defer(Andromeda::close(test$covariateData))
+
+  applied <- withr::with_seed(42, {
+    PatientLevelPrediction:::iterativeImpute(test, settings, done = TRUE)
+  })
+  withr::defer(Andromeda::close(applied$covariateData))
+
+  imputed <- covariateRows(applied, 100)
+  expect_equal(imputed$rowId, 1:3)
+  expect_equal(imputed$covariateValue, c(10, 30, 30))
+  expect_equal(covariateRows(applied, 1100)$rowId, 1:3)
+  expect_equal(covariateRows(applied, 200)$covariateValue, c(10, 30, 30))
+})
+
+test_that("iterativeImpute apply path keeps training mean for features without a PMM model", {
+  skip_if_not_installed("glmnet")
+  settings <- makeSavedPmmSettings()
+
+  partiallyAbsent <- makeImputationFixture(
+    rowIds = 1:3,
+    covariates = rbind(
+      data.frame(rowId = 1:3, covariateId = 100, covariateValue = c(10, 30, 30)),
+      data.frame(rowId = 1:2, covariateId = 200, covariateValue = c(10, 30))
+    ),
+    numericIds = c(100, 200)
+  )
+  withr::defer(Andromeda::close(partiallyAbsent$covariateData))
+  applied <- PatientLevelPrediction:::iterativeImpute(partiallyAbsent, settings, done = TRUE)
+  withr::defer(Andromeda::close(applied$covariateData))
+  expect_equal(covariateRows(applied, 200)$covariateValue, c(10, 30, 20))
+
+  absent <- makeImputationFixture(
+    rowIds = 1:3,
+    covariates = data.frame(rowId = 1:3, covariateId = 100, covariateValue = c(10, 30, 30)),
+    numericIds = c(100, 200)
+  )
+  withr::defer(Andromeda::close(absent$covariateData))
+  appliedAbsent <- PatientLevelPrediction:::iterativeImpute(absent, settings, done = TRUE)
+  withr::defer(Andromeda::close(appliedAbsent$covariateData))
+  expect_equal(covariateRows(appliedAbsent, 200)$covariateValue, c(20, 20, 20))
+})
+
+test_that("iterativeImpute apply path leaves untrained sparse numeric covariates alone", {
+  skip_if_not_installed("glmnet")
+  settings <- makeSavedPmmSettings()
+  attr(settings, "imputer")[["100"]]$coefficients <- data.frame(covariateId = 300, values = 1)
+  test <- makeImputationFixture(
+    rowIds = 1:3,
+    covariates = rbind(
+      data.frame(rowId = c(1, 3), covariateId = 100, covariateValue = c(10, 30)),
+      data.frame(rowId = 1:3, covariateId = 200, covariateValue = 1),
+      data.frame(rowId = 2, covariateId = 300, covariateValue = 30)
+    ),
+    numericIds = c(100, 200, 300),
+    zeroMeansMissingIds = 300
+  )
+  withr::defer(Andromeda::close(test$covariateData))
+
+  applied <- withr::with_seed(42, {
+    PatientLevelPrediction:::iterativeImpute(test, settings, done = TRUE)
+  })
+  withr::defer(Andromeda::close(applied$covariateData))
+
+  expect_equal(covariateRows(applied, 300)$rowId, 2)
+  # the sparse covariate still informs the PMM prediction for row 2
+  expect_equal(covariateRows(applied, 100)$covariateValue, c(10, 30, 30))
+  allValues <- applied$covariateData$covariates %>% dplyr::collect()
+  expect_false(anyNA(allValues$covariateValue))
+})
+
 test_that("predictPlp imputes the requested population, including patients outside labels", {
   train <- makeImputationFixture(
     rowIds = 1:6,
