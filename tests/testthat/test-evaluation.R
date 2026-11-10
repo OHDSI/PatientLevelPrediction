@@ -238,6 +238,56 @@ test_that("Calibration metrics", {
     hsExist2$p.value)
 })
 
+
+test_that("calibration errors include predictions of exactly 0 and 1", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = rep(c(0, 1), each = 10),
+    outcomeCount = rep(c(1, 0), each = 10),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  values <- as.numeric(stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)])
+  # by hand: every observed risk is 1 - p, so every absolute calibration error is 1
+  expect_equal(values, c(1, 1, 1))
+})
+
+test_that("calibration errors match endpoints-included values for mixed predictions", {
+  prediction <- data.frame(
+    rowId = 1:6,
+    value = c(0, 0.2, 0.4, 0.6, 0.8, 1),
+    outcomeCount = c(0, 0, 0, 1, 1, 1),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  values <- as.numeric(stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)])
+  # LOWESS (iter = 0) over all six points, and over only the interior four
+  fit <- stats::lowess(prediction$value, prediction$outcomeCount, iter = 0)
+  distance <- abs(prediction$value - stats::approx(fit, xout = prediction$value, ties = mean)$y)
+  expect_equal(values, c(mean(distance), unname(stats::quantile(distance, 0.9)), max(distance)))
+  interior <- prediction[prediction$value > 0 & prediction$value < 1, ]
+  excludedFit <- stats::lowess(interior$value, interior$outcomeCount, iter = 0)
+  excludedDistance <- abs(interior$value - stats::approx(excludedFit, xout = interior$value, ties = mean)$y)
+  expect_false(isTRUE(all.equal(values[1], mean(excludedDistance))))
+})
+
+test_that("calibration errors are NA rather than zero when they cannot be estimated", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = 0.5,
+    outcomeCount = c(rep(1, 10), rep(0, 10)),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- suppressWarnings(
+    getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  )
+  values <- stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)]
+  expect_true(all(is.na(values)))
+})
+
 test_that("E statistics binary", {
   prediction <- data.frame(
     value = c(seq(.1, .5, length.out = 5), NA, .2),

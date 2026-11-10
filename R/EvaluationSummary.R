@@ -84,17 +84,18 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...) {
     ParallelLogger::logInfo(sprintf("%-20s%.2f", "Brier: ", brier$brier))
 
 
-    # using rms::val.prob
-    indValProb <- predictionOfInterest$value > 0 & predictionOfInterest$value < 1
     valProb <- tryCatch(
-      calculateEStatisticsBinary(prediction = predictionOfInterest[indValProb, ]),
+      calculateEStatisticsBinary(prediction = predictionOfInterest),
       error = function(e) {
-        ParallelLogger::logInfo(e)
+        ParallelLogger::logWarn(paste0(
+          "Calibration error statistics could not be estimated for ",
+          evalType, ": ", conditionMessage(e)
+        ))
         return(
           c(
-            Eavg = 0,
-            E90 = 0,
-            Emax = 0
+            Eavg = NA_real_,
+            E90 = NA_real_,
+            Emax = NA_real_
           )
         )
       }
