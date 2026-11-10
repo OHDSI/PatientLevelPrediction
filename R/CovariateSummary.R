@@ -106,7 +106,10 @@ covariateSummary <- function(
   )
 
   covariateSummary <- aggregateCovariateSummaries(
-    covariateSummariesPerStrata = do.call(rbind, covariateSummariesPerStrata),
+    covariateSummariesPerStrata = completeCovariateSummaries(
+      covariateSummaries = do.call(rbind, covariateSummariesPerStrata),
+      subsetList = subsetList
+    ),
     labels = labels,
     strata = strata
   )
@@ -129,6 +132,32 @@ covariateSummary <- function(
     signif(delta, 3), " ", attr(delta, "units")
   )
   return(covariateSummary)
+}
+
+
+# Covariates are stored sparsely, so a subgroup where a covariate is always zero
+# has no row for it. Add those rows so the subgroup still counts in pooled denominators.
+completeCovariateSummaries <- function(covariateSummaries, subsetList) {
+  subsetSizes <- data.frame(
+    group = sapply(subsetList, function(x) x$subsetName),
+    N = sapply(subsetList, function(x) nrow(x$subset))
+  )
+  completeSummaries <- tidyr::crossing(
+    covariateId = unique(covariateSummaries$covariateId),
+    subsetSizes
+  ) %>%
+    dplyr::left_join(
+      covariateSummaries %>% dplyr::select(-"N"),
+      by = c("covariateId", "group")
+    ) %>%
+    tidyr::replace_na(list(
+      CovariateCount = 0,
+      sumVal = 0,
+      sumSquares = 0,
+      CovariateMean = 0,
+      CovariateStDev = 0
+    ))
+  return(completeSummaries)
 }
 
 

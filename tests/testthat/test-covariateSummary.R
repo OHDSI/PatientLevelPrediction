@@ -112,3 +112,75 @@ test_that("covariateSummarySubset works with temporal data", {
   restrictToSubset <- covariateSummarySubset(covs, rowIds)
   expect_equal(nrow(restrictToSubset), 2)
 })
+
+test_that("pooled covariate summaries keep the population of zero-only subgroups", {
+  sparseData <- Andromeda::andromeda()
+  # covariate 1001 only occurs for rowIds 1:10, all in Train with an outcome (N = 50)
+  sparseData$covariates <- data.frame(
+    rowId = c(1:10, 1:200),
+    covariateId = c(rep(1001, 10), rep(1002, 200)),
+    covariateValue = 1
+  )
+  sparseData$covariateRef <- data.frame(
+    covariateId = c(1001, 1002),
+    covariateName = c("rare", "common")
+  )
+  cohort <- data.frame(rowId = 1:200)
+  sparseLabels <- data.frame(rowId = 1:200, outcomeCount = c(rep(1, 100), rep(0, 100)))
+  strata <- data.frame(
+    rowId = 1:200,
+    strataName = c(rep("Train", 50), rep("Test", 50), rep("Train", 50), rep("Test", 50))
+  )
+  rare <- function(x) x[x$covariateId == 1001, ]
+
+  # by hand, across 200 people 10 positive
+  pooledMean <- 10 / 200
+  pooledSd <- sqrt(0.05 * 0.95)
+
+  unstratified <- rare(covariateSummary(sparseData, cohort))
+  expect_equal(unstratified$CovariateMean, pooledMean)
+  expect_equal(unstratified$CovariateStDev, pooledSd)
+
+  withLabels <- rare(covariateSummary(sparseData, cohort, labels = sparseLabels))
+  expect_equal(withLabels$CovariateMean, pooledMean)
+  expect_equal(withLabels$CovariateStDev, pooledSd)
+  expect_equal(withLabels$CovariateCount, 10)
+  expect_equal(withLabels$WithOutcome_CovariateMean, 0.1)
+  expect_equal(withLabels$WithNoOutcome_CovariateMean, 0)
+
+  withBoth <- rare(covariateSummary(
+    sparseData, cohort,
+    labels = sparseLabels, strata = strata
+  ))
+  expect_equal(withBoth$CovariateMean, pooledMean)
+  expect_equal(withBoth$CovariateStDev, pooledSd)
+  expect_equal(withBoth$CovariateCount, 10)
+  expect_equal(withBoth$WithOutcome_CovariateMean, 10 / 100)
+  expect_equal(withBoth$WithOutcome_CovariateStDev, sqrt(0.1 * 0.9))
+  expect_equal(withBoth$WithNoOutcome_CovariateMean, 0)
+  expect_equal(withBoth$StandardizedMeanDiff, 0.1 / sqrt((0.1 * 0.9 + 0) / 2))
+  # per-subgroup columns still describe their own subgroup
+  expect_equal(withBoth$TrainWithOutcome_CovariateMean, 10 / 50)
+  expect_equal(withBoth$TestWithOutcome_CovariateMean, 0)
+
+  common <- covariateSummary(sparseData, cohort, labels = sparseLabels, strata = strata)
+  common <- common[common$covariateId == 1002, ]
+  expect_equal(common$CovariateMean, 1)
+  expect_equal(common$CovariateStDev, 0)
+})
+
+test_that("covariateSummary works when a label group has no covariate rows", {
+  sparseData <- Andromeda::andromeda()
+  sparseData$covariates <- data.frame(
+    rowId = 1:5,
+    covariateId = 1001,
+    covariateValue = 1
+  )
+  sparseData$covariateRef <- data.frame(covariateId = 1001, covariateName = "only cases")
+  sparseLabels <- data.frame(rowId = 1:10, outcomeCount = c(rep(1, 5), rep(0, 5)))
+  result <- covariateSummary(sparseData, data.frame(rowId = 1:10), labels = sparseLabels)
+  # by hand: 5 of 10 people, all in the outcome group
+  expect_equal(result$CovariateMean, 0.5)
+  expect_equal(result$WithOutcome_CovariateMean, 1)
+  expect_equal(result$WithNoOutcome_CovariateMean, 0)
+})
