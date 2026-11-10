@@ -1349,9 +1349,11 @@ addCohort <- function(
     json <- as.character(json) # now convert to character
   }
 
-  # reduce the size to save
-  if (!targetDialect %in% c("sqlite", "postgres")) {
-    json <- substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  # only platforms where VARCHAR(MAX) has a hard limit get a shortened json
+  truncateJson <- targetDialect %in% c("oracle", "redshift", "pdw", "netezza", "synapse") &&
+    nchar(json) > 4000
+  if (truncateJson) {
+    json <- substr(json, 1, 4000)
   }
 
   # check whether cohort already in COHORT_DEFINITION table:
@@ -1366,14 +1368,19 @@ addCohort <- function(
     tempEmulationSchema = tempEmulationSchema
   )
 
+  matches <- result$json %in% json
+  if (truncateJson) {
+    # a shared prefix does not make cohorts identical, so the id has to agree too
+    matches <- matches & result$cohortDefinitionId == cohortDefinition$cohortId
+  }
   addNew <- FALSE
   if (nrow(result) > 0) {
-    addNew <- json %in% result$json
+    addNew <- any(matches)
     ParallelLogger::logInfo(paste0("json in jsons:", addNew))
   }
 
   if (addNew) {
-    cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json][1] # restrict to 1 if duplicates
+    cohortDefinitionId <- result$cohortDefinitionId[matches][1] # restrict to 1 if duplicates
     ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohort_definition with cohort id", cohortDefinitionId))
   } else {
     ParallelLogger::logInfo(paste0("Adding cohort ", gsub("'", "", cohortDefinition$cohortName)))

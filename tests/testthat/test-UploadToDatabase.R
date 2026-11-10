@@ -996,3 +996,47 @@ test_that("addModel replaces the models row of a re-uploaded fit", {
   )
   expect_equal(other$intercept, 9)
 })
+
+test_that("addCohort keeps full cohort JSON on PostgreSQL and SQL Server style platforms", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prefix <- paste0('{"criteria":"', strrep("a", 4100))
+  add <- function(id, tail, dialect) {
+    PatientLevelPrediction:::addCohort(
+      conn = conn, resultSchema = "main", targetDialect = dialect, cgTablePrefix = "",
+      plpTablePrefix = "", tempEmulationSchema = NULL,
+      cohortDefinition = data.frame(cohortId = id, cohortName = "shared", json = paste0(prefix, tail))
+    )
+  }
+  first <- add(101, 'early"}', "postgresql")
+  second <- add(202, 'late"}', "postgresql")
+  expect_false(first == second)
+  stored <- DatabaseConnector::querySql(conn, "select length(json) as len from main.cohort_definition order by cohort_definition_id;", snakeCaseToCamelCase = TRUE)
+  expect_equal(stored$len, c(nchar(paste0(prefix, 'early"}')), nchar(paste0(prefix, 'late"}'))))
+
+  # same definition reuses its cohort
+  expect_equal(add(101, 'early"}', "postgresql"), first)
+})
+
+test_that("addCohort does not merge truncated definitions across cohort ids", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prefix <- paste0('{"criteria":"', strrep("a", 4100))
+  add <- function(id, tail) {
+    PatientLevelPrediction:::addCohort(
+      conn = conn, resultSchema = "main", targetDialect = "oracle", cgTablePrefix = "",
+      plpTablePrefix = "", tempEmulationSchema = NULL,
+      cohortDefinition = data.frame(cohortId = id, cohortName = "shared", json = paste0(prefix, tail))
+    )
+  }
+  first <- add(101, 'early"}')
+  second <- add(202, 'late"}')
+  expect_false(first == second)
+  expect_equal(add(101, 'early"}'), first)
+  stored <- DatabaseConnector::querySql(conn, "select length(json) as len from main.cohort_definition;", snakeCaseToCamelCase = TRUE)
+  expect_true(all(stored$len == 4000))
+})
