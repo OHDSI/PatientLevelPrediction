@@ -350,7 +350,13 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     offset <- ifelse(is.null(attr(recalibrated, "offset")), 0, attr(recalibrated, "offset"))
     ParallelLogger::logInfo(paste0("recal initial offset: ", offset))
 
-    timepoint <- ifelse(is.null(attr(recalibrated, "timePoint")), 365, attr(recalibrated, "timePoint"))
+    timepoint <- attr(recalibrated, "metaData")$timepoint
+    if (is.null(timepoint)) {
+      timepoint <- attr(recalibrated, "timePoint")
+    }
+    if (is.null(timepoint) || length(timepoint) != 1 || !is.finite(timepoint) || timepoint <= 0) {
+      stop("weakRecalibration of a survival model needs a positive timepoint in the prediction metaData")
+    }
     ParallelLogger::logInfo(paste0("recal initial timepoint: ", timepoint))
 
     if ("rawValue" %in% names(recalibrated)) {

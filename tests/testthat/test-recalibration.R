@@ -528,3 +528,43 @@ survivalHorizonFixture <- function(timepoint = 730) {
   attr(fixture, "metaData") <- list(modelType = "survival", timepoint = timepoint)
   fixture
 }
+
+test_that("weakRecalibration survival uses the timepoint stored in metaData", {
+  skip_if_not_installed("survival")
+  expected365 <- 1 - exp(-sum(1 / (9:12)))
+  expected730 <- 1 - exp(-sum(1 / (5:12)))
+
+  for (setting in list(list(timepoint = 730, expected = expected730), list(timepoint = 365, expected = expected365))) {
+    result <- recalibratePlp(survivalHorizonFixture(setting$timepoint), method = "weakRecalibration")
+    expect_equal(
+      recalRows(result, "weakRecalibration")$value,
+      rep(setting$expected, 12),
+      tolerance = 1e-6
+    )
+    expect_equal(attr(result, "metaData")$timepoint, setting$timepoint)
+  }
+
+  # metaData$timepoint is the canonical horizon, read by evaluation as well
+  both <- survivalHorizonFixture(730)
+  attr(both, "timePoint") <- 365
+  result <- recalibratePlp(both, method = "weakRecalibration")
+  expect_equal(recalRows(result, "weakRecalibration")$value, rep(expected730, 12), tolerance = 1e-6)
+})
+
+test_that("weakRecalibration survival rejects a missing or non-positive horizon", {
+  skip_if_not_installed("survival")
+  missingHorizon <- survivalHorizonFixture()
+  attr(missingHorizon, "metaData")$timepoint <- NULL
+  expect_error(
+    recalibratePlp(missingHorizon, method = "weakRecalibration"),
+    "positive timepoint"
+  )
+  expect_error(
+    recalibratePlp(survivalHorizonFixture(timepoint = 0), method = "weakRecalibration"),
+    "positive timepoint"
+  )
+  expect_error(
+    recalibratePlp(survivalHorizonFixture(timepoint = NA_real_), method = "weakRecalibration"),
+    "positive timepoint"
+  )
+})
