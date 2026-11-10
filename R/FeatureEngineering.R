@@ -223,9 +223,11 @@ createSplineSettings <- function(
 splineCovariates <- function(
     trainData,
     featureEngineeringSettings,
-    knots = NULL) {
+    knots = NULL,
+    componentIds = NULL) {
   ParallelLogger::logInfo("Starting splineCovariates")
 
+  fitting <- is.null(knots)
   if (is.null(knots)) {
     if (length(featureEngineeringSettings$knots) == 1) {
       measurements <- trainData$covariateData$covariates %>%
@@ -239,18 +241,22 @@ splineCovariates <- function(
   }
 
   # apply the spline mapping
-  trainData <- splineMap(
+  splineResult <- splineMap(
     data = trainData,
     covariateId = featureEngineeringSettings$continousCovariateId,
     analysisId = featureEngineeringSettings$analysisId,
-    knots = knots
+    knots = knots,
+    componentIds = componentIds,
+    checkCollisions = fitting
   )
+  trainData <- splineResult$data
 
   featureEngineering <- list(
     funct = "splineCovariates",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      knots = knots
+      knots = knots,
+      componentIds = splineResult$componentIds
     )
   )
 
@@ -264,12 +270,30 @@ splineCovariates <- function(
   return(trainData)
 }
 
+# Keeps the established IDs unless another spline already uses them. Saved
+# models without a persisted mapping replay without the check, to reproduce the
+# IDs they were trained on.
+allocateSplineIds <- function(covariateId, analysisId, nComponents, existingIds) {
+  for (prefix in c(floor(covariateId / 1000), covariateId)) {
+    ids <- prefix * 10000 + seq_len(nComponents) * 1000 + analysisId
+    if (max(ids) < 1e15 && !any(ids %in% existingIds)) {
+      return(ids)
+    }
+  }
+  stop(
+    "Cannot create unique spline covariate IDs for covariateId ", covariateId,
+    ". Use a different analysisId in createSplineSettings()."
+  )
+}
+
 # create the spline map to add spline columns
 splineMap <- function(
     data,
     covariateId,
     analysisId,
-    knots) {
+    knots,
+    componentIds = NULL,
+    checkCollisions = FALSE) {
   ParallelLogger::logInfo("Starting splineMap")
   measurements <- data$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!covariateId) %>%
@@ -293,8 +317,17 @@ splineMap <- function(
   data$covariateData$covariateRef <- data$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId != !!covariateId)
 
-  # remove last 3 numbers as this was old analysis id
-  covariateId <- floor(covariateId / 1000)
+  if (is.null(componentIds)) {
+    existingIds <- if (checkCollisions) {
+      data$covariateData$covariateRef %>% dplyr::pull(.data$covariateId)
+    }
+    componentIds <- allocateSplineIds(
+      covariateId = covariateId,
+      analysisId = analysisId,
+      nComponents = ncol(designMatrix),
+      existingIds = existingIds
+    )
+  }
 
   # add the spline columns
   for (i in 1:ncol(designMatrix)) {
@@ -302,7 +335,7 @@ splineMap <- function(
       tbl = data$covariateData$covariates,
       data = data.frame(
         rowId = measurements$rowId,
-        covariateId = covariateId * 10000 + i * 1000 + analysisId,
+        covariateId = componentIds[i],
         covariateValue = designMatrix[, i]
       )
     )
@@ -312,8 +345,7 @@ splineMap <- function(
   Andromeda::appendToTable(
     tbl = data$covariateData$covariateRef,
     data = data.frame(
-      covariateId =
-        covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
+      covariateId = componentIds,
       covariateName = paste(
         paste0(covariateName, " spline component "),
         1:ncol(designMatrix)
@@ -340,7 +372,7 @@ splineMap <- function(
     )
   }
   ParallelLogger::logInfo("Finished splineMap")
-  return(data)
+  return(list(data = data, componentIds = componentIds))
 }
 
 

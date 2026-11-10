@@ -416,3 +416,147 @@ test_that("two step FE and RClassifier works", {
     (originalTestAge - minAge) / (maxAge - minAge)
   )
 })
+
+createSplineData <- function(ageValues = c(20, 80, 40, 60), charlsonValues = c(4, 0, 1, 3)) {
+  n <- length(ageValues)
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = rep(seq_len(n), 2),
+      covariateId = rep(c(1002, 1901), each = n),
+      covariateValue = c(ageValues, charlsonValues)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1002, 1901),
+      covariateName = c("Age", "Charlson index"),
+      conceptId = c(0, 0),
+      analysisId = c(2, 901)
+    ),
+    analysisRef = data.frame(
+      analysisId = c(2, 901),
+      analysisName = c("Age", "Charlson index"),
+      domainId = c("Demographics", "Condition"),
+      startDay = c(0, 0),
+      endDay = c(0, 0),
+      isBinary = c("N", "N"),
+      missingMeansZero = c("N", "N")
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = n)
+  structure(
+    list(labels = data.frame(rowId = seq_len(n), outcomeCount = 0), covariateData = covariateData),
+    class = "plpData"
+  )
+}
+
+ageSplineSettings <- createSplineSettings(1002, knots = c(20, 50, 80))
+charlsonSplineSettings <- createSplineSettings(1901, knots = c(0, 2, 4))
+
+test_that("splines for covariates sharing an ID prefix keep separate columns", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  engineered <- featureEngineer(data, list(ageSplineSettings, charlsonSplineSettings))
+  ref <- as.data.frame(engineered$covariateData$covariateRef)
+  sparse <- toSparseM(engineered, engineered$labels)
+
+  expect_equal(nrow(ref), 8)
+  expect_equal(dplyr::n_distinct(ref$covariateId), 8)
+  expect_equal(ncol(sparse$dataMatrix), 8)
+  age <- splines::bs(c(20, 80, 40, 60), knots = 50, Boundary.knots = c(20, 80))
+  charlson <- splines::bs(c(4, 0, 1, 3), knots = 2, Boundary.knots = c(0, 4))
+  expected <- cbind(age, charlson)
+  actual <- as.matrix(sparse$dataMatrix)
+  expect_equal(unname(actual[order(sparse$labels$originalRowId), ]), unname(expected), ignore_attr = TRUE)
+})
+
+test_that("persisted spline IDs are reused at prediction, including after a JSON round trip", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  engineered <- featureEngineer(data, list(ageSplineSettings, charlsonSplineSettings))
+  trainIds <- sort(as.data.frame(engineered$covariateData$covariateRef)$covariateId)
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  ParallelLogger::saveSettingsToJson(saved, jsonFile)
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)
+
+  newData <- createSplineData(c(30, 70), c(2, 1))
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  replayed <- applyFeatureEngineering(newData, loaded)
+
+  expect_setequal(as.data.frame(replayed$covariateData$covariateRef)$covariateId, trainIds)
+  expect_setequal(unique(as.data.frame(replayed$covariateData$covariates)$covariateId), trainIds)
+})
+
+test_that("a single spline keeps its established covariate IDs", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  engineered <- featureEngineer(data, ageSplineSettings)
+
+  expect_setequal(
+    as.data.frame(engineered$covariateData$covariateRef)$covariateId,
+    c(1901, 11683, 12683, 13683, 14683)
+  )
+})
+
+test_that("models saved before spline IDs were persisted replay their original IDs", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  legacy <- list(
+    funct = "splineCovariates",
+    settings = list(featureEngineeringSettings = ageSplineSettings, knots = c(20, 50, 80))
+  )
+
+  replayed <- applyFeatureEngineering(data, legacy)
+
+  expect_setequal(
+    as.data.frame(replayed$covariateData$covariateRef)$covariateId,
+    c(1901, 11683, 12683, 13683, 14683)
+  )
+})
+
+test_that("allocateSplineIds avoids collisions and stops when it cannot", {
+  expect_equal(allocateSplineIds(1002, 683, 2, numeric()), c(11683, 12683))
+  expect_equal(
+    allocateSplineIds(1901, 683, 2, c(11683, 12683)),
+    c(19011683, 19012683)
+  )
+  expect_error(
+    allocateSplineIds(1901, 683, 2, c(11683, 12683, 19011683, 19012683)),
+    "Cannot create unique"
+  )
+})
+
+createRareData <- function(nPatients, featureRowIds, rowsPerPatient = 1) {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(1:100, rep(featureRowIds, each = rowsPerPatient)),
+      covariateId = c(rep(1, 100), rep(2, length(featureRowIds) * rowsPerPatient)),
+      covariateValue = 1
+    ),
+    covariateRef = data.frame(
+      covariateId = c(1, 2),
+      covariateName = c("background", "candidate"),
+      analysisId = 1,
+      conceptId = 0
+    ),
+    analysisRef = data.frame(analysisId = 1, analysisName = "binary features")
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = nPatients)
+  structure(
+    list(
+      labels = data.frame(rowId = seq_len(nPatients), outcomeCount = 0),
+      folds = data.frame(rowId = seq_len(nPatients), index = 1),
+      covariateData = covariateData
+    ),
+    class = "plpData"
+  )
+}
+
+remainingCovariates <- function(data) {
+  sort(unique(as.data.frame(data$covariateData$covariates)$covariateId))
+}
