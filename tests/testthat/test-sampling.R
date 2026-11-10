@@ -320,6 +320,25 @@ test_that("overSampleData keeps rowIds unique across folds and repeated draws", 
   expect_equal(unname(byFold[, "FALSE"]), unname(byFold[, "TRUE"]))
 })
 
+test_that("overSampleData only copies the sole case of a fold", {
+  # sample(100, n, replace = TRUE) would draw from 1:100
+  labels <- data.frame(
+    rowId = c(100, 1:10), subjectId = c(1100, 1001:1010),
+    outcomeCount = c(1, rep(0, 10)), survivalTime = 1
+  )
+  folds <- data.frame(rowId = labels$rowId, index = 1L)
+  covariates <- data.frame(rowId = labels$rowId, covariateId = 10, covariateValue = labels$rowId)
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+
+  sampled <- overSampleData(original, list(sampleSeed = 3, numberOutcomestoNonOutcomes = 1))
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  copies <- expectCompleteCopies(sampled, original)
+  expect_equal(nrow(copies), 9)
+  expect_true(all(copies$subjectId == 1100))
+})
+
 test_that("Cyclops fits oversampled data as complete patient copies", {
   labels <- data.frame(
     rowId = 1:6, subjectId = 101:106,
@@ -452,4 +471,51 @@ test_that("oversampled copies are not counted as test patients in the covariate 
     observed("TestWithOutcome_CovariateCount") + observed("TestWithNoOutcome_CovariateCount"),
     countIn(testIds)
   )
+})
+
+test_that("underSampleData keeps the sole control of a fold", {
+  # sample(100, 1) would draw from 1:100
+  labels <- data.frame(
+    rowId = c(201:206, 100L, 301:306, 1:30),
+    subjectId = 1:43,
+    outcomeCount = c(rep(1, 6), 0, rep(1, 6), rep(0, 30)),
+    survivalTime = 1
+  )
+  folds <- data.frame(rowId = labels$rowId, index = c(rep(1L, 7), rep(2L, 36)))
+  covariates <- data.frame(rowId = labels$rowId, covariateId = 10, covariateValue = 1)
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+
+  for (seed in 1:10) {
+    sampled <- suppressWarnings(
+      underSampleData(original, list(sampleSeed = seed, numberOutcomestoNonOutcomes = 1))
+    )
+    fold1 <- sampled$folds$rowId[sampled$folds$index == 1]
+    fold2 <- sampled$folds$rowId[sampled$folds$index == 2]
+    expect_true(100L %in% fold1)
+    expect_setequal(fold1, c(201:206, 100L))
+    expect_equal(length(setdiff(fold2, 301:306)), 6)
+    Andromeda::close(sampled$covariateData)
+  }
+})
+
+test_that("underSampleData draws controls as before when a fold has several", {
+  labels <- data.frame(
+    rowId = 1:40,
+    subjectId = 1:40,
+    outcomeCount = c(rep(1, 10), rep(0, 30)),
+    survivalTime = 1
+  )
+  folds <- data.frame(rowId = 1:40, index = 1L)
+  covariates <- data.frame(rowId = 1:40, covariateId = 10, covariateValue = 1)
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+
+  sampled <- underSampleData(original, list(sampleSeed = 5, numberOutcomestoNonOutcomes = 1))
+  withr::defer(Andromeda::close(sampled$covariateData))
+
+  set.seed(5)
+  expected <- sample(11:40, 10)
+  expect_setequal(sampled$labels$rowId, c(1:10, expected))
+  expect_setequal(sampled$folds$rowId, c(1:10, expected))
 })

@@ -158,8 +158,9 @@ underSampleData <- function(trainData, sampleSettings) {
       sampleSize <- length(nonoutcomeIds)
     }
 
-    # randomly pick non-outcome people
-    sampleNonoutcomeIds <- sample(nonoutcomeIds, sampleSize)
+    # randomly pick non-outcome people, sampling positions because sample()
+    # on a single numeric id would draw from 1:id
+    sampleNonoutcomeIds <- nonoutcomeIds[sample.int(length(nonoutcomeIds), sampleSize)]
 
     pplOfInterest <- c(pplOfInterest, outcomeIds, sampleNonoutcomeIds)
   }
@@ -237,7 +238,7 @@ overSampleData <- function(trainData, sampleSettings) {
     while (sampleSize > 0) {
       tempSampleSize <- min(length(outcomeIds), sampleSize)
       # randomly oversample outcome people
-      sampleOutcomeIds <- sample(outcomeIds, tempSampleSize, replace = TRUE)
+      sampleOutcomeIds <- outcomeIds[sample.int(length(outcomeIds), tempSampleSize, replace = TRUE)]
       pplOfInterest <- unique(sampleOutcomeIds) # to enable oversampling with replacement
       sampleSize <- sampleSize - length(pplOfInterest)
 
