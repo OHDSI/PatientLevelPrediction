@@ -502,3 +502,21 @@ test_that("getNetBenefit explains survival predictions it cannot use", {
   constant$prediction$value <- 0.3
   expect_error(getNetBenefit(constant, "Test"), "differ between patients")
 })
+
+test_that("plotDemographicSummary band is the spread of individual predicted risks", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  for (n in c(100, 10000)) {
+    prediction <- data.frame(
+      rowId = seq_len(n), ageYear = 60, gender = 8507,
+      value = rep(c(0.1, 0.3), length.out = n),
+      outcomeCount = rep(c(0, 1), length.out = n),
+      evaluation = "Test"
+    )
+    summary <- getDemographicSummary(prediction, "binary", typeColumn = "evaluation")
+    plots <- capturePlots(plotDemographicSummary(list(performanceEvaluation = list(demographicSummary = summary))))
+    data <- plots[[1]]$data
+    row <- data[data$variable == "averagePredictedProbability", ][1, ]
+    expect_equal((row$upper - row$lower) / 2, 1.96 * stats::sd(prediction$value), tolerance = 1e-6)
+  }
+})

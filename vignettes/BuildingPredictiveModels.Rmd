@@ -1181,7 +1181,7 @@ For Recall the denominator does not depend on the classifier threshold (Tp+Fn is
 
 \## Demographic summary
 
-This plot shows for females and males the expected and observed risk in different age groups together with a confidence area.
+This plot shows for females and males the expected and observed risk in different age groups. The shaded band is the mean predicted risk plus or minus 1.96 standard deviations of the individual predicted risks, so it shows how much predicted risks vary within a group. It is not a confidence interval.
 
 The results show that our model is well calibrated across gender and age groups.
 

@@ -31,6 +31,10 @@ Plot the Observed vs. expected incidence, by age and gender
 }
 \details{
 Create a plot showing the Observed vs. expected incidence, by age and gender
+
+The shaded band around the expected line is the mean predicted risk plus or minus 1.96 standard
+deviations of the individual predicted risks in each group. It shows how much predicted risks vary
+within the group, and is not a confidence interval for the mean or for the observed incidence.
 #'
 }
 \examples{
