@@ -866,3 +866,167 @@ test_that("covariateSummary replays steps with the population columns and the la
 
   expect_setequal(seen$labelColumns, c("rowId", "ageYear", "gender", "outcomeCount"))
 })
+
+createStratifiedData <- function(rowIds, ageYear, gender, values, labels = TRUE) {
+  observed <- !is.na(values)
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = rowIds[observed], covariateId = rep(12101, sum(observed)),
+      covariateValue = as.numeric(values[observed])
+    ),
+    covariateRef = data.frame(
+      covariateId = 12101, covariateName = "lab", analysisId = 101, conceptId = 0
+    ),
+    analysisRef = data.frame(
+      analysisId = 101, analysisName = "lab", domainId = "Measurement",
+      startDay = 0, endDay = 0, isBinary = "N", missingMeansZero = "N"
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = length(rowIds))
+  people <- data.frame(rowId = rowIds, ageYear = ageYear, gender = gender)
+  data <- list(covariateData = covariateData)
+  if (labels) {
+    data$labels <- cbind(people, outcomeCount = 0)
+  } else {
+    data$cohorts <- people
+  }
+  structure(data, class = "plpData")
+}
+
+labValues <- function(data) {
+  covariateValues(data) %>%
+    dplyr::filter(.data$covariateId == 12101) %>%
+    dplyr::select("rowId", "covariateValue")
+}
+
+test_that("stratified imputation runs in training and is applied at prediction", {
+  settings <- createStratifiedImputationSettings(covariateId = 12101, ageSplits = 50)
+  # training data has labels and no cohorts, as made by splitData()
+  train <- createStratifiedData(
+    rowIds = 1:6,
+    ageYear = c(30, 30, 30, 60, 60, 60),
+    gender = c(8507, 8507, 8507, 8507, 8507, 8532),
+    values = c(10, 20, NA, 40, NA, 100)
+  )
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+
+  engineered <- featureEngineer(train, settings)
+  # patients 3 and 5 get the mean of their age group and gender
+  expect_equal(labValues(engineered)$covariateValue, c(10, 20, 15, 40, 40, 100))
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+  expect_equal(stepFunctions(saved), "stratifiedImputeCovariates")
+  expect_false("cohorts" %in% names(engineered$covariateData))
+
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(list(featureEngineering = saved), jsonFile)
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  # a full plpData has cohorts and no labels
+  newData <- createStratifiedData(
+    rowIds = 11:14,
+    ageYear = c(30, 60, 30, 60),
+    gender = c(8507, 8532, 8532, 8507),
+    values = c(NA, NA, NA, 5),
+    labels = FALSE
+  )
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  replayed <- applyFeatureEngineering(newData, loaded)
+
+  # training means by group; patient 13's group has no training values, so it
+  # gets the overall training mean (10 + 20 + 40 + 100) / 4
+  expect_equal(labValues(replayed)$rowId, 11:14)
+  expect_equal(labValues(replayed)$covariateValue, c(15, 100, 42.5, 5))
+  expect_equal(labValues(newData)$rowId, 14)
+})
+
+test_that("stratified imputation settings default to 5-year age groups", {
+  settings <- createStratifiedImputationSettings(covariateId = 12101)
+  expect_null(settings$ageSplits)
+  train <- createStratifiedData(
+    rowIds = 1:4,
+    ageYear = c(31, 34, 36, 36),
+    gender = 8507,
+    values = c(10, NA, 30, NA)
+  )
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+
+  engineered <- featureEngineer(train, settings)
+  # ages 31 and 34 are one group, 36 another
+  expect_equal(labValues(engineered)$covariateValue, c(10, 10, 30, 30))
+})
+
+test_that("stratified imputation imputes stored NA values and uses the overall mean without age", {
+  settings <- createStratifiedImputationSettings(covariateId = 12101, ageSplits = 50)
+  train <- createStratifiedData(
+    rowIds = 1:4,
+    ageYear = c(30, 30, NA, 60),
+    gender = 8507,
+    values = c(10, 20, 30, 70)
+  )
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  # a stored NA for patient 4
+  train$covariateData$covariates <- train$covariateData$covariates %>%
+    dplyr::mutate(covariateValue = dplyr::if_else(.data$rowId == 4, NA_real_, .data$covariateValue))
+
+  engineered <- featureEngineer(train, settings)
+
+  values <- labValues(engineered)
+  expect_equal(values$rowId, 1:4)
+  # patient 4's group (over 50) has no training value, so it gets the overall mean of 10, 20 and 30
+  expect_equal(values$covariateValue, c(10, 20, 30, 20))
+  # patient 3 has no age, so its value only counts towards the overall mean
+  means <- featureEngineeringSteps(
+    attr(engineered$covariateData, "metaData")$featureEngineering
+  )[[1]]$settings$stratifiedMeans
+  expect_false(anyNA(means$ageGroup))
+})
+
+test_that("stratified imputation without training values warns and replays after a JSON round trip", {
+  settings <- createStratifiedImputationSettings(covariateId = 12101, ageSplits = 50)
+  train <- createStratifiedData(rowIds = 1:3, ageYear = 30, gender = 8507, values = c(NA, NA, NA))
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+
+  expect_warning(engineered <- featureEngineer(train, settings), "no values of covariate 12101")
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(list(featureEngineering = saved), jsonFile)
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  newData <- createStratifiedData(rowIds = 11:12, ageYear = 30, gender = 8507, values = c(NA, 5), labels = FALSE)
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  replayed <- applyFeatureEngineering(newData, loaded)
+  expect_equal(labValues(replayed)$rowId, 12)
+})
+
+test_that("runPlp with stratified imputation completes with the covariate summary", {
+  skip_on_cran()
+  data("simulationProfile", package = "PatientLevelPrediction")
+  simulated <- simulatePlpData(simulationProfile, n = 800, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+  before <- simulated$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()
+
+  result <- runPlp(
+    plpData = simulated,
+    outcomeId = 3,
+    analysisId = "stratifiedImputation",
+    populationSettings = createStudyPopulationSettings(requireTimeAtRisk = FALSE),
+    featureEngineeringSettings = createStratifiedImputationSettings(covariateId = 1002),
+    modelSettings = setLassoLogisticRegression(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE, runFeatureEngineering = TRUE, runPreprocessData = TRUE,
+      runModelDevelopment = TRUE, runCovariateSummary = TRUE
+    ),
+    saveDirectory = file.path(saveLoc, "stratifiedImputation")
+  )
+
+  expect_false(is.null(result$covariateSummary))
+  expect_equal(
+    stepFunctions(result$model$preprocessing$featureEngineering),
+    "stratifiedImputeCovariates"
+  )
+  expect_equal(simulated$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(), before)
+})

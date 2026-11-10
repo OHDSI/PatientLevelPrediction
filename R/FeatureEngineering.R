@@ -494,16 +494,20 @@ splineMap <- function(
 
 
 
-#' Create the settings for using stratified imputation.
+#' Create the settings for using stratified imputation
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies 
-#' how to do stratified imputation. This function splits the covariate into
-#' age groups and fits splines to the covariate within each age group. The spline
-#' values are then used to impute missing values.
+#' Returns an object of class \code{featureEngineeringSettings} that specifies
+#' how to do stratified imputation. Patients without a value for the covariate
+#' get the mean value of the training patients with the same age group and
+#' gender. Patients in an age group and gender without training values, and
+#' patients without an age or gender, get the mean over all training patients.
+#' Stored missing (NA) values are imputed too. The means learned in training are
+#' reused when the model is applied to new data.
 #'
 #' @param covariateId     The covariateId that needs imputed values
-#' @param ageSplits       A vector of age splits in years to create age groups
+#' @param ageSplits       A vector of ages in years at which to split the age
+#'   groups. If \code{NULL}, the default, age groups are 5 years wide.
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
@@ -517,7 +521,7 @@ createStratifiedImputationSettings <- function(
     covariateId,
     ageSplits = NULL) {
   checkIsClass(covariateId, c("numeric", "integer"))
-  checkIsClass(ageSplits, c("numeric", "integer"))
+  checkIsClass(ageSplits, c("numeric", "integer", "NULL"))
 
   featureEngineeringSettings <- list(
     covariateId = covariateId,
@@ -533,46 +537,105 @@ createStratifiedImputationSettings <- function(
 stratifiedImputeCovariates <- function(
     trainData,
     featureEngineeringSettings,
-    stratifiedMeans = NULL) {
-  if (is.null(stratifiedMeans)) {
+    stratifiedMeans = NULL,
+    overallMean = NULL,
+    done = FALSE) {
+  covariateId <- featureEngineeringSettings$covariateId
+  # a stored NA counts as a missing value
+  trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    dplyr::filter(!(.data$covariateId == !!covariateId & is.na(.data$covariateValue)))
+  if (!done) {
     stratifiedMeans <- calculateStratifiedMeans(
       trainData = trainData,
       featureEngineeringSettings = featureEngineeringSettings
     )
+    overallMean <- trainData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == !!covariateId) %>%
+      dplyr::summarise(overallMean = mean(.data$covariateValue, na.rm = TRUE)) %>%
+      dplyr::pull()
+    if (nrow(stratifiedMeans) == 0) {
+      warning(
+        "Stratified imputation found no values of covariate ", covariateId,
+        " in the training data, so no values are imputed."
+      )
+    }
+  }
+  stratifiedMeans <- savedStratifiedMeans(stratifiedMeans)
+  # NaN, NULL or "NA" (after a JSON round trip) when there were no training values
+  overallMean <- suppressWarnings(as.numeric(unlist(overallMean)))
+  if (length(overallMean) != 1 || !is.finite(overallMean)) {
+    overallMean <- NA_real_
   }
 
   trainData <- imputeMissingMeans(
     trainData = trainData,
-    covariateId = featureEngineeringSettings$covariateId,
+    covariateId = covariateId,
     ageSplits = featureEngineeringSettings$ageSplits,
-    stratifiedMeans = stratifiedMeans
+    stratifiedMeans = stratifiedMeans,
+    overallMean = overallMean
   )
 
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
+    funct = "stratifiedImputeCovariates",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      stratifiedMeans = stratifiedMeans,
+      overallMean = overallMean,
+      done = TRUE
+    )
+  )
   return(trainData)
+}
+
+# The saved group means with numeric columns, also when there are none.
+savedStratifiedMeans <- function(stratifiedMeans) {
+  means <- restoreSavedTable(stratifiedMeans)
+  if (is.null(means) || nrow(means) == 0) {
+    return(data.frame(ageGroup = numeric(0), gender = numeric(0), covariateValue = numeric(0)))
+  }
+  return(data.frame(
+    ageGroup = as.numeric(means$ageGroup),
+    gender = as.numeric(means$gender),
+    covariateValue = as.numeric(means$covariateValue)
+  ))
+}
+
+# Age and gender of the patients being processed: the labels during training,
+# or the cohorts when a full plpData is processed.
+stratificationPopulation <- function(trainData, ageSplits) {
+  population <- trainData$labels %||% trainData$cohorts
+  if (is.null(population) || !all(c("rowId", "ageYear", "gender") %in% colnames(population))) {
+    stop("Stratified imputation needs rowId, ageYear and gender in the labels or cohorts.")
+  }
+  population <- as.data.frame(population)[, c("rowId", "ageYear", "gender")]
+  if (is.null(ageSplits)) {
+    population$ageGroup <- floor(population$ageYear / 5)
+  } else {
+    population$ageGroup <- 0
+    for (i in seq_along(ageSplits)) {
+      population$ageGroup[population$ageYear > ageSplits[i]] <- i
+    }
+    population$ageGroup[is.na(population$ageYear)] <- NA
+  }
+  population$ageGroup <- as.numeric(population$ageGroup)
+  population$gender <- as.numeric(population$gender)
+  return(population[, c("rowId", "ageGroup", "gender")])
 }
 
 calculateStratifiedMeans <- function(
     trainData,
     featureEngineeringSettings) {
-  if (is.null(featureEngineeringSettings$ageSplits)) {
-    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear / 5)
-  } else {
-    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
-    for (i in seq_along(featureEngineeringSettings$ageSplits)) {
-      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > featureEngineeringSettings$ageSplits[i]] <- i
-    }
-  }
-
-  trainData$covariateData$cohorts <- trainData$cohorts[, c("rowId", "ageGroup", "gender")]
-
+  population <- stratificationPopulation(trainData, featureEngineeringSettings$ageSplits)
+  # patients without an age or gender get the overall mean instead
+  population <- population[!is.na(population$ageGroup) & !is.na(population$gender), ]
   stratifiedMeans <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!featureEngineeringSettings$covariateId) %>%
-    dplyr::inner_join(
-      y = trainData$covariateData$cohorts,
-      by = c("rowId")
-    ) %>%
+    dplyr::select("rowId", "covariateValue") %>%
+    dplyr::collect() %>%
+    dplyr::inner_join(population, by = "rowId") %>%
     dplyr::group_by(.data$ageGroup, .data$gender) %>%
-    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE), .groups = "drop") %>%
     as.data.frame()
 
   return(stratifiedMeans)
@@ -582,34 +645,24 @@ imputeMissingMeans <- function(
     trainData,
     covariateId,
     ageSplits,
-    stratifiedMeans) {
-  if (is.null(ageSplits)) {
-    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear / 5)
-  } else {
-    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
-    for (i in seq_along(ageSplits)) {
-      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > ageSplits[i]] <- i
-    }
-  }
-
+    stratifiedMeans,
+    overallMean = NULL) {
+  population <- stratificationPopulation(trainData, ageSplits)
   rowIdsWithValues <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!covariateId) %>%
-    dplyr::select("rowId") %>%
+    dplyr::distinct(.data$rowId) %>%
     dplyr::pull()
-  rowIdsWithMissingValues <- trainData$cohorts$rowId[!trainData$cohorts$rowId %in% rowIdsWithValues]
 
-
-  imputedData <- trainData$cohorts %>%
-    dplyr::filter(.data$rowId %in% rowIdsWithMissingValues) %>%
-    dplyr::select("rowId", "ageGroup", "gender") %>%
-    dplyr::left_join(
-      y = stratifiedMeans,
-      by = c("ageGroup", "gender")
-    ) %>%
+  fallback <- overallMean %||% NA_real_
+  imputedData <- population %>%
+    dplyr::filter(!.data$rowId %in% rowIdsWithValues) %>%
+    dplyr::left_join(stratifiedMeans, by = c("ageGroup", "gender")) %>%
     dplyr::mutate(
       covariateId = !!covariateId,
-      covariateValue = .data$covariateValue
+      covariateValue = dplyr::coalesce(.data$covariateValue, !!fallback)
     ) %>%
+    # without a training mean there is nothing to impute
+    dplyr::filter(!is.na(.data$covariateValue)) %>%
     dplyr::select("rowId", "covariateId", "covariateValue")
 
   Andromeda::appendToTable(
