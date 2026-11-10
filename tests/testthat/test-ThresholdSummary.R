@@ -54,7 +54,7 @@ test_that("getThresholdSummary survival", {
     value = c(
       (100 + sample(10, 50, replace = TRUE)),
       (105 + sample(10, 150, replace = TRUE))
-    ),
+    ) / 250,
     outcomeCount = c(rep(1, 50), rep(0, 150)),
     evaluation = rep("Test", 200),
     survivalTime = 50 + sample(365 * 2, 200, replace = TRUE)
@@ -71,6 +71,44 @@ test_that("getThresholdSummary survival", {
   expect_equal(ncol(thresSum), 5)
 })
 
+
+test_that("survival net benefit uses absolute probabilities", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = seq(0.01, 0.19, length.out = 20),
+    outcomeCount = as.integer(1:20 %in% c(5, 15)),
+    survivalTime = ifelse(1:20 %in% c(5, 15), 100, 730),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(timepoint = 365, modelType = "survival")
+
+  result <- getThresholdSummary(prediction, predictionType = "survival")
+
+  # all thresholds stay on the probability scale of the input
+  expect_equal(max(result$threshold), 0.19)
+  expect_equal(min(result$threshold), 0.01)
+  # with complete follow-up net benefit is TP/N - FP/N * t/(1-t)
+  handNetBenefit <- sapply(result$threshold, function(t) {
+    selected <- prediction$value > t
+    (sum(selected & prediction$outcomeCount == 1) -
+      sum(selected & prediction$outcomeCount == 0) * t / (1 - t)) / 20
+  })
+  hasValue <- !is.na(result$p)
+  expect_equal(result$p[hasValue], handNetBenefit[hasValue])
+  # worked example: 19 selected at t = 0.01, both cases among them
+  expect_equal(result$p[1], 2 / 20 - 17 / 20 * 0.01 / 0.99)
+})
+
+test_that("survival net benefit is not calculated for values that are not probabilities", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = seq(1.5, 20, length.out = 20),
+    outcomeCount = as.integer(1:20 %in% c(5, 15)),
+    survivalTime = ifelse(1:20 %in% c(5, 15), 100, 730),
+    evaluation = "Test"
+  )
+  expect_null(getThresholdSummary_survival(prediction, "evaluation", timepoint = 365))
+})
 
 test_that("f1Score", {
   expect_equal(f1Score(TP = 0, TN = 0, FN = 0, FP = 0), NaN)

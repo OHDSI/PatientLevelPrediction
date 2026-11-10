@@ -217,7 +217,7 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
 
     # add netbenefit
     preddat <- data.frame(
-      p = p / max(p),
+      p = p,
       t = t,
       y = y
     )
