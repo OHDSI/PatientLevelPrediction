@@ -431,3 +431,74 @@ makeSurvivalNetBenefitResult <- function(censorTime, timepoint = 365, addModelTy
     )
   )
 }
+
+test_that("getNetBenefit is censoring-aware for survival predictions", {
+  skip_if_not_installed("survival")
+  result <- makeSurvivalNetBenefitResult(censorTime = 10)
+  nb <- getNetBenefit(result, "Test")
+  nb <- nb[order(nb$threshold), ]
+
+  km <- survival::survfit(survival::Surv(result$prediction$survivalTime, result$prediction$outcomeCount) ~ 1)
+  risk <- 1 - summary(km, times = 365)$surv
+  expect_equal(risk, 1 / 3)
+  expect_equal(nb$treatAll, risk - (1 - risk) * nb$threshold / (1 - nb$threshold))
+  expect_equal(nb$treatNone, rep(0, nrow(nb)))
+
+  # moving the censoring time past the event changes the risk set and the net benefit
+  later <- getNetBenefit(makeSurvivalNetBenefitResult(censorTime = 150), "Test")
+  later <- later[order(later$threshold), ]
+  expect_false(isTRUE(all.equal(nb$treatAll, later$treatAll)))
+
+  # thresholds stop below the highest predicted risk and every row has a value
+  expect_true(all(nb$threshold < max(result$prediction$value)))
+  expect_false(anyNA(nb$netBenefit))
+})
+
+test_that("getNetBenefit honours the prediction horizon for survival models", {
+  skip_if_not_installed("survival")
+  nb100 <- getNetBenefit(makeSurvivalNetBenefitResult(censorTime = 10, timepoint = 50), "Test")
+  nb100 <- nb100[order(nb100$threshold), ]
+  # no events before day 50, so KM risk is 0 and treat-all is the pure harm term
+  expect_equal(nb100$treatAll, -(nb100$threshold / (1 - nb100$threshold)))
+
+  # a horizon beyond all follow-up falls back to the last observed time
+  beyond <- getNetBenefit(makeSurvivalNetBenefitResult(censorTime = 10, timepoint = 10000), "Test")
+  expect_false(anyNA(beyond$treatAll))
+})
+
+test_that("getNetBenefit falls back on the model type for survival results", {
+  skip_if_not_installed("survival")
+  result <- makeSurvivalNetBenefitResult(censorTime = 10, addModelType = FALSE)
+  attr(result$prediction, "metaData")$modelType <- NULL
+  result$model <- structure(list(), modelType = "survival")
+  nb <- getNetBenefit(result, "Test")
+  expect_true(all(c("threshold", "netBenefit", "treatAll", "treatNone") %in% colnames(nb)))
+  expect_false("TP" %in% colnames(nb))
+})
+
+test_that("plotNetBenefit draws the censoring-aware curve for survival results", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("ggplot2")
+  result <- makeSurvivalNetBenefitResult(censorTime = 10)
+  class(result) <- "runPlp"
+  result$performanceEvaluation$thresholdSummary <- data.frame(evaluation = "Test")
+  plot <- plotNetBenefit(result, evalType = "Test", showPlot = FALSE)
+  layerData <- ggplot2::layer_data(plot, i = 1)
+  risk <- 1 / 3
+  expect_equal(
+    layerData$y[order(layerData$x)],
+    risk - (1 - risk) * sort(layerData$x) / (1 - sort(layerData$x)),
+    tolerance = 1e-6
+  )
+})
+
+test_that("getNetBenefit explains survival predictions it cannot use", {
+  skip_if_not_installed("survival")
+  relativeRisks <- makeSurvivalNetBenefitResult(censorTime = 10)
+  relativeRisks$prediction$value <- relativeRisks$prediction$value + 1
+  expect_error(getNetBenefit(relativeRisks, "Test"), "relative risks")
+
+  constant <- makeSurvivalNetBenefitResult(censorTime = 10)
+  constant$prediction$value <- 0.3
+  expect_error(getNetBenefit(constant, "Test"), "differ between patients")
+})

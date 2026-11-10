@@ -1575,6 +1575,9 @@ getNetBenefit <- function(plpResult, evalType) {
   if (is.null(plpResult$prediction)) {
     # get net benefit from thresholdSummary
     nbData <- getNetBenefitThresholdSummary(plpResult, evalType)
+  } else if (identical(attr(plpResult$prediction, "metaData")$modelType, "survival") ||
+    identical(attr(plpResult$model, "modelType"), "survival")) {
+    nbData <- getNetBenefitSurvival(plpResult, evalType)
   } else {
     nbData <- getNetBenefitPredictions(plpResult, evalType)
 
@@ -1607,6 +1610,68 @@ getNetBenefitThresholdSummary <- function(plpResult, evalType) {
       netBenefit = .data$truePositiveCount / n - (.data$falsePositiveCount / n) * (.data$predictionThreshold / (1 - .data$predictionThreshold)),
       treatAll = outcomeRate - (1 - outcomeRate) * .data$predictionThreshold / (1 - .data$predictionThreshold),
       treatNone = 0
+    )
+  return(nbData)
+}
+
+# censoring-aware net benefit for survival predictions at the prediction horizon
+getNetBenefitSurvival <- function(plpResult, evalType) {
+  rlang::check_installed("survival", reason = "for net benefit of survival models")
+  prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
+
+  if (nrow(prediction) == 0) {
+    stop("No prediction data found for evaluation type ", evalType)
+  }
+
+  timepoint <- attr(plpResult$prediction, "metaData")$timepoint
+  if (is.null(timepoint)) {
+    timepoint <- max(prediction$survivalTime)
+  }
+  timepoint <- min(timepoint, max(prediction$survivalTime))
+
+  values <- prediction$value
+  if (anyNA(values) || any(values < 0 | values > 1)) {
+    stop(
+      "Net benefit for a survival model needs predicted risks between 0 and 1, ",
+      "but the predictions range from ", signif(min(values, na.rm = TRUE), 3),
+      " to ", signif(max(values, na.rm = TRUE), 3), ". A Cox model without a ",
+      "baseline survival predicts relative risks, not risks."
+    )
+  }
+  xstart <- max(min(values), 0.001)
+  xstop <- min(max(values), 0.99)
+  if (xstop <= xstart) {
+    stop(
+      "Net benefit for a survival model needs predicted risks that differ ",
+      "between patients within 0.001 to 0.99, but they range from ",
+      signif(min(values), 3), " to ", signif(max(values), 3), "."
+    )
+  }
+  xby <- (xstop - xstart) / 100
+  # stop one grid step below the highest risk so the top threshold still has patients above it
+  nb <- stdca(
+    data = data.frame(
+      p = prediction$value,
+      t = prediction$survivalTime,
+      y = ifelse(prediction$outcomeCount > 0, 1, 0)
+    ),
+    outcome = "y",
+    ttoutcome = "t",
+    timepoint = timepoint,
+    predictors = "p",
+    xstart = xstart,
+    xstop = xstop - xby,
+    xby = xby,
+    smooth = FALSE,
+    graph = FALSE
+  )$net.benefit
+
+  nbData <- nb[!is.na(nb$p), ] %>%
+    dplyr::transmute(
+      threshold = .data$threshold,
+      netBenefit = .data$p,
+      treatAll = .data$all,
+      treatNone = .data$none
     )
   return(nbData)
 }
