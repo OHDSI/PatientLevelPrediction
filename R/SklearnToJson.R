@@ -138,7 +138,7 @@ deSerializeTree <- function(tree_dict, nFeatures, nClasses, nOutputs) {
       formats = tree_dict["nodes_dtype"]
     ))
   )
-  tree_dict["values"] <- np$array(tree_dict["values"])
+  tree_dict["values"] <- normalizeLegacyTreeValues(np$array(tree_dict["values"]))
 
   Tree <- sklearn$tree$`_tree`$Tree(
     nFeatures,
@@ -151,6 +151,19 @@ deSerializeTree <- function(tree_dict, nFeatures, nClasses, nOutputs) {
   Tree$`__setstate__`(tree_dict)
 
   return(Tree)
+}
+
+# Older scikit-learn stored class counts in `values` and normalized them when
+# predicting; recent versions return the stored values as probabilities.
+normalizeLegacyTreeValues <- function(values) {
+  np <- reticulate::import("numpy", convert = FALSE)
+  totals <- values$sum(axis = 2L, keepdims = TRUE)
+  hasMass <- np$greater(totals, 0)
+  isCounts <- np$logical_and(hasMass, np$greater(np$abs(np$subtract(totals, 1)), 1e-8))
+  if (!reticulate::py_to_r(np$any(isCounts))) {
+    return(values)
+  }
+  np$divide(values, totals, out = values$copy(), where = hasMass)
 }
 
 serializeDecisionTree <- function(model) {

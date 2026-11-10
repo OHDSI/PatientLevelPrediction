@@ -194,3 +194,83 @@ test_that("CSR serialization preserves trailing zero columns and all-zero matric
     expect_equal(reticulate::py_to_r(loadedMatrix$toarray()), values)
   }
 })
+
+# rewrites the node values of a saved tree model the way older scikit-learn stored them
+toLegacyCounts <- function(path) {
+  helper <- reticulate::py_run_string("
+def toCounts(path):
+    import json
+    with open(path) as f:
+        model = json.load(f)
+    def scale(treeDict):
+        for i, node in enumerate(treeDict['values']):
+            weight = treeDict['nodes'][i][6]
+            treeDict['values'][i] = [[x * weight for x in row] for row in node]
+    if 'tree_' in model:
+        scale(model['tree_'])
+    else:
+        for estimator in model['estimators_']:
+            scale(estimator['tree_'])
+    with open(path, 'w') as f:
+        json.dump(model, f)
+", local = TRUE, convert = TRUE)
+  helper$toCounts(path)
+}
+
+test_that("Decision trees saved with class counts load as probabilities", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  model <- sklearn$tree$DecisionTreeClassifier(max_depth = 3L, random_state = 1L)$fit(X, y)
+  predictions <- reticulate::py_to_r(model$predict_proba(xUnseen))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  sklearnToJson(model, path)
+  toLegacyCounts(path)
+
+  loaded <- sklearnFromJson(path)
+  expect_equal(reticulate::py_to_r(loaded$predict_proba(xUnseen)), predictions)
+})
+
+test_that("Random forests saved with class counts load as probabilities", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  model <- sklearn$ensemble$RandomForestClassifier(
+    n_estimators = 5L, max_depth = 3L, random_state = 1L
+  )$fit(X, y)
+  predictions <- reticulate::py_to_r(model$predict_proba(xUnseen))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  sklearnToJson(model, path)
+  toLegacyCounts(path)
+
+  loaded <- sklearnFromJson(path)
+  expect_equal(reticulate::py_to_r(loaded$predict_proba(xUnseen)), predictions)
+})
+
+test_that("Current tree JSON is unchanged by the legacy count handling", {
+  skip_if_not_installed("reticulate")
+  skip_on_cran()
+  model <- sklearn$tree$DecisionTreeClassifier(max_depth = 2L, random_state = 1L)$fit(X, y)
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  sklearnToJson(model, path)
+  loaded <- sklearnFromJson(path)
+  expect_equal(
+    reticulate::py_to_r(loaded$tree_$value),
+    reticulate::py_to_r(model$tree_$value)
+  )
+})
+
+# edits the saved params of an AdaBoost model so that algorithm states can be exercised
+setSavedAdaBoostAlgorithm <- function(path, algorithm) {
+  helper <- reticulate::py_run_string("
+def setAlgorithm(path, algorithm):
+    import json
+    with open(path) as f:
+        model = json.load(f)
+    model['params']['algorithm'] = algorithm
+    with open(path, 'w') as f:
+        json.dump(model, f)
+", local = TRUE, convert = TRUE)
+  helper$setAlgorithm(path, algorithm)
+}
