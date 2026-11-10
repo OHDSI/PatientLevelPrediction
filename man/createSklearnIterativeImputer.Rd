@@ -39,9 +39,12 @@ This function creates settings for a dense iterative imputer
 powered by scikit-learn's \code{IterativeImputer} through \code{reticulate}.
 }
 \details{
-The fitted scikit-learn imputer is kept in the R session. A model
-that uses it can be applied in the session it was trained in, but not after
-it is saved and loaded again; refit the model in the new session instead.
+scikit-learn fits the imputer; at prediction its fitted steps (the
+starting value of each feature and the coefficients of each BayesianRidge
+model) are applied in R, so a saved model can be loaded and applied without
+Python. With \code{samplePosterior = TRUE} the imputer draws random values, which
+cannot be repeated in R, so such a model can only be applied in the R session
+it was fitted in.
 }
 \examples{
 \dontshow{ # dontrun reason: requires python and scikit-learn }

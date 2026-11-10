@@ -262,9 +262,12 @@ createSklearnIterativeImputerObject <- function(methodSettings) {
 #' @title Create scikit-learn Iterative Imputer settings
 #' @description This function creates settings for a dense iterative imputer
 #' powered by scikit-learn's `IterativeImputer` through `reticulate`.
-#' @details The fitted scikit-learn imputer is kept in the R session. A model
-#' that uses it can be applied in the session it was trained in, but not after
-#' it is saved and loaded again; refit the model in the new session instead.
+#' @details scikit-learn fits the imputer; at prediction its fitted steps (the
+#' starting value of each feature and the coefficients of each BayesianRidge
+#' model) are applied in R, so a saved model can be loaded and applied without
+#' Python. With `samplePosterior = TRUE` the imputer draws random values, which
+#' cannot be repeated in R, so such a model can only be applied in the R session
+#' it was fitted in.
 #' @param missingThreshold The threshold for missing values to remove a feature
 #' @param methodSettings A list of settings for sklearn `IterativeImputer`.
 #' Supported settings are:
@@ -340,6 +343,84 @@ getSklearnIterativeImputerRuntime <- function(key) {
     return(NULL)
   }
   get(key, envir = sklearnIterativeImputerRuntime, inherits = FALSE)
+}
+
+# The fitted scikit-learn IterativeImputer is a Python object, so it cannot be
+# saved with the model. With the default samplePosterior = FALSE its transform is
+# deterministic and needs only numbers: a starting value for each column, then
+# for each step in order the column it imputes, the columns it uses, and the
+# coefficients and intercept of its BayesianRidge model. Those are saved as the
+# step list and applied in R at prediction. Returns NULL when the imputer cannot
+# be replayed this way (samplePosterior = TRUE draws random values).
+extractSklearnImputerSteps <- function(imputer, covariateIds, methodSettings) {
+  if (isTRUE(methodSettings$samplePosterior)) {
+    return(NULL)
+  }
+  sequence <- imputer$imputation_sequence_
+  stepRows <- list()
+  coefficientRows <- list()
+  for (i in seq_len(reticulate::py_len(sequence))) {
+    step <- reticulate::py_get_item(sequence, i - 1L)
+    if (!inherits(step$estimator, "sklearn.linear_model._bayes.BayesianRidge")) {
+      return(NULL)
+    }
+    predictors <- as.integer(reticulate::py_to_r(step$neighbor_feat_idx)) + 1L
+    stepRows[[i]] <- data.frame(
+      step = i,
+      target = as.integer(reticulate::py_to_r(step$feat_idx)) + 1L,
+      intercept = as.numeric(reticulate::py_to_r(step$estimator$intercept_))
+    )
+    coefficientRows[[i]] <- data.frame(
+      step = rep(i, length(predictors)),
+      predictor = predictors,
+      coefficient = as.numeric(reticulate::py_to_r(step$estimator$coef_))
+    )
+  }
+  emptySteps <- data.frame(step = integer(0), target = integer(0), intercept = numeric(0))
+  emptyCoefficients <- data.frame(step = integer(0), predictor = integer(0), coefficient = numeric(0))
+  list(
+    covariateIds = covariateIds,
+    initialValues = as.numeric(reticulate::py_to_r(imputer$initial_imputer_$statistics_)),
+    nIterations = as.integer(reticulate::py_to_r(imputer$n_iter_)),
+    minValue = methodSettings$minValue,
+    maxValue = methodSettings$maxValue,
+    steps = if (length(stepRows) > 0) do.call(rbind, stepRows) else emptySteps,
+    coefficients = if (length(coefficientRows) > 0) do.call(rbind, coefficientRows) else emptyCoefficients
+  )
+}
+
+# Does what IterativeImputer.transform() does with samplePosterior = FALSE: fill
+# every missing value with its column's starting value, then run the steps in
+# order, each replacing the missing values of its column with the clipped linear
+# prediction from the current values of its predictor columns.
+applySklearnImputerSteps <- function(matrixData, imputerSteps) {
+  initialValues <- as.numeric(unlist(imputerSteps$initialValues))
+  if (ncol(matrixData) != length(initialValues)) {
+    stop("The saved sklearn imputer steps do not match the number of columns to impute.")
+  }
+  missing <- is.na(matrixData)
+  for (j in seq_len(ncol(matrixData))) {
+    matrixData[missing[, j], j] <- initialValues[j]
+  }
+  if (imputerSteps$nIterations == 0 || all(missing)) {
+    return(matrixData)
+  }
+  steps <- restoreSavedTables(imputerSteps$steps)
+  coefficients <- restoreSavedTables(imputerSteps$coefficients)
+  minValue <- as.numeric(imputerSteps$minValue)
+  maxValue <- as.numeric(imputerSteps$maxValue)
+  for (i in seq_len(nrow(steps))) {
+    target <- steps$target[i]
+    rows <- missing[, target]
+    if (!any(rows)) {
+      next
+    }
+    stepCoefficients <- coefficients[coefficients$step == steps$step[i], , drop = FALSE]
+    predicted <- matrixData[rows, stepCoefficients$predictor, drop = FALSE] %*%
+      stepCoefficients$coefficient + steps$intercept[i]
+    matrixData[rows, target] <- pmin(pmax(as.numeric(predicted), minValue), maxValue)
+  }
+  return(matrixData)
 }
 
 normalizeIdKey <- function(x) {
@@ -1243,10 +1324,11 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @keywords internal
 sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
-  checkSklearnIterativeImputerDependencies()
 
   outputData <- trainData
   if (!done) {
+    # fitting needs Python; applying the saved steps does not
+    checkSklearnIterativeImputerDependencies()
     ParallelLogger::logInfo(
       "Imputing missing values with sklearn IterativeImputer, missing threshold: ",
       featureEngineeringSettings$missingThreshold
@@ -1319,7 +1401,13 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
       if (nrow(imputedRows) > 0) {
         Andromeda::appendToTable(outputData$covariateData$covariates, imputedRows)
       }
+      # the Python object is kept for this session, and the step list is saved
       featureEngineeringSettings$sklearnImputerKey <- registerSklearnIterativeImputerRuntime(imputer)
+      attr(featureEngineeringSettings, "sklearnImputerSteps") <- extractSklearnImputerSteps(
+        imputer = imputer,
+        covariateIds = predictorCovariateIds,
+        methodSettings = featureEngineeringSettings$methodSettings
+      )
     } else {
       featureEngineeringSettings$sklearnImputerKey <- NULL
     }
@@ -1404,15 +1492,27 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
         }
       }
 
-      imputer <- getSklearnIterativeImputerRuntime(featureEngineeringSettings$sklearnImputerKey)
-      if (is.null(imputer)) {
-        stop("sklearn iterative imputer runtime state not available; refit model in current session.")
+      imputerSteps <- attr(featureEngineeringSettings, "sklearnImputerSteps")
+      if (!is.null(imputerSteps)) {
+        if (!identical(as.numeric(unlist(imputerSteps$covariateIds)), as.numeric(predictorCovariateIds))) {
+          stop("The saved sklearn imputer steps do not match the covariates it was fitted on.")
+        }
+        imputedMatrix <- applySklearnImputerSteps(denseMatrix, imputerSteps)
+      } else {
+        imputer <- getSklearnIterativeImputerRuntime(featureEngineeringSettings$sklearnImputerKey)
+        if (is.null(imputer)) {
+          stop(
+            "This sklearn iterative imputer has no saved steps, because it uses ",
+            "samplePosterior = TRUE or was fitted by an earlier version, so it can ",
+            "only be applied in the R session it was fitted in. Refit the model."
+          )
+        }
+        imputedMatrix <- asSklearnImputedMatrix(
+          reticulate::py_to_r(imputer$transform(denseMatrix)),
+          nRows = nrow(denseMatrix),
+          nCols = ncol(denseMatrix)
+        )
       }
-      imputedMatrix <- asSklearnImputedMatrix(
-        reticulate::py_to_r(imputer$transform(denseMatrix)),
-        nRows = nrow(denseMatrix),
-        nCols = ncol(denseMatrix)
-      )
       imputedRows <- extractSklearnImputedRows(
         originalMatrix = denseMatrix,
         imputedMatrix = imputedMatrix,
