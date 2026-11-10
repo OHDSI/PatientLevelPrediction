@@ -302,3 +302,229 @@ test_that("survival", {
 
   testthat::expect_true(sum(test$evaluationType == "weakRecalibration") == 100)
 })
+
+
+recalFixture <- function() {
+  # five score groups of 20 people with 2, 4, 6, 8 and 10 outcomes
+  fixture <- data.frame(
+    rowId = 1:100,
+    value = rep(c(.5, .6, .7, .8, .9), each = 20),
+    outcomeCount = unlist(lapply(c(2, 4, 6, 8, 10), function(k) {
+      c(rep(1, k), rep(0, 20 - k))
+    })),
+    evaluationType = "Validation"
+  )
+  attr(fixture, "metaData") <- list(modelType = "binary")
+  fixture
+}
+
+recalRows <- function(result, method) {
+  result[result$evaluationType == method, ]
+}
+
+test_that("recalibratePlp methods fit on the original predictions only", {
+  methods <- c("recalibrationInTheLarge", "weakRecalibration")
+  fixture <- recalFixture()
+  single <- lapply(methods, function(m) recalibratePlp(fixture, method = m))
+  names(single) <- methods
+
+  for (order in list(methods, rev(methods))) {
+    combined <- fixture
+    for (m in order) {
+      combined <- recalibratePlp(combined, method = m)
+    }
+    expect_equal(nrow(combined), 300)
+    expect_equal(nrow(recalRows(combined, "Validation")), 100)
+    for (m in methods) {
+      expect_equal(nrow(recalRows(combined, m)), 100)
+      expect_equal(anyDuplicated(recalRows(combined, m)$rowId), 0)
+      expect_equal(recalRows(combined, m)$value, recalRows(single[[m]], m)$value)
+    }
+    expect_equal(
+      attr(combined, "metaData")$weakRecalibration$adjustGradient,
+      attr(single$weakRecalibration, "metaData")$weakRecalibration$adjustGradient
+    )
+    expect_equal(
+      attr(combined, "metaData")$recalibrationInTheLarge$correctionFactor,
+      attr(single$recalibrationInTheLarge, "metaData")$recalibrationInTheLarge$correctionFactor
+    )
+  }
+})
+
+test_that("rerunning a recalibration method replaces its rows", {
+  once <- recalibratePlp(recalFixture(), method = "weakRecalibration")
+  twice <- recalibratePlp(once, method = "weakRecalibration")
+  expect_equal(nrow(twice), 200)
+  expect_equal(recalRows(twice, "weakRecalibration")$value, recalRows(once, "weakRecalibration")$value)
+})
+
+test_that("recalibrating after recalibratePlpRefit ignores the refit rows", {
+  fixture <- recalFixture()
+  refitRows <- fixture
+  refitRows$value <- 0.3
+  refitRows$evaluationType <- "recalibrationRefit"
+  withRefit <- rbind(fixture, refitRows)
+  attr(withRefit, "metaData") <- attr(fixture, "metaData")
+
+  result <- recalibratePlp(withRefit, method = "weakRecalibration")
+  alone <- recalibratePlp(fixture, method = "weakRecalibration")
+  expect_equal(nrow(recalRows(result, "weakRecalibration")), 100)
+  expect_equal(recalRows(result, "weakRecalibration")$value, recalRows(alone, "weakRecalibration")$value)
+  expect_equal(nrow(recalRows(result, "recalibrationRefit")), 100)
+})
+
+recalValidationModel <- function() {
+  predictFixture <- function(plpModel, data, cohort) {
+    ans <- cohort[c("rowId", "outcomeCount")]
+    ans$ageYear <- 50
+    ans$gender <- 8507
+    ans$value <- cohort$score
+    ans$rawValue <- stats::qlogis(ans$value)
+    ans
+  }
+  structure(
+    list(modelDesign = list(modelSettings = list(settings = list(predict = predictFixture)))),
+    class = "plpModel",
+    modelType = "binary"
+  )
+}
+
+recalValidationPopulation <- function() {
+  fixture <- recalFixture()
+  population <- data.frame(
+    rowId = fixture$rowId,
+    score = fixture$value,
+    outcomeCount = fixture$outcomeCount
+  )
+  attr(population, "metaData") <- list(
+    populationSettings = list(riskWindowEnd = 365),
+    outcomeId = 2,
+    targetId = 1
+  )
+  population
+}
+
+recalValidationPlpData <- list(metaData = list(databaseDetails = list(
+  cdmDatabaseSchema = "fixture", cdmDatabaseId = "fixture", targetId = 1
+)))
+
+test_that("externalValidatePlp evaluates both recalibration methods on the original patients", {
+  methods <- c("recalibrationInTheLarge", "weakRecalibration")
+  population <- recalValidationPopulation()
+  runValidation <- function(recalibrate) {
+    PatientLevelPrediction:::externalValidatePlp(
+      plpModel = recalValidationModel(),
+      plpData = recalValidationPlpData,
+      population = population,
+      settings = createValidationSettings(recalibrate = recalibrate, runCovariateSummary = FALSE)
+    )
+  }
+  metric <- function(result, evaluation, name) {
+    stats <- result$performanceEvaluation$evaluationStatistics
+    as.numeric(stats$value[stats$evaluation == evaluation & stats$metric == name])
+  }
+
+  for (order in list(methods, rev(methods))) {
+    combined <- runValidation(order)
+    expect_equal(nrow(recalRows(combined$prediction, "Validation")), 100)
+    for (m in methods) {
+      alone <- runValidation(m)
+      expect_equal(nrow(recalRows(combined$prediction, m)), 100)
+      expect_equal(metric(combined, m, "populationSize"), 100)
+      expect_equal(metric(combined, m, "outcomeCount"), 30)
+      expect_equal(metric(combined, m, "AUROC"), metric(alone, m, "AUROC"))
+    }
+  }
+})
+
+test_that("a failing recalibration method does not lose the validation predictions", {
+  result <- with_mocked_bindings(
+    PatientLevelPrediction:::externalValidatePlp(
+      plpModel = recalValidationModel(),
+      plpData = recalValidationPlpData,
+      population = recalValidationPopulation(),
+      settings = createValidationSettings(
+        recalibrate = c("recalibrationInTheLarge", "weakRecalibration"),
+        runCovariateSummary = FALSE
+      )
+    ),
+    recalibratePlp = function(prediction, method, ...) stop("recalibration failed")
+  )
+  expect_equal(nrow(result$prediction), 100)
+  expect_equal(unique(result$prediction$evaluationType), "Validation")
+})
+
+test_that("recalibrationInTheLarge keeps survival predictions unchanged", {
+  survivalPrediction <- recalFixture()
+  attr(survivalPrediction, "metaData")$modelType <- "survival"
+  result <- recalibratePlp(survivalPrediction, method = "recalibrationInTheLarge")
+  expect_equal(nrow(result), 100)
+  expect_equal(unique(result$evaluationType), "Validation")
+})
+
+test_that("recalibrationInTheLarge matches mean risk for heterogeneous predictions", {
+  values <- c(0.1, 0.1, 0.9, 0.9)
+  for (withRaw in c(FALSE, TRUE)) {
+    heterogeneous <- data.frame(
+      rowId = 1:4,
+      value = values,
+      outcomeCount = c(0, 0, 0, 1),
+      evaluationType = "validation"
+    )
+    if (withRaw) {
+      heterogeneous$rawValue <- stats::qlogis(values)
+    }
+    attr(heterogeneous, "metaData") <- list(modelType = "binary")
+
+    result <- recalibratePlp(heterogeneous, method = "recalibrationInTheLarge")
+    newRows <- recalRows(result, "recalibrationInTheLarge")
+    expect_equal(mean(newRows$value), 0.25, tolerance = 1e-7)
+
+    reference <- unname(stats::coef(stats::glm(
+      c(0, 0, 0, 1) ~ 1,
+      offset = stats::qlogis(values),
+      family = "binomial"
+    )))
+    expect_equal(
+      attr(result, "metaData")$recalibrationInTheLarge$correctionFactor,
+      reference,
+      tolerance = 1e-7
+    )
+    expect_null(names(attr(result, "metaData")$recalibrationInTheLarge$correctionFactor))
+  }
+})
+
+test_that("recalibrationInTheLarge handles homogeneous risks and no outcomes", {
+  homogeneous <- data.frame(
+    rowId = 1:4,
+    value = rep(0.5, 4),
+    outcomeCount = c(0, 0, 0, 1),
+    evaluationType = "validation"
+  )
+  attr(homogeneous, "metaData") <- list(modelType = "binary")
+  result <- recalibratePlp(homogeneous, method = "recalibrationInTheLarge")
+  expect_equal(recalRows(result, "recalibrationInTheLarge")$value, rep(0.25, 4), tolerance = 1e-7)
+
+  noOutcomes <- homogeneous
+  noOutcomes$outcomeCount <- 0
+  noOutcomes$value <- c(0.1, 0.2, 0.3, 0.4)
+  result <- recalibratePlp(noOutcomes, method = "recalibrationInTheLarge")
+  newValues <- recalRows(result, "recalibrationInTheLarge")$value
+  expect_true(all(is.finite(newValues)))
+  expect_lt(max(newValues), 1e-6)
+})
+
+survivalHorizonFixture <- function(timepoint = 730) {
+  # six pairs with opposite linear predictors: the Cox slope is zero by symmetry
+  fixture <- data.frame(
+    rowId = 1:12,
+    rawValue = rep(c(-1, 1), 6),
+    outcomeCount = rep(c(1, 1, 1, 1, 0, 0), each = 2),
+    survivalTime = rep(c(100, 200, 400, 500, 900, 900), each = 2),
+    daysToCohortEnd = rep(900, 12),
+    evaluationType = "validation"
+  )
+  fixture$value <- 1 - exp(-0.5 * exp(fixture$rawValue))
+  attr(fixture, "metaData") <- list(modelType = "survival", timepoint = timepoint)
+  fixture
+}

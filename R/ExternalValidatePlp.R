@@ -51,6 +51,7 @@ externalValidatePlp <- function(plpModel,
           },
           error = function(e) {
             ParallelLogger::logError(e)
+            prediction
           }
         )
     }

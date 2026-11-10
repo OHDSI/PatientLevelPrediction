@@ -286,6 +286,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 
   if (attr(prediction, "metaData")$modelType == "survival") {
     ParallelLogger::logError("Survival recal in the large not currently available")
+    return(prediction)
   }
 }
 
@@ -304,7 +305,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 weakRecalibration <- function(prediction, columnType = "evaluationType") {
   # if binary:
   if (attr(prediction, "metaData")$modelType == "binary") {
-    recalibrated <- prediction
+    recalibrated <- getOriginalPredictions(prediction, columnType)
     epsilon <- .Machine$double.eps
 
     if ("rawValue" %in% names(recalibrated)) {
@@ -326,8 +327,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     }
     recalibrated$value <- stats::plogis(newLp)
 
-    recalibrated[, columnType] <- "weakRecalibration"
-    prediction <- rbind(prediction, recalibrated)
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "weakRecalibration")
     attr(prediction, "metaData")$weakRecalibration <- list(
       adjustGradient = refit$coefficients[2],
       adjustIntercept = refit$coefficients[1]
@@ -341,7 +341,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     rlang::check_installed("survival",
       reason = "weakRecalibration for survival models requires the survival package to be installed"
     )
-    recalibrated <- prediction
+    recalibrated <- getOriginalPredictions(prediction, columnType)
 
     # this will make the recalibration work if the baselineSurvival is missing
     baseline <- ifelse(is.null(attr(recalibrated, "baselineSurvival")), 0.9, attr(recalibrated, "baselineSurvival"))
@@ -380,8 +380,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     # 1-h.slope^exp(lp.slope)
 
 
-    recalibrated[, columnType] <- "weakRecalibration"
-    prediction <- rbind(prediction, recalibrated)
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "weakRecalibration")
     attr(prediction, "metaData")$weakRecalibration <- list(
       adjustGradient = f.slope$coefficients["lp"],
       adjustIntercept = h.slope
