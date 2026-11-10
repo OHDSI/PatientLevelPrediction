@@ -513,8 +513,15 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
   nhoslem <- merge(obs.count2, expected.count2, by = "group")
   Xsquared <- sum((hoslem$observed - hoslem$expected)^2 / hoslem$expected) +
     sum((nhoslem$observed - nhoslem$expected)^2 / nhoslem$expected)
-  pvalue <- stats::pchisq(Xsquared, df = numberOfStrata - 2, lower.tail = FALSE)
-  hosmerlemeshow <- data.frame(Xsquared = Xsquared, df = numberOfStrata - 2, pvalue = pvalue)
+  # ties can collapse strata, so df comes from the groups actually occupied
+  df <- nrow(hoslem) - 2
+  if (df < 1) {
+    df <- NA_real_
+    pvalue <- NA_real_
+  } else {
+    pvalue <- stats::pchisq(Xsquared, df = df, lower.tail = FALSE)
+  }
+  hosmerlemeshow <- data.frame(Xsquared = Xsquared, df = df, pvalue = pvalue)
 
   # linear model fitting obs to pred:
   lmData <- merge(obs.Points, pred.Points, by = "group")

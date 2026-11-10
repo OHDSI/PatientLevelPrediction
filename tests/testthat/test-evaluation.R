@@ -238,6 +238,45 @@ test_that("Calibration metrics", {
     hsExist2$p.value)
 })
 
+test_that("Hosmer-Lemeshow df counts occupied groups", {
+  prediction <- data.frame(
+    rowId = 1:300,
+    value = rep(c(0.1, 0.2, 0.3), each = 100),
+    outcomeCount = c(rep(1, 15), rep(0, 85), rep(1, 20), rep(0, 80), rep(1, 25), rep(0, 75))
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  # by hand across the three occupied groups, df = 3 - 2 = 1
+  handChi <- ((15 - 10)^2 / 10 + (85 - 90)^2 / 90) +
+    ((20 - 20)^2 / 20 + (80 - 80)^2 / 80) +
+    ((25 - 30)^2 / 30 + (75 - 70)^2 / 70)
+  expect_equal(result$Xsquared, handChi)
+  expect_equal(result$df, 1)
+  expect_equal(result$pvalue, stats::pchisq(handChi, df = 1, lower.tail = FALSE))
+})
+
+test_that("Hosmer-Lemeshow is unavailable with too few occupied groups", {
+  prediction <- data.frame(
+    rowId = 1:100,
+    value = rep(c(0.2, 0.3), each = 50),
+    outcomeCount = c(rep(1, 10), rep(0, 40), rep(1, 15), rep(0, 35))
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  expect_true(is.finite(result$Xsquared))
+  expect_true(is.na(result$df))
+  expect_true(is.na(result$pvalue))
+})
+
+test_that("Hosmer-Lemeshow df is unchanged when all requested strata are occupied", {
+  set.seed(42)
+  prediction <- data.frame(
+    rowId = 1:200,
+    value = stats::runif(200, 0.05, 0.95),
+    outcomeCount = stats::rbinom(200, 1, 0.3)
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  expect_equal(result$df, 8)
+  expect_equal(result$pvalue, stats::pchisq(result$Xsquared, df = 8, lower.tail = FALSE))
+})
 
 test_that("calibration errors include predictions of exactly 0 and 1", {
   prediction <- data.frame(
