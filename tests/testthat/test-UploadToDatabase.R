@@ -1040,3 +1040,87 @@ test_that("addCohort does not merge truncated definitions across cohort ids", {
   stored <- DatabaseConnector::querySql(conn, "select length(json) as len from main.cohort_definition;", snakeCaseToCamelCase = TRUE)
   expect_true(all(stored$len == 4000))
 })
+
+test_that("addEvaluation clears a summary that has no replacement", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  columns <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "threshold_summary")
+  threshold <- as.data.frame(lapply(setNames(columns, columns), function(x) 0.5))
+  threshold$evaluation <- "Test"
+  threshold$performanceId <- NULL
+  upload <- function(thresholdSummary, auc) {
+    PatientLevelPrediction:::addEvaluation(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+      performanceEvaluation = list(
+        thresholdSummary = thresholdSummary,
+        evaluationStatistics = data.frame(evaluation = "Test", metric = "AUC", value = auc)
+      ),
+      overWriteIfExists = TRUE, tempEmulationSchema = NULL
+    )
+  }
+  countRows <- function(id = 1) {
+    DatabaseConnector::querySql(conn, sprintf("select count(*) as n from main.threshold_summary where performance_id = %s;", id), snakeCaseToCamelCase = TRUE)$n
+  }
+
+  upload(threshold, 0.7)
+  expect_equal(countRows(), 1)
+
+  # another performance is not touched
+  PatientLevelPrediction:::addThresholdSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 2,
+    performanceEvaluation = list(thresholdSummary = threshold), overWriteIfExists = TRUE,
+    tempEmulationSchema = NULL
+  )
+
+  upload(NULL, 0.6)
+  expect_equal(countRows(), 0)
+  expect_equal(countRows(id = 2), 1)
+  auc <- DatabaseConnector::querySql(conn, "select value from main.evaluation_statistics where performance_id = 1;")
+  expect_equal(as.numeric(auc[[1]]), 0.6)
+
+  # keeping existing rows stays possible
+  upload(threshold, 0.7)
+  PatientLevelPrediction:::addThresholdSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+    performanceEvaluation = list(thresholdSummary = NULL), overWriteIfExists = FALSE,
+    tempEmulationSchema = NULL
+  )
+  expect_equal(countRows(), 1)
+})
+
+test_that("insertPerformanceInDatabase clears attrition and covariate summary when absent", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  schema <- createDatabaseSchemaSettings(resultSchema = "main", targetDialect = "sqlite", tempEmulationSchema = NULL)
+  attritionCols <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "attrition")
+  covariateCols <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "covariate_summary")
+  attrition <- as.data.frame(lapply(setNames(attritionCols, attritionCols), function(x) 1))
+  attrition$performanceId <- NULL
+  attrition$description <- "start"
+  covariateSummary <- as.data.frame(lapply(setNames(covariateCols, covariateCols), function(x) 1))
+  covariateSummary$performanceId <- NULL
+  covariateSummary$covariateValue <- 2
+
+  upload <- function(attr, cov) {
+    PatientLevelPrediction:::insertPerformanceInDatabase(
+      performanceEvaluation = list(evaluationStatistics = data.frame(evaluation = "Test", metric = "AUC", value = 0.5)),
+      covariateSummary = cov, attrition = attr,
+      executionDateTime = "2026-01-01", plpVersion = "6.7.0", conn = conn,
+      databaseSchemaSettings = schema, modelDesignId = 1, developmentDatabaseId = 1,
+      validationDatabaseId = 1, validationTarId = 1, validationPopulationId = 1,
+      validationPlpDataId = 1, validationTargetId = 1, validationOutcomeId = 1, modelDevelopment = 1
+    )
+  }
+  count <- function(table) DatabaseConnector::querySql(conn, paste0("select count(*) as n from main.", table, ";"), snakeCaseToCamelCase = TRUE)$n
+
+  upload(attrition, covariateSummary)
+  expect_equal(count("attrition"), 1)
+  expect_equal(count("covariate_summary"), 1)
+  upload(NULL, NULL)
+  expect_equal(count("attrition"), 0)
+  expect_equal(count("covariate_summary"), 0)
+})
