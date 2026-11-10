@@ -229,3 +229,146 @@ test_that("runPlp stops a survival model when the window ends have different anc
     populationSettings = mixed, modelSettings = setLassoLogisticRegression(seed = 42)
   )))
 })
+
+createSharedPlpData <- function() {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(1, 2, 1, 2),
+      covariateId = c(101, 101, 202, 202),
+      covariateValue = c(1, 1, 1, 2)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(101, 202),
+      covariateName = c("A feature", "B feature"),
+      analysisId = c(1, 1),
+      conceptId = c(0, 0)
+    ),
+    analysisRef = data.frame(
+      analysisId = 1,
+      analysisName = "analysis",
+      domainId = "domain",
+      startDay = 0,
+      endDay = 0,
+      isBinary = "N",
+      missingMeansZero = "N"
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = 2)
+  structure(
+    list(cohorts = data.frame(rowId = c(1, 2)), outcomes = data.frame(), covariateData = covariateData),
+    class = "plpData"
+  )
+}
+
+covariateRows <- function(plpData) {
+  rows <- as.data.frame(plpData$covariateData$covariates)
+  rows[order(rows$rowId, rows$covariateId), c("rowId", "covariateId", "covariateValue")]
+}
+
+test_that("predictPlp with saved feature selection does not change data used by later models", {
+  for (selector in c("univariateFeatureSelection", "randomForestFeatureSelection")) {
+    selection <- list(
+      funct = selector,
+      settings = list(
+        featureEngineeringSettings = list(k = 1L),
+        covariateIdsInclude = 101
+      )
+    )
+    modelA <- createGlmModel(
+      data.frame(covariateId = 101, coefficient = 1),
+      intercept = 0,
+      featureEngineering = selection
+    )
+    modelB <- createGlmModel(data.frame(covariateId = 202, coefficient = 1), intercept = 0)
+    shared <- createSharedPlpData()
+    on.exit(Andromeda::close(shared$covariateData), add = TRUE)
+    before <- covariateRows(shared)
+
+    predictionA <- predictPlp(modelA, shared, shared$cohorts)
+    expect_equal(predictionA$value[order(predictionA$rowId)], stats::plogis(c(1, 1)))
+    predictionB <- predictPlp(modelB, shared, shared$cohorts)
+
+    expect_equal(predictionB$value[order(predictionB$rowId)], stats::plogis(c(1, 2)))
+    expect_equal(covariateRows(shared), before)
+    expect_setequal(
+      as.data.frame(shared$covariateData$covariateRef)$covariateId,
+      c(101, 202)
+    )
+  }
+})
+
+test_that("predictPlp with saved splines does not remove the source covariate from shared data", {
+  splineKnots <- c(0, 1.5, 3)
+  splines <- list(
+    funct = "splineCovariates",
+    settings = list(
+      featureEngineeringSettings = createSplineSettings(
+        continousCovariateId = 202,
+        knots = splineKnots
+      ),
+      knots = splineKnots
+    )
+  )
+  splineModel <- createGlmModel(
+    data.frame(covariateId = 101, coefficient = 1),
+    intercept = 0,
+    featureEngineering = splines
+  )
+  modelB <- createGlmModel(data.frame(covariateId = 202, coefficient = 1), intercept = 0)
+  shared <- createSharedPlpData()
+  on.exit(Andromeda::close(shared$covariateData), add = TRUE)
+  before <- covariateRows(shared)
+
+  predictPlp(splineModel, shared, shared$cohorts)
+  prediction <- predictPlp(modelB, shared, shared$cohorts)
+
+  expect_equal(prediction$value[order(prediction$rowId)], stats::plogis(c(1, 2)))
+  expect_equal(covariateRows(shared), before)
+})
+
+test_that("applyFeatureEngineering protects shared data from user-written transforms", {
+  # Follows the template in the custom feature engineering vignette
+  assign(
+    "auditCustomFe",
+    function(trainData, featureEngineeringSettings) {
+      trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+        dplyr::filter(.data$covariateId == 101)
+      trainData
+    },
+    envir = globalenv()
+  )
+  on.exit(rm("auditCustomFe", envir = globalenv()), add = TRUE)
+  shared <- createSharedPlpData()
+  on.exit(Andromeda::close(shared$covariateData), add = TRUE)
+
+  result <- applyFeatureEngineering(
+    shared,
+    list(funct = "auditCustomFe", settings = list(featureEngineeringSettings = list()))
+  )
+
+  expect_equal(nrow(covariateRows(shared)), 4)
+  expect_equal(nrow(covariateRows(result)), 2)
+})
+
+test_that("applyFeatureEngineering keeps class, metaData and plpData shape", {
+  shared <- createSharedPlpData()
+  on.exit(Andromeda::close(shared$covariateData), add = TRUE)
+
+  result <- applyFeatureEngineering(
+    shared,
+    list(
+      funct = "univariateFeatureSelection",
+      settings = list(
+        featureEngineeringSettings = list(k = 1L),
+        covariateIdsInclude = 101
+      )
+    )
+  )
+
+  expect_s3_class(result, "plpData")
+  expect_equal(names(result), names(shared))
+  expect_true(FeatureExtraction::isCovariateData(result$covariateData))
+  expect_equal(attr(result$covariateData, "metaData")$populationSize, 2)
+  expect_equal(unique(covariateRows(result)$covariateId), 101)
+})

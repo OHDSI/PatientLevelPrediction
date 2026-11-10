@@ -42,6 +42,35 @@ featureEngineer <- function(data, featureEngineeringSettings) {
   return(data)
 }
 
+# Andromeda tables are modified in place, so copying the data list alone does
+# not isolate them from the caller.
+isolateCovariateData <- function(data) {
+  metaData <- attr(data$covariateData, "metaData")
+  data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
+  class(data$covariateData) <- "CovariateData"
+  attr(data$covariateData, "metaData") <- metaData
+  return(data)
+}
+
+# Saved steps may be stored as funct/settings pairs in one flat list (renamed
+# funct.1, settings.1, ... by the JSON round trip), as list entries, or both.
+featureEngineeringSteps <- function(featureEngineering) {
+  steps <- list()
+  entryNames <- names(featureEngineering)
+  for (i in seq_along(featureEngineering)) {
+    entry <- featureEngineering[[i]]
+    if (is.list(entry) && !is.null(entry$funct)) {
+      steps[[length(steps) + 1]] <- entry
+    } else if (!is.null(entryNames) && grepl("^funct(\\.[0-9]+)?$", entryNames[i])) {
+      steps[[length(steps) + 1]] <- list(
+        funct = entry,
+        settings = featureEngineering[[i + 1]]
+      )
+    }
+  }
+  return(steps)
+}
+
 #' Create the settings for defining any feature engineering that will be done
 #'
 #' @details

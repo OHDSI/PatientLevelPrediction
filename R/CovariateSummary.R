@@ -79,11 +79,7 @@ covariateSummary <- function(
     )
     covariateData <- newCovariateData
 
-    if (!is.null(featureEngineering$funct)) {
-      featureEngineering <- list(featureEngineering)
-    }
-
-    for (fe in featureEngineering) {
+    for (fe in featureEngineeringSteps(featureEngineering)) {
       feSettings <- fe$settings
       feSettings$trainData <- list(covariateData = covariateData)
       covariateData <- do.call(fe$funct, feSettings)$covariateData

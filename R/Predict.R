@@ -210,10 +210,11 @@ baselineSurvivalAt <- function(baselineSurvival, timepoint) {
 applyFeatureEngineering <- function(
     plpData,
     settings) {
-  # if a single setting make it into a list
-  if (!is.null(settings$funct)) {
-    settings <- list(settings)
-  }
+  settings <- featureEngineeringSteps(settings)
+
+  # The caller's data may be shared between models, and transforms (including
+  # user-written ones) rewrite Andromeda tables in place.
+  plpData <- isolateCovariateData(plpData)
 
   # add code for implementing the feature engineering
   for (set in settings) {
