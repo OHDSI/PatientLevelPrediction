@@ -32,7 +32,7 @@
 #' @param cohortTable  the table name that contains the target population cohort
 #' @param rowIdField  string representing the unique identifier in the target population cohort
 #' @param aggregated  whether the covariate should be aggregated
-#' @param cohortIds  cohort id for the target cohort
+#' @param cohortIds  cohort id(s) for the target cohort; -1 uses every cohort in the table
 #' @param covariateSettings  settings for the covariate cohorts and time periods
 #' @param ...  additional arguments from FeatureExtraction
 #'
@@ -72,7 +72,7 @@ getCohortCovariateData <- function(
     cohortTable = "#cohort_person",
     rowIdField = "row_id",
     aggregated,
-    cohortIds,
+    cohortIds = -1,
     covariateSettings,
     ...) {
   if (!is.null(oracleTempSchema) && oracleTempSchema != "") {
@@ -95,8 +95,9 @@ getCohortCovariateData <- function(
     " b.cohort_start_date <= dateadd(day, @endDays, a.cohort_start_date) and ",
     " b.cohort_end_date >= dateadd(day, @startDay, a.cohort_start_date) ",
     "{@ageInteraction | @lnAgeInteraction}?{inner join @cdm_database_schema.person p on p.person_id=a.subject_id}",
-    "where b.cohort_definition_id = @covariate_cohort_id
-    group by a.@row_id_field; "
+    "where b.cohort_definition_id = @covariate_cohort_id",
+    "{@cohort_ids != -1}?{and a.cohort_definition_id in (@cohort_ids)}",
+    "group by a.@row_id_field; "
   )
 
   if (is.null(covariateSettings$cohortTable) &&
@@ -132,7 +133,8 @@ getCohortCovariateData <- function(
     countval = covariateSettings$count,
     ageInteraction = covariateSettings$ageInteraction,
     lnAgeInteraction = covariateSettings$lnAgeInteraction,
-    cdm_database_schema = cdmDatabaseSchema
+    cdm_database_schema = cdmDatabaseSchema,
+    cohort_ids = cohortIds
   )
 
   sql <- SqlRender::translate(

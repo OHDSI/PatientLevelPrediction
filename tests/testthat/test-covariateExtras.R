@@ -101,7 +101,7 @@ test_that("extraction works", {
     cohortTable = "cohort",
     cohortDatabaseSchema = "main",
     cohortTableIsTemp = FALSE,
-    cohortIds = c(1),
+    cohortIds = c(3), # only cohort 3 entries have cohort 2 in this window
     rowIdField = "rowId",
     covariateSettings = covSet,
     aggregated = FALSE
@@ -205,4 +205,30 @@ test_that("cohort covariate value multiplies count and age interactions", {
     expect_equal(nrow(extracted$covariates), 1)
     expect_equal(as.numeric(extracted$covariates$covariateValue), case$expected, tolerance = 1e-8)
   }
+})
+
+test_that("getCohortCovariateData restricts rows to the requested target cohorts", {
+  connection <- createCohortCovariateTestDb(
+    targetRows = data.frame(
+      rowId = c(1, 2), subjectId = 1, cohortId = c(1, 2),
+      startDate = c("2020-01-01", "2020-07-01")
+    ),
+    covariateRows = data.frame(subjectId = 1, cohortId = 10, startDate = "2020-06-25")
+  )
+  on.exit(DatabaseConnector::disconnect(connection))
+  settings <- cohortCovariateSettingsFor(cohortId = 10, startDay = -30, endDay = 0)
+
+  # The event is only in range for the July index date (rowId 2).
+  requestedOne <- extractCohortCovariate(connection, settings, cohortIds = 1)
+  expect_equal(nrow(requestedOne$covariates), 0)
+
+  requestedTwo <- extractCohortCovariate(connection, settings, cohortIds = 2)
+  expect_equal(as.numeric(requestedTwo$covariates$rowId), 2)
+
+  allCohorts <- extractCohortCovariate(connection, settings, cohortIds = -1)
+  expect_equal(as.numeric(allCohorts$covariates$rowId), 2)
+
+  # cohortIds has a default so the documented direct call without it keeps working.
+  withoutCohortIds <- extractCohortCovariate(connection, settings)
+  expect_equal(as.numeric(withoutCohortIds$covariates$rowId), 2)
 })
