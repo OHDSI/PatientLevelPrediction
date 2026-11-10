@@ -1480,6 +1480,106 @@ test_that("iterativeImpute apply path selects missing rows by rowId, not label o
   expect_equal(permutedRows, sortedRows)
 })
 
+test_that("extractMissingInfo uses the labeled population as denominator", {
+  labelsOnly <- makeImputationFixture(
+    rowIds = 1:100,
+    covariates = data.frame(rowId = 1:60, covariateId = 10, covariateValue = 1),
+    numericIds = 10,
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(labelsOnly$covariateData))
+  expect_equal(
+    PatientLevelPrediction:::extractMissingInfo(labelsOnly)$missingInfo$missing,
+    0.4
+  )
+
+  withBinaryFeature <- makeImputationFixture(
+    rowIds = 1:100,
+    covariates = rbind(
+      data.frame(rowId = 1:60, covariateId = 10, covariateValue = 1),
+      data.frame(rowId = 1:100, covariateId = 20, covariateValue = 1)
+    ),
+    numericIds = 10,
+    binaryIds = 20,
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(withBinaryFeature$covariateData))
+  expect_equal(
+    PatientLevelPrediction:::extractMissingInfo(withBinaryFeature)$missingInfo$missing,
+    0.4
+  )
+
+  outsideLabels <- makeImputationFixture(
+    rowIds = 1:50,
+    covariates = data.frame(
+      rowId = c(1:40, 51:60),
+      covariateId = 10,
+      covariateValue = 1
+    ),
+    numericIds = 10,
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(outsideLabels$covariateData))
+  expect_equal(
+    PatientLevelPrediction:::extractMissingInfo(outsideLabels)$missingInfo$missing,
+    0.2
+  )
+  expect_false("tmpMissingInfoRowIds" %in% names(outsideLabels$covariateData))
+})
+
+test_that("imputers remove features above the threshold when patients have no covariates", {
+  makeLabOnlyData <- function() {
+    makeImputationFixture(
+      rowIds = 1:10,
+      covariates = data.frame(rowId = 1:6, covariateId = 10, covariateValue = c(1, 2, 3, 4, 5, 6)),
+      numericIds = 10,
+      folds = TRUE
+    )
+  }
+
+  simpleData <- makeLabOnlyData()
+  withr::defer(Andromeda::close(simpleData$covariateData))
+  simple <- PatientLevelPrediction:::simpleImpute(
+    simpleData,
+    createSimpleImputer(missingThreshold = 0.3),
+    done = FALSE
+  )
+  withr::defer(Andromeda::close(simple$covariateData))
+  expect_equal(nrow(covariateRows(simple, 10)), 0)
+
+  skip_if_not_installed("glmnet")
+  iterativeData <- makeLabOnlyData()
+  withr::defer(Andromeda::close(iterativeData$covariateData))
+  iterative <- PatientLevelPrediction:::iterativeImpute(
+    iterativeData,
+    createIterativeImputer(
+      missingThreshold = 0.3,
+      methodSettings = list(pmm = list(k = 1, iterations = 1, alpha = 1))
+    ),
+    done = FALSE
+  )
+  withr::defer(Andromeda::close(iterative$covariateData))
+  expect_equal(nrow(covariateRows(iterative, 10)), 0)
+})
+
+test_that("sklearnIterativeImpute removes features above the threshold when patients have no covariates", {
+  skip_on_cran()
+  skip_if_no_sklearn_iterative()
+  data <- makeImputationFixture(
+    rowIds = 1:10,
+    covariates = data.frame(rowId = 1:6, covariateId = 10, covariateValue = c(1, 2, 3, 4, 5, 6)),
+    numericIds = 10,
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(data$covariateData))
+  settings <- createSklearnIterativeImputer(missingThreshold = 0.3)
+
+  imputed <- PatientLevelPrediction:::sklearnIterativeImpute(data, settings, done = FALSE)
+  withr::defer(Andromeda::close(imputed$covariateData))
+
+  expect_equal(nrow(covariateRows(imputed, 10)), 0)
+})
+
 test_that("predictPlp imputes the requested population, including patients outside labels", {
   train <- makeImputationFixture(
     rowIds = 1:6,

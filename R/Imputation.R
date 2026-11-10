@@ -1707,9 +1707,10 @@ pmmPredict <- function(data, k = 5, imputer) {
 
 extractMissingInfo <- function(trainData) {
   ParallelLogger::logInfo("Calculating missingness in data")
-  total <- trainData$covariateData$covariates %>%
-    dplyr::summarise(total = dplyr::n_distinct(.data$rowId)) %>%
-    dplyr::pull()
+  covariateData <- trainData$covariateData
+  covariateData$tmpMissingInfoRowIds <- data.frame(rowId = unique(trainData$labels$rowId))
+  on.exit(covariateData$tmpMissingInfoRowIds <- NULL, add = TRUE)
+  total <- length(unique(trainData$labels$rowId))
   continuousFeatures <- trainData$covariateData$analysisRef %>%
     dplyr::filter(.data$isBinary == "N",
                   .data$missingMeansZero == "N") %>%
@@ -1719,6 +1720,7 @@ extractMissingInfo <- function(trainData) {
 
   missingInfo <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId %in% continuousFeatures) %>%
+    dplyr::inner_join(covariateData$tmpMissingInfoRowIds, by = "rowId") %>%
     dplyr::group_by(.data$covariateId) %>%
     dplyr::summarise(counts = dplyr::n()) %>%
     dplyr::collect() %>% # necessary because of integer division in sqlite
