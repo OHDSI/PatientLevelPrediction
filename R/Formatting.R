@@ -70,19 +70,14 @@ toSparseM <- function(plpData, cohort = NULL, map = NULL) {
   # return the new covariateData (rowId changes in covariates plus covariates/covariateRef with modified columnIds)
   # return labels with modified rowId if plpData$labels exists
 
-  if (!is.null(plpData$labels)) {
-    newcovariateData <- MapIds(
-      plpData$covariateData,
-      cohort = plpData$labels,
-      mapping = map
-    )
-  } else {
-    newcovariateData <- MapIds(
-      plpData$covariateData,
-      cohort = cohort,
-      mapping = map
-    )
+  if (is.null(cohort)) {
+    cohort <- plpData$labels
   }
+  newcovariateData <- MapIds(
+    plpData$covariateData,
+    cohort = cohort,
+    mapping = map
+  )
 
 
   ParallelLogger::logDebug(paste0("# covariates in mapped covariateRef: ", nrow(newcovariateData$covariateRef)))

@@ -314,7 +314,7 @@ test_that("Sklearn predict works", {
   predictions <- predictSklearn(
     plpModel,
     testData,
-    population
+    testData$labels
   )
   expect_correct_predictions(predictions, testData)
 })
