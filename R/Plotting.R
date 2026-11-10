@@ -82,10 +82,8 @@ outcomeSurvivalPlot <- function(
     )
   )
 
-  population$daysToEvent[is.na(population$daysToEvent)] <-
-    population$survivalTime[is.na(population$daysToEvent)]
   survivalFit <- survival::survfit(
-    survival::Surv(daysToEvent, outcomeCount) ~ targetId,
+    survival::Surv(survivalTime, outcomeCount) ~ targetId,
     # riskDecile,
     population,
     conf.int = TRUE
@@ -97,17 +95,21 @@ outcomeSurvivalPlot <- function(
     yliml <- 0.5
   }
 
+  # the window length when it is the same for everyone, otherwise the longest follow-up
+  xMax <- getSurvivalHorizon(populationSettings) %||% max(population$survivalTime)
+
   result <- survminer::ggsurvplot(
     fit = survivalFit,
     data = population,
     risk.table = riskTable,
     pval = FALSE,
-    xlim = c(0, populationSettings$riskWindowEnd),
+    xlim = c(0, xMax),
     ylim = c(yliml * 0.95, 1),
     conf.int = confInt,
     ggtheme = ggplot2::theme_minimal(),
     risk.table.y.text.col = TRUE,
     risk.table.y.text = FALSE,
+    xlab = "Days since start of the time-at-risk window",
     ylab = yLabel
   )
   return(result)

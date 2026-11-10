@@ -272,3 +272,82 @@ test_that("getNetBenefit works with thresholdSummary", {
   expect_true(is.numeric(netBenefit$netBenefit))
 })
 dev.off()
+
+# Keeps the ggplot objects that plot functions would hand to marrangeGrob.
+capturePlots <- function(expr, env = parent.frame()) {
+  testthat::local_mocked_bindings(marrangeGrob = function(grobs, ...) grobs, .package = "gridExtra", .env = env)
+  expr
+}
+
+makeSurvivalPlotData <- function() {
+  cohorts <- data.frame(
+    rowId = 1:2, subjectId = 1:2, targetId = 1, cohortStartDate = as.Date("2020-01-01"),
+    daysFromObsStart = 400, daysToCohortEnd = 0, daysToObsEnd = c(400, 100),
+    ageYear = 60, gender = 8507
+  )
+  outcomes <- data.frame(rowId = 1, outcomeId = 1, outcomeCount = 1, daysToEvent = 100)
+  plp <- list(cohorts = cohorts, outcomes = outcomes, metaData = list())
+  class(plp) <- "plpData"
+  plp
+}
+
+survivalPlotSettings <- function(start, end = 3650, startAnchor = "cohort start", endAnchor = "cohort start") {
+  createStudyPopulationSettings(
+    requireTimeAtRisk = FALSE, removeSubjectsWithPriorOutcome = FALSE,
+    riskWindowStart = start, startAnchor = startAnchor,
+    riskWindowEnd = end, endAnchor = endAnchor
+  )
+}
+
+test_that("outcomeSurvivalPlot uses one time origin with a delayed risk window", {
+  skip_if_not_installed("survminer")
+  skip_if_not_installed("ggplot2")
+  result <- suppressWarnings(outcomeSurvivalPlot(
+    makeSurvivalPlotData(), 1,
+    populationSettings = survivalPlotSettings(30),
+    riskTable = FALSE, confInt = FALSE
+  ))
+  survival <- result$data.survplot
+  expect_equal(min(survival$surv[survival$n.event > 0]), 0.5)
+  expect_equal(survival$time[survival$n.event > 0], 71)
+  # the x axis follows the risk-window origin: days 30..3650 become 1..3621
+  expect_equal(result$plot$coordinates$limits$x, c(0, 3621))
+  expect_equal(result$plot$labels$x, "Days since start of the time-at-risk window")
+})
+
+test_that("outcomeSurvivalPlot is unchanged for the default risk window", {
+  skip_if_not_installed("survminer")
+  skip_if_not_installed("ggplot2")
+  result <- suppressWarnings(outcomeSurvivalPlot(
+    makeSurvivalPlotData(), 1,
+    populationSettings = survivalPlotSettings(1),
+    riskTable = FALSE, confInt = FALSE
+  ))
+  survival <- result$data.survplot
+  # with the default window daysToEvent equals survivalTime, and the tie at day 100 keeps survival 0.5
+  expect_equal(min(survival$surv[survival$n.event > 0]), 0.5)
+  expect_equal(survival$time[survival$n.event > 0], 100)
+  expect_equal(result$plot$coordinates$limits$x, c(0, 3650))
+})
+
+test_that("outcomeSurvivalPlot x axis is the window length unless the window ends have different anchors", {
+  skip_if_not_installed("survminer")
+  skip_if_not_installed("ggplot2")
+  plp <- makeSurvivalPlotData()
+  plp$cohorts$daysToCohortEnd <- 5
+  bothCohortEnd <- survivalPlotSettings(1, end = 365, startAnchor = "cohort end", endAnchor = "cohort end")
+  result <- suppressWarnings(outcomeSurvivalPlot(
+    plp, 1,
+    populationSettings = bothCohortEnd, riskTable = FALSE, confInt = FALSE
+  ))
+  expect_equal(result$plot$coordinates$limits$x, c(0, 365))
+
+  mixed <- survivalPlotSettings(1, end = 365, endAnchor = "cohort end")
+  result <- suppressWarnings(outcomeSurvivalPlot(
+    plp, 1,
+    populationSettings = mixed, riskTable = FALSE, confInt = FALSE
+  ))
+  population <- suppressWarnings(createStudyPopulation(plp, 1, populationSettings = mixed))
+  expect_equal(result$plot$coordinates$limits$x, c(0, max(population$survivalTime)))
+  expect_false(max(population$survivalTime) == 365)
+})
