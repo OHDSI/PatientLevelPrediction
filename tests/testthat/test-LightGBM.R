@@ -159,3 +159,47 @@ test_that("LightGBM working checks", {
   expect_s3_class(loadModelOld, "plpModel")
   expect_equal(class(loadModelOld$model), c("lgb.Booster", "R6"))
 })
+
+test_that("LightGBM importance is reported against the correct covariates", {
+  skip_if_not_installed("lightgbm")
+  skip_on_cran()
+  set.seed(42)
+  n <- 1000L
+  x <- matrix(rbinom(3 * n, 1, 0.5), ncol = 3)
+  fitImportance <- function(y) {
+    model <- fitLightGBM(
+      dataMatrix = Matrix::Matrix(x, sparse = TRUE),
+      labels = data.frame(outcomeCount = y),
+      hyperParameters = list(
+        numIterations = 30, numLeaves = 7, maxDepth = 3, learningRate = 0.1,
+        minDataInLeaf = 5, scalePosWeight = 1, lambdaL1 = 0, lambdaL2 = 0,
+        isUnbalance = FALSE
+      ),
+      settings = list(seed = 1, threads = 1)
+    )
+    raw <- lightgbm::lgb.importance(model, percentage = TRUE)
+    imported <- varImpLightGBM(
+      model,
+      data.frame(columnId = c(1, 2, 3), covariateId = c(1001, 1002, 1003))
+    )
+    list(raw = raw, imported = imported)
+  }
+
+  strongFirst <- fitImportance(rbinom(n, 1, plogis(-1 + 3 * x[, 1] + x[, 3])))
+  imported <- strongFirst$imported
+  expect_equal(imported$covariateId[which.max(imported$covariateValue)], 1001)
+  expect_equal(
+    imported$covariateValue[imported$covariateId == 1001],
+    strongFirst$raw$Gain[strongFirst$raw$Feature == "Column_0"]
+  )
+
+  # A column LightGBM never splits on must not receive another column's importance.
+  noFirst <- fitImportance(rbinom(n, 1, plogis(-1 + 3 * x[, 2])))
+  expect_false(1001 %in% noFirst$imported$covariateId[noFirst$imported$covariateValue > 0.5])
+  expect_equal(
+    noFirst$imported$covariateValue[noFirst$imported$covariateId == 1002],
+    noFirst$raw$Gain[noFirst$raw$Feature == "Column_1"]
+  )
+  expect_true(all(noFirst$imported$included == 1))
+})
+
