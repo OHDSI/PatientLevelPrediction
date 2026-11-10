@@ -363,3 +363,145 @@ test_that("insertModelDesignInDatabase differentiates model_design_id by hyperpa
   )
   expect_gte(hyperparameterRows$n[1], 2)
 })
+
+
+test_that("custom generators get separate model designs when their code differs", {
+  skip_if_not_installed("ResultModelManager")
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  on.exit(unlink(sqliteFile), add = TRUE)
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  PatientLevelPrediction::createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = ""
+  )
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE, after = FALSE)
+  schema <- createDatabaseSchemaSettings(resultSchema = "main", targetDialect = "sqlite", tempEmulationSchema = NULL)
+  cohorts <- data.frame(cohortName = c("t", "o"), cohortId = c(1, 2), json = c("{}", "{}"))
+  makeDesign <- function(generator) {
+    createModelDesign(
+      targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression(seed = 1),
+      splitSettings = createDefaultSplitSetting(splitSeed = 1),
+      hyperparameterSettings = createHyperparameterSettings(generator = generator)
+    )
+  }
+  insertDesign <- function(design) {
+    PatientLevelPrediction:::insertModelDesignInDatabase(
+      object = design, conn = conn, databaseSchemaSettings = schema, cohortDefinitions = cohorts
+    )
+  }
+
+  firstOnly <- makeDesign(function(definition, expanded, settings) expanded[1])
+  lastOnly <- makeDesign(function(definition, expanded, settings) expanded[length(expanded)])
+  idFirst <- insertDesign(firstOnly)
+  idLast <- insertDesign(lastOnly)
+  expect_false(identical(idFirst, idLast))
+
+  # identity survives the JSON round trip used by saved models and is stable
+  roundTrip <- ParallelLogger::convertJsonToSettings(ParallelLogger::convertSettingsToJson(firstOnly))
+  expect_equal(insertDesign(roundTrip), idFirst)
+  expect_equal(insertDesign(firstOnly), idFirst)
+
+  # closures from one factory differ through captured values
+  factory <- function(k) function(definition, expanded, settings) expanded[seq_len(k)]
+  idTwo <- insertDesign(makeDesign(factory(2)))
+  idThree <- insertDesign(makeDesign(factory(3)))
+  expect_false(identical(idTwo, idThree))
+  expect_equal(insertDesign(makeDesign(factory(2))), idTwo)
+
+  # control: default grid search keeps its hyperparameter JSON and one row
+  defaultSettings <- createHyperparameterSettings()
+  sanitized <- PatientLevelPrediction:::sanitizeHyperparameterSettingsForDatabase(defaultSettings)
+  expect_null(sanitized$generator)
+  expect_null(sanitized$tuningMetric$funFingerprint)
+})
+
+test_that("custom tuning metrics are distinguished by their function", {
+  sanitize <- function(metric) {
+    PatientLevelPrediction:::sanitizeTuningMetricForDatabase(metric)
+  }
+  metricA <- createTuningMetric(fun = function(prediction) mean(prediction$value), name = "custom")
+  metricB <- createTuningMetric(fun = function(prediction) stats::median(prediction$value), name = "custom")
+  expect_false(identical(sanitize(metricA)$funFingerprint, sanitize(metricB)$funFingerprint))
+  expect_equal(sanitize(metricA), sanitize(metricA))
+  # built-in metrics keep the JSON they always had
+  expect_null(sanitize(PatientLevelPrediction:::aucMetric)$funFingerprint)
+  expect_null(sanitize(PatientLevelPrediction:::auprcMetric)$funFingerprint)
+  expect_null(sanitize(ParallelLogger::convertJsonToSettings(
+    ParallelLogger::convertSettingsToJson(PatientLevelPrediction:::aucMetric)
+  ))$funFingerprint)
+})
+
+test_that("lifecycle generators are fingerprinted by their methods", {
+  makeGenerator <- function(step) {
+    list(
+      initialize = function(definition, settings) invisible(NULL),
+      getNext = function(history) step
+    )
+  }
+  fp1 <- PatientLevelPrediction:::fingerprintGenerator(makeGenerator(1))
+  expect_equal(fp1, PatientLevelPrediction:::fingerprintGenerator(makeGenerator(1)))
+  expect_false(identical(fp1, PatientLevelPrediction:::fingerprintGenerator(makeGenerator(2))))
+})
+
+test_that("disabled preprocessing gets a separate tidy settings row and model design", {
+  skip_if_not_installed("ResultModelManager")
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  on.exit(unlink(sqliteFile), add = TRUE)
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  PatientLevelPrediction::createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = ""
+  )
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE, after = FALSE)
+  schema <- createDatabaseSchemaSettings(resultSchema = "main", targetDialect = "sqlite", tempEmulationSchema = NULL)
+  cohorts <- data.frame(cohortName = c("t", "o"), cohortId = c(1, 2), json = c("{}", "{}"))
+  makeDesign <- function(preprocess) {
+    createModelDesign(
+      targetId = 1, outcomeId = 2, modelSettings = setLassoLogisticRegression(seed = 1),
+      splitSettings = createDefaultSplitSetting(splitSeed = 1),
+      preprocessSettings = preprocess
+    )
+  }
+  insertDesign <- function(design) {
+    PatientLevelPrediction:::insertModelDesignInDatabase(
+      object = design, conn = conn, databaseSchemaSettings = schema, cohortDefinitions = cohorts
+    )
+  }
+
+  disabled <- makeDesign(NULL)
+  enabled <- makeDesign(createPreprocessSettings())
+  idDisabled <- insertDesign(disabled)
+  idEnabled <- insertDesign(enabled)
+  expect_false(identical(idDisabled, idEnabled))
+
+  # repeated uploads, including after the JSON round trip used for saved models, keep the id
+  expect_equal(insertDesign(disabled), idDisabled)
+  roundTrip <- ParallelLogger::convertJsonToSettings(ParallelLogger::convertSettingsToJson(disabled))
+  expect_equal(insertDesign(roundTrip), idDisabled)
+
+  # control: enabled preprocessing JSON is unchanged, so existing rows keep matching
+  jsons <- DatabaseConnector::querySql(
+    conn, "select tidy_covariates_settings_json from main.tidy_covariates_settings;",
+    snakeCaseToCamelCase = TRUE
+  )$tidyCovariatesSettingsJson
+  expect_equal(sum(grepl("runPreprocessData", jsons)), 1)
+  expect_true(any(jsons == as.character(ParallelLogger::convertSettingsToJson(
+    PatientLevelPrediction:::orderJson(createPreprocessSettings())
+  ))))
+
+  # different settings still differ when both are enabled
+  idOther <- insertDesign(makeDesign(createPreprocessSettings(minFraction = 0.05)))
+  expect_false(identical(idOther, idEnabled))
+
+  # the runPlp fallback path keeps the flag (it rebuilds the design, so compare its tidy row)
+  tidyIdOf <- function(id) {
+    DatabaseConnector::querySql(
+      conn, sprintf("select tidy_covariates_setting_id from main.model_designs where model_design_id = %s;", id),
+      snakeCaseToCamelCase = TRUE
+    )$tidyCovariatesSettingId
+  }
+  object <- structure(list(model = list(modelDesign = disabled)), class = "runPlp")
+  expect_equal(tidyIdOf(insertDesign(object)), tidyIdOf(idDisabled))
+})

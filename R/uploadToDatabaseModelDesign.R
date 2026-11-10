@@ -45,6 +45,10 @@ insertModelDesignInDatabase <- function(
     if (is.null(hyperparameterSettings)) {
       hyperparameterSettings <- createHyperparameterSettings()
     }
+    preprocessSettings <- object$model$modelDesign$preprocessSettings
+    if (isFALSE(object$model$modelDesign$executeSettings$runPreprocessData)) {
+      preprocessSettings <- NULL
+    }
     object <- PatientLevelPrediction::createModelDesign(
       targetId = object$model$modelDesign$targetId,
       outcomeId = object$model$modelDesign$outcomeId,
@@ -53,7 +57,7 @@ insertModelDesignInDatabase <- function(
       covariateSettings = object$model$modelDesign$covariateSettings,
       featureEngineeringSettings = object$model$modelDesign$featureEngineeringSettings,
       sampleSettings = object$model$modelDesign$sampleSettings,
-      preprocessSettings = object$model$modelDesign$preprocessSettings,
+      preprocessSettings = preprocessSettings,
       modelSettings = object$model$modelDesign$modelSettings,
       hyperparameterSettings = hyperparameterSettings,
       runCovariateSummary = TRUE
@@ -186,11 +190,16 @@ insertModelDesignSettings <- function(
   ParallelLogger::logInfo(paste0("sampleSetId: ", sampleSetId))
 
   # NEW: add tidy_covariate_settings
+  tidySettings <- object$preprocessSettings
+  if (!is.null(tidySettings) && isFALSE(object$executeSettings$runPreprocessData)) {
+    # the stored defaults were not applied, so this must not share a row with a design that used them
+    tidySettings$runPreprocessData <- FALSE
+  }
   tidySetId <- addTidySetting(
     conn = conn,
     resultSchema = databaseSchemaSettings$resultSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
-    json = object$preprocessSettings,
+    json = tidySettings,
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )

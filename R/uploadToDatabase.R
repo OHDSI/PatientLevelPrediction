@@ -842,11 +842,59 @@ sanitizeTuningMetricForDatabase <- function(tuningMetric) {
     return(NULL)
   }
 
-  list(
+  sanitized <- list(
     name = tuningMetric$name,
     maximize = tuningMetric$maximize,
     funArgs = sanitizeObjectForDatabaseJson(tuningMetric$funArgs)
   )
+  builtIn <- if (is.character(tuningMetric$name)) {
+    list(AUC = aucMetric, AUPRC = auprcMetric)[[tuningMetric$name]]
+  }
+  if (is.function(tuningMetric$fun)) {
+    fingerprint <- fingerprintFunction(tuningMetric$fun)
+    if (is.null(builtIn) || !identical(fingerprint, fingerprintFunction(builtIn$fun))) {
+      sanitized$funFingerprint <- fingerprint
+    }
+  }
+  sanitized
+}
+
+# Identifies a function by its code and the captured values it uses, so that designs
+# differing only in a custom function get separate rows. Unused enclosing variables
+# are ignored because they vary between runs without changing the function.
+fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv())) {
+  captured <- list()
+  env <- environment(fn)
+  if (is.environment(env)) {
+    assign(format(env), TRUE, envir = seen)
+  }
+  remaining <- unique(all.names(body(fn)))
+  while (is.environment(env) && !nzchar(environmentName(env)) && length(remaining) > 0) {
+    found <- sort(intersect(remaining, ls(env, all.names = TRUE)))
+    remaining <- setdiff(remaining, found)
+    for (name in found) {
+      value <- tryCatch(get(name, envir = env), error = function(e) NULL)
+      captured[[name]] <- if (is.function(value)) {
+        if (exists(format(environment(value)), envir = seen, inherits = FALSE)) {
+          deparse(value)
+        } else {
+          fingerprintFunction(value, seen)
+        }
+      } else {
+        sanitizeObjectForDatabaseJson(value)
+      }
+    }
+    env <- parent.env(env)
+  }
+  digest::digest(list(code = deparse(fn), captured = captured), algo = "sha256")
+}
+
+fingerprintGenerator <- function(generator) {
+  if (is.function(generator)) {
+    return(fingerprintFunction(generator))
+  }
+  methods <- intersect(c("initialize", "getNext", "finalize"), names(generator))
+  digest::digest(lapply(methods, function(name) fingerprintFunction(generator[[name]])), algo = "sha256")
 }
 
 sanitizeGeneratorForDatabase <- function(generator) {
@@ -867,12 +915,17 @@ sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
     return(NULL)
   }
 
+  generator <- sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
+  if (!is.null(generator)) {
+    generator$fingerprint <- fingerprintGenerator(hyperparameterSettings$generator)
+  }
+
   list(
     search = hyperparameterSettings$search,
     tuningMetric = sanitizeTuningMetricForDatabase(hyperparameterSettings$tuningMetric),
     sampleSize = hyperparameterSettings$sampleSize,
     randomSeed = hyperparameterSettings$randomSeed,
-    generator = sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
+    generator = generator
   )
 }
 
