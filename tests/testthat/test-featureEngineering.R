@@ -315,28 +315,23 @@ test_that("createRareFeatureRemover works", {
 test_that("Removing rare features works", {
   skip_if_offline()
   remover <- createRareFeatureRemover(threshold = 0.1)
-
-  removedData <- removeRareFeatures(tinyTrainData, remover)
-  expect_true(
-    removedData$covariateData$covariates %>%
+  distinctCovariates <- function(data) {
+    data$covariateData$covariates %>%
       dplyr::pull(.data$covariateId) %>%
-      dplyr::n_distinct() <=
-      tinyTrainData$covariateData$covariates %>%
-        dplyr::pull(.data$covariateId) %>%
-        dplyr::n_distinct()
-  )
-  metaData <- attr(removedData$covariateData, "metaData")
-  testSettings <- metaData$featureEngineering$removeRare$settings$featureEngineeringSettings
+      dplyr::n_distinct()
+  }
 
-  removedTestData <- removeRareFeatures(testData, remover, done = TRUE)
-  expect_true(
-    removedTestData$covariateData$covariates %>%
-      dplyr::pull(.data$covariateId) %>%
-      dplyr::n_distinct() <=
-      testData$covariateData$covariates %>%
-        dplyr::pull(.data$covariateId) %>%
-        dplyr::n_distinct()
-  )
+  # steps change the data they are given, so work on copies of the shared data
+  removedData <- removeRareFeatures(copyTrainData(tinyTrainData), remover)
+  expect_true(distinctCovariates(removedData) <= distinctCovariates(tinyTrainData))
+  testSettings <- fittedFeatureEngineeringSettings(removedData, "removeRareFeatures")
+  rareFeatures <- attr(testSettings, "rareFeatures")
+
+  removedTestData <- removeRareFeatures(copyTrainData(testData), testSettings, done = TRUE)
+  remaining <- removedTestData$covariateData$covariates %>%
+    dplyr::pull(.data$covariateId)
+  expect_false(any(remaining %in% rareFeatures))
+  expect_true(distinctCovariates(removedTestData) <= distinctCovariates(testData))
 })
 
 test_that("two step FE and RClassifier works", {
@@ -354,11 +349,12 @@ test_that("two step FE and RClassifier works", {
     data = newTrainData,
     featureEngineeringSettings = featureEngineeringSettings
   )
+  # featureEngineer() changes newTrainData itself, so compare with the shared data
   expect_true(
     engineeredData$covariateData$covariates %>%
       dplyr::pull(.data$covariateId) %>%
       dplyr::n_distinct() <=
-      newTrainData$covariateData$covariates %>%
+      trainData$covariateData$covariates %>%
         dplyr::pull(.data$covariateId) %>%
         dplyr::n_distinct()
   )
@@ -400,7 +396,11 @@ test_that("two step FE and RClassifier works", {
         dplyr::pull(.data$covariateId) %>%
         dplyr::n_distinct()
   )
-  minMaxs <- attr(plpModel$preprocessing$featureEngineering[["minMaxNormalize"]]$settings$featureEngineeringSettings, "minMaxs")
+  minMaxSteps <- Filter(
+    function(step) step$funct == "minMaxNormalize",
+    plpModel$preprocessing$featureEngineering
+  )
+  minMaxs <- attr(minMaxSteps[[1]]$settings$featureEngineeringSettings, "minMaxs")
   minAge <- minMaxs$min[minMaxs$covariateId == 1002]
   maxAge <- minMaxs$max[minMaxs$covariateId == 1002]
 
@@ -604,4 +604,265 @@ test_that("saved rare feature removal replays on plpData without labels", {
   result <- removeRareFeatures(plpData, remover, done = TRUE)
 
   expect_equal(remainingCovariates(result), 1)
+})
+
+covariateValues <- function(data) {
+  as.data.frame(data$covariateData$covariates) %>%
+    dplyr::arrange(.data$rowId, .data$covariateId)
+}
+
+stepFunctions <- function(steps) {
+  vapply(steps, function(step) step$funct, character(1))
+}
+
+test_that("training steps change the training data in place and record one entry per step", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  engineered <- featureEngineer(
+    data,
+    list(ageSplineSettings, createNormalizer("minmax"), charlsonSplineSettings)
+  )
+
+  steps <- attr(engineered$covariateData, "metaData")$featureEngineering
+  expect_null(names(steps))
+  expect_equal(
+    stepFunctions(steps),
+    c("splineCovariates", "minMaxNormalize", "splineCovariates")
+  )
+  # training makes no copy: the training data itself was changed
+  expect_equal(covariateValues(data), covariateValues(engineered))
+})
+
+test_that("a saved model with several kinds of steps replays all of them on a copy", {
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  engineered <- featureEngineer(data, list(ageSplineSettings, createNormalizer("minmax")))
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(list(featureEngineering = saved), jsonFile)
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  newData <- createSplineData(c(30, 70), c(2, 1))
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  before <- covariateValues(newData)
+  replayed <- applyFeatureEngineering(newData, loaded)
+
+  expect_equal(covariateValues(newData), before)
+  values <- covariateValues(replayed)
+  # the spline replaced age, and the normalizer scaled Charlson with the training range 0-4
+  expect_false(1002 %in% values$covariateId)
+  expect_equal(values$covariateValue[values$covariateId == 1901], c(2, 1) / 4)
+})
+
+test_that("saved steps are read from every stored format", {
+  selection <- list(funct = "univariateFeatureSelection", settings = list(covariateIdsInclude = 1))
+  spline <- list(funct = "splineCovariates", settings = list(knots = c(0, 1, 2)))
+  imputer <- list(funct = "simpleImpute", settings = list(done = TRUE))
+
+  canonical <- list(selection, spline, imputer)
+  # listAppend() pairs, as saved before, and as renamed by the JSON round trip
+  flat <- c(selection, spline)
+  renamed <- stats::setNames(flat, c("funct", "settings", "funct.1", "settings.1"))
+  # named entries, as the normalizers and imputers saved them
+  mixed <- c(flat, list(simpleImputer = imputer))
+
+  # a listAppend() pair after unnamed entries, as an old-style custom step leaves it
+  appended <- c(list(selection), spline)
+  names(appended) <- c("funct", "settings", NA)
+
+  expect_equal(featureEngineeringSteps(canonical), canonical)
+  expect_equal(featureEngineeringSteps(flat), list(selection, spline))
+  expect_equal(featureEngineeringSteps(renamed), list(selection, spline))
+  expect_equal(featureEngineeringSteps(mixed), canonical)
+  expect_equal(featureEngineeringSteps(appended), list(selection, spline))
+  expect_equal(featureEngineeringSteps(NULL), list())
+  expect_warning(
+    steps <- featureEngineeringSteps(list(selection, 42)),
+    "entry 2 is not a step"
+  )
+  expect_equal(steps, list(selection))
+})
+
+test_that("recordFeatureEngineeringStep appends after steps saved in older formats", {
+  covariateData <- Andromeda::andromeda()
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+  data <- list(covariateData = covariateData)
+  attr(data$covariateData, "metaData") <- list(featureEngineering = list(
+    funct = "univariateFeatureSelection",
+    settings = list(covariateIdsInclude = 1),
+    simpleImputer = list(funct = "simpleImpute", settings = list(done = TRUE))
+  ))
+
+  data <- recordFeatureEngineeringStep(data, "removeRareFeatures", list(done = TRUE))
+  data <- recordFeatureEngineeringStep(data, "removeRareFeatures", list(done = TRUE))
+
+  steps <- attr(data$covariateData, "metaData")$featureEngineering
+  # a step used twice keeps both entries
+  expect_equal(
+    stepFunctions(steps),
+    c("univariateFeatureSelection", "simpleImpute", "removeRareFeatures", "removeRareFeatures")
+  )
+  expect_equal(steps[[1]]$settings, list(covariateIdsInclude = 1))
+  expect_error(recordFeatureEngineeringStep(data, "removeRareFeatures", "not a list"))
+})
+
+test_that("a custom step written as in the vignette is applied at prediction", {
+  # the implement function from vignette("AddingCustomFeatureEngineering")
+  assign(
+    "implementCapCovariate",
+    function(trainData, featureEngineeringSettings, cap = NULL) {
+      covariateId <- featureEngineeringSettings$covariateId
+      if (is.null(cap)) {
+        cap <- trainData$covariateData$covariates %>%
+          dplyr::filter(.data$covariateId == !!covariateId) %>%
+          dplyr::pull(.data$covariateValue) %>%
+          stats::quantile(featureEngineeringSettings$quantile, names = FALSE)
+      }
+      trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+        dplyr::mutate(covariateValue = dplyr::if_else(
+          .data$covariateId == !!covariateId & .data$covariateValue > !!cap,
+          !!cap,
+          .data$covariateValue
+        ))
+      trainData <- recordFeatureEngineeringStep(
+        trainData,
+        funct = "implementCapCovariate",
+        settings = list(featureEngineeringSettings = featureEngineeringSettings, cap = cap)
+      )
+      return(trainData)
+    },
+    envir = globalenv()
+  )
+  on.exit(rm("implementCapCovariate", envir = globalenv()), add = TRUE)
+  capSettings <- structure(
+    list(covariateId = 1002, quantile = 0.5),
+    fun = "implementCapCovariate",
+    class = "featureEngineeringSettings"
+  )
+
+  data <- createSplineData(ageValues = c(20, 80, 40, 60))
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  engineered <- featureEngineer(data, capSettings)
+  ages <- covariateValues(engineered) %>% dplyr::filter(.data$covariateId == 1002)
+  expect_equal(ages$covariateValue, c(20, 50, 40, 50))
+
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(
+    list(featureEngineering = attr(engineered$covariateData, "metaData")$featureEngineering),
+    jsonFile
+  )
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  newData <- createSplineData(ageValues = c(30, 90), charlsonValues = c(1, 2))
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  replayed <- applyFeatureEngineering(newData, loaded)
+  newAges <- covariateValues(replayed) %>% dplyr::filter(.data$covariateId == 1002)
+  expect_equal(newAges$covariateValue, c(30, 50))
+  # the shared data is unchanged
+  originalAges <- covariateValues(newData) %>% dplyr::filter(.data$covariateId == 1002)
+  expect_equal(originalAges$covariateValue, c(30, 90))
+})
+
+test_that("an old-style custom step recorded with listAppend() is applied in any order", {
+  # adds a constant covariate and records itself as the earlier vignette showed
+  assign(
+    "implementAddConstantOldStyle",
+    function(trainData, featureEngineeringSettings, value = NULL) {
+      value <- value %||% 1
+      Andromeda::appendToTable(
+        trainData$covariateData$covariates,
+        data.frame(rowId = trainData$labels$rowId, covariateId = 9999, covariateValue = value)
+      )
+      attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
+        attr(trainData$covariateData, "metaData")$featureEngineering,
+        list(funct = "implementAddConstantOldStyle", settings = list(value = value))
+      )
+      trainData
+    },
+    envir = globalenv()
+  )
+  on.exit(rm("implementAddConstantOldStyle", envir = globalenv()), add = TRUE)
+  oldStyle <- structure(list(), fun = "implementAddConstantOldStyle", class = "featureEngineeringSettings")
+
+  for (order in list(c("builtIn", "oldStyle"), c("oldStyle", "builtIn"))) {
+    settings <- list(builtIn = createNormalizer("minmax"), oldStyle = oldStyle)[order]
+    data <- createSplineData()
+    engineered <- featureEngineer(data, unname(settings))
+    saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+    jsonFile <- tempfile(fileext = ".json")
+    saveSettingsToJsonFullPrecision(list(featureEngineering = saved), jsonFile)
+    loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+    expect_equal(
+      stepFunctions(featureEngineeringSteps(loaded)),
+      c(builtIn = "minMaxNormalize", oldStyle = "implementAddConstantOldStyle")[order],
+      ignore_attr = TRUE
+    )
+    newData <- createSplineData(ageValues = c(30, 90), charlsonValues = c(1, 2))
+    replayed <- covariateValues(applyFeatureEngineering(newData, loaded))
+    # both steps ran: the constant was added and age was scaled with the training range 20-80
+    expect_equal(replayed$rowId[replayed$covariateId == 9999], 1:2)
+    expect_equal(replayed$covariateValue[replayed$covariateId == 1002], c(10, 70) / 60)
+    Andromeda::close(data$covariateData)
+    Andromeda::close(newData$covariateData)
+    unlink(jsonFile)
+  }
+})
+
+test_that("a step fitted twice is recorded and replayed twice", {
+  data <- createRareData(nPatients = 200, featureRowIds = 1:15)
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  # covariate 2 is in 7.5% of patients and covariate 1 in 50%
+  engineered <- featureEngineer(
+    data,
+    list(createRareFeatureRemover(threshold = 0.1), createRareFeatureRemover(threshold = 0.6))
+  )
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+  expect_equal(stepFunctions(saved), c("removeRareFeatures", "removeRareFeatures"))
+
+  newData <- createRareData(nPatients = 200, featureRowIds = 1:15)
+  on.exit(Andromeda::close(newData$covariateData), add = TRUE)
+  replayed <- applyFeatureEngineering(newData, saved)
+  expect_equal(remainingCovariates(replayed), numeric(0))
+  expect_equal(remainingCovariates(newData), c(1, 2))
+})
+
+test_that("covariateSummary replays steps with the population columns and the labels", {
+  seen <- new.env()
+  assign(
+    "implementRecordLabelColumns",
+    function(trainData, featureEngineeringSettings, done = FALSE) {
+      if (done) {
+        assign("labelColumns", colnames(trainData$labels), envir = seen)
+      }
+      recordFeatureEngineeringStep(
+        trainData,
+        funct = "implementRecordLabelColumns",
+        settings = list(featureEngineeringSettings = featureEngineeringSettings, done = TRUE)
+      )
+    },
+    envir = globalenv()
+  )
+  on.exit(rm("implementRecordLabelColumns", envir = globalenv()), add = TRUE)
+  data <- createSplineData()
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  population <- data.frame(rowId = 1:4, ageYear = c(20, 80, 40, 60), gender = 8507, outcomeCount = c(0, 1, 0, 1))
+  steps <- list(list(
+    funct = "implementRecordLabelColumns",
+    settings = list(featureEngineeringSettings = list(), done = TRUE)
+  ))
+
+  # the arguments runPlp() passes
+  covariateSummary(
+    covariateData = data$covariateData,
+    cohort = population %>% dplyr::select(-"outcomeCount"),
+    labels = population %>% dplyr::select("rowId", "outcomeCount"),
+    featureEngineering = steps
+  )
+
+  expect_setequal(seen$labelColumns, c("rowId", "ageYear", "gender", "outcomeCount"))
 })

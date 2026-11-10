@@ -18,7 +18,7 @@ An object of class \code{featureEngineeringSettings}
 Create the settings for random foreat based feature selection
 }
 \details{
-Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 }
 \examples{
 \dontshow{ # dontrun reason: requires python and scikit-learn }

@@ -398,7 +398,7 @@ runPlp <- function(
     covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
-        cohort = population %>% dplyr::select("rowId"),
+        cohort = population %>% dplyr::select(-dplyr::any_of("outcomeCount")),
         labels = population %>% dplyr::select("rowId", "outcomeCount"), 
         strata = strata,
         variableImportance = variableImportance,

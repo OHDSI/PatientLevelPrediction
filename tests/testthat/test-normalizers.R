@@ -132,13 +132,10 @@ test_that("normalization works", {
     } else {
       stop("Unknown normalizer type")
     }
+    # the normalizer changes its input, so compute the expected values first
+    testNormFeature <- manualFn(newData, newTestData)
     trainNormalizedData <- normalizeFn(newData, normalizer)
-    metaData <- attr(trainNormalizedData$covariateData, "metaData")
-    if (normalizer$type == "minmax") {
-      testSettings <- metaData$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings
-    } else if (normalizer$type == "robust") {
-      testSettings <- metaData$featureEngineering$robustNormalize$settings$featureEngineeringSettings
-    }
+    testSettings <- fittedFeatureEngineeringSettings(trainNormalizedData, attr(normalizer, "fun"))
     testNormalizedData <- normalizeFn(newTestData, testSettings, done = TRUE)
 
     trainFeature <- trainNormalizedData$covariateData$covariates %>%
@@ -148,7 +145,6 @@ test_that("normalization works", {
     newTestFeature <- testNormalizedData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId == 12101) %>%
       dplyr::pull(.data$covariateValue)
-    testNormFeature <- manualFn(newData, newTestData)
     expect_equal(newTestFeature, testNormFeature)
   }
   normalizer <- createNormalizer(type = "minmax")
@@ -203,7 +199,7 @@ test_that("normalization with constant column doesn't produce NaNs", {
   newData <- addConstantFeature(tinyTrainData, 12101, 5)
   newTestData <- addConstantFeature(testData, 12101, 5)
   normalizedData <- minMaxNormalize(newData, normalizer)
-  testNormalizedData <- minMaxNormalize(newTestData, attr(normalizedData$covariateData, "metaData")$featureEngineering$minMaxNormalize$settings$featureEngineeringSettings, done = TRUE)
+  testNormalizedData <- minMaxNormalize(newTestData, fittedFeatureEngineeringSettings(normalizedData, "minMaxNormalize"), done = TRUE)
 
   trainFeature <- normalizedData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
@@ -219,7 +215,7 @@ test_that("normalization with constant column doesn't produce NaNs", {
   newData <- addConstantFeature(tinyTrainData, 12101, 5)
   newTestData <- addConstantFeature(testData, 12101, 5)
   normalizedData <- robustNormalize(newData, normalizer)
-  testNormalizedData <- robustNormalize(newTestData, attr(normalizedData$covariateData, "metaData")$featureEngineering$robustNormalize$settings$featureEngineeringSettings, done = TRUE)
+  testNormalizedData <- robustNormalize(newTestData, fittedFeatureEngineeringSettings(normalizedData, "robustNormalize"), done = TRUE)
   trainFeature <- normalizedData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == 12101) %>%
     dplyr::pull(.data$covariateValue)
@@ -280,7 +276,7 @@ matrixValues <- function(data, rowIds) {
 }
 
 savedNormalizer <- function(data, name) {
-  attr(data$covariateData, "metaData")$featureEngineering[[name]]$settings$featureEngineeringSettings
+  fittedFeatureEngineeringSettings(data, name)
 }
 
 test_that("min-max normalization includes implicit zeros", {

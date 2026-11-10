@@ -18,7 +18,8 @@ the joined list
 join two lists
 }
 \details{
-This function joins two lists
+This function joins two lists. Names stay with their elements; an unnamed
+list contributes empty names.
 }
 \examples{
 a <- list(a = 1, b = 2)

@@ -18,7 +18,7 @@ An object of class \code{featureEngineeringSettings}
 Create the settings for defining any feature engineering that will be done
 }
 \details{
-Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 }
 \examples{
 createFeatureEngineeringSettings(type = "none")

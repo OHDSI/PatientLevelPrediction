@@ -76,7 +76,8 @@ createTempModelLoc <- function() {
 #' join two lists
 #'
 #' @details
-#' This function joins two lists
+#' This function joins two lists. Names stay with their elements; an unnamed
+#' list contributes empty names.
 #' @param a   A list
 #' @param b   Another list
 #' @return the joined list
@@ -90,14 +91,17 @@ listAppend <- function(a, b) {
   size <- length(a) + length(b)
   x <- list()
   length(x) <- size
-  for (i in 1:size) {
+  for (i in seq_len(size)) {
     if (i <= length(a)) {
       x[[i]] <- a[[i]]
     } else {
       x[[i]] <- b[[i - length(a)]]
     }
   }
-  names(x) <- c(names(a), names(b))
+  # an unnamed list contributes empty names, so the names stay with their elements
+  if (!is.null(names(a)) || !is.null(names(b))) {
+    names(x) <- c(names(a) %||% rep("", length(a)), names(b) %||% rep("", length(b)))
+  }
   return(x)
 }
 

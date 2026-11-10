@@ -11,6 +11,16 @@ copyTrainData <- function(trainData) {
   return(newTrainData)
 }
 
+# The featureEngineeringSettings saved by the last fitted step that called funct.
+fittedFeatureEngineeringSettings <- function(data, funct) {
+  steps <- featureEngineeringSteps(attr(data$covariateData, "metaData")$featureEngineering)
+  matches <- Filter(function(step) identical(step$funct, funct), steps)
+  if (length(matches) == 0) {
+    stop("No fitted ", funct, " step")
+  }
+  matches[[length(matches)]]$settings$featureEngineeringSettings
+}
+
 # create tiny dataset with subset of covariates based on lasso fit
 createTinyPlpData <- function(plpData, plpResult, n = 20) {
   covariates <- plpResult$model$covariateImportance %>%

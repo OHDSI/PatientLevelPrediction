@@ -209,22 +209,19 @@ baselineSurvivalAt <- function(baselineSurvival, timepoint) {
 }
 
 
+# Replays the fitted feature engineering steps on new data. Steps change the
+# data they are given, and the caller's data may be shared with other models,
+# so this makes the one copy they work on.
 applyFeatureEngineering <- function(
     plpData,
     settings) {
-  settings <- featureEngineeringSteps(settings)
-
-  # The caller's data may be shared between models, and transforms (including
-  # user-written ones) rewrite Andromeda tables in place.
+  steps <- featureEngineeringSteps(settings)
   plpData <- isolateCovariateData(plpData)
-
-  # add code for implementing the feature engineering
-  for (set in settings) {
-    set$settings$trainData <- plpData
-    plpData <- do.call(eval(parse(text = set$funct)), set$settings)
+  for (step in steps) {
+    args <- step$settings
+    args$trainData <- plpData
+    plpData <- do.call(eval(parse(text = step$funct)), args)
   }
-
-  # dont do anything for now
   return(plpData)
 }
 

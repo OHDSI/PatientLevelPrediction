@@ -16,6 +16,8 @@
 # limitations under the License.
 
 
+# Training: `data` is the training set made by splitData() (and sampleData()),
+# which already has its own Andromeda, so the steps change it in place.
 featureEngineer <- function(data, featureEngineeringSettings) {
   start <- Sys.time()
   ParallelLogger::logInfo("Starting Feature Engineering")
@@ -43,7 +45,8 @@ featureEngineer <- function(data, featureEngineeringSettings) {
 }
 
 # Andromeda tables are modified in place, so copying the data list alone does
-# not isolate them from the caller.
+# not isolate them from the caller. Feature engineering steps change the data
+# they are given; applyFeatureEngineering() uses this to give them a copy.
 isolateCovariateData <- function(data) {
   metaData <- attr(data$covariateData, "metaData")
   data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
@@ -117,29 +120,83 @@ removeStoredZeros <- function(covariateData, covariateIds) {
   return(invisible(NULL))
 }
 
-# Saved steps may be stored as funct/settings pairs in one flat list (renamed
-# funct.1, settings.1, ... by the JSON round trip), as list entries, or both.
+# Fitted steps are stored as a list of list(funct, settings) entries, one per
+# step in the order they ran. Models saved by earlier versions, and custom steps
+# that record themselves with listAppend(), may also hold a step as a function
+# name followed by its settings list directly in the list, under any names
+# (funct and settings, funct.1 and settings.1 after the JSON round trip, or
+# misaligned names), so steps are recognised by their structure.
 featureEngineeringSteps <- function(featureEngineering) {
+  isStep <- function(entry) is.list(entry) && !is.null(entry[["funct"]])
   steps <- list()
-  entryNames <- names(featureEngineering)
-  for (i in seq_along(featureEngineering)) {
+  i <- 1
+  while (i <= length(featureEngineering)) {
     entry <- featureEngineering[[i]]
-    if (is.list(entry) && !is.null(entry$funct)) {
-      steps[[length(steps) + 1]] <- entry
-    } else if (!is.null(entryNames) && grepl("^funct(\\.[0-9]+)?$", entryNames[i])) {
-      steps[[length(steps) + 1]] <- list(
-        funct = entry,
-        settings = featureEngineering[[i + 1]]
-      )
+    nextEntry <- if (i < length(featureEngineering)) featureEngineering[[i + 1]]
+    if (isStep(entry)) {
+      steps[[length(steps) + 1]] <- list(funct = entry[["funct"]], settings = entry[["settings"]])
+      i <- i + 1
+    } else if (is.character(entry) && length(entry) == 1 && is.list(nextEntry) && !isStep(nextEntry)) {
+      steps[[length(steps) + 1]] <- list(funct = entry, settings = nextEntry)
+      i <- i + 2
+    } else {
+      warning("Saved feature engineering entry ", i, " is not a step and is not applied.")
+      i <- i + 1
     }
   }
   return(steps)
 }
 
+#' Record a fitted feature engineering step so it is applied at prediction
+#'
+#' @description
+#' Call this at the end of a feature engineering 'implement' function, before
+#' returning `trainData`. When the model is applied to new data,
+#' PatientLevelPrediction calls the recorded steps again, in the order they were
+#' recorded.
+#'
+#' @details
+#' At prediction the function named `funct` is called with `trainData` (a copy
+#' of the data to transform) and the elements of `settings` as arguments. Put
+#' everything the function needs to repeat the step in `settings`, such as the
+#' `featureEngineeringSettings` and the values learned from the training data.
+#' The model is saved as JSON, so `settings` should hold only numbers, strings,
+#' logicals, data frames and lists of these.
+#'
+#' @param trainData The data the implement function received and changed.
+#' @param funct The name of the implement function to call at prediction.
+#' @param settings A named list of the other arguments for that call.
+#' @return `trainData`, with the step added to
+#'   `attr(trainData$covariateData, "metaData")$featureEngineering`.
+#' @examples
+#' covariateData <- Andromeda::andromeda(
+#'   covariates = data.frame(rowId = 1:3, covariateId = 1, covariateValue = c(1, 5, 9))
+#' )
+#' trainData <- list(covariateData = covariateData)
+#' trainData <- recordFeatureEngineeringStep(
+#'   trainData,
+#'   funct = "capCovariateValues",
+#'   settings = list(featureEngineeringSettings = list(), cap = 5)
+#' )
+#' attr(trainData$covariateData, "metaData")$featureEngineering
+#' Andromeda::close(covariateData)
+#' @export
+recordFeatureEngineeringStep <- function(trainData, funct, settings) {
+  checkIsClass(funct, "character")
+  if (length(funct) != 1) {
+    stop("funct must be the name of one function")
+  }
+  checkIsClass(settings, "list")
+  steps <- featureEngineeringSteps(attr(trainData$covariateData, "metaData")$featureEngineering)
+  steps[[length(steps) + 1]] <- list(funct = funct, settings = settings)
+  attr(trainData$covariateData, "metaData")$featureEngineering <- steps
+  return(trainData)
+}
+
 #' Create the settings for defining any feature engineering that will be done
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 #'
 #' @param type              (character) Choice of:  \itemize{
 #'                                         \item'none' No feature engineering - this is the default
@@ -210,7 +267,7 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' Create the settings for random foreat based feature selection
 #'
 #' @details
-#' Returns an object of class `featureEngineeringSettings` that specifies the sampling function that will be called and the settings
+#' Returns an object of class `featureEngineeringSettings` that specifies the feature engineering function that will be called and its settings
 #'
 #' @param ntrees              number of tree in forest
 #' @param maxDepth            MAx depth of each tree
@@ -254,7 +311,7 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
 #' Create the settings for adding a spline for continuous variables
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 #'
 #' @param continousCovariateId     The covariateId to apply splines to
 #' @param knots            Either number of knots of vector of split values
@@ -316,19 +373,14 @@ splineCovariates <- function(
   )
   trainData <- splineResult$data
 
-  featureEngineering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "splineCovariates",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       knots = knots,
       componentIds = splineResult$componentIds
     )
-  )
-
-  # add the feature engineering in
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngineering
   )
   ParallelLogger::logInfo("Finished splineCovariates")
 
@@ -606,17 +658,13 @@ univariateFeatureSelection <- function(
   trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariateIdsInclude)
 
-  featureEngineering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "univariateFeatureSelection",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       covariateIdsInclude = covariateIdsInclude
     )
-  )
-
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngineering
   )
 
   return(trainData)
@@ -666,18 +714,13 @@ randomForestFeatureSelection <- function(
   trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariateIdsInclude)
 
-
-  featureEngeering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "randomForestFeatureSelection",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       covariateIdsInclude = covariateIdsInclude
     )
-  )
-
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngeering
   )
 
   return(trainData)
@@ -719,15 +762,16 @@ createNormalizer <- function(type = "minmax",
 
 #' A function that normalizes continous features to have values between 0 and 1
 #' @details uses value - min / (max - min) to normalize the data
-#' @param trainData The training data to be normalized
+#' @param trainData The data to normalize: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param done Whether the data has already been normalized (bool)
-#' @return The normalized data
+#' @param done Whether the normalization has already been fitted (bool)
+#' @return `trainData`, normalized, with the step recorded for prediction
 #' @keywords internal
 minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
-    outData <- isolateCovariateData(trainData)
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
     implicitZeroIds <- implicitZeroCovariateIds(outData)
     addImplicitZeros(outData, implicitZeroIds)
@@ -774,7 +818,6 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
-    outData <- isolateCovariateData(trainData)
     # NULL for models saved before implicit zeros were handled
     implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
     addImplicitZeros(outData, implicitZeroIds)
@@ -791,16 +834,14 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::select(-c("max", "min"))
     removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "minMaxNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-
-  attr(outData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished min-max normalization of continuous features in ",
@@ -817,16 +858,17 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' This forces the values to be between -3 and 3 while preserving the relative
 #' ordering of the values.
 #' based on https://arxiv.org/abs/2407.04491 for more details
-#' @param trainData The training data to be normalized
+#' @param trainData The data to normalize: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param done Whether the data has already been normalized (bool)
-#' @return The `trainData` object with normalized data
+#' @param done Whether the normalization has already been fitted (bool)
+#' @return `trainData`, normalized, with the step recorded for prediction
 #' @keywords internal
 robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
     ParallelLogger::logInfo("Starting robust normalization of continuous features")
-    outData <- isolateCovariateData(trainData)
     implicitZeroIds <- implicitZeroCovariateIds(outData)
     addImplicitZeros(outData, implicitZeroIds)
     attr(featureEngineeringSettings, "implicitZeroCovariateIds") <- implicitZeroIds
@@ -900,7 +942,6 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
-    outData <- isolateCovariateData(trainData)
     # NULL for models saved before implicit zeros were handled
     implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
     addImplicitZeros(outData, implicitZeroIds)
@@ -927,16 +968,14 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::select(-c("median", "iqr", "normalizeCovariate"))
     removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "robustNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-
-  attr(outData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished robust normalization in ",
@@ -986,19 +1025,21 @@ createRareFeatureRemover <- function(threshold = 0.001) {
 
 #' A function that removes rare features from the data
 #' @details removes features that are present in less than a certain fraction of the population
-#' @param trainData The data to be normalized
-#' @param featureEngineeringSettings The settings for the normalization
+#' @param trainData The data to remove rare features from: the training data, or
+#'   new data when `done = TRUE`. It is changed in place.
+#' @param featureEngineeringSettings The settings for the rare feature removal
 #' @param done Whether to find and remove rare features or remove them only (bool)
-#' @return The data with rare features removed
+#' @return `trainData`, with rare features removed and the step recorded for
+#'   prediction
 #' @keywords internal
 removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
     ParallelLogger::logInfo(
       "Removing features rarer than threshold: ", featureEngineeringSettings$threshold,
       " from the data"
     )
-    outData <- isolateCovariateData(trainData)
     rowIds <- populationRowIds(outData)
     populationSize <- if (is.null(rowIds)) {
       outData$covariateData$covariates %>%
@@ -1029,7 +1070,6 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       "Applying rare feature removal with rate below: ",
       featureEngineeringSettings$threshold, " to test data"
     )
-    outData <- isolateCovariateData(trainData)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
@@ -1039,15 +1079,14 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
       )
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "removeRareFeatures",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-  attr(outData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished rare feature removal in ",

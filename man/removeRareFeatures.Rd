@@ -7,14 +7,16 @@
 removeRareFeatures(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
-\item{trainData}{The data to be normalized}
+\item{trainData}{The data to remove rare features from: the training data, or
+new data when \code{done = TRUE}. It is changed in place.}
 
-\item{featureEngineeringSettings}{The settings for the normalization}
+\item{featureEngineeringSettings}{The settings for the rare feature removal}
 
 \item{done}{Whether to find and remove rare features or remove them only (bool)}
 }
 \value{
-The data with rare features removed
+\code{trainData}, with rare features removed and the step recorded for
+prediction
 }
 \description{
 A function that removes rare features from the data

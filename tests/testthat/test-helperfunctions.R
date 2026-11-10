@@ -24,6 +24,10 @@ list1 <- list(a = 1:2, b = 5:6)
 list2 <- list(c = 1:5)
 test_that("listAppend", {
   expect_equal(length(listAppend(list1, list2)), 3)
+  expect_equal(names(listAppend(list1, list2)), c("a", "b", "c"))
+  # names stay with their elements when one list is unnamed
+  expect_equal(names(listAppend(list(1), list(c = 3))), c("", "c"))
+  expect_null(names(listAppend(list(1), list(2))))
 })
 
 test_that("null-default operator uses right-hand side only for NULL", {

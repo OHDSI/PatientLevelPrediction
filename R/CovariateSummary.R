@@ -69,21 +69,18 @@ covariateSummary <- function(
     strata = strata
   )
 
-  # apply feature engineering
+  # apply feature engineering to a copy, as at prediction, where the steps see
+  # the population columns and the labels
   if (!is.null(featureEngineering)) {
-    # create copy of covariateData
-    newCovariateData <- Andromeda::andromeda(
-      covariateRef = covariateData$covariateRef,
-      analysisRef = covariateData$analysisRef,
-      covariates = covariateData$covariates
-    )
-    covariateData <- newCovariateData
-
-    for (fe in featureEngineeringSteps(featureEngineering)) {
-      feSettings <- fe$settings
-      feSettings$trainData <- list(labels = cohort, covariateData = covariateData)
-      covariateData <- do.call(fe$funct, feSettings)$covariateData
+    replayLabels <- cohort
+    if (!is.null(labels)) {
+      labelColumns <- c("rowId", setdiff(colnames(labels), colnames(cohort)))
+      replayLabels <- dplyr::left_join(cohort, labels[, labelColumns, drop = FALSE], by = "rowId")
     }
+    covariateData <- applyFeatureEngineering(
+      plpData = list(labels = replayLabels, covariateData = covariateData),
+      settings = featureEngineering
+    )$covariateData
   }
 
   # make this run in parallel for big speed improvements..

@@ -14,14 +14,15 @@ based on https://arxiv.org/abs/2407.04491 for more details}
 robustNormalize(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
-\item{trainData}{The training data to be normalized}
+\item{trainData}{The data to normalize: the training data, or new data when
+\code{done = TRUE}. It is changed in place.}
 
 \item{featureEngineeringSettings}{The settings for the normalization}
 
-\item{done}{Whether the data has already been normalized (bool)}
+\item{done}{Whether the normalization has already been fitted (bool)}
 }
 \value{
-The \code{trainData} object with normalized data
+\code{trainData}, normalized, with the step recorded for prediction
 }
 \description{
 A function that normalizes continous by the interquartile range and

@@ -111,21 +111,10 @@ sampleData <- function(trainData, sampleSettings) {
 
 
 
+# Used when there is no sampling or no feature engineering. Returning the data
+# unchanged needs nothing recorded for prediction.
 sameData <- function(trainData, ...) {
-  ParallelLogger::logInfo("No sampling - returning same data")
-
-  # add attribute for FE
-  featureEngeering <- list(
-    funct = "sameData",
-    settings = list(
-      none = TRUE
-    )
-  )
-  attr(trainData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData, "metaData")$featureEngineering,
-    featureEngeering
-  )
-
+  ParallelLogger::logInfo("No sampling or feature engineering - returning same data")
   return(trainData)
 }
 

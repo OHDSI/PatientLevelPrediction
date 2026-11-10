@@ -7,14 +7,15 @@
 simpleImpute(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
-\item{trainData}{The data to be imputed}
+\item{trainData}{The data to impute: the training data, or new data when
+\code{done = TRUE}. It is changed in place.}
 
 \item{featureEngineeringSettings}{The settings for the imputation}
 
-\item{done}{Whether the imputation has already been done (bool)}
+\item{done}{Whether the imputer has already been fitted (bool)}
 }
 \value{
-The imputed data
+\code{trainData}, imputed, with the step recorded for prediction
 }
 \description{
 This function does single imputation with the mean or median

@@ -853,27 +853,19 @@ appendSimpleImputedRows <- function(outputData,
 
 #' @title Simple Imputation
 #' @description This function does single imputation with the mean or median
-#' @param trainData The data to be imputed
+#' @param trainData The data to impute: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the imputation
-#' @param done Whether the imputation has already been done (bool)
-#' @return The imputed data
+#' @param done Whether the imputer has already been fitted (bool)
+#' @return `trainData`, imputed, with the step recorded for prediction
 #' @keywords internal
 simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outputData <- trainData
   if (!done) {
     ParallelLogger::logInfo("Imputing missing values with simpleImputer using: ",
       featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
-    outputData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -932,7 +924,6 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     ParallelLogger::logInfo("Applying imputation to test data with simpleImputer
       using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
-    outputData <- isolateCovariateData(trainData)
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
@@ -975,15 +966,14 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       tempData = numericData
     )
   }
-  featureEngineering <- list(
+  outputData <- recordFeatureEngineeringStep(
+    outputData,
     funct = "simpleImpute",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-  attr(outputData$covariateData, "metaData")$featureEngineering[["simpleImputer"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Imputation done in time: ", signif(delta, 3), " ",
   attr(delta, "units"))
@@ -993,28 +983,20 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
 
 #' @title Imputation
 #' @description This function does single imputation with predictive mean matching
-#' @param trainData The data to be imputed
+#' @param trainData The data to impute: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the imputation
-#' @param done Whether the imputation has already been done (bool)
-#' @return The imputed data
+#' @param done Whether the imputer has already been fitted (bool)
+#' @return `trainData`, imputed, with the step recorded for prediction
 #' @keywords internal
 iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outputData <- trainData
   if (!done) {
     ParallelLogger::logInfo("Imputing missing values with iterativeImputer using: ",
       featureEngineeringSettings$method, ", missing threshold: ",
       featureEngineeringSettings$missingThreshold, " and method settings: ",
       featureEngineeringSettings$methodSettings)
-    outputData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
     continuousFeatures <- missingInfo$continuousFeatures
@@ -1083,7 +1065,6 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying imputation to test data with iterativeImputer
       using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
-    outputData <- isolateCovariateData(trainData)
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -1234,15 +1215,14 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
         dplyr::select(-c("imputedValue"))
     )
   }
-  featureEngineering <- list(
+  outputData <- recordFeatureEngineeringStep(
+    outputData,
     funct = "iterativeImpute",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-  attr(outputData$covariateData, "metaData")$featureEngineering[["iterativeImputer"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Imputation done in time: ", signif(delta, 3), " ",
   attr(delta, "units"))
@@ -1252,30 +1232,22 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' @title scikit-learn Iterative Imputation
 #' @description This function imputes missing values using
 #' scikit-learn `IterativeImputer` through `reticulate`.
-#' @param trainData The data to be imputed
+#' @param trainData The data to impute: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the imputation
-#' @param done Whether the imputation has already been done (bool)
-#' @return The imputed data
+#' @param done Whether the imputer has already been fitted (bool)
+#' @return `trainData`, imputed, with the step recorded for prediction
 #' @keywords internal
 sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
   checkSklearnIterativeImputerDependencies()
 
+  outputData <- trainData
   if (!done) {
     ParallelLogger::logInfo(
       "Imputing missing values with sklearn IterativeImputer, missing threshold: ",
       featureEngineeringSettings$missingThreshold
     )
-    outputData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <-
-      attr(trainData$covariateData, "metaData")
 
     missingInfo <- extractMissingInfo(outputData)
     outputData$covariateData$missingInfo <- missingInfo$missingInfo
@@ -1364,7 +1336,6 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
       "Applying sklearn IterativeImputer to test data, missing threshold: ",
       featureEngineeringSettings$missingThreshold
     )
-    outputData <- isolateCovariateData(trainData)
 
     missingInfoValue <- attr(featureEngineeringSettings, "missingInfo")
     if (is.null(missingInfoValue)) {
@@ -1452,15 +1423,14 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
     }
   }
 
-  featureEngineering <- list(
+  outputData <- recordFeatureEngineeringStep(
+    outputData,
     funct = "sklearnIterativeImpute",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-  attr(outputData$covariateData, "metaData")$featureEngineering[["sklearnIterativeImputer"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo("Imputation done in time: ", signif(delta, 3), " ",
   attr(delta, "units"))
