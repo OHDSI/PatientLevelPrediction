@@ -143,3 +143,71 @@ test_that("permute handles a feature absent from the evaluated population", {
   permuted <- permutedCovariates(location, 1101, population)
   expect_equal(sum(permuted$rowId %in% population$rowId), 0)
 })
+
+test_that("permute keeps unrelated predictors when permuting a categorical block", {
+  n <- 100
+  population <- data.frame(rowId = 1:n)
+  ageGroup <- data.frame(
+    rowId = 1:n,
+    covariateId = ifelse(1:n <= 30, 1003, ifelse(1:n <= 70, 2003, 3003)),
+    covariateValue = 1
+  )
+  unrelated <- data.frame(rowId = 1:n, covariateId = 5002, covariateValue = 2:(n + 1))
+  location <- permutePlpDataLocation(rbind(ageGroup, unrelated), ageGroupRef(), ageGroupAnalysisRef(), n)
+
+  for (seed in 1:5) {
+    set.seed(seed)
+    permuted <- permutedCovariates(location, 1003, population)
+    keptOther <- permuted[permuted$covariateId == 5002, ]
+    expect_equal(keptOther$covariateValue[order(keptOther$rowId)], 2:(n + 1))
+
+    block <- permuted[permuted$covariateId %in% c(1003, 2003, 3003), ]
+    expect_equal(sum(block$covariateId == 1003), 30)
+    expect_equal(sum(block$covariateId == 2003), 40)
+    expect_equal(sum(block$covariateId == 3003), 30)
+    expect_equal(max(table(block$rowId)), 1)
+    expect_equal(nrow(block), n)
+  }
+})
+
+test_that("permute handles missing category rows and holders outside the population", {
+  n <- 100
+  population <- data.frame(rowId = 1:60)
+  # rows 91:100 have no race row at all; rows 61:90 are outside the evaluated population
+  race <- data.frame(
+    rowId = 1:90,
+    covariateId = ifelse(1:90 <= 30 | 1:90 > 75, 1003, 2003),
+    covariateValue = 1
+  )
+  unrelated <- data.frame(rowId = 1:100, covariateId = 5002, covariateValue = 1)
+  ref <- ageGroupRef()
+  ref$analysisId[ref$covariateId %in% c(1003, 2003, 3003)] <- 4
+  location <- permutePlpDataLocation(rbind(race, unrelated), ref, ageGroupAnalysisRef(), n)
+
+  set.seed(4)
+  permuted <- permutedCovariates(location, 1003, population)
+  block <- permuted[permuted$covariateId %in% c(1003, 2003), ]
+  inPop <- block[block$rowId %in% population$rowId, ]
+  # only the population's own 30 + 30 category rows move
+  expect_equal(sum(inPop$covariateId == 1003), 30)
+  expect_equal(sum(inPop$covariateId == 2003), 30)
+  expect_equal(max(table(inPop$rowId)), 1)
+  # holders outside the evaluated population keep their rows
+  outside <- block[block$rowId > 60, ]
+  expect_equal(sort(outside$rowId), 61:90)
+  expect_equal(unname(outside$covariateId[order(outside$rowId)]), ifelse(61:90 > 75, 1003, 2003))
+  expect_equal(sum(permuted$covariateId == 5002), 100)
+})
+
+test_that("permute leaves a categorical block unchanged when nobody needs to swap", {
+  n <- 20
+  population <- data.frame(rowId = 1:n)
+  location <- permutePlpDataLocation(
+    data.frame(rowId = 1:n, covariateId = 1003, covariateValue = 1),
+    ageGroupRef(), ageGroupAnalysisRef(), n
+  )
+  set.seed(1)
+  permuted <- permutedCovariates(location, 1003, population)
+  expect_equal(sort(permuted$rowId), 1:n)
+  expect_equal(unique(permuted$covariateId), 1003)
+})
