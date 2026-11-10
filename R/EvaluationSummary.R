@@ -556,16 +556,17 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
 #' averagePrecision(prediction)
 #' @export
 averagePrecision <- function(prediction) {
-  lab.order <- prediction$outcomeCount[order(-prediction$value)]
-  n <- nrow(prediction)
   P <- sum(prediction$outcomeCount > 0)
   if (P == 0) {
     ParallelLogger::logWarn("Cannot compute Average Precision: outcomeCount has no positive class")
     return(NA_real_)
   }
-  val <- rep(0, n)
-  val[lab.order > 0] <- 1:P
-  return(sum(val / (1:n)) / P)
+  ordering <- order(-prediction$value)
+  # tied scores share one threshold, so precision is taken at the last row of each tie
+  lastOfTie <- !duplicated(prediction$value[ordering], fromLast = TRUE)
+  truePositives <- cumsum(prediction$outcomeCount[ordering] > 0)[lastOfTie]
+  selected <- which(lastOfTie)
+  return(sum(diff(c(0, truePositives)) / P * truePositives / selected))
 }
 
 

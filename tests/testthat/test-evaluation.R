@@ -160,6 +160,31 @@ test_that("evaluation statistics report the observed-prevalence scaled Brier sco
   scaled <- as.numeric(stats$value[stats$metric == "brier score scaled"])
   expect_equal(scaled, 1 - 0.1001 / 0.09)
 })
+
+test_that("Average precision evaluates tied scores together", {
+  prediction <- data.frame(value = c(0.8, 0.8, 0.2), outcomeCount = c(1, 0, 1))
+  swapped <- prediction[c(2, 1, 3), ]
+  # by hand: 0.8 -> TP 1, selected 2; 0.2 -> TP 2, selected 3
+  # AP = (1/2)*(1/2) + (1/2)*(2/3) = 7/12
+  expect_equal(averagePrecision(prediction), 7 / 12)
+  expect_equal(averagePrecision(swapped), 7 / 12)
+
+  # a larger tie: .9 -> TP 1/1; .5 -> TP 3/4; .1 adds no recall
+  # AP = (1/3)*1 + (2/3)*(3/4) = 5/6
+  larger <- data.frame(
+    value = c(0.9, 0.5, 0.5, 0.5, 0.1),
+    outcomeCount = c(1, 1, 0, 1, 0)
+  )
+  expect_equal(averagePrecision(larger), 5 / 6)
+  expect_equal(averagePrecision(larger[c(3, 5, 2, 1, 4), ]), 5 / 6)
+})
+
+test_that("Average precision is unchanged for untied scores", {
+  prediction <- data.frame(value = c(0.9, 0.8, 0.2), outcomeCount = c(1, 0, 1))
+  # by hand: 1/2 * (1/1 + 2/3) = 5/6
+  expect_equal(averagePrecision(prediction), 5 / 6)
+})
+
 test_that("Average precision", {
   skip_if_not_installed("Metrics")
   ePrediction <- data.frame(value = runif(100), outcomeCount = round(runif(100)))
