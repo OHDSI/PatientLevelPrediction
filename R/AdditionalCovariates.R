@@ -86,10 +86,10 @@ getCohortCovariateData <- function(
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
-    "{@lnAgeInteraction}?{LOG(max(YEAR(a.cohort_start_date)-p.year_of_birth))}:{",
-    "{@ageInteraction}?{max(YEAR(a.cohort_start_date)-p.year_of_birth)}:{",
     "{@countval}?{count(distinct b.cohort_start_date)}:{max(1)}",
-    "}} as covariate_value",
+    "{@lnAgeInteraction}?{ * LOG(max(YEAR(a.cohort_start_date)-p.year_of_birth))}:{",
+    "{@ageInteraction}?{ * max(YEAR(a.cohort_start_date)-p.year_of_birth)}",
+    "} as covariate_value",
     "from @cohort_temp_table a inner join @covariate_cohort_schema.@covariate_cohort_table b",
     " on a.subject_id = b.subject_id and ",
     " b.cohort_start_date <= dateadd(day, @endDays, a.cohort_start_date) and ",
