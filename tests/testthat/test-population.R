@@ -586,3 +586,26 @@ test_that("restrictTarToCohortEnd warns when every episode ends on index day", {
   mixed <- smallPopulationPlpData(c(0, 20), c(365, 365), outcomes)
   expect_false(warned(mixed, restrict = TRUE))
 })
+
+test_that("minTimeAtRisk counts days elapsed after the risk window start", {
+  populationRows <- function(daysToObsEnd, minTimeAtRisk, riskWindowEnd) {
+    outcomes <- data.frame(rowId = 2, outcomeId = 1, outcomeCount = 1, daysToEvent = 5)
+    plpDataTar <- smallPopulationPlpData(
+      daysToCohortEnd = rep(1, 2), daysToObsEnd = rep(daysToObsEnd, 2), outcomes = outcomes
+    )
+    settings <- createStudyPopulationSettings(
+      includeAllOutcomes = TRUE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = TRUE, minTimeAtRisk = minTimeAtRisk,
+      riskWindowStart = 1, riskWindowEnd = riskWindowEnd
+    )
+    sort(createStudyPopulation(plpDataTar, outcomeId = 1, populationSettings = settings)$rowId)
+  }
+
+  # Row 2 has the outcome, so includeAllOutcomes keeps it; row 1 has to meet the minimum.
+  expect_equal(populationRows(30, minTimeAtRisk = 30, riskWindowEnd = 90), 2)
+  expect_equal(populationRows(31, minTimeAtRisk = 30, riskWindowEnd = 90), c(1, 2))
+
+  # The default minimum of 364 with a risk window of days 1 to 365 requires the full window.
+  expect_equal(populationRows(364, minTimeAtRisk = 364, riskWindowEnd = 365), 2)
+  expect_equal(populationRows(365, minTimeAtRisk = 364, riskWindowEnd = 365), c(1, 2))
+})

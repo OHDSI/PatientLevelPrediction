@@ -37,7 +37,11 @@ date for a person to be included in the cohort.}
 
 \item{requireTimeAtRisk}{Should subject without time at risk be removed?}
 
-\item{minTimeAtRisk}{The minimum number of days at risk required to be included}
+\item{minTimeAtRisk}{The minimum time at risk required to be included, in days elapsed after
+the first day of the risk window. A person therefore needs
+\code{minTimeAtRisk + 1} days in the risk window, counting its first and
+last day. The default of 364 with a risk window of days 1 to 365 requires
+the full window.}
 
 \item{riskWindowStart}{The start of the risk window (in days) relative to the index date (+
 days of exposure if the \code{addExposureDaysToStart} parameter is
