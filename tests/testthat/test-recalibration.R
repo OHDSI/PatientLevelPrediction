@@ -166,7 +166,8 @@ test_that("recalibratePlpRefit augments missing columns and raw values", {
     ),
     fitPlp = function(...) mockFit,
     predictPlp = function(...) mockPredict,
-    setLassoLogisticRegression = function(...) list()
+    setLassoLogisticRegression = function(...) list(),
+    limitCovariatesToPopulation = function(covariateData, rowIds) covariateData
   )
 
   expect_s3_class(result, "data.frame")
@@ -646,3 +647,35 @@ refitFixture <- function(excludedValue = NULL) {
     x = x
   )
 }
+
+test_that("recalibratePlpRefit ignores covariates of patients outside newPopulation", {
+  skip_if_not_installed("Cyclops")
+  clean <- refitFixture()
+  contaminated <- refitFixture(excludedValue = 10)
+  withr::defer({
+    Andromeda::close(clean$plpData$covariateData)
+    Andromeda::close(contaminated$plpData$covariateData)
+  })
+
+  fitModel <- function(data) {
+    withr::with_seed(42, recalibratePlpRefit(
+      plpModel = data$model,
+      newPopulation = data$population,
+      newData = data$plpData,
+      returnModel = TRUE
+    ))
+  }
+  coefs <- function(fit) {
+    z <- fit$model$model$coefficients
+    stats::setNames(z$betas, z$covariateIds)[c("(Intercept)", "1001")]
+  }
+
+  cleanFit <- fitModel(clean)
+  contaminatedFit <- fitModel(contaminated)
+  expect_equal(unname(coefs(cleanFit)), c(log(1 / 3), log(9)), tolerance = 1e-3)
+  expect_equal(unname(coefs(contaminatedFit)), unname(coefs(cleanFit)), tolerance = 1e-5)
+
+  # the caller's covariate data keeps the excluded patient
+  contaminatedRows <- contaminated$plpData$covariateData$covariates %>% dplyr::collect()
+  expect_equal(sum(contaminatedRows$rowId == 121), 1)
+})

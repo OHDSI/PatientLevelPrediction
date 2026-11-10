@@ -76,6 +76,11 @@ recalibratePlpRefit <- function(
   )
 
   newData$labels <- newPopulation
+  # covariates of patients outside newPopulation must not reach the refit
+  newData$covariateData <- limitCovariatesToPopulation(
+    covariateData = newData$covariateData,
+    rowIds = newPopulation$rowId
+  )
 
   newData$folds <- data.frame(
     rowId = newData$labels$rowId,
