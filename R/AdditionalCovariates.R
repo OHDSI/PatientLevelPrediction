@@ -150,13 +150,19 @@ getCohortCovariateData <- function(
     snakeCaseToCamelCase = TRUE
   )
 
+  # Consumers classify covariates as binary per analysisId, so non-binary variants
+  # must not share one with binary cohort covariates (default analysisId is 456).
+  isBinary <- !(covariateSettings$count || covariateSettings$ageInteraction ||
+    covariateSettings$lnAgeInteraction)
+  analysisId <- covariateSettings$analysisId + ifelse(isBinary, 0, 1000)
+
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
   @analysis_id as analysis_id, -1 as concept_id;"
   sql <- SqlRender::render(
     sql = sql,
     covariate_id = covariateSettings$covariateId,
-    analysis_id = covariateSettings$analysisId,
+    analysis_id = analysisId,
     concept_set = paste(
       "Cohort_covariate during day",
       covariateSettings$startDay,
@@ -184,12 +190,12 @@ getCohortCovariateData <- function(
   )
 
   analysisRef <- data.frame(
-    analysisId = covariateSettings$analysisId,
+    analysisId = analysisId,
     analysisName = "cohort covariate",
     domainId = "cohort covariate",
     startDay = covariateSettings$startDay,
     endDay = covariateSettings$endDays,
-    isBinary = "Y",
+    isBinary = ifelse(isBinary, "Y", "N"),
     missingMeansZero = "Y"
   )
 
@@ -225,7 +231,8 @@ getCohortCovariateData <- function(
 #'                If TRUE then the covariate value is the number of unique cohort_start_dates between index+startDay and index+endDay
 #' @param ageInteraction  If TRUE multiple covariate value by the patient's age in years
 #' @param lnAgeInteraction  If TRUE multiple covariate value by the log of the patient's age in years
-#' @param analysisId  The analysisId for the covariate
+#' @param analysisId  The analysisId for the covariate. Count or age-interaction covariates are
+#'                    reported with analysisId + 1000 in the covariateRef and analysisRef
 #'
 #' @return
 #' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId

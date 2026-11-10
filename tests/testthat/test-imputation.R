@@ -1621,3 +1621,64 @@ test_that("predictPlp imputes the requested population, including patients outsi
   expect_equal(prediction$rowId, c(101, 102, 103))
   expect_equal(prediction$value, c(5, 30, 30))
 })
+
+test_that("iterativeImpute leaves sparse missing-means-zero covariates alone at prediction", {
+  addSparseCount <- function(data, rowIds) {
+    Andromeda::appendToTable(
+      data$covariateData$covariates,
+      data.frame(rowId = rowIds, covariateId = 30, covariateValue = rep(c(1, 2, 3), length.out = length(rowIds)))
+    )
+    Andromeda::appendToTable(
+      data$covariateData$covariateRef,
+      data.frame(covariateId = 30, covariateName = "cohortCount", analysisId = 30, conceptId = -1)
+    )
+    Andromeda::appendToTable(
+      data$covariateData$analysisRef,
+      data.frame(
+        analysisId = 30, analysisName = "cohort covariate", domainId = "cohort covariate",
+        startDay = NA, endDay = NA, isBinary = "N", missingMeansZero = "Y"
+      )
+    )
+    data
+  }
+  countRows <- function(data) {
+    data$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == 30) %>%
+      dplyr::arrange(.data$rowId) %>%
+      dplyr::collect() %>%
+      as.data.frame()
+  }
+
+  trainData <- addSparseCount(
+    createMissingData(makeToyImputationData(seed = 1), missingness = 0.2),
+    rowIds = 1:40
+  )
+  class(trainData) <- "plpData"
+  attr(trainData, "metaData") <- list()
+  testData <- addSparseCount(
+    createMissingData(makeToyImputationData(seed = 2), missingness = 0.2, test = TRUE),
+    rowIds = 11:50
+  )
+  class(testData) <- "plpData"
+  attr(testData, "metaData") <- list()
+  expectedTest <- countRows(testData)
+
+  imputer <- createIterativeImputer(
+    missingThreshold = 0.9,
+    method = "pmm",
+    methodSettings = list(pmm = list(k = 1, iterations = 1))
+  )
+  imputedTrain <- iterativeImpute(trainData, imputer, done = FALSE)
+  expect_equal(nrow(countRows(imputedTrain)), 40)
+
+  fitted <- attr(imputedTrain$covariateData, "metaData")$featureEngineering$iterativeImputer$settings$featureEngineeringSettings
+  imputedTest <- iterativeImpute(testData, fitted, done = TRUE)
+  expect_equal(countRows(imputedTest)$rowId, expectedTest$rowId)
+  expect_equal(countRows(imputedTest)$covariateValue, expectedTest$covariateValue)
+
+  # Features fitted by the imputer are still imputed at prediction.
+  imputedFake <- imputedTest$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 666) %>%
+    dplyr::collect()
+  expect_equal(nrow(imputedFake), nrow(testData$labels))
+})

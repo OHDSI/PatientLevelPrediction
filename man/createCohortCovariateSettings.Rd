@@ -42,7 +42,8 @@ If TRUE then the covariate value is the number of unique cohort_start_dates betw
 
 \item{lnAgeInteraction}{If TRUE multiple covariate value by the log of the patient's age in years}
 
-\item{analysisId}{The analysisId for the covariate}
+\item{analysisId}{The analysisId for the covariate. Count or age-interaction covariates are
+reported with analysisId + 1000 in the covariateRef and analysisRef}
 }
 \value{
 An object of class \code{covariateSettings} specifying how to create the cohort covariate with the covariateId

@@ -232,3 +232,97 @@ test_that("getCohortCovariateData restricts rows to the requested target cohorts
   withoutCohortIds <- extractCohortCovariate(connection, settings)
   expect_equal(as.numeric(withoutCohortIds$covariates$rowId), 2)
 })
+
+test_that("cohort covariate metadata marks counts and interactions as non-binary", {
+  connection <- createCohortCovariateTestDb(
+    targetRows = data.frame(rowId = 1, subjectId = 1, cohortId = 1, startDate = "2020-06-01"),
+    covariateRows = data.frame(subjectId = 1, cohortId = 2, startDate = "2020-05-20")
+  )
+  on.exit(DatabaseConnector::disconnect(connection))
+
+  nonBinaryCases <- list(
+    list(count = TRUE),
+    list(ageInteraction = TRUE),
+    list(lnAgeInteraction = TRUE),
+    list(count = TRUE, ageInteraction = TRUE)
+  )
+  for (args in nonBinaryCases) {
+    settings <- do.call(cohortCovariateSettingsFor, args)
+    extracted <- extractCohortCovariate(connection, settings)
+    expect_equal(extracted$analysisRef$isBinary, "N")
+    expect_equal(extracted$analysisRef$missingMeansZero, "Y")
+    expect_equal(extracted$analysisRef$analysisId, 1456)
+    expect_equal(as.numeric(extracted$covariateRef$analysisId), 1456)
+    # The covariateId formula is unchanged so stored models keep matching.
+    expect_equal(as.numeric(extracted$covariateRef$covariateId), settings$covariateId)
+  }
+
+  binary <- extractCohortCovariate(connection, cohortCovariateSettingsFor())
+  expect_equal(binary$analysisRef$isBinary, "Y")
+  expect_equal(binary$analysisRef$analysisId, 456)
+  expect_equal(as.numeric(binary$covariateRef$analysisId), 456)
+
+  binaryCustomId <- extractCohortCovariate(
+    connection, cohortCovariateSettingsFor(analysisId = 789)
+  )
+  expect_equal(binaryCustomId$analysisRef$analysisId, 789)
+})
+
+test_that("normalizers scale count covariates and leave binary cohort covariates alone", {
+  connection <- createCohortCovariateTestDb(
+    targetRows = data.frame(
+      rowId = 1:3, subjectId = 1:3, cohortId = 1,
+      startDate = "2020-06-01"
+    ),
+    covariateRows = data.frame(
+      subjectId = c(1, 2, 3, 1, 2, 2, 3, 3, 3),
+      cohortId = c(11, 11, 11, 12, 12, 12, 12, 12, 12),
+      startDate = c(
+        "2020-05-15", "2020-05-15", "2020-05-15",
+        "2020-05-10", "2020-05-10", "2020-05-20",
+        "2020-05-10", "2020-05-20", "2020-05-30"
+      )
+    )
+  )
+  on.exit(DatabaseConnector::disconnect(connection))
+
+  # Both use the default analysisId, as they would in a real covariate settings list.
+  binarySettings <- cohortCovariateSettingsFor(cohortId = 11, settingId = 1)
+  countSettings <- cohortCovariateSettingsFor(cohortId = 12, settingId = 2, count = TRUE)
+  binary <- extractCohortCovariate(connection, binarySettings)
+  count <- extractCohortCovariate(connection, countSettings)
+
+  makeTrainData <- function() {
+    covariateData <- Andromeda::andromeda(
+      covariates = rbind(binary$covariates, count$covariates),
+      covariateRef = rbind(binary$covariateRef, count$covariateRef),
+      analysisRef = rbind(binary$analysisRef, count$analysisRef)
+    )
+    class(covariateData) <- "CovariateData"
+    attr(covariateData, "metaData") <- list()
+    trainData <- list(
+      labels = data.frame(rowId = 1:3),
+      folds = data.frame(rowId = 1:3, index = 1),
+      covariateData = covariateData
+    )
+    class(trainData) <- "plpData"
+    trainData
+  }
+  valuesFor <- function(normalized, covariateId) {
+    stored <- normalized$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == !!covariateId) %>%
+      dplyr::collect()
+    # Normalizers keep the data sparse, so a row that normalizes to zero isn't stored.
+    values <- stored$covariateValue[match(1:3, stored$rowId)]
+    values[is.na(values)] <- 0
+    return(values)
+  }
+
+  minMax <- minMaxNormalize(makeTrainData(), createNormalizer(type = "minmax"))
+  expect_equal(valuesFor(minMax, binarySettings$covariateId), c(1, 1, 1))
+  expect_equal(valuesFor(minMax, countSettings$covariateId), c(0, 0.5, 1))
+
+  robust <- robustNormalize(makeTrainData(), createNormalizer(type = "robust", settings = list(clip = FALSE)))
+  expect_equal(valuesFor(robust, binarySettings$covariateId), c(1, 1, 1))
+  expect_equal(valuesFor(robust, countSettings$covariateId), c(-1, 0, 1))
+})
