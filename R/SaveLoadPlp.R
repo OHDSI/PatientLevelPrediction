@@ -71,11 +71,15 @@ savePlpData <- function(plpData, file, envir = NULL, overwrite = FALSE) {
   saveRDS(plpData$cohorts, file = file.path(file, "cohorts.rds"))
   saveRDS(plpData$outcomes, file = file.path(file, "outcomes.rds"))
   saveRDS(plpData$metaData, file = file.path(file, "metaData.rds"))
-  if (!is.null(plpData$simulationSettings)) {
-    saveRDS(plpData$simulationSettings, file = file.path(file, "simulationSettings.rds"))
-  }
-  if (!is.null(plpData$simulationTruth)) {
-    saveRDS(plpData$simulationTruth, file = file.path(file, "simulationTruth.rds"))
+  # optional elements are loaded whenever their file exists, so a file left by an
+  # earlier save into the same folder is removed when the element is absent
+  for (element in c("population", "simulationSettings", "simulationTruth")) {
+    elementFile <- file.path(file, paste0(element, ".rds"))
+    if (!is.null(plpData[[element]])) {
+      saveRDS(plpData[[element]], file = elementFile)
+    } else if (file.exists(elementFile)) {
+      unlink(elementFile)
+    }
   }
 }
 
@@ -117,6 +121,11 @@ loadPlpData <- function(file, readOnly = TRUE) {
     outcomes = readRDS(file.path(file, "outcomes.rds")),
     metaData = readRDS(file.path(file, "metaData.rds"))
   )
+
+  populationFile <- file.path(file, "population.rds")
+  if (file.exists(populationFile)) {
+    result$population <- readRDS(populationFile)
+  }
 
   simulationSettingsFile <- file.path(file, "simulationSettings.rds")
   if (file.exists(simulationSettingsFile)) {

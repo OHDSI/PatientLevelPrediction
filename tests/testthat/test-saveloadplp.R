@@ -272,3 +272,60 @@ test_that("applyMinCellCount leaves missing counts missing", {
   expect_equal(minCellResult$person_count_at_risk, c(20, -1, 30, -1))
   expect_equal(minCellResult$person_count_with_outcome, c(12, -1, NA, -1))
 })
+
+test_that("savePlpData round-trips a custom population with its attributes", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  population <- simulated$cohorts[1:20, ]
+  population$outcomeCount <- rep(c(0, 1), 10)
+  attr(population, "metaData") <- list(outcomeId = 3, marker = "custom")
+  simulated$population <- population
+
+  path <- tempfile("savePopulation")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(simulated, path)
+  expect_true(file.exists(file.path(path, "population.rds")))
+
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_equal(loaded$population, population)
+  expect_equal(attr(loaded$population, "metaData"), attr(population, "metaData"))
+})
+
+test_that("savePlpData leaves plpData without a population unchanged", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  path <- tempfile("saveNoPopulation")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(simulated, path)
+  expect_false(file.exists(file.path(path, "population.rds")))
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_null(loaded$population)
+})
+
+test_that("savePlpData removes optional files left by an earlier save into the same folder", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  withPopulation <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  population <- withPopulation$cohorts[1:20, ]
+  population$outcomeCount <- 0
+  withPopulation$population <- population
+  withPopulation$simulationTruth <- data.frame(rowId = 1:2, trueRisk = 0.1)
+  path <- tempfile("saveTwice")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(withPopulation, path)
+  expect_true(file.exists(file.path(path, "population.rds")))
+  expect_true(file.exists(file.path(path, "simulationTruth.rds")))
+
+  withoutPopulation <- simulatePlpData(simulationProfile, n = 100, seed = 18)
+  withoutPopulation$simulationTruth <- NULL
+  savePlpData(withoutPopulation, path)
+  expect_false(file.exists(file.path(path, "population.rds")))
+  expect_false(file.exists(file.path(path, "simulationTruth.rds")))
+
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_null(loaded$population)
+  expect_null(loaded$simulationTruth)
+  expect_equal(nrow(loaded$cohorts), 100)
+})
