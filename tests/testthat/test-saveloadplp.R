@@ -329,3 +329,68 @@ test_that("savePlpData removes optional files left by an earlier save into the s
   expect_null(loaded$simulationTruth)
   expect_equal(nrow(loaded$cohorts), 100)
 })
+
+test_that("Saved GLM models keep coefficient precision", {
+  model <- createGlmModel(
+    coefficients = data.frame(
+      covariateId = c(1002, 2002),
+      coefficient = c(4e-05, 0.1)
+    ),
+    intercept = -2,
+    mapping = "logistic"
+  )
+  path <- tempfile("saveGlmPrecision")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpModel(model, path)
+  loaded <- loadPlpModel(path)
+  expect_identical(loaded$model$coefficients$coefficient, c(4e-05, 0.1))
+  expect_equal(loaded$model$intercept, -2)
+
+  # the file stays plain numeric JSON readable by the standard loader
+  raw <- ParallelLogger::loadSettingsFromJson(file.path(path, "model.json"))
+  expect_true(is.numeric(raw$coefficients$coefficient))
+})
+
+test_that("Full precision JSON writer handles the settings shapes saved with models", {
+  object <- list(
+    tiny = 1.5e-12,
+    third = 1 / 3,
+    large = 123456789.123456,
+    negative = -7.25e-05,
+    vector = c(0.1, 2e-300),
+    missing = c(1.5, NA),
+    infinite = c(-Inf, Inf),
+    integers = 1:3,
+    flag = TRUE,
+    text = "__not a marker",
+    nothing = NULL,
+    frame = data.frame(covariateId = c(1, 2), maxValue = c(0.000012345, 987654.321)),
+    date = as.Date("2026-01-02"),
+    nested = list(inner = 5e-06)
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  PatientLevelPrediction:::saveSettingsToJsonFullPrecision(object, path)
+  loaded <- ParallelLogger::loadSettingsFromJson(path)
+
+  expect_identical(loaded$tiny, 1.5e-12)
+  expect_identical(loaded$third, 1 / 3)
+  expect_identical(loaded$large, 123456789.123456)
+  expect_identical(loaded$negative, -7.25e-05)
+  expect_identical(loaded$vector[1], 0.1)
+  # tiny values must survive instead of being rounded to zero; reading a number
+  # with an exponent this large back is not exact on every platform (R's
+  # conversion from text on macOS arm64), so this one is checked to tolerance
+  expect_equal(loaded$vector[2], 2e-300, tolerance = 1e-12)
+  expect_equal(loaded$missing, c(1.5, NA))
+  expect_true(is.nan(loaded$missing[2]) || is.na(loaded$missing[2]))
+  expect_equal(loaded$infinite, c(-Inf, Inf))
+  expect_equal(loaded$integers, 1:3)
+  expect_true(loaded$flag)
+  expect_equal(loaded$text, "__not a marker")
+  expect_true("nothing" %in% names(loaded))
+  expect_null(loaded$nothing)
+  expect_identical(loaded$frame$maxValue, c(0.000012345, 987654.321))
+  expect_equal(loaded$date, "2026-01-02")
+  expect_identical(loaded$nested$inner, 5e-06)
+})

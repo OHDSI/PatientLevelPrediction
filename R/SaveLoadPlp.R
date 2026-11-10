@@ -228,7 +228,7 @@ savePlpModel <- function(plpModel, dirPath) {
         as.data.frame(plpModel$preprocessing$tidyCovariates$normFactors)
     }
 
-    ParallelLogger::saveSettingsToJson(
+    saveSettingsToJsonFullPrecision(
       object = plpModel$preprocessing,
       fileName = file.path(dirPath, "preprocessing.json")
     )
@@ -937,10 +937,38 @@ applyMinCellCount <- function(
 }
 
 
+# ParallelLogger writes numbers with jsonlite's default 4 decimal places, which
+# zeroes small coefficients. Doubles are passed through as marked strings and the
+# marks removed from the JSON text, so the file keeps plain numbers at full precision.
+saveSettingsToJsonFullPrecision <- function(object, fileName) {
+  json <- as.character(ParallelLogger::convertSettingsToJson(markDoubles(object)))
+  json <- gsub('"__plpDouble__([^"]*)__"', "\\1", json)
+  write(json, normalizePath(fileName, mustWork = FALSE))
+}
+
+markDoubles <- function(x) {
+  if (is.list(x)) {
+    x[] <- lapply(x, markDoubles)
+    return(x)
+  }
+  if (!is.double(x) || is.object(x)) {
+    return(x)
+  }
+  marked <- sprintf("%.15g", x)
+  finite <- is.finite(x)
+  needsMoreDigits <- finite
+  needsMoreDigits[finite] <- as.numeric(marked[finite]) != x[finite]
+  marked[needsMoreDigits] <- sprintf("%.17g", x[needsMoreDigits])
+  # NA, NaN and Inf stay as the strings jsonlite would have written for them
+  marked[finite] <- paste0("__plpDouble__", marked[finite], "__")
+  attributes(marked) <- attributes(x)
+  marked
+}
+
 RtoJson <- function() {
   list(
     save = function(model, filePath) {
-      ParallelLogger::saveSettingsToJson(
+      saveSettingsToJsonFullPrecision(
         object = model,
         fileName = filePath
       )
