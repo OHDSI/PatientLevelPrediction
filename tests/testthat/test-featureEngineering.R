@@ -560,3 +560,48 @@ createRareData <- function(nPatients, featureRowIds, rowsPerPatient = 1) {
 remainingCovariates <- function(data) {
   sort(unique(as.data.frame(data$covariateData$covariates)$covariateId))
 }
+
+test_that("rare feature removal uses the whole training population as denominator", {
+  data <- createRareData(nPatients = 200, featureRowIds = 1:15)
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  result <- removeRareFeatures(data, createRareFeatureRemover(threshold = 0.1))
+
+  # 15 of 200 patients is 7.5%, below the 10% threshold
+  expect_equal(remainingCovariates(result), 1)
+  expect_equal(nrow(result$labels), 200)
+})
+
+test_that("rare feature removal counts patients, not rows", {
+  data <- createRareData(nPatients = 100, featureRowIds = 1:5, rowsPerPatient = 2)
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  result <- removeRareFeatures(data, createRareFeatureRemover(threshold = 0.08))
+
+  # 5 of 100 patients is 5%, even though the feature has 10 rows
+  expect_equal(remainingCovariates(result), 1)
+})
+
+test_that("rare feature removal keeps features above the threshold", {
+  data <- createRareData(nPatients = 100, featureRowIds = 1:15)
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  result <- removeRareFeatures(data, createRareFeatureRemover(threshold = 0.1))
+
+  expect_equal(remainingCovariates(result), c(1, 2))
+})
+
+test_that("saved rare feature removal replays on plpData without labels", {
+  data <- createRareData(nPatients = 100, featureRowIds = 1:15)
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  remover <- createRareFeatureRemover(threshold = 0.1)
+  attr(remover, "rareFeatures") <- 2
+  plpData <- structure(
+    list(cohorts = data.frame(rowId = 1:100), outcomes = data.frame(), covariateData = data$covariateData),
+    class = "plpData"
+  )
+
+  result <- removeRareFeatures(plpData, remover, done = TRUE)
+
+  expect_equal(remainingCovariates(result), 1)
+})

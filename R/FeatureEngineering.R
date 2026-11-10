@@ -998,26 +998,21 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       "Removing features rarer than threshold: ", featureEngineeringSettings$threshold,
       " from the data"
     )
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
+    rowIds <- populationRowIds(outData)
+    populationSize <- if (is.null(rowIds)) {
+      outData$covariateData$covariates %>%
+        dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
+        dplyr::pull()
+    } else {
+      length(rowIds)
+    }
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(count = dplyr::n()) %>%
+      dplyr::summarise(count = dplyr::n_distinct(.data$rowId)) %>%
       dplyr::collect()
     rareFeatures <- rareFeatures %>%
-      dplyr::mutate(ratio = .data$count / (
-        outData$covariateData$covariates %>%
-          dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
-          dplyr::pull()
-      )) %>%
+      dplyr::mutate(ratio = .data$count / populationSize) %>%
       dplyr::filter(.data$ratio <= featureEngineeringSettings$threshold) %>%
       dplyr::pull(c("covariateId"))
 
@@ -1034,15 +1029,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       "Applying rare feature removal with rate below: ",
       featureEngineeringSettings$threshold, " to test data"
     )
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::filter(
         !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
