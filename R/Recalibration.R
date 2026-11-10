@@ -28,7 +28,12 @@
 #'                                         data extracted from the CDM.
 #' @param returnModel                      Logical: return the refitted model
 #' @return
-#' An prediction dataframe with the predictions of the recalibrated model added
+#' A prediction data frame with the original model's predictions for
+#' `newPopulation` (evaluationType "validation") and one prediction per patient
+#' from the refitted model (evaluationType "recalibrationRefit"). The refitted
+#' model is fitted on these same patients, so its predictions are in-sample and
+#' their performance is optimistic. With `returnModel = TRUE`, a list with this
+#' `prediction` and the refitted `model`. `NULL` if the refit fails.
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
@@ -117,6 +122,10 @@ recalibratePlpRefit <- function(
     return(NULL)
   }
 
+  # fitPlp also returns out-of-fold predictions; those are not from the refitted model
+  if ("evaluationType" %in% names(newModel$prediction)) {
+    newModel$prediction <- newModel$prediction[newModel$prediction$evaluationType == "Train", , drop = FALSE]
+  }
   newModel$prediction$evaluationType <- "recalibrationRefit"
 
   oldPred <- predictPlp(

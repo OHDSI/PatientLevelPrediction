@@ -17,7 +17,12 @@ data extracted from the CDM.}
 \item{returnModel}{Logical: return the refitted model}
 }
 \value{
-An prediction dataframe with the predictions of the recalibrated model added
+A prediction data frame with the original model's predictions for
+\code{newPopulation} (evaluationType "validation") and one prediction per patient
+from the refitted model (evaluationType "recalibrationRefit"). The refitted
+model is fitted on these same patients, so its predictions are in-sample and
+their performance is optimistic. With \code{returnModel = TRUE}, a list with this
+\code{prediction} and the refitted \code{model}. \code{NULL} if the refit fails.
 }
 \description{
 Recalibrating a model by refitting it

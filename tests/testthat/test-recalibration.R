@@ -679,3 +679,25 @@ test_that("recalibratePlpRefit ignores covariates of patients outside newPopulat
   contaminatedRows <- contaminated$plpData$covariateData$covariates %>% dplyr::collect()
   expect_equal(sum(contaminatedRows$rowId == 121), 1)
 })
+
+test_that("recalibratePlpRefit returns one full-model prediction per patient", {
+  skip_if_not_installed("Cyclops")
+  fixture <- refitFixture()
+  withr::defer(Andromeda::close(fixture$plpData$covariateData))
+
+  fit <- withr::with_seed(42, recalibratePlpRefit(
+    plpModel = fixture$model,
+    newPopulation = fixture$population,
+    newData = fixture$plpData,
+    returnModel = TRUE
+  ))
+
+  refitRows <- recalRows(fit$prediction, "recalibrationRefit")
+  expect_equal(nrow(refitRows), 120)
+  expect_equal(anyDuplicated(refitRows$rowId), 0)
+  expect_equal(nrow(recalRows(fit$prediction, "validation")), 120)
+  expect_equal(sum(refitRows$outcomeCount), 60)
+  expect_equal(refitRows$value[refitRows$rowId %in% 1:60], rep(0.25, 60), tolerance = 1e-3)
+  expect_equal(refitRows$value[refitRows$rowId %in% 61:120], rep(0.75, 60), tolerance = 1e-3)
+  expect_equal(nrow(fit$model$prediction), 120)
+})
