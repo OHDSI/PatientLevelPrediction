@@ -444,7 +444,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
     cohortTable = NULL,
     cdmVersion = 5,
     targetId = 1,
-    outcomeIds = 3
+    outcomeIds = outcomeIds
   )
   metaData$restrictPlpDataSettings <- PatientLevelPrediction::createRestrictPlpDataSettings()
   metaData$covariateSettings <- FeatureExtraction::createCovariateSettings(
@@ -456,16 +456,16 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
 
   attrition <- data.frame(
-    outcomeId = 3, description = "Simulated data",
+    outcomeId = outcomeIds, description = "Simulated data",
     targetCount = nrow(cohorts), uniquePeople = nrow(cohorts),
-    outcomes = nrow(outcomes)
+    outcomes = vapply(outcomeIds, function(id) sum(allOutcomes$outcomeId == id), numeric(1))
   )
   attr(cohorts, "metaData") <- list(
     targetId = 1,
     attrition = attrition
   )
 
-  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = 3)
+  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = outcomeIds)
 
   attr(covariateData, "metaData") <- list(populationSize = n, cohortId = 1)
 

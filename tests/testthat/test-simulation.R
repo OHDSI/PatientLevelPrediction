@@ -1051,3 +1051,55 @@ test_that("simulateGenderCovariates handles profiles missing gender covariates",
   zeroPrevalence <- simulateGenderCovariates(c("8532001" = 0, "8507001" = 0), n = 10)
   expect_equal(sum(zeroPrevalence$gender == 8507), 5)
 })
+
+test_that("simulatePlpData preserves configured outcome ids in metadata and attrition", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulateWithOutcomeIds <- function(outcomeIds) {
+    profile <- simulationProfile
+    profile$metaData$databaseDetails$outcomeIds <- outcomeIds
+    profile$outcomeModels <- list(
+      c("(Intercept)" = -1.5, "1002" = 0.01),
+      c("(Intercept)" = -3, "1002" = 0.01)
+    )
+    profile$outcomeModelPlpModels <- list(NULL, NULL)
+    simulatePlpData(profile, n = 1000, seed = 42)
+  }
+
+  for (outcomeIds in list(c(99, 3), c(3, 99))) {
+    simulated <- simulateWithOutcomeIds(outcomeIds)
+    expect_equal(simulated$metaData$databaseDetails$outcomeIds, outcomeIds)
+    expect_equal(attr(simulated$outcomes, "metaData")$outcomeIds, outcomeIds)
+
+    attrition <- attr(simulated$cohorts, "metaData")$attrition
+    expect_equal(attrition$outcomeId, outcomeIds)
+    expect_equal(attrition$targetCount, rep(nrow(simulated$cohorts), 2))
+    expect_equal(
+      attrition$outcomes,
+      vapply(outcomeIds, function(id) sum(simulated$outcomes$outcomeId == id), numeric(1))
+    )
+    Andromeda::close(simulated$covariateData)
+  }
+})
+
+test_that("simulatePlpData outcome metadata drives the default study population", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  profile <- simulationProfile
+  profile$metaData$databaseDetails$outcomeIds <- c(99, 3)
+  profile$outcomeModels <- list(
+    c("(Intercept)" = -1.5, "1002" = 0.01),
+    c("(Intercept)" = -3, "1002" = 0.01)
+  )
+  profile$outcomeModelPlpModels <- list(NULL, NULL)
+  simulated <- simulatePlpData(profile, n = 1000, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+
+  settings <- createStudyPopulationSettings(
+    includeAllOutcomes = TRUE, removeSubjectsWithPriorOutcome = FALSE,
+    requireTimeAtRisk = FALSE, riskWindowStart = 0, riskWindowEnd = 365
+  )
+  population <- createStudyPopulation(simulated, populationSettings = settings)
+  expect_equal(attr(population, "metaData")$outcomeId, 99)
+  attrition <- attr(population, "metaData")$attrition
+  expect_equal(unique(attrition$outcomeId), 99)
+  expect_equal(attrition$outcomes[1], sum(simulated$outcomes$outcomeId == 99))
+})
