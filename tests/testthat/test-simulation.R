@@ -1007,3 +1007,47 @@ test_that("simulatePlpBenchmarkData targets outcome rate with shifted linear pre
   truth <- benchmarkData$simulationTruth
   expect_equal(mean(truth$trueRisk), 0.2, tolerance = 1e-5)
 })
+
+test_that("simulatePlpData keeps cohort gender consistent with the gender covariates", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 400, seed = 123)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+  genderCovariates <- as.data.frame(
+    simulated$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% c(8532001, 8507001)) %>%
+      dplyr::collect()
+  )
+  cohorts <- simulated$cohorts
+
+  # Each person has exactly one gender covariate and it matches the cohort gender.
+  expect_equal(sort(as.numeric(genderCovariates$rowId)), sort(as.numeric(cohorts$rowId)))
+  genderCovariates <- genderCovariates[order(genderCovariates$rowId), ]
+  expect_equal(
+    as.numeric(genderCovariates$covariateId),
+    ifelse(cohorts$gender[order(cohorts$rowId)] == 8532, 8532001, 8507001)
+  )
+  prevalence <- simulationProfile$covariateInfo$covariatePrevalence
+  femaleShare <- prevalence[["8532001"]] / (prevalence[["8532001"]] + prevalence[["8507001"]])
+  expect_equal(mean(cohorts$gender == 8532), femaleShare, tolerance = 0.05)
+})
+
+test_that("simulateGenderCovariates handles profiles missing gender covariates", {
+  set.seed(1)
+  noGender <- simulateGenderCovariates(c("1002" = 1), n = 100)
+  expect_null(noGender$covariates)
+  expect_equal(sum(noGender$gender == 8507), 50)
+  expect_setequal(noGender$gender, c(8532, 8507))
+
+  onlyFemale <- simulateGenderCovariates(c("1002" = 1, "8532001" = 0.3), n = 100)
+  expect_equal(sum(onlyFemale$gender == 8532), 30, tolerance = 2)
+  expect_equal(onlyFemale$covariateIds, 8532001)
+  expect_equal(unique(onlyFemale$covariates$covariateId), 8532001)
+  expect_equal(sort(onlyFemale$covariates$rowId), which(onlyFemale$gender == 8532))
+
+  onlyMale <- simulateGenderCovariates(c("8507001" = 0.25), n = 100)
+  expect_equal(sum(onlyMale$gender == 8507), 25, tolerance = 2)
+  expect_equal(unique(onlyMale$covariates$covariateId), 8507001)
+
+  zeroPrevalence <- simulateGenderCovariates(c("8532001" = 0, "8507001" = 0), n = 10)
+  expect_equal(sum(zeroPrevalence$gender == 8507), 5)
+})

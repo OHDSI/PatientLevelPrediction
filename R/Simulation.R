@@ -385,8 +385,13 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
     dplyr::filter(.data$covariateId == 1002) %>%
     dplyr::arrange(.data$rowId) %>%
     dplyr::pull(.data$covariateValue)
-  cohorts$gender <- 8532 # female
-  cohorts$gender[sample((seq_len(nrow(cohorts))), nrow(cohorts) / 2)] <- 8507
+  simulatedGender <- simulateGenderCovariates(covariatePrevalence, n = nrow(cohorts))
+  cohorts$gender <- simulatedGender$gender
+  if (!is.null(simulatedGender$covariates)) {
+    covariateData$covariates <- covariateData$covariates %>%
+      dplyr::filter(!.data$covariateId %in% !!simulatedGender$covariateIds)
+    Andromeda::appendToTable(covariateData$covariates, simulatedGender$covariates)
+  }
 
   writeLines("Generating outcomes")
   allOutcomes <- vector("list", length(plpDataSimulationProfile$metaData$databaseDetails$outcomeIds))
@@ -475,6 +480,44 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
   class(result) <- "plpData"
   return(result)
+}
+
+simulateGenderCovariates <- function(covariatePrevalence, n) {
+  genderConceptIds <- c(8532, 8507) # female, male
+  covariateIds <- genderConceptIds * 1000 + 1 # FeatureExtraction's gender covariate ids
+  prevalence <- as.numeric(covariatePrevalence[as.character(covariateIds)])
+  hasCovariate <- !is.na(prevalence)
+
+  # A profile with only one of the two covariates implies the other as its complement.
+  maleShare <- 0.5
+  if (all(hasCovariate)) {
+    maleShare <- prevalence[2] / sum(prevalence)
+  } else if (hasCovariate[2]) {
+    maleShare <- prevalence[2]
+  } else if (hasCovariate[1]) {
+    maleShare <- 1 - prevalence[1]
+  }
+  if (!is.finite(maleShare)) {
+    maleShare <- 0.5
+  }
+  maleShare <- min(max(maleShare, 0), 1)
+
+  gender <- rep(genderConceptIds[1], n)
+  gender[sample(seq_len(n), n * maleShare)] <- genderConceptIds[2]
+
+  if (!any(hasCovariate)) {
+    return(list(gender = gender))
+  }
+  rowHasCovariate <- hasCovariate[match(gender, genderConceptIds)]
+  return(list(
+    gender = gender,
+    covariateIds = covariateIds[hasCovariate],
+    covariates = data.frame(
+      rowId = seq_len(n)[rowHasCovariate],
+      covariateId = covariateIds[match(gender[rowHasCovariate], genderConceptIds)],
+      covariateValue = 1
+    )
+  ))
 }
 
 predictSimulationOutcomeRisk <- function(outcomeModel, plpModel, cohorts, covariateData, metaData) {
