@@ -389,19 +389,18 @@ predictCyclops <- function(plpModel, data, cohort) {
 
   if (predictionType == "survival") {
     if (!is.null(plpModel$model$baselineSurvival)) {
-      if (is.null(attr(cohort, "timepoint"))) {
-        timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
-      } else {
-        timepoint <- attr(cohort, "timepoint")
-      }
-      bhind <- which.min(abs(plpModel$model$baselineSurvival$time - timepoint))
+      timepoint <- getSurvivalTimepoint(
+        attr(cohort, "metaData")$populationSettings,
+        attr(cohort, "timepoint")
+      )
+      baselineSurvival <- baselineSurvivalAt(plpModel$model$baselineSurvival, timepoint)
       # 1- baseline survival(time)^ (exp(betas*values))
-      prediction$value <- 1 - plpModel$model$baselineSurvival$surv[bhind]^prediction$value
+      prediction$value <- 1 - baselineSurvival^prediction$value
 
 
       metaData <- list()
-      metaData$baselineSurvivalTimepoint <- plpModel$model$baselineSurvival$time[bhind]
-      metaData$baselineSurvival <- plpModel$model$baselineSurvival$surv[bhind]
+      metaData$baselineSurvivalTimepoint <- timepoint
+      metaData$baselineSurvival <- baselineSurvival
       metaData$offset <- 0
 
       attr(prediction, "metaData") <- metaData

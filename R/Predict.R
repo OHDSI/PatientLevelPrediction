@@ -26,7 +26,14 @@
 #' @param plpData                          An object of type \code{plpData} - the patient level prediction
 #'                                         data extracted from the CDM.
 #' @param population                       The population created using createStudyPopulation() who will have their risks predicted or a cohort without the outcome known
-#' @param timepoint                        The timepoint to predict risk (survival models only)
+#' @param timepoint                        Survival models only: the number of days since the start of the
+#'                                         time-at-risk window at which to predict risk, counted like
+#'                                         survivalTime (the first day of the window is day 1). The default
+#'                                         is the length of the window, riskWindowEnd - riskWindowStart + 1,
+#'                                         which needs both ends of the window anchored to the same date (both
+#'                                         cohort start or both cohort end). With other anchors the window
+#'                                         length differs between patients, so a timepoint must be given. A
+#'                                         timepoint after the end of the window is an error.
 #' @return A data frame containing the predicted risk values
 #' @examples
 #' coefficients <- data.frame(
@@ -52,6 +59,19 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
     stop("No plpData input")
   }
 
+  populationSettings <- attr(population, "metaData")$populationSettings
+  if (identical(attr(plpModel, "modelType"), "survival")) {
+    # one horizon, on the survivalTime scale, for the prediction and its evaluation
+    timepoint <- getSurvivalTimepoint(
+      populationSettings,
+      if (missing(timepoint)) NULL else timepoint
+    )
+    attr(population, "timepoint") <- timepoint
+  } else if (!missing(timepoint)) {
+    attr(population, "timepoint") <- timepoint
+  } else {
+    timepoint <- populationSettings$riskWindowEnd
+  }
 
   # do feature engineering/selection
   if (!is.null(plpModel$preprocessing$featureEngineering)) {
@@ -84,13 +104,6 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   ParallelLogger::logTrace("did tidy")
-
-  # add timepoint if not missing to population attribute
-  if (!missing(timepoint)) {
-    attr(population, "timepoint") <- timepoint
-  } else {
-    timepoint <- attr(population, "metaData")$populationSettings$riskWindowEnd
-  }
 
   # apply prediction function
   settings <- plpModel$modelDesign$modelSettings$settings
@@ -135,6 +148,63 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   return(prediction)
 }
 
+# Survival models are fitted, predicted and evaluated on the survivalTime scale:
+# days since the start of the time-at-risk window, counting that day as 1. Their
+# horizon is the length of the window, which is the same for every patient only
+# when both ends of the window have the same anchor. NULL when the anchors differ.
+getSurvivalHorizon <- function(populationSettings) {
+  if (is.null(populationSettings) ||
+    !identical(populationSettings$startAnchor, populationSettings$endAnchor)) {
+    return(NULL)
+  }
+  return(populationSettings$riskWindowEnd - populationSettings$riskWindowStart + 1)
+}
+
+# The timepoint at which a survival model predicts risk and is evaluated: the
+# given timepoint, which must lie within the time-at-risk window, or the window
+# length.
+getSurvivalTimepoint <- function(populationSettings, timepoint = NULL) {
+  horizon <- getSurvivalHorizon(populationSettings)
+  if (is.null(timepoint)) {
+    if (is.null(horizon)) {
+      reason <- if (is.null(populationSettings)) {
+        "the population has no populationSettings"
+      } else {
+        paste0(
+          "the time-at-risk window starts at ", populationSettings$startAnchor,
+          " and ends at ", populationSettings$endAnchor,
+          ", so its length differs between patients"
+        )
+      }
+      stop(
+        "A survival model predicts risk at a fixed time, but ", reason, ". ",
+        "Anchor both ends of the time-at-risk window to the same date ",
+        "(both cohort start or both cohort end), or give predictPlp() a timepoint."
+      )
+    }
+    return(horizon)
+  }
+  if (!is.numeric(timepoint) || length(timepoint) != 1 || !is.finite(timepoint) || timepoint <= 0) {
+    stop("timepoint must be one positive number of days since the start of the time-at-risk window.")
+  }
+  if (!is.null(horizon) && timepoint > horizon) {
+    stop(
+      "timepoint (", timepoint, ") is after the end of the time-at-risk window, which is ",
+      horizon, " days long, so there is no follow-up to predict or evaluate at."
+    )
+  }
+  return(timepoint)
+}
+
+# Baseline survival at a timepoint, read as the step function it is: the value at
+# the last baseline time at or before the timepoint, or 1 before the first one.
+baselineSurvivalAt <- function(baselineSurvival, timepoint) {
+  atOrBefore <- which(baselineSurvival$time <= timepoint)
+  if (length(atOrBefore) == 0) {
+    return(1)
+  }
+  return(baselineSurvival$surv[atOrBefore[which.max(baselineSurvival$time[atOrBefore])]])
+}
 
 
 applyFeatureEngineering <- function(

@@ -14,7 +14,14 @@ data extracted from the CDM.}
 
 \item{population}{The population created using createStudyPopulation() who will have their risks predicted or a cohort without the outcome known}
 
-\item{timepoint}{The timepoint to predict risk (survival models only)}
+\item{timepoint}{Survival models only: the number of days since the start of the
+time-at-risk window at which to predict risk, counted like
+survivalTime (the first day of the window is day 1). The default
+is the length of the window, riskWindowEnd - riskWindowStart + 1,
+which needs both ends of the window anchored to the same date (both
+cohort start or both cohort end). With other anchors the window
+length differs between patients, so a timepoint must be given. A
+timepoint after the end of the window is an error.}
 }
 \value{
 A data frame containing the predicted risk values

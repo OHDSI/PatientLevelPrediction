@@ -58,6 +58,11 @@ checkInputs <- function(inputs) {
     stop("Temporal covariates detected but chosen model does not support temporal covariates")
   }
 
+  if (identical(inputs$modelSettings$settings$modelType, "survival")) {
+    # stops when the time-at-risk window gives survival models no fixed horizon
+    getSurvivalTimepoint(inputs$populationSettings)
+  }
+
   for (inputName in inputNames[!inputNames %in% c("plpData", "outcomeId")]) {
     ParallelLogger::logDebug(paste0(
       names(inputs[[inputName]]), " : ",

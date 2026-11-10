@@ -221,6 +221,13 @@ setRidgeRegression <- function(
 #' @param tolerance   Numeric: maximum relative change in convergence criterion from successive iterations to achieve convergence
 #' @param maxIterations 	Integer: maximum iterations of Cyclops to attempt before returning a failed-to-converge error
 #'
+#' @details
+#' The model predicts the risk of the outcome by the end of the time-at-risk window,
+#' that is riskWindowEnd - riskWindowStart + 1 days after the window starts. Both ends
+#' of the window therefore need the same anchor (both cohort start or both cohort end);
+#' runPlp() stops otherwise. predictPlp() can predict at an earlier time with its
+#' timepoint argument.
+#'
 #' @return `modelSettings` object
 #' @examples
 #' coxL1 <- setCoxModel()

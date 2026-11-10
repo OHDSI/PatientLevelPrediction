@@ -111,3 +111,121 @@ test_that("applyTidyCovariateData", {
 
   expect_equal(sum(covariateIds[!covariateIds %in% newCovs] %in% remove), 10)
 })
+
+survivalWindow <- function(start, end, startAnchor = "cohort start", endAnchor = "cohort start") {
+  createStudyPopulationSettings(
+    riskWindowStart = start, startAnchor = startAnchor,
+    riskWindowEnd = end, endAnchor = endAnchor,
+    requireTimeAtRisk = FALSE
+  )
+}
+
+test_that("survival horizon is the length of a time-at-risk window with one anchor", {
+  expect_equal(getSurvivalHorizon(survivalWindow(1, 365)), 365)
+  expect_equal(getSurvivalHorizon(survivalWindow(0, 365)), 366)
+  expect_equal(getSurvivalHorizon(survivalWindow(30, 365)), 336)
+  expect_equal(getSurvivalHorizon(survivalWindow(0, 30, "cohort end", "cohort end")), 31)
+  expect_null(getSurvivalHorizon(survivalWindow(1, 365, endAnchor = "cohort end")))
+  expect_null(getSurvivalHorizon(NULL))
+})
+
+test_that("survival timepoint defaults to the window length and must lie within the window", {
+  delayed <- survivalWindow(30, 365)
+  mixed <- survivalWindow(1, 365, endAnchor = "cohort end")
+  expect_equal(getSurvivalTimepoint(delayed), 336)
+  expect_equal(getSurvivalTimepoint(delayed, 180), 180)
+  expect_equal(getSurvivalTimepoint(delayed, 336), 336)
+  expect_error(getSurvivalTimepoint(delayed, 337), "after the end of the time-at-risk window")
+  expect_error(getSurvivalTimepoint(delayed, 0), "positive number")
+  expect_error(getSurvivalTimepoint(mixed), "length differs between patients")
+  expect_equal(getSurvivalTimepoint(mixed, 180), 180)
+  expect_error(getSurvivalTimepoint(NULL), "no populationSettings")
+})
+
+test_that("Cox baseline survival is read as a step function at the timepoint", {
+  baseline <- list(time = c(10, 20, 30), surv = c(0.9, 0.8, 0.7))
+  # the nearest baseline time to 28 is 30, but survival at 28 is still that of day 20
+  expect_equal(baselineSurvivalAt(baseline, 28), 0.8)
+  expect_equal(baselineSurvivalAt(baseline, 30), 0.7)
+  expect_equal(baselineSurvivalAt(baseline, 100), 0.7)
+  expect_equal(baselineSurvivalAt(baseline, 5), 1)
+})
+
+test_that("a Cox model with a delayed risk window is predicted and evaluated at the window length", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
+  skip_on_cran()
+  populationSettings <- survivalWindow(30, 365)
+  result <- runPlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    analysisId = "coxDelayedWindow",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12),
+    modelSettings = setCoxModel(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE, runSampleData = FALSE, runFeatureEngineering = FALSE,
+      runPreprocessData = TRUE, runModelDevelopment = TRUE, runCovariateSummary = FALSE
+    ),
+    saveDirectory = file.path(saveLoc, "coxDelayedWindow")
+  )
+  expect_equal(max(result$prediction$survivalTime), 336)
+  expect_equal(attr(result$prediction, "metaData")$timepoint, 336)
+
+  # at the old horizon of 365 days these were not numbers, all NA, or an error
+  statistics <- result$performanceEvaluation$evaluationStatistics
+  survival <- statistics[statistics$metric == "Survival", ]
+  expect_setequal(survival$evaluation, c("Test", "Train"))
+  expect_true(all(survival$timepoint == 336))
+  expect_false(anyNA(suppressWarnings(as.numeric(survival$value))))
+  expect_false(anyNA(result$performanceEvaluation$calibrationSummary$observedIncidence))
+  expect_gt(nrow(result$performanceEvaluation$demographicSummary), 0)
+
+  population <- createStudyPopulation(plpData, outcomeId, populationSettings)
+  atWindowEnd <- predictPlp(result$model, plpData, population)
+  atDay30 <- predictPlp(result$model, plpData, population, timepoint = 30)
+  expect_equal(attr(atDay30, "metaData")$timepoint, 30)
+  expect_equal(atDay30$rowId, atWindowEnd$rowId)
+  expect_true(all(atDay30$value <= atWindowEnd$value))
+  expect_true(any(atDay30$value < atWindowEnd$value))
+  expect_error(
+    predictPlp(result$model, plpData, population, timepoint = 400),
+    "after the end of the time-at-risk window"
+  )
+
+  mixed <- createStudyPopulation(plpData, outcomeId, survivalWindow(1, 365, endAnchor = "cohort end"))
+  expect_error(predictPlp(result$model, plpData, mixed), "length differs between patients")
+})
+
+test_that("runPlp stops a survival model when the window ends have different anchors", {
+  skip_if_not_installed("Eunomia")
+  skip_if_offline()
+  mixed <- survivalWindow(1, 365, endAnchor = "cohort end")
+  expect_error(
+    checkInputs(list(
+      plpData = plpData, outcomeId = outcomeId,
+      populationSettings = mixed, modelSettings = setCoxModel(seed = 42)
+    )),
+    "length differs between patients"
+  )
+  expect_error(
+    runPlp(
+      plpData = plpData,
+      outcomeId = outcomeId,
+      analysisId = "coxMixedAnchors",
+      populationSettings = mixed,
+      modelSettings = setCoxModel(seed = 42),
+      logSettings = createLogSettings(verbosity = "FATAL"),
+      saveDirectory = file.path(saveLoc, "coxMixedAnchors")
+    ),
+    "Settings are invalid"
+  )
+  # binary models are unaffected
+  expect_true(checkInputs(list(
+    plpData = plpData, outcomeId = outcomeId,
+    populationSettings = mixed, modelSettings = setLassoLogisticRegression(seed = 42)
+  )))
+})
