@@ -1187,7 +1187,9 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
         dplyr::mutate(y = .data$covariateValue) %>%
         dplyr::select("y", "rowId")
       on.exit(numericData$y <- NULL, add = TRUE)
-      missIdx <- which(is.na(numericData$y %>% dplyr::pull(.data$y)))
+      missRowIds <- numericData$y %>%
+        dplyr::filter(is.na(.data$y)) %>%
+        dplyr::pull(.data$rowId)
       numericData$X <- numericData$imputedCovariates %>%
         dplyr::filter(.data$covariateId != varId) %>%
         dplyr::mutate(covariateValue = .data$imputedValue) %>%
@@ -1195,7 +1197,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       on.exit(numericData$X <- NULL, add = TRUE)
       Andromeda::appendToTable(numericData$X, binary$covariates)
       numericData$xMiss <- numericData$X %>%
-        dplyr::filter(.data$rowId %in% !!allRowIds[missIdx])
+        dplyr::filter(.data$rowId %in% !!missRowIds)
       on.exit(numericData$xMiss <- NULL, add = TRUE)
 
       imputer <-
@@ -1209,7 +1211,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       if (is.null(kPmm)) {
         kPmm <- 5
       }
-      nMissRows <- length(missIdx)
+      nMissRows <- length(missRowIds)
       nDonors <- if (!is.null(imputer$predictions)) nrow(imputer$predictions) else 0
       pmmResults <- pmmPredict(numericData, k = kPmm, imputer)
       varDelta <- Sys.time() - varStart

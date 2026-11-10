@@ -1452,6 +1452,34 @@ test_that("iterativeImpute apply path leaves untrained sparse numeric covariates
   expect_false(anyNA(allValues$covariateValue))
 })
 
+test_that("iterativeImpute apply path selects missing rows by rowId, not label order", {
+  skip_if_not_installed("glmnet")
+  settings <- makeSavedPmmSettings()
+  imputeWithLabels <- function(labelOrder) {
+    test <- makeImputationFixture(
+      rowIds = labelOrder,
+      covariates = data.frame(
+        rowId = c(1, 3, 1, 2, 3),
+        covariateId = c(100, 100, 200, 200, 200),
+        covariateValue = c(10, 30, 10, 30, 30)
+      ),
+      numericIds = c(100, 200)
+    )
+    withr::defer(Andromeda::close(test$covariateData))
+    applied <- withr::with_seed(42, {
+      PatientLevelPrediction:::iterativeImpute(test, settings, done = TRUE)
+    })
+    withr::defer(Andromeda::close(applied$covariateData))
+    covariateRows(applied, 100)
+  }
+
+  sortedRows <- imputeWithLabels(c(1, 2, 3))
+  permutedRows <- imputeWithLabels(c(3, 1, 2))
+
+  expect_equal(sortedRows$covariateValue, c(10, 30, 30))
+  expect_equal(permutedRows, sortedRows)
+})
+
 test_that("predictPlp imputes the requested population, including patients outside labels", {
   train <- makeImputationFixture(
     rowIds = 1:6,
