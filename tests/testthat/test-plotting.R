@@ -351,3 +351,26 @@ test_that("outcomeSurvivalPlot x axis is the window length unless the window end
   expect_equal(result$plot$coordinates$limits$x, c(0, max(population$survivalTime)))
   expect_false(max(population$survivalTime) == 365)
 })
+
+test_that("plotSparseCalibration ribbon is the pointwise CI of the fitted line", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  summary <- data.frame(
+    evaluation = "Test",
+    averagePredictedProbability = c(0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5),
+    observedIncidence = c(0.06, 0.08, 0.17, 0.18, 0.27, 0.28, 0.37, 0.38, 0.47, 0.48)
+  )
+  plots <- capturePlots(plotSparseCalibration(list(performanceEvaluation = list(calibrationSummary = summary))))
+  data <- plots[[1]]$data
+  model <- stats::lm(observedIncidence ~ averagePredictedProbability, data = summary)
+  expected <- stats::predict(
+    model,
+    newdata = data.frame(averagePredictedProbability = data$x),
+    interval = "confidence"
+  )
+  expect_equal(data$lci, unname(expected[, "lwr"]))
+  expect_equal(data$uci, unname(expected[, "upr"]))
+  # the band is narrowest around the mean of the points, unlike joined marginal limits
+  width <- data$uci - data$lci
+  expect_equal(which.min(width), which.min(abs(data$x - mean(summary$averagePredictedProbability))))
+})

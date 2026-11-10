@@ -975,14 +975,18 @@ plotSparseCalibration <- function(
     res <- model$coefficients
     names(res) <- c("Intercept", "Gradient")
 
-    # confidence int
-    interceptConf <- stats::confint(model)[1, ]
-    gradientConf <- stats::confint(model)[2, ]
+    # pointwise 95% confidence interval of the fitted line
+    grid <- seq(0, 1, length.out = nrow(x))
+    fitted <- stats::predict(
+      model,
+      newdata = data.frame(averagePredictedProbability = grid),
+      interval = "confidence"
+    )
 
     cis <- data.frame(
-      lci = interceptConf[1] + seq(0, 1, length.out = nrow(x)) * gradientConf[1],
-      uci = interceptConf[2] + seq(0, 1, length.out = nrow(x)) * gradientConf[2],
-      x = seq(0, 1, length.out = nrow(x))
+      lci = fitted[, "lwr"],
+      uci = fitted[, "upr"],
+      x = grid
     )
 
     x <- cbind(x, cis)
