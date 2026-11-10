@@ -280,6 +280,15 @@ applyTidyCovariateData <- function(
       dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
   }
 
+  deletedCovariateTimeIds <- preprocessSettings$deletedRedundantCovariateTimeIds
+  if (length(deletedCovariateTimeIds) > 0 &&
+    "timeId" %in% colnames(newCovariateData$covariates)) {
+    newCovariateData$deletedCovariateTimeIds <- as.data.frame(deletedCovariateTimeIds)
+    newCovariateData$covariates <- newCovariateData$covariates %>%
+      dplyr::anti_join(newCovariateData$deletedCovariateTimeIds, by = c("covariateId", "timeId"))
+    newCovariateData$deletedCovariateTimeIds <- NULL
+  }
+
   # reduce covariateRef
   newCovariateData$covariateRef <- covariateData$covariateRef %>%
     dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
