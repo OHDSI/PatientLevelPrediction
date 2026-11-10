@@ -224,21 +224,22 @@ permute <- function(plpDataLocation, cId, population) {
 
   # if analysis id is not 3 (age group), 4 (race) or 5 (ethnicity)
   if (!aId$analysisId %in% c(3, 4, 5)) {
-    # select covariateId data
+    # select covariateId data of the evaluated population only
     coi <- plpData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId == !!cId) %>%
       dplyr::collect()
-    nSamp <- length(coi$rowId)
+    coi <- coi[coi$rowId %in% population$rowId, ]
 
     # find a new random selection of people and give them the covariate and value
-    newPlp <- sample(population$rowId, nSamp)
-    newData <- dplyr::as_tibble(cbind(rowId = newPlp, coi[, -1]))
+    newData <- dplyr::mutate(coi, rowId = sample(population$rowId, nrow(coi)))
 
     # swap old covariate data with new
     plpData$covariateData$covariates <- plpData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId != !!cId) %>%
       dplyr::collect()
-    Andromeda::appendToTable(plpData$covariateData$covariates, newData)
+    if (nrow(newData) > 0) {
+      Andromeda::appendToTable(plpData$covariateData$covariates, newData)
+    }
   } else {
     # do some code for the connected variables... with more than 2 options
 
