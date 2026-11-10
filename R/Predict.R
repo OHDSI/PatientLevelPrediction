@@ -75,6 +75,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
   # do feature engineering/selection
   if (!is.null(plpModel$preprocessing$featureEngineering)) {
+    # imputers fill in the rows in labels, which must be the rows predicted
+    plpData$labels <- population
     plpData <- do.call(
       applyFeatureEngineering,
       list(

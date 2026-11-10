@@ -1308,3 +1308,91 @@ test_that("iterativeImpute keeps missing indicators separate from colliding cova
   expect_false(any(indicatorIds %in% c(10010, 11010)))
   expect_equal(covariateRows(fitted, 11010)$covariateValue, x)
 })
+
+test_that("simpleImpute apply path imputes patients with no observed numeric values", {
+  for (method in c("mean", "median")) {
+    train <- makeImputationFixture(
+      rowIds = 1:6,
+      covariates = rbind(
+        data.frame(rowId = 1:4, covariateId = 10, covariateValue = c(10, 20, 30, 60)),
+        data.frame(rowId = 1:6, covariateId = 20, covariateValue = 1)
+      ),
+      numericIds = 10,
+      binaryIds = 20,
+      folds = TRUE
+    )
+    withr::defer(Andromeda::close(train$covariateData))
+    settings <- createSimpleImputer(
+      method = method,
+      missingThreshold = 0.5,
+      addMissingIndicator = TRUE
+    )
+    fitted <- PatientLevelPrediction:::simpleImpute(train, settings, done = FALSE)
+    withr::defer(Andromeda::close(fitted$covariateData))
+    saved <- savedImputerSettings(fitted, "simpleImputer")
+    indicatorId <- attr(saved, "missingIndicatorInfo")$map$indicatorCovariateId
+
+    test <- makeImputationFixture(
+      rowIds = c(101, 102),
+      covariates = rbind(
+        data.frame(rowId = 101, covariateId = 10, covariateValue = 5),
+        data.frame(rowId = c(101, 102), covariateId = 20, covariateValue = 1)
+      ),
+      numericIds = 10,
+      binaryIds = 20
+    )
+    withr::defer(Andromeda::close(test$covariateData))
+    applied <- PatientLevelPrediction:::simpleImpute(test, saved, done = TRUE)
+    withr::defer(Andromeda::close(applied$covariateData))
+
+    expected <- if (method == "mean") 30 else 25
+    labRows <- covariateRows(applied, 10)
+    expect_equal(labRows$rowId, c(101, 102))
+    expect_equal(labRows$covariateValue, c(5, expected))
+    indicatorRows <- covariateRows(applied, indicatorId)
+    expect_equal(indicatorRows$rowId, 102)
+    expect_equal(indicatorRows$covariateValue, 1)
+  }
+})
+
+test_that("predictPlp imputes the requested population, including patients outside labels", {
+  train <- makeImputationFixture(
+    rowIds = 1:6,
+    covariates = rbind(
+      data.frame(rowId = 1:4, covariateId = 10, covariateValue = c(10, 20, 30, 60)),
+      data.frame(rowId = 1:6, covariateId = 20, covariateValue = 1)
+    ),
+    numericIds = 10,
+    binaryIds = 20,
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(train$covariateData))
+  settings <- createSimpleImputer(method = "mean", missingThreshold = 0.5)
+  fitted <- PatientLevelPrediction:::simpleImpute(train, settings, done = FALSE)
+  withr::defer(Andromeda::close(fitted$covariateData))
+  featureEngineering <- attr(fitted$covariateData, "metaData")$featureEngineering$simpleImputer
+
+  model <- createGlmModel(
+    coefficients = data.frame(covariateId = 10, coefficient = 1),
+    intercept = 0,
+    mapping = "linear",
+    featureEngineering = featureEngineering
+  )
+  test <- makeImputationFixture(
+    rowIds = 102,
+    covariates = rbind(
+      data.frame(rowId = 101, covariateId = 10, covariateValue = 5),
+      data.frame(rowId = c(101, 102, 103), covariateId = 20, covariateValue = 1)
+    ),
+    numericIds = 10,
+    binaryIds = 20
+  )
+  withr::defer(Andromeda::close(test$covariateData))
+  population <- data.frame(rowId = c(101, 102, 103), outcomeCount = 0)
+
+  prediction <- predictPlp(model, test, population)
+  prediction <- prediction[order(prediction$rowId), ]
+
+  expect_equal(prediction$rowId, c(101, 102, 103))
+  expect_equal(prediction$value, c(5, 30, 30))
+})

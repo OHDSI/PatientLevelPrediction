@@ -964,10 +964,6 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     numericData <- featureData[[1]]
     on.exit(numericData <- NULL, add = TRUE)
     # impute missing values
-    allRowIds <- numericData$covariates %>%
-      dplyr::pull(.data$rowId) %>%
-      unique() %>%
-      sort()
     numericData$imputedValues <- attr(featureEngineeringSettings, "imputer")
     indicatorMap <- NULL
     if (isTRUE(featureEngineeringSettings$addMissingIndicator)) {
@@ -982,7 +978,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
       outputData = outputData,
       covariates = numericData$covariates,
       imputedValues = numericData$imputedValues,
-      rowIds = allRowIds,
+      rowIds = outputData$labels$rowId,
       indicatorMap = indicatorMap,
       tempData = numericData
     )
