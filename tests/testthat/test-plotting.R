@@ -374,3 +374,60 @@ test_that("plotSparseCalibration ribbon is the pointwise CI of the fitted line",
   width <- data$uci - data$lci
   expect_equal(which.min(width), which.min(abs(data$x - mean(summary$averagePredictedProbability))))
 })
+
+test_that("plotSparseCalibration2 plots stored Kaplan-Meier bounds for survival summaries", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  skip_if_not_installed("survival")
+  prediction <- data.frame(
+    rowId = 1:100, value = 0.1,
+    outcomeCount = c(rep(0, 90), 1, rep(0, 9)),
+    survivalTime = c(rep(10, 90), 20, rep(30, 9)),
+    evaluation = "Test"
+  )
+  summary <- suppressWarnings(getCalibrationSummary(
+    prediction, "survival",
+    typeColumn = "evaluation", numberOfStrata = 10, truncateFraction = 0.01
+  ))
+  plots <- capturePlots(plotSparseCalibration2(list(performanceEvaluation = list(calibrationSummary = summary))))
+  data <- plots[[1]]$data
+  expect_equal(data$lci, summary$observedIncidenceLB)
+  expect_equal(data$uci, summary$observedIncidenceUB)
+  # not the narrower binomial interval from the fabricated event count
+  binom <- stats::binom.test(round(summary$observedIncidence * summary$PersonCountAtRisk), summary$PersonCountAtRisk)$conf.int
+  expect_gt(data$uci - data$lci, binom[2] - binom[1])
+})
+
+test_that("plotSparseCalibration2 keeps binomial intervals for binary summaries", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  summary <- data.frame(
+    evaluation = "Test",
+    averagePredictedProbability = c(0.1, 0.2),
+    observedIncidence = c(0.1, 0.25),
+    PersonCountAtRisk = c(100, 40)
+  )
+  plots <- capturePlots(plotSparseCalibration2(list(performanceEvaluation = list(calibrationSummary = summary))))
+  data <- plots[[1]]$data
+  expected <- stats::binom.test(10, 100)$conf.int
+  expect_equal(data$lci[1], expected[1])
+  expect_equal(data$uci[1], expected[2])
+})
+
+makeSurvivalNetBenefitResult <- function(censorTime, timepoint = 365, addModelType = TRUE) {
+  prediction <- data.frame(
+    rowId = 1:4,
+    value = c(0.1, 0.2, 0.3, 0.4),
+    outcomeCount = c(1, 0, 0, 0),
+    survivalTime = c(100, censorTime, 365, 365),
+    evaluationType = "Test",
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = if (addModelType) "survival" else NULL, timepoint = timepoint)
+  list(
+    prediction = prediction,
+    performanceEvaluation = list(
+      calibrationSummary = data.frame(evaluation = "Test", averagePredictedProbability = 0.25, observedIncidence = 0.33)
+    )
+  )
+}

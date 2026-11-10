@@ -1068,12 +1068,22 @@ plotSparseCalibration2 <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>%
       dplyr::filter(.data[[typeColumn]] == evalType) %>%
-      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk") %>%
       dplyr::filter(!is.na(.data$observedIncidence))
 
-    cis <- apply(x, 1, function(x) stats::binom.test(round(x[2] * x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
-    x$lci <- cis[1, ]
-    x$uci <- cis[2, ]
+    # survival summaries store censoring-aware Kaplan-Meier bounds; binary summaries do not
+    if (all(c("observedIncidenceLB", "observedIncidenceUB") %in% colnames(x))) {
+      x <- x %>%
+        dplyr::select(
+          "averagePredictedProbability", "observedIncidence",
+          lci = "observedIncidenceLB", uci = "observedIncidenceUB"
+        )
+    } else {
+      x <- x %>%
+        dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
+      cis <- apply(x, 1, function(x) stats::binom.test(round(x[2] * x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
+      x$lci <- cis[1, ]
+      x$uci <- cis[2, ]
+    }
 
     maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence)) * 1.1
 
