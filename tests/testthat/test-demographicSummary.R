@@ -69,3 +69,42 @@ test_that("getDemographicSummary", {
   # check correct gender length
   expect_equal(length(unique(prediction$gender)), length(unique(demoSumSurv$genGroup)))
 })
+
+test_that("binary demographic summary does not count unknown genders as female", {
+  prediction <- data.frame(
+    rowId = 1:5,
+    ageYear = 52,
+    gender = c(8507, 8532, 0, 8551, NA),
+    value = c(0.2, 0.4, 0.6, 0.8, 0.5),
+    outcomeCount = c(0, 1, 0, 1, 0),
+    evaluation = "Test"
+  )
+  result <- getDemographicSummary(prediction, predictionType = "binary")
+  female <- result[which(result$genGroup == "Female"), ]
+  unknown <- result[which(result$genGroup == "Unknown"), ]
+  expect_equal(female$PersonCountAtRisk, 1)
+  expect_equal(female$PersonCountWithOutcome, 1)
+  expect_equal(female$averagePredictedProbability, 0.4)
+  expect_equal(unknown$PersonCountAtRisk, 2)
+  expect_equal(unknown$PersonCountWithOutcome, 1)
+  expect_equal(unknown$averagePredictedProbability, 0.7)
+  expect_equal(result$PersonCountAtRisk[is.na(result$genGroup)], 1)
+  expect_equal(result$PersonCountAtRisk[which(result$genGroup == "Male")], 1)
+})
+
+test_that("survival demographic summary does not count unknown genders as female", {
+  prediction <- data.frame(
+    rowId = 1:4,
+    ageYear = 52,
+    gender = c("8532", "8532", "0", "8551"),
+    value = c(0.2, 0.4, 0.6, 0.8),
+    outcomeCount = c(1, 0, 1, 0),
+    survivalTime = c(100, 500, 100, 500),
+    evaluation = "Test"
+  )
+  result <- getDemographicSummary_survival(prediction, "evaluation", timepoint = 365)
+  expect_setequal(result$genGroup, c("Female", "Unknown"))
+  expect_equal(result$PersonCountAtRisk[result$genGroup == "Female"], 2)
+  expect_equal(result$PersonCountAtRisk[result$genGroup == "Unknown"], 2)
+  expect_equal(as.numeric(result$observedRisk[result$genGroup == "Female"]), 1 / 2)
+})

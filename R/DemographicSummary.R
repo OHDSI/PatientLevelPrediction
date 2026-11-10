@@ -79,7 +79,7 @@ getDemographicSummary_binary <- function(prediction, evalColumn, ...) {
         ageId = floor(.data$ageYear / 5),
         ageGroup = paste0("Age group: ", floor(.data$ageYear / 5) * 5, "-", floor(.data$ageYear / 5) * 5 + 4),
         genId = .data$gender,
-        genGroup = ifelse(.data$gender == 8507, "Male", "Female")
+        genGroup = getGenderGroup(.data$gender)
       ) %>%
       dplyr::select("rowId", "ageId", "ageGroup", "genId", "genGroup") %>%
       dplyr::inner_join(predictionOfInterest[, colnames(predictionOfInterest) %in% c("rowId", "value", "outcomeCount", "survivalTime")], by = "rowId")
@@ -125,7 +125,7 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         ageId = floor(.data$ageYear / 5),
         ageGroup = paste0("Age group: ", floor(.data$ageYear / 5) * 5, "-", floor(.data$ageYear / 5) * 5 + 4),
         genId = .data$gender,
-        genGroup = ifelse(.data$gender == 8507, "Male", "Female")
+        genGroup = getGenderGroup(.data$gender)
       ) %>%
       dplyr::select("rowId", "ageId", "ageGroup", "genId", "genGroup") %>%
       dplyr::inner_join(predictionOfInterest[, colnames(predictionOfInterest) %in% c("rowId", "value", "outcomeCount", "survivalTime")], by = "rowId")
@@ -199,4 +199,13 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
 
   result <- as.data.frame(result)
   return(result)
+}
+
+# 8507 and 8532 are the OMOP male and female concepts; other concepts are neither.
+getGenderGroup <- function(gender) {
+  return(dplyr::case_when(
+    gender == 8507 ~ "Male",
+    gender == 8532 ~ "Female",
+    !is.na(gender) ~ "Unknown"
+  ))
 }
