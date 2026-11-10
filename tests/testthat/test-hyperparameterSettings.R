@@ -283,3 +283,83 @@ test_that("listCartesian works", {
   expect_equal(names(paramLists[[1]]), c("a", "b", "c"))
   expect_equal(length(paramLists[[1]]), 3)
 })
+
+drainIterator <- function(iterator) {
+  candidates <- list()
+  repeat {
+    candidate <- iterator$getNext(list())
+    if (is.null(candidate)) {
+      break
+    }
+    candidates[[length(candidates) + 1]] <- candidate
+  }
+  iterator$finalize(list())
+  candidates
+}
+
+test_that("expanded legacy grids honour random and custom searches", {
+  legacyGrid <- list(list(alpha = 1), list(alpha = 2), list(alpha = 3))
+  jsonGrid <- stats::setNames(legacyGrid, c("1", "2", "3"))
+
+  for (grid in list(legacyGrid, jsonGrid)) {
+    sampled <- drainIterator(prepareHyperparameterGrid(
+      grid,
+      createHyperparameterSettings(search = "random", sampleSize = 1, randomSeed = 7)
+    ))
+    expect_length(sampled, 1)
+    expect_true(sampled[[1]]$alpha %in% 1:3)
+
+    recorded <- NULL
+    fromFunction <- drainIterator(prepareHyperparameterGrid(
+      grid,
+      createHyperparameterSettings(generator = function(definition, expanded, settings) {
+        recorded <<- expanded
+        expanded[2]
+      })
+    ))
+    expect_equal(fromFunction, list(list(alpha = 2)))
+    expect_equal(recorded, legacyGrid)
+  }
+
+  served <- FALSE
+  initialized <- NULL
+  lifecycle <- list(
+    initialize = function(definition, settings) {
+      initialized <<- definition
+      invisible(NULL)
+    },
+    getNext = function(history) {
+      if (served) {
+        return(NULL)
+      }
+      served <<- TRUE
+      list(alpha = 3)
+    }
+  )
+  fromLifecycle <- drainIterator(prepareHyperparameterGrid(
+    legacyGrid, createHyperparameterSettings(generator = lifecycle)
+  ))
+  expect_equal(fromLifecycle, list(list(alpha = 3)))
+  expect_equal(initialized, legacyGrid)
+})
+
+test_that("expanded legacy grids still run every candidate under grid search", {
+  legacyGrid <- list(list(alpha = 1), list(alpha = 2))
+  jsonGrid <- stats::setNames(legacyGrid, c("1", "2"))
+
+  for (grid in list(legacyGrid, jsonGrid)) {
+    candidates <- drainIterator(prepareHyperparameterGrid(
+      grid, createHyperparameterSettings(search = "grid")
+    ))
+    expect_equal(candidates, legacyGrid)
+  }
+})
+
+sampleAlphas <- function(ambientSeed, randomSeed, definition = list(alpha = as.list(1:12))) {
+  set.seed(ambientSeed)
+  candidates <- drainIterator(prepareHyperparameterGrid(
+    definition,
+    createHyperparameterSettings(search = "random", sampleSize = 3, randomSeed = randomSeed)
+  ))
+  vapply(candidates, function(x) as.numeric(x$alpha), numeric(1))
+}

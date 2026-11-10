@@ -95,9 +95,10 @@ prepareHyperparameterGrid <- function(paramDefinition,
           length(paramDefinition) > 0 &&
           is.list(paramDefinition[[1]]) &&
           !is.null(names(paramDefinition[[1]]))) {
-        return(makeSequentialIterator(paramDefinition))
+        expanded <- unname(paramDefinition)
+      } else {
+        expanded <- listCartesian(paramDefinition)
       }
-      expanded <- listCartesian(paramDefinition)
 
       if (identical(settings$search, "grid")) {
         return(makeSequentialIterator(expanded))
