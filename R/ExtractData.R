@@ -581,7 +581,8 @@ summary.plpData <- function(object, ...) {
   )
   for (i in seq_len(nrow(outcomeCounts))) {
     outcomeCounts$eventCount[i] <- sum(object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i])
-    outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
+    outcomeRowIds <- object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]
+    outcomeCounts$personCount[i] <- length(unique(object$cohorts$subjectId[object$cohorts$rowId %in% outcomeRowIds]))
   }
 
   covDetails <- FeatureExtraction::summary(object$covariateData)

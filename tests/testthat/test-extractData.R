@@ -152,6 +152,21 @@ test_that("Print and print summary plpData work", {
   expect_true(any(grepl("Number of non-zero covariate values: 21949", printed)))
 })
 
+test_that("summary.plpData counts distinct people per outcome", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 20, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData))
+  outcomes <- data.frame(rowId = c(1, 2, 3), outcomeId = 3, outcomeCount = 1, daysToEvent = c(5, 8, 7))
+  attr(outcomes, "metaData") <- attr(simulated$outcomes, "metaData")
+  simulated$outcomes <- outcomes
+  # Rows 1 and 2 are two target-cohort entries of the same person.
+  simulated$cohorts$subjectId[2] <- simulated$cohorts$subjectId[1]
+
+  counts <- summary(simulated)$outcomeCounts
+  expect_equal(counts$eventCount, 3)
+  expect_equal(counts$personCount, 2)
+})
+
 test_that("getPlpData with restrict by dates only", {
   skip_if_offline()
   skip_if_not_installed("Eunomia")
