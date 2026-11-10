@@ -1125,6 +1125,8 @@ plotSparseCalibration2 <- function(
 #' was defined: from utopia to empirical data" (2016)
 #'
 #' @details
+#' Only binary models are supported. For survival models use \code{\link{plotSparseCalibration2}}.
+#'
 #' Create a plot showing the smoothed calibration
 #' @param plpResult       The result of running \code{\link{runPlp}} function. An object containing the
 #'                        model or location where the model is save, the data selection settings, the
@@ -1180,6 +1182,13 @@ plotSmoothCalibration <- function(plpResult,
   }
   if (nKnots < 3) {
     stop(ParallelLogger::logError("Number of knots must be larger than 3"))
+  }
+  # The fit uses outcomeCount, which counts people censored before the horizon as non-cases (#270).
+  if (identical(attr(plpResult$prediction, "metaData")$modelType, "survival") ||
+    identical(attr(plpResult$model, "modelType"), "survival")) {
+    errorMessage <- "plotSmoothCalibration does not support survival models. Use plotSparseCalibration2 instead."
+    ParallelLogger::logError(errorMessage)
+    stop(errorMessage)
   }
   if (smooth == "rcs") {
     rlang::check_installed("mgcv",

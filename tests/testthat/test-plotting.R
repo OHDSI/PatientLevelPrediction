@@ -520,3 +520,35 @@ test_that("plotDemographicSummary band is the spread of individual predicted ris
     expect_equal((row$upper - row$lower) / 2, 1.96 * stats::sd(prediction$value), tolerance = 1e-6)
   }
 })
+
+test_that("plotSmoothCalibration refuses survival models", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("survival")
+  n <- 200
+  set.seed(1)
+  prediction <- data.frame(
+    rowId = 1:n,
+    value = stats::runif(n, 0.2, 0.5),
+    outcomeCount = c(rep(0, 50), rep(c(1, 0, 0, 0), length.out = 150)),
+    survivalTime = c(rep(10, 50), rep(365, 150)),
+    evaluationType = "Test", evaluation = "Test"
+  )
+  prediction$survivalTime[prediction$outcomeCount == 1] <- 100
+  attr(prediction, "metaData") <- list(modelType = "survival", timepoint = 365)
+  summary <- getCalibrationSummary(prediction, "survival", typeColumn = "evaluation", numberOfStrata = 10, truncateFraction = 0.01)
+  plpResult <- list(prediction = prediction, performanceEvaluation = list(calibrationSummary = summary))
+
+  expect_error(
+    plotSmoothCalibration(plpResult, smooth = "loess", typeColumn = "evaluation"),
+    "does not support survival"
+  )
+
+  modelOnly <- list(
+    model = structure(list(), modelType = "survival"),
+    performanceEvaluation = list(calibrationSummary = summary)
+  )
+  expect_error(plotSmoothCalibration(modelOnly, typeColumn = "evaluation"), "does not support survival")
+
+  # the plot the error points to works for the same result
+  expect_no_error(capturePlots(plotSparseCalibration2(plpResult, typeColumn = "evaluation")))
+})

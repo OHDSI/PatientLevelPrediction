@@ -53,6 +53,8 @@ Plot the smooth calibration as detailed in Calster et al. "A calibration heirarc
 was defined: from utopia to empirical data" (2016)
 }
 \details{
+Only binary models are supported. For survival models use \code{\link{plotSparseCalibration2}}.
+
 Create a plot showing the smoothed calibration
 }
 \examples{
