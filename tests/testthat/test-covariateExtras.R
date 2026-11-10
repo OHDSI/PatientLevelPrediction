@@ -326,3 +326,111 @@ test_that("normalizers scale count covariates and leave binary cohort covariates
   expect_equal(valuesFor(robust, binarySettings$covariateId), c(1, 1, 1))
   expect_equal(valuesFor(robust, countSettings$covariateId), c(-1, 0, 1))
 })
+
+test_that("cohort covariate settings record the analysisId reported in covariateRef", {
+  binary <- cohortCovariateSettingsFor()
+  expect_equal(binary$reportedAnalysisId, 456)
+  for (args in list(list(count = TRUE), list(ageInteraction = TRUE), list(lnAgeInteraction = TRUE))) {
+    nonBinary <- do.call(cohortCovariateSettingsFor, args)
+    expect_equal(nonBinary$reportedAnalysisId, 1456)
+    # covariateId keeps the configured analysisId, so stored models keep matching
+    expect_equal(nonBinary$covariateId, binary$covariateId)
+  }
+  custom <- cohortCovariateSettingsFor(count = TRUE, analysisId = 668)
+  expect_equal(custom$reportedAnalysisId, 1668)
+  roundTrip <- ParallelLogger::convertJsonToSettings(ParallelLogger::convertSettingsToJson(custom))
+  expect_equal(roundTrip$reportedAnalysisId, 1668)
+})
+
+test_that("getCohortCovariateData reports the analysisId stored in the settings", {
+  connection <- createCohortCovariateTestDb(
+    targetRows = data.frame(rowId = 1, subjectId = 1, cohortId = 1, startDate = "2020-06-01"),
+    covariateRows = data.frame(subjectId = 1, cohortId = 2, startDate = "2020-05-20")
+  )
+  on.exit(DatabaseConnector::disconnect(connection))
+
+  settings <- cohortCovariateSettingsFor(count = TRUE)
+  settings$reportedAnalysisId <- 1999
+  result <- extractCohortCovariate(connection, settings)
+  expect_equal(result$covariateRef$analysisId, 1999)
+  expect_equal(result$analysisRef$analysisId, 1999)
+
+  # settings saved before reportedAnalysisId existed
+  settings$reportedAnalysisId <- NULL
+  result <- extractCohortCovariate(connection, settings)
+  expect_equal(result$covariateRef$analysisId, 1456)
+  expect_equal(result$analysisRef$isBinary, "N")
+})
+
+test_that("mergeDuplicateAnalysisRef keeps one row per analysisId so aggregation counts covariates once", {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(1, 1, 2, 1, 2),
+      covariateId = c(201456, 203456, 203456, 202456, 202456),
+      covariateValue = c(1, 1, 1, 3, 1)
+    ),
+    covariateRef = data.frame(
+      covariateId = c(201456, 202456, 203456), covariateName = c("a", "b", "c"),
+      analysisId = c(456, 1456, 456), conceptId = -1
+    ),
+    # one row per cohort covariate setting, as FeatureExtraction appends them
+    analysisRef = data.frame(
+      analysisId = c(456, 1456, 456), analysisName = "cohort covariate",
+      domainId = "cohort covariate", startDay = c(-30, -365, -365), endDay = 0,
+      isBinary = c("Y", "N", "Y"), missingMeansZero = "Y"
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = 3)
+  withr::defer(Andromeda::close(covariateData))
+
+  PatientLevelPrediction:::mergeDuplicateAnalysisRef(covariateData)
+  analysisRef <- as.data.frame(dplyr::collect(covariateData$analysisRef))
+  expect_equal(sort(analysisRef$analysisId), c(456, 1456))
+  expect_true(is.na(analysisRef$startDay[analysisRef$analysisId == 456]))
+  expect_equal(analysisRef$startDay[analysisRef$analysisId == 1456], -365)
+  expect_equal(analysisRef$endDay, c(0, 0))
+
+  aggregated <- FeatureExtraction::aggregateCovariates(covariateData)
+  withr::defer(Andromeda::close(aggregated))
+  binary <- as.data.frame(dplyr::collect(aggregated$covariates))
+  expect_equal(binary$sumValue[match(c(201456, 203456), binary$covariateId)], c(1, 2))
+  continuous <- as.data.frame(dplyr::collect(aggregated$covariatesContinuous))
+  expect_equal(continuous$averageValue[continuous$covariateId == 202456], 4 / 3)
+})
+
+test_that("mergeDuplicateAnalysisRef stops when one analysisId mixes covariate types", {
+  covariateData <- Andromeda::andromeda(
+    analysisRef = data.frame(analysisId = c(456, 456), isBinary = c("Y", "N"), missingMeansZero = "Y")
+  )
+  withr::defer(Andromeda::close(covariateData))
+  expect_error(PatientLevelPrediction:::mergeDuplicateAnalysisRef(covariateData), "different isBinary")
+
+  covariateData$analysisRef <- data.frame(analysisId = c(1, 456), isBinary = c("N", "Y"), missingMeansZero = "Y")
+  PatientLevelPrediction:::mergeDuplicateAnalysisRef(covariateData)
+  expect_equal(nrow(dplyr::collect(covariateData$analysisRef)), 2)
+})
+
+test_that("getPlpData keeps one analysisRef row per analysisId for several cohort covariates", {
+  skip_if_offline()
+  cohortSettings <- function(settingId, startDay, count = FALSE) {
+    createCohortCovariateSettings(
+      cohortName = paste("cohort", settingId), settingId = settingId,
+      cohortDatabaseSchema = "main", cohortTable = "cohort", cohortId = 2,
+      startDay = startDay, endDay = -1, count = count
+    )
+  }
+  plpDataCohorts <- getPlpData(
+    databaseDetails = databaseDetails,
+    covariateSettings = list(
+      FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE),
+      cohortSettings(1, -30), cohortSettings(2, -365), cohortSettings(3, -365, count = TRUE)
+    ),
+    restrictPlpDataSettings = createRestrictPlpDataSettings()
+  )
+  analysisRef <- as.data.frame(dplyr::collect(plpDataCohorts$covariateData$analysisRef))
+  expect_equal(anyDuplicated(analysisRef$analysisId), 0)
+  expect_true(all(c(456, 1456) %in% analysisRef$analysisId))
+  expect_true(is.na(analysisRef$startDay[analysisRef$analysisId == 456]))
+  expect_equal(analysisRef$isBinary[analysisRef$analysisId == 1456], "N")
+})

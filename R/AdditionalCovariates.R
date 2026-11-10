@@ -150,11 +150,9 @@ getCohortCovariateData <- function(
     snakeCaseToCamelCase = TRUE
   )
 
-  # Consumers classify covariates as binary per analysisId, so non-binary variants
-  # must not share one with binary cohort covariates (default analysisId is 456).
-  isBinary <- !(covariateSettings$count || covariateSettings$ageInteraction ||
-    covariateSettings$lnAgeInteraction)
-  analysisId <- covariateSettings$analysisId + ifelse(isBinary, 0, 1000)
+  isBinary <- isBinaryCohortCovariate(covariateSettings)
+  analysisId <- covariateSettings$reportedAnalysisId %||%
+    reportedCohortCovariateAnalysisId(covariateSettings$analysisId, isBinary)
 
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
@@ -219,7 +217,13 @@ getCohortCovariateData <- function(
 #' cohort during the time periods relative to target population cohort index
 #'
 #' @param cohortName  Name for the cohort
-#' @param settingId   A unique id for the covariate time and
+#' @param settingId   An id between 1 and 100 for this combination of time window
+#'                    (startDay, endDay) and value (count, ageInteraction,
+#'                    lnAgeInteraction). It is part of the covariateId
+#'                    (cohortId x 100000 + settingId x 1000 + analysisId), so settings
+#'                    for the same cohort need different settingIds. Using the same
+#'                    settingId for the same window and value across cohorts keeps
+#'                    covariateIds readable.
 #' @param cohortDatabaseSchema  The schema of the database with the cohort. If
 #' nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.
 #' @param cohortTable  the table name that contains the covariate cohort. If
@@ -236,7 +240,8 @@ getCohortCovariateData <- function(
 #'
 #' @return
 #' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId
-#'  cohortId x 100000 + settingId x 1000 + analysisId
+#'  cohortId x 100000 + settingId x 1000 + analysisId. Its `reportedAnalysisId` element is the
+#'  analysisId the covariate gets in the covariateRef and analysisRef.
 #' @examples
 #' createCohortCovariateSettings(cohortName="testCohort",
 #'                               settingId=1,
@@ -273,8 +278,23 @@ createCohortCovariateSettings <- function(
     lnAgeInteraction = lnAgeInteraction,
     analysisId = analysisId
   )
+  covariateSettings$reportedAnalysisId <- reportedCohortCovariateAnalysisId(
+    analysisId, isBinaryCohortCovariate(covariateSettings)
+  )
 
   attr(covariateSettings, "fun") <- "PatientLevelPrediction::getCohortCovariateData"
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)
+}
+
+isBinaryCohortCovariate <- function(covariateSettings) {
+  !(covariateSettings$count || covariateSettings$ageInteraction ||
+    covariateSettings$lnAgeInteraction)
+}
+
+# Consumers classify covariates as binary per analysisId, so non-binary variants
+# must not share one with binary cohort covariates (default analysisId is 456).
+# covariateId keeps the configured analysisId, so stored models keep matching.
+reportedCohortCovariateAnalysisId <- function(analysisId, isBinary) {
+  analysisId + ifelse(isBinary, 0, 1000)
 }
