@@ -832,3 +832,126 @@ test_that("insertRunPlpToSqlite stores a single externalValidatePlp result", {
   expect_equal(res$n[res$dev == 1], 1)
   expect_equal(res$n[res$dev == 0], 1)
 })
+
+test_that("createPlpResultTables with deleteTables removes rows from complete tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+  countTars <- function() DatabaseConnector::querySql(conn, "select count(*) as n from main.tars;", snakeCaseToCamelCase = TRUE)$n
+
+  # control: deleteTables = FALSE keeps rows and migrates again
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = FALSE, createTables = TRUE, tablePrefix = ""
+  )
+  expect_equal(countTars(), 1)
+
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = ""
+  )
+  expect_equal(countTars(), 0)
+
+  # a reset must reapply migrations
+  columns <- tolower(colnames(DatabaseConnector::querySql(conn, "select * from main.model_designs where 1 = 0;")))
+  expect_true("hyperparameter_setting_id" %in% columns)
+  migrations <- DatabaseConnector::querySql(conn, "select * from main.migration;", snakeCaseToCamelCase = TRUE)
+  expect_gt(nrow(migrations), 0)
+})
+
+test_that("createPlpResultTables keeps existing results by default", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+
+  createPlpResultTables(connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main")
+  n <- DatabaseConnector::querySql(conn, "select count(*) as n from main.tars;", snakeCaseToCamelCase = TRUE)$n
+  expect_equal(n, 1)
+})
+
+test_that("createPlpResultTables explains how to recreate a schema with only some tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "drop table main.tars;")
+
+  expect_error(
+    createPlpResultTables(connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main"),
+    "Use deleteTables = TRUE"
+  )
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE
+  )
+  expect_true("tars" %in% tolower(DatabaseConnector::getTableNames(conn, databaseSchema = "main")))
+})
+
+test_that("createPlpResultTables deleteTables without createTables removes all tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = FALSE, tablePrefix = ""
+  )
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  remaining <- tolower(DatabaseConnector::getTableNames(conn, databaseSchema = "main"))
+  expect_false(any(c("performances", "models", "migration") %in% remaining))
+})
+
+test_that("createPlpResultTables deleteTables honours a table prefix", {
+  skip_if_not_installed("ResultModelManager")
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  on.exit(unlink(sqliteFile), add = TRUE)
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  args <- list(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = "test"
+  )
+  do.call(createPlpResultTables, args)
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE, after = FALSE)
+  DatabaseConnector::executeSql(conn, "insert into main.test_tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+  do.call(createPlpResultTables, args)
+  res <- DatabaseConnector::querySql(conn, "select count(*) as n from main.test_tars;", snakeCaseToCamelCase = TRUE)
+  expect_equal(res$n, 0)
+})
+
+test_that("insertResultsToSqlite replaces results by default and can add to them", {
+  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
+  skip_if_offline()
+  resultsLoc <- tempfile("insertResultsDeleteTables")
+  on.exit(unlink(resultsLoc, recursive = TRUE), add = TRUE)
+  savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
+  insert <- function(...) {
+    insertResultsToSqlite(
+      resultLocation = resultsLoc,
+      sqliteLocation = file.path(resultsLoc, "sqlite"),
+      skipDiagnostics = TRUE,
+      ...
+    )
+  }
+  countMarkers <- function(db) {
+    conn <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = db))
+    on.exit(DatabaseConnector::disconnect(conn))
+    DatabaseConnector::querySql(conn, "select count(*) as n from main.tars where tar_start_day = -999;", snakeCaseToCamelCase = TRUE)$n
+  }
+  addMarker <- function(db) {
+    conn <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = db))
+    on.exit(DatabaseConnector::disconnect(conn))
+    DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (-999,'cohort start',365,'cohort start');")
+  }
+
+  db <- insert()
+  addMarker(db)
+  insert(deleteTables = FALSE)
+  expect_equal(countMarkers(db), 1)
+
+  insert()
+  expect_equal(countMarkers(db), 0)
+})

@@ -107,6 +107,8 @@ insertRunPlpToSqlite <- function(
 #' @param databaseList             A list created by \code{createDatabaseList} to specify the databases
 #' @param sqliteLocation               (string) location of directory where the sqlite database will be saved
 #' @param skipDiagnostics             Whether to skip uploading the diagnostics
+#' @param deleteTables                 If TRUE any results already in the sqlite database are removed
+#'                                     first. Use FALSE to add results to an existing database.
 #'
 #' @return
 #' Returns the location of the sqlite database file
@@ -136,7 +138,8 @@ insertResultsToSqlite <- function(
     cohortDefinitions = NULL,
     databaseList = NULL,
     sqliteLocation = file.path(resultLocation, "sqlite"),
-    skipDiagnostics = FALSE
+    skipDiagnostics = FALSE,
+    deleteTables = TRUE
     ) {
   if (!dir.exists(sqliteLocation)) {
     dir.create(sqliteLocation, recursive = TRUE)
@@ -153,7 +156,7 @@ insertResultsToSqlite <- function(
     connectionDetails = connectionDetails,
     targetDialect = "sqlite",
     resultSchema = "main",
-    deleteTables = TRUE,
+    deleteTables = deleteTables,
     createTables = TRUE,
     tablePrefix = ""
   )
@@ -192,7 +195,10 @@ insertResultsToSqlite <- function(
 #' @param connectionDetails            The database connection details
 #' @param targetDialect                The database management system being used
 #' @param resultSchema                 The name of the database schema that the result tables will be created.
-#' @param deleteTables                 If true any existing tables matching the PatientLevelPrediction result tables names will be deleted
+#' @param deleteTables                 If TRUE, existing PatientLevelPrediction result tables (and the
+#'                                     migration tables) in the schema are deleted first, with all
+#'                                     their results. FALSE by default, so results are never removed
+#'                                     unless asked for.
 #' @param createTables                 If true the PatientLevelPrediction result tables will be created
 #' @param tablePrefix         A string that appends to the PatientLevelPrediction result tables
 #' @param tempEmulationSchema          The temp schema used when the database management system is oracle
@@ -224,7 +230,7 @@ createPlpResultTables <- function(
     connectionDetails,
     targetDialect = "postgresql",
     resultSchema,
-    deleteTables = TRUE,
+    deleteTables = FALSE,
     createTables = TRUE,
     tablePrefix = "",
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
@@ -232,68 +238,71 @@ createPlpResultTables <- function(
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn))
 
-  tablesExists <- sum(tolower(getPlpResultTables()) %in% tolower(DatabaseConnector::getTableNames(connection = conn, databaseSchema = resultSchema)))
-  tablesExists <- tablesExists == length(getPlpResultTables())
+  if (tablePrefix != "") {
+    tablePrefix <- paste0(toupper(gsub("_", "", gsub(" ", "", tablePrefix))), "_")
+  }
 
-  if (!tablesExists) {
-    ParallelLogger::logInfo("All or some PLP result tables do not exist, tables being recreated")
-    if (deleteTables) {
-      ParallelLogger::logInfo("Deleting existing tables")
+  if (deleteTables) {
+    ParallelLogger::logInfo("Deleting existing PLP result tables")
+    deleteTables(
+      conn = conn,
+      databaseSchema = resultSchema,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema,
+      # the migration state has to go with the tables so migrations re-run on the new ones
+      tableNames = c(getPlpResultTables(), "MIGRATION", "PACKAGE_VERSION"),
+      tablePrefix = tablePrefix
+    )
+  }
 
-      tableNames <- getPlpResultTables()
+  existing <- tolower(paste0(tablePrefix, getPlpResultTables())) %in%
+    tolower(DatabaseConnector::getTableNames(connection = conn, databaseSchema = resultSchema))
+  tablesExist <- all(existing)
 
-      deleteTables(
-        conn = conn,
-        databaseSchema = resultSchema,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema,
-        tableNames = tableNames,
-        tablePrefix = tablePrefix
+  if (createTables && !tablesExist) {
+    if (any(existing)) {
+      errorMessage <- paste0(
+        "Some PLP result tables already exist in ", resultSchema, " but not all. ",
+        "Use deleteTables = TRUE to recreate them, which removes their results."
       )
+      ParallelLogger::logError(errorMessage)
+      stop(errorMessage)
     }
+    ParallelLogger::logInfo("Creating PLP results tables")
 
+    pathToSql <- system.file(
+      paste("sql/", targetDialect,
+        sep = ""
+      ),
+      "PlpResultTables.sql",
+      package = "PatientLevelPrediction"
+    )
 
-    if (createTables) {
-      ParallelLogger::logInfo("Creating PLP results tables")
-
-      if (tablePrefix != "") {
-        tablePrefix <- paste0(toupper(gsub("_", "", gsub(" ", "", tablePrefix))), "_")
-      }
-
+    if (!file.exists(pathToSql)) {
+      # if no dbms specific file use sql_server
       pathToSql <- system.file(
-        paste("sql/", targetDialect,
+        paste("sql/", "sql_server",
           sep = ""
         ),
         "PlpResultTables.sql",
         package = "PatientLevelPrediction"
       )
-
-      if (!file.exists(pathToSql)) {
-        # if no dbms specific file use sql_server
-        pathToSql <- system.file(
-          paste("sql/", "sql_server",
-            sep = ""
-          ),
-          "PlpResultTables.sql",
-          package = "PatientLevelPrediction"
-        )
-      }
-
-      sql <- readChar(pathToSql, file.info(pathToSql)$size)
-      renderedSql <- SqlRender::render(
-        sql = sql[1],
-        my_schema = resultSchema,
-        string_to_append = tablePrefix
-      )
-      renderedSql <- SqlRender::translate(
-        sql = renderedSql,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema
-      )
-
-      DatabaseConnector::executeSql(conn, renderedSql)
     }
-  } else {
+
+    sql <- readChar(pathToSql, file.info(pathToSql)$size)
+    renderedSql <- SqlRender::render(
+      sql = sql[1],
+      my_schema = resultSchema,
+      string_to_append = tablePrefix
+    )
+    renderedSql <- SqlRender::translate(
+      sql = renderedSql,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+    )
+
+    DatabaseConnector::executeSql(conn, renderedSql)
+  } else if (tablesExist) {
     ParallelLogger::logInfo("PLP result tables already exist")
   }
   
@@ -305,17 +314,6 @@ createPlpResultTables <- function(
       databaseSchema = resultSchema,
       tablePrefix = tablePrefix
     )
-  } else {
-    ParallelLogger::logInfo("Deleting PLP migration tables") 
-    migrationTableNames <- c("MIGRATION", "PACKAGE_VERSION") 
-    deleteTables(
-        conn = conn,
-        databaseSchema = resultSchema,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema,
-        tableNames = migrationTableNames,
-        tablePrefix = tablePrefix
-      )
   }
 }
 
@@ -1149,8 +1147,9 @@ deleteTables <- function(
     tableNames,
     tablePrefix) {
   if (tablePrefix != "") {
-    tableNames <- tolower(paste0(gsub("_", "", gsub(" ", "", tablePrefix)), "_", tableNames))
+    tableNames <- paste0(gsub("_", "", gsub(" ", "", tablePrefix)), "_", tableNames)
   }
+  tableNames <- tolower(tableNames)
 
   alltables <- tolower(DatabaseConnector::getTableNames(
     connection = conn,

@@ -653,7 +653,8 @@ validateMultiplePlp <- function(
           cdmDatabaseNames = validationDatabaseDetail$cdmDatabaseName,
           databaseRefIds = validationDatabaseDetail$cdmDatabaseId
         ),
-        sqliteLocation = sqliteLocation
+        sqliteLocation = sqliteLocation,
+        deleteTables = FALSE
       )
     })
   }

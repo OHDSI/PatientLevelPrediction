@@ -670,7 +670,8 @@ validateExternal <- function(validationDesignList,
             cdmDatabaseNames = database$cdmDatabaseName,
             databaseRefIds = database$cdmDatabaseId
           ),
-          sqliteLocation = sqliteLocation
+          sqliteLocation = sqliteLocation,
+          deleteTables = FALSE
         )
       },
       error = function(e) ParallelLogger::logInfo(e)
