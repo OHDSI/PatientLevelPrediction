@@ -1682,3 +1682,59 @@ test_that("iterativeImpute leaves sparse missing-means-zero covariates alone at 
     dplyr::collect()
   expect_equal(nrow(imputedFake), nrow(testData$labels))
 })
+
+test_that("imputers apply to prediction data with more than labels and covariateData", {
+  fixture <- function(folds) {
+    x <- 1:20
+    makeImputationFixture(
+      rowIds = x,
+      covariates = rbind(
+        data.frame(rowId = 1:18, covariateId = 10, covariateValue = 2 * x[1:18] + 1),
+        data.frame(rowId = x, covariateId = 11, covariateValue = x),
+        data.frame(rowId = x, covariateId = 12, covariateValue = x %% 5)
+      ),
+      numericIds = c(10, 11, 12),
+      analysisIds = c(10, 11, 12),
+      folds = folds
+    )
+  }
+  plainPlpData <- function(data) {
+    data$cohorts <- data.frame(rowId = data$labels$rowId)
+    data$outcomes <- data.frame(rowId = integer(0))
+    data$metaData <- list()
+    data
+  }
+  checkImputer <- function(imputer, settings, imputerName) {
+    train <- fixture(folds = TRUE)
+    withr::defer(Andromeda::close(train$covariateData))
+    fitted <- imputer(train, settings, done = FALSE)
+    withr::defer(Andromeda::close(fitted$covariateData))
+
+    test <- plainPlpData(fixture(folds = FALSE))
+    withr::defer(Andromeda::close(test$covariateData))
+    applied <- imputer(test, savedImputerSettings(fitted, imputerName), done = TRUE)
+    withr::defer(Andromeda::close(applied$covariateData))
+
+    expect_equal(nrow(covariateRows(applied, 10)), 20)
+    expect_s3_class(applied, "plpData")
+    expect_equal(colnames(applied$cohorts), "rowId")
+    # the caller's data is left as it was
+    expect_equal(nrow(covariateRows(test, 10)), 18)
+  }
+
+  checkImputer(
+    PatientLevelPrediction:::simpleImpute,
+    createSimpleImputer(method = "mean", missingThreshold = 0.5),
+    "simpleImputer"
+  )
+  skip_if_not_installed("glmnet")
+  checkImputer(
+    PatientLevelPrediction:::iterativeImpute,
+    createIterativeImputer(
+      method = "pmm",
+      methodSettings = list(pmm = list(k = 2, iterations = 1)),
+      missingThreshold = 0.5
+    ),
+    "iterativeImputer"
+  )
+})

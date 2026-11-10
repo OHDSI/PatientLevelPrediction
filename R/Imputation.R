@@ -932,15 +932,7 @@ simpleImpute <- function(trainData, featureEngineeringSettings, done = FALSE) {
     ParallelLogger::logInfo("Applying imputation to test data with simpleImputer
       using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
-    outputData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outputData <- isolateCovariateData(trainData)
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
       "missingInfo"
@@ -1091,15 +1083,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     ParallelLogger::logInfo("Applying imputation to test data with iterativeImputer
       using method: ", featureEngineeringSettings$method, " and missing threshold: ",
       featureEngineeringSettings$missingThreshold)
-    outputData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outputData <- isolateCovariateData(trainData)
     # remove data with more than missingThreshold
     outputData$covariateData$missingInfo <- attr(
       featureEngineeringSettings,
@@ -1380,15 +1364,7 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
       "Applying sklearn IterativeImputer to test data, missing threshold: ",
       featureEngineeringSettings$missingThreshold
     )
-    outputData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outputData) <- "plpData"
-    attributes(outputData) <- attributes(trainData)
-    class(outputData$covariateData) <- "CovariateData"
-    attr(outputData$covariateData, "metaData") <-
-      attr(trainData$covariateData, "metaData")
+    outputData <- isolateCovariateData(trainData)
 
     missingInfoValue <- attr(featureEngineeringSettings, "missingInfo")
     if (is.null(missingInfoValue)) {
