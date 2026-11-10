@@ -917,8 +917,9 @@ applyMinCellCount <- function(
   columnsToCensor <- sensitiveColumns[[tableName]]
 
   for (columns in columnsToCensor) {
-    rowInd <- apply(result[, columns, drop = FALSE] < minCellCount, 1, sum) > 0
-    if (sum(rowInd) > 0) {
+    # a missing count discloses nothing, so it stays NA and does not trigger censoring
+    rowInd <- rowSums(result[, columns, drop = FALSE] < minCellCount, na.rm = TRUE) > 0
+    if (any(rowInd)) {
       result[rowInd, columns] <- -1
     }
   }

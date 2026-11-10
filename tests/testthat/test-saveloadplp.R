@@ -245,3 +245,30 @@ test_that("applyMinCellCount works", {
   expect_equal(1, sum(minCellResult$with_no_outcome_covariate_count == -1))
   expect_equal(1, sum(minCellResult$with_outcome_covariate_count == -1))
 })
+
+test_that("applyMinCellCount leaves missing counts missing", {
+  result <- data.frame(
+    performance_id = 1,
+    person_count_at_risk = c(20, 2, 30, 3),
+    person_count_with_outcome = c(12, NA, NA, 1)
+  )
+  minCellResult <- applyMinCellCount(
+    tableName = "demographic_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = result,
+    minCellCount = 5
+  )
+  expect_equal(minCellResult$person_count_at_risk, c(20, -1, 30, -1))
+  expect_equal(minCellResult$person_count_with_outcome, c(12, NA, NA, -1))
+
+  # columns censored together: a small count hides its NA partner too
+  calibration <- result
+  minCellResult <- applyMinCellCount(
+    tableName = "calibration_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = calibration,
+    minCellCount = 5
+  )
+  expect_equal(minCellResult$person_count_at_risk, c(20, -1, 30, -1))
+  expect_equal(minCellResult$person_count_with_outcome, c(12, -1, NA, -1))
+})
