@@ -1116,3 +1116,195 @@ test_that("appendMissingIndicatorMetadata normalizes IDs before duplicate checks
   expect_equal(nrow(dplyr::collect(updated$covariateData$analysisRef)), 1)
   expect_equal(nrow(dplyr::collect(updated$covariateData$covariateRef)), 1)
 })
+
+makeImputationFixture <- function(rowIds,
+                                  covariates,
+                                  numericIds,
+                                  binaryIds = numeric(0),
+                                  analysisIds = c(numericIds, binaryIds),
+                                  zeroMeansMissingIds = numeric(0),
+                                  folds = FALSE) {
+  covariateIds <- c(numericIds, binaryIds)
+  analysisRef <- data.frame(
+    analysisId = analysisIds,
+    analysisName = paste0("analysis", analysisIds),
+    domainId = "measurement",
+    startDay = NA_real_,
+    endDay = NA_real_,
+    isBinary = ifelse(covariateIds %in% numericIds, "N", "Y"),
+    missingMeansZero = ifelse(
+      covariateIds %in% c(binaryIds, zeroMeansMissingIds),
+      "Y",
+      "N"
+    )
+  ) %>% dplyr::distinct()
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = data.frame(
+      covariateId = covariateIds,
+      covariateName = paste0("feature", covariateIds),
+      analysisId = analysisIds,
+      conceptId = covariateIds
+    ),
+    analysisRef = analysisRef
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list()
+  data <- list(labels = data.frame(rowId = rowIds, outcomeCount = 0))
+  if (folds) {
+    data$folds <- data.frame(rowId = rowIds, index = 1L)
+  }
+  data$covariateData <- covariateData
+  class(data) <- "plpData"
+  attr(data, "metaData") <- list()
+  data
+}
+
+covariateRows <- function(data, covariateId) {
+  data$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!covariateId) %>%
+    dplyr::collect() %>%
+    dplyr::arrange(.data$rowId)
+}
+
+savedImputerSettings <- function(fitted, imputerName) {
+  attr(fitted$covariateData, "metaData")$featureEngineering[[imputerName]]$settings$featureEngineeringSettings
+}
+
+makeSavedPmmSettings <- function() {
+  settings <- createIterativeImputer(
+    missingThreshold = 0.8,
+    methodSettings = list(pmm = list(k = 1, iterations = 1, alpha = 1))
+  )
+  attr(settings, "missingInfo") <- data.frame(
+    covariateId = c(100, 200),
+    missing = c(0.25, 0)
+  )
+  attr(settings, "initialValues") <- data.frame(
+    covariateId = c(100, 200),
+    initialValue = c(20, 20)
+  )
+  attr(settings, "imputer") <- list(
+    "100" = list(
+      intercept = 0,
+      coefficients = data.frame(covariateId = 200, values = 1),
+      predictions = data.frame(
+        rowId = c(101, 102),
+        prediction = c(10, 30),
+        observedValue = c(10, 30)
+      )
+    )
+  )
+  settings
+}
+
+test_that("createMissingIndicatorInfo avoids existing and newly allocated ids", {
+  data <- makeImputationFixture(
+    rowIds = 1:2,
+    covariates = data.frame(
+      rowId = 1:2,
+      covariateId = c(10010, 11010),
+      covariateValue = 1
+    ),
+    numericIds = c(10010, 11010),
+    analysisIds = c(10, 10)
+  )
+  withr::defer(Andromeda::close(data$covariateData))
+
+  info <- PatientLevelPrediction:::createMissingIndicatorInfo(data, c(10010, 11010))
+
+  expect_equal(anyDuplicated(info$map$indicatorCovariateId), 0)
+  expect_false(any(info$map$indicatorCovariateId %in% c(10010, 11010)))
+  expect_equal(nrow(info$covariateRef), 2)
+})
+
+test_that("createMissingIndicatorInfo keeps the default ids when nothing collides", {
+  data <- makeImputationFixture(
+    rowIds = 1:2,
+    covariates = data.frame(
+      rowId = 1:2,
+      covariateId = c(1001010, 3005010),
+      covariateValue = 1
+    ),
+    numericIds = c(1001010, 3005010),
+    analysisIds = c(10, 10)
+  )
+  withr::defer(Andromeda::close(data$covariateData))
+
+  info <- PatientLevelPrediction:::createMissingIndicatorInfo(data, c(1001010, 3005010))
+
+  expect_equal(
+    info$map$indicatorCovariateId[match(c(1001010, 3005010), info$map$sourceCovariateId)],
+    c(1002010, 3006010)
+  )
+})
+
+test_that("allocateIndicatorCovariateIds resolves chained collisions", {
+  allocated <- PatientLevelPrediction:::allocateIndicatorCovariateIds(
+    candidateIds = c(2000, 2000, 3000),
+    usedIds = c(2000, 4000)
+  )
+  expect_equal(anyDuplicated(allocated), 0)
+  expect_false(any(allocated %in% c(2000, 4000)))
+  expect_equal(allocated[3], 3000)
+})
+
+test_that("simpleImpute keeps missing indicators separate from colliding covariates", {
+  train <- makeImputationFixture(
+    rowIds = 1:3,
+    covariates = data.frame(
+      rowId = c(1, 3, 1, 2, 3),
+      covariateId = c(10010, 10010, 11010, 11010, 11010),
+      covariateValue = c(2, 4, 7, 8, 9)
+    ),
+    numericIds = c(10010, 11010),
+    analysisIds = c(10, 10),
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(train$covariateData))
+  settings <- createSimpleImputer(
+    method = "mean",
+    missingThreshold = 0.5,
+    addMissingIndicator = TRUE
+  )
+
+  fitted <- PatientLevelPrediction:::simpleImpute(train, settings, done = FALSE)
+  withr::defer(Andromeda::close(fitted$covariateData))
+
+  expect_equal(covariateRows(fitted, 11010)$covariateValue, c(7, 8, 9))
+  sparse <- toSparseM(fitted, fitted$labels)
+  expect_equal(ncol(sparse$dataMatrix), 3)
+})
+
+test_that("iterativeImpute keeps missing indicators separate from colliding covariates", {
+  skip_if_not_installed("glmnet")
+  x <- 1:20
+  train <- makeImputationFixture(
+    rowIds = x,
+    covariates = rbind(
+      data.frame(rowId = 1:18, covariateId = 10010, covariateValue = 2 * x[1:18] + 1),
+      data.frame(rowId = x, covariateId = 11010, covariateValue = x),
+      data.frame(rowId = x, covariateId = 20, covariateValue = x %% 2)
+    ),
+    numericIds = c(10010, 11010),
+    binaryIds = 20,
+    analysisIds = c(10, 10, 20),
+    folds = TRUE
+  )
+  withr::defer(Andromeda::close(train$covariateData))
+  settings <- createIterativeImputer(
+    missingThreshold = 0.5,
+    methodSettings = list(pmm = list(k = 1, iterations = 1, alpha = 1)),
+    addMissingIndicator = TRUE
+  )
+
+  fitted <- withr::with_seed(42, {
+    PatientLevelPrediction:::iterativeImpute(train, settings, done = FALSE)
+  })
+  withr::defer(Andromeda::close(fitted$covariateData))
+
+  saved <- savedImputerSettings(fitted, "iterativeImputer")
+  indicatorIds <- attr(saved, "missingIndicatorInfo")$map$indicatorCovariateId
+  expect_false(any(indicatorIds %in% c(10010, 11010)))
+  expect_equal(covariateRows(fitted, 11010)$covariateValue, x)
+})

@@ -343,6 +343,24 @@ normalizeIdKey <- function(x) {
   trimws(as.character(x))
 }
 
+allocateIndicatorCovariateIds <- function(candidateIds, usedIds) {
+  usedKeys <- normalizeIdKey(usedIds)
+  candidateKeys <- normalizeIdKey(candidateIds)
+  collides <- candidateKeys %in% usedKeys | duplicated(candidateKeys)
+  usedKeys <- c(usedKeys, candidateKeys[!collides])
+  for (i in which(collides)) {
+    repeat {
+      candidateIds[i] <- candidateIds[i] + 1000
+      candidateKey <- normalizeIdKey(candidateIds[i])
+      if (!candidateKey %in% usedKeys) {
+        break
+      }
+    }
+    usedKeys <- c(usedKeys, candidateKey)
+  }
+  candidateIds
+}
+
 createMissingIndicatorInfo <- function(outputData, sourceCovariateIds) {
   sourceCovariateIds <- unique(sourceCovariateIds)
   if (length(sourceCovariateIds) == 0) {
@@ -398,8 +416,19 @@ createMissingIndicatorInfo <- function(outputData, sourceCovariateIds) {
       analysisMap,
       by = c("analysisId" = "sourceAnalysisId")
     ) %>%
+    dplyr::arrange(.data$covariateId) %>%
     dplyr::mutate(indicatorCovariateId = .data$covariateId -
       .data$analysisId + .data$indicatorAnalysisId)
+  map$indicatorCovariateId <- allocateIndicatorCovariateIds(
+    candidateIds = map$indicatorCovariateId,
+    usedIds = c(
+      outputData$covariateData$covariateRef %>%
+        dplyr::pull(.data$covariateId),
+      outputData$covariateData$covariates %>%
+        dplyr::distinct(.data$covariateId) %>%
+        dplyr::pull(.data$covariateId)
+    )
+  )
 
   indicatorCovariateRef <- map %>%
     dplyr::transmute(
