@@ -1052,6 +1052,39 @@ addModel <- function(
       ),
       tempEmulationSchema = tempEmulationSchema
     )
+  } else {
+    # The model files are overwritten, so the row has to describe the new fit
+    sql <- "UPDATE @my_schema.@string_to_appendmodels SET
+    analysis_id = '@analysis_id',
+    model_type = '@model_type',
+    plp_model_file = '@plp_model_file',
+    train_details = '@train_details',
+    preprocessing = '@preprocessing',
+    execution_date_time = '@execution_date_time',
+    training_time = '@training_time',
+    intercept = @intercept
+    WHERE model_design_id = @model_design_id AND database_id = @database_id"
+    sql <- SqlRender::render(
+      sql,
+      my_schema = resultSchema,
+      analysis_id = analysisId,
+      model_design_id = modelDesignId,
+      database_id = databaseId,
+      model_type = modelType,
+      plp_model_file = plpModelFile,
+      train_details = trainDetails,
+      preprocessing = preprocessing,
+      execution_date_time = executionDateTime,
+      training_time = trainingTime,
+      intercept = intercept,
+      string_to_append = tablePrefix
+    )
+    sql <- SqlRender::translate(
+      sql,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    DatabaseConnector::executeSql(conn, sql)
   }
 
   return(result$modelId[1])

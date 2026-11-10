@@ -955,3 +955,44 @@ test_that("insertResultsToSqlite replaces results by default and can add to them
   insert()
   expect_equal(countMarkers(db), 0)
 })
+
+test_that("addModel replaces the models row of a re-uploaded fit", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  upload <- function(intercept, trainDetails, day) {
+    PatientLevelPrediction:::addModel(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+      analysisId = "Analysis_1", modelDesignId = 1, databaseId = 1, modelType = "lasso",
+      plpModelFile = "folder-1-1", trainDetails = trainDetails, preprocessing = "",
+      executionDateTime = day, trainingTime = "1 secs", intercept = intercept,
+      tempEmulationSchema = NULL
+    )
+  }
+  firstId <- upload(-1.5, '{"first": true}', "2026-01-01")
+  secondId <- upload(-3.25, '{"first": false}', "2026-02-02")
+  otherDatabase <- PatientLevelPrediction:::addModel(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+    analysisId = "Analysis_2", modelDesignId = 1, databaseId = 2, modelType = "lasso",
+    plpModelFile = "folder-1-2", trainDetails = "{}", preprocessing = "",
+    executionDateTime = "2026-03-03", trainingTime = "1 secs", intercept = 9, tempEmulationSchema = NULL
+  )
+  expect_equal(firstId, secondId)
+  expect_false(identical(firstId, otherDatabase))
+
+  row <- DatabaseConnector::querySql(
+    conn, "select * from main.models where database_id = 1;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(nrow(row), 1)
+  expect_equal(row$intercept, -3.25)
+  expect_equal(row$trainDetails, '{"first": false}')
+  expect_equal(as.character(row$executionDateTime), "2026-02-02")
+
+  other <- DatabaseConnector::querySql(
+    conn, "select * from main.models where database_id = 2;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(other$intercept, 9)
+})
