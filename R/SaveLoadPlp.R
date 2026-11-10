@@ -943,9 +943,62 @@ applyMinCellCount <- function(
 # zeroes small coefficients. Doubles are passed through as marked strings and the
 # marks removed from the JSON text, so the file keeps plain numbers at full precision.
 saveSettingsToJsonFullPrecision <- function(object, fileName) {
-  json <- as.character(ParallelLogger::convertSettingsToJson(markDoubles(object)))
+  object <- keepColumnsAsArrays(markDoubles(attributesToMembers(object)))
+  json <- as.character(ParallelLogger::convertSettingsToJson(object))
   json <- gsub('"__plpDouble__([^"]*)__"', "\\1", json)
   write(json, normalizePath(fileName, mustWork = FALSE))
+}
+
+# ParallelLogger stores the attributes of a list as attr_* members, the format
+# ParallelLogger::loadSettingsFromJson() turns back into attributes, but it writes
+# the values of those attributes as they are. A data frame held in an attribute,
+# such as the values a feature engineering step learned in training, was
+# therefore written row by row without its class, at jsonlite's default four
+# decimals, and loaded back as a list of rows. Converting the attributes at every
+# level first, in the same format, lets them load back as they were saved, and
+# lets markDoubles() keep their full precision.
+attributesToMembers <- function(x) {
+  if (!is.list(x)) {
+    return(x)
+  }
+  for (i in seq_along(x)) {
+    if (!is.null(x[[i]])) {
+      x[[i]] <- attributesToMembers(x[[i]])
+    }
+  }
+  objectClass <- class(x)
+  extra <- setdiff(names(attributes(x)), c("names", "class"))
+  values <- lapply(attributes(x)[extra], attributesToMembers)
+  x <- unclass(x)
+  attributes(x)[extra] <- NULL
+  if (length(objectClass) > 1 || objectClass != "list") {
+    x$attr_class <- objectClass
+  }
+  if (length(extra) > 0) {
+    x[paste0("attr_", extra)] <- values
+  }
+  return(x)
+}
+
+# jsonlite writes a vector of length one as a scalar, and a missing value as the
+# string "NA", which it reads back as a missing value inside an array but as the
+# string "NA" on its own. The columns of a table with one row, such as the
+# missing indicator analysis an imputer adds, are therefore kept as arrays, as
+# those of longer tables are, so that their missing values load back as missing
+# values and not as strings that Andromeda cannot append to numeric columns.
+keepColumnsAsArrays <- function(x) {
+  if (!is.list(x)) {
+    return(x)
+  }
+  x[] <- lapply(x, keepColumnsAsArrays)
+  if ("data.frame" %in% x[["attr_class"]]) {
+    for (column in grep("^attr_", names(x), value = TRUE, invert = TRUE)) {
+      if (is.atomic(x[[column]])) {
+        x[[column]] <- I(x[[column]])
+      }
+    }
+  }
+  return(x)
 }
 
 markDoubles <- function(x) {

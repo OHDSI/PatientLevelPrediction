@@ -55,12 +55,63 @@ isolateCovariateData <- function(data) {
   return(data)
 }
 
-# Data frames stored as attributes come back from the settings JSON as a list of rows.
+# Models saved before saveSettingsToJsonFullPrecision() converted attribute
+# values hold data frames from attributes as a list of rows, without the fields
+# of NA values. Steps that read a saved table call this.
 restoreSavedTable <- function(savedTable) {
   if (is.data.frame(savedTable)) {
     return(savedTable)
   }
-  return(do.call(rbind, lapply(savedTable, as.data.frame)))
+  if (length(savedTable) == 0) {
+    return(NULL)
+  }
+  return(as.data.frame(dplyr::bind_rows(savedTable)))
+}
+
+isSavedRows <- function(x) {
+  is.list(x) && !is.data.frame(x) && length(x) > 0 && is.null(names(x)) &&
+    all(vapply(x, function(row) {
+      is.list(row) && !is.null(names(row)) &&
+        all(vapply(row, function(value) is.atomic(value) && length(value) <= 1, logical(1)))
+    }, logical(1)))
+}
+
+# The feature engineering steps of this package, whose saved settings
+# restoreSavedTables() may repair.
+builtInFeatureEngineeringSteps <- function() {
+  c(
+    "splineCovariates", "univariateFeatureSelection", "randomForestFeatureSelection",
+    "minMaxNormalize", "robustNormalize", "removeRareFeatures", "simpleImpute",
+    "iterativeImpute", "sklearnIterativeImpute", "stratifiedImputeCovariates", "sameData"
+  )
+}
+
+# Turns every saved list of rows in a step's settings, including in attributes
+# and nested lists, back into a data frame.
+restoreSavedTables <- function(x) {
+  if (isSavedRows(x)) {
+    return(restoreSavedTable(x))
+  }
+  if (is.data.frame(x)) {
+    # the columns of a table without rows come back from the JSON as empty lists
+    for (column in names(x)) {
+      if (is.list(x[[column]]) && length(x[[column]]) == 0) {
+        x[[column]] <- numeric(0)
+      }
+    }
+    return(x)
+  }
+  if (is.list(x)) {
+    for (i in seq_along(x)) {
+      if (!is.null(x[[i]])) {
+        x[[i]] <- restoreSavedTables(x[[i]])
+      }
+    }
+  }
+  for (name in setdiff(names(attributes(x)), c("names", "class", "row.names"))) {
+    attr(x, name) <- restoreSavedTables(attr(x, name))
+  }
+  return(x)
 }
 
 populationRowIds <- function(data) {
@@ -128,16 +179,24 @@ removeStoredZeros <- function(covariateData, covariateIds) {
 # misaligned names), so steps are recognised by their structure.
 featureEngineeringSteps <- function(featureEngineering) {
   isStep <- function(entry) is.list(entry) && !is.null(entry[["funct"]])
+  savedStep <- function(funct, settings) {
+    # only the package's own steps are known to have saved tables as lists of
+    # rows; custom steps get their settings as they were loaded
+    if (funct %in% builtInFeatureEngineeringSteps()) {
+      settings <- restoreSavedTables(settings)
+    }
+    list(funct = funct, settings = settings)
+  }
   steps <- list()
   i <- 1
   while (i <= length(featureEngineering)) {
     entry <- featureEngineering[[i]]
     nextEntry <- if (i < length(featureEngineering)) featureEngineering[[i + 1]]
     if (isStep(entry)) {
-      steps[[length(steps) + 1]] <- list(funct = entry[["funct"]], settings = entry[["settings"]])
+      steps[[length(steps) + 1]] <- savedStep(entry[["funct"]], entry[["settings"]])
       i <- i + 1
     } else if (is.character(entry) && length(entry) == 1 && is.list(nextEntry) && !isStep(nextEntry)) {
-      steps[[length(steps) + 1]] <- list(funct = entry, settings = nextEntry)
+      steps[[length(steps) + 1]] <- savedStep(entry, nextEntry)
       i <- i + 2
     } else {
       warning("Saved feature engineering entry ", i, " is not a step and is not applied.")
@@ -1123,14 +1182,12 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       "Applying rare feature removal with rate below: ",
       featureEngineeringSettings$threshold, " to test data"
     )
+    # an empty set of rare features comes back from the JSON as an empty list
+    rareFeatures <- as.numeric(unlist(attr(featureEngineeringSettings, "rareFeatures")))
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::filter(
-        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
-      )
+      dplyr::filter(!.data$covariateId %in% !!rareFeatures)
     outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
-      dplyr::filter(
-        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
-      )
+      dplyr::filter(!.data$covariateId %in% !!rareFeatures)
   }
   outData <- recordFeatureEngineeringStep(
     outData,

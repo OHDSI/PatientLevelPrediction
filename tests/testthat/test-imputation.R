@@ -1736,3 +1736,118 @@ test_that("imputers apply to prediction data with more than labels and covariate
     )
   )
 })
+
+replayedRows <- function(data) {
+  as.data.frame(data$covariateData$covariates) %>%
+    dplyr::arrange(.data$rowId, .data$covariateId)
+}
+
+# Fits one step on toy training data, saves its fitted state with the writer
+# savePlpModel() uses (or another writer), loads it back, and returns the rows
+# replayed on new data from memory and from the loaded file.
+replayInMemoryAndReloaded <- function(settings, writer = saveSettingsToJsonFullPrecision) {
+  train <- createMissingData(makeToyImputationData(n = 120, seed = 1), 0.3)
+  withr::defer(Andromeda::close(train$covariateData), envir = parent.frame())
+  engineered <- suppressWarnings(featureEngineer(train, settings))
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+  jsonFile <- tempfile(fileext = ".json")
+  withr::defer(unlink(jsonFile), envir = parent.frame())
+  writer(list(featureEngineering = saved), jsonFile)
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  replay <- function(steps) {
+    newData <- createMissingData(makeToyImputationData(n = 60, seed = 2), 0.4, test = TRUE)
+    on.exit(Andromeda::close(newData$covariateData))
+    replayed <- applyFeatureEngineering(newData, steps)
+    on.exit(Andromeda::close(replayed$covariateData), add = TRUE)
+    replayedRows(replayed)
+  }
+  list(inMemory = replay(saved), reloaded = replay(loaded))
+}
+
+fittedStepSettings <- function() {
+  list(
+    simpleMean = createSimpleImputer(method = "mean", missingThreshold = 0.5, addMissingIndicator = TRUE),
+    simpleMedian = createSimpleImputer(method = "median", missingThreshold = 0.5),
+    iterative = createIterativeImputer(
+      method = "pmm", missingThreshold = 0.5, addMissingIndicator = TRUE,
+      methodSettings = list(pmm = list(k = 1, iterations = 1))
+    ),
+    minMax = createNormalizer("minmax"),
+    robust = createNormalizer("robust", settings = list(clip = TRUE)),
+    rareNone = createRareFeatureRemover(threshold = 0.01)
+  )
+}
+
+test_that("fitted feature engineering replays exactly after saving and loading", {
+  skip_if_not_installed("glmnet")
+  for (name in names(fittedStepSettings())) {
+    result <- replayInMemoryAndReloaded(fittedStepSettings()[[name]])
+    expect_equal(result$reloaded, result$inMemory, tolerance = 0, info = name)
+  }
+})
+
+test_that("feature engineering saved by earlier versions replays after loading", {
+  skip_if_not_installed("glmnet")
+  # earlier versions saved preprocessing with ParallelLogger::saveSettingsToJson(),
+  # which wrote the learned tables row by row with four decimals
+  for (name in names(fittedStepSettings())) {
+    result <- replayInMemoryAndReloaded(
+      fittedStepSettings()[[name]],
+      writer = ParallelLogger::saveSettingsToJson
+    )
+    expect_equal(result$reloaded$rowId, result$inMemory$rowId, info = name)
+    expect_equal(result$reloaded$covariateId, result$inMemory$covariateId, info = name)
+    # predictive mean matching picks the donor with the nearest predicted value,
+    # so rounded predictions can pick another donor; the other steps only lose precision
+    if (name != "iterative") {
+      expect_equal(result$reloaded$covariateValue, result$inMemory$covariateValue,
+        tolerance = 1e-3, info = name
+      )
+    }
+  }
+})
+
+test_that("steps whose learned tables are empty replay after saving and loading", {
+  binaryOnly <- function(n) {
+    covariateData <- Andromeda::andromeda(
+      covariates = data.frame(rowId = seq_len(n), covariateId = 20, covariateValue = 1),
+      covariateRef = data.frame(covariateId = 20, covariateName = "b", analysisId = 20, conceptId = 0),
+      analysisRef = data.frame(
+        analysisId = 20, analysisName = "b", domainId = "x", startDay = 0, endDay = 0,
+        isBinary = "Y", missingMeansZero = "Y"
+      )
+    )
+    class(covariateData) <- "CovariateData"
+    attr(covariateData, "metaData") <- list()
+    structure(
+      list(
+        labels = data.frame(rowId = seq_len(n), outcomeCount = 0),
+        folds = data.frame(rowId = seq_len(n), index = 1),
+        covariateData = covariateData
+      ),
+      class = "plpData"
+    )
+  }
+  for (settings in list(
+    createNormalizer("minmax"),
+    createNormalizer("robust", settings = list(clip = FALSE)),
+    createSimpleImputer(method = "mean", missingThreshold = 0.5)
+  )) {
+    train <- binaryOnly(40)
+    engineered <- suppressWarnings(featureEngineer(train, settings))
+    jsonFile <- tempfile(fileext = ".json")
+    saveSettingsToJsonFullPrecision(
+      list(featureEngineering = attr(engineered$covariateData, "metaData")$featureEngineering),
+      jsonFile
+    )
+    loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+    newData <- binaryOnly(20)
+    replayed <- applyFeatureEngineering(newData, loaded)
+    expect_equal(nrow(replayedRows(replayed)), 20, info = attr(settings, "fun"))
+    Andromeda::close(train$covariateData)
+    Andromeda::close(newData$covariateData)
+    Andromeda::close(replayed$covariateData)
+    unlink(jsonFile)
+  }
+})

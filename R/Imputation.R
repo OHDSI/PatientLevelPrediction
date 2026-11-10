@@ -262,6 +262,9 @@ createSklearnIterativeImputerObject <- function(methodSettings) {
 #' @title Create scikit-learn Iterative Imputer settings
 #' @description This function creates settings for a dense iterative imputer
 #' powered by scikit-learn's `IterativeImputer` through `reticulate`.
+#' @details The fitted scikit-learn imputer is kept in the R session. A model
+#' that uses it can be applied in the session it was trained in, but not after
+#' it is saved and loaded again; refit the model in the new session instead.
 #' @param missingThreshold The threshold for missing values to remove a feature
 #' @param methodSettings A list of settings for sklearn `IterativeImputer`.
 #' Supported settings are:

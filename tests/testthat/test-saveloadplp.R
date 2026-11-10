@@ -351,6 +351,70 @@ test_that("Saved GLM models keep coefficient precision", {
   expect_true(is.numeric(raw$coefficients$coefficient))
 })
 
+test_that("Full precision JSON writer keeps data frames held in attributes", {
+  # feature engineering steps keep the values they learned in training as attributes
+  settings <- structure(
+    list(type = "minmax"),
+    class = "featureEngineeringSettings",
+    fun = "minMaxNormalize",
+    minMaxs = dplyr::tibble(covariateId = c(1002, 1003), max = c(80.123456789, 1 / 3), min = c(20, NA)),
+    nested = list(map = data.frame(sourceCovariateId = 1, indicatorCovariateId = 2))
+  )
+  object <- list(step = list(funct = "minMaxNormalize", settings = list(featureEngineeringSettings = settings)))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  PatientLevelPrediction:::saveSettingsToJsonFullPrecision(object, path)
+  loaded <- ParallelLogger::loadSettingsFromJson(path)$step$settings$featureEngineeringSettings
+
+  expect_s3_class(loaded, "featureEngineeringSettings")
+  expect_equal(attr(loaded, "fun"), "minMaxNormalize")
+  minMaxs <- attr(loaded, "minMaxs")
+  expect_s3_class(minMaxs, "data.frame")
+  expect_identical(minMaxs$max, c(80.123456789, 1 / 3))
+  expect_equal(minMaxs$min, c(20, NA))
+  expect_s3_class(attr(loaded, "nested")$map, "data.frame")
+  expect_equal(attr(loaded, "nested")$map$indicatorCovariateId, 2)
+})
+
+test_that("Full precision JSON writer keeps missing values in tables with one row", {
+  # an imputer saves the missing indicator analysis it adds; for a single
+  # measurement analysis without a time window that table has one row, and
+  # prediction appends it to the analysisRef of the new data
+  analysisRef <- data.frame(
+    analysisId = 1010, analysisName = "measurement missing indicator",
+    domainId = "measurement", startDay = NA_real_, endDay = NA_real_,
+    isBinary = "Y", missingMeansZero = "Y"
+  )
+  settings <- structure(list(method = "mean"), analysisRef = analysisRef)
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(list(settings = settings), jsonFile)
+  reloaded <- attr(ParallelLogger::loadSettingsFromJson(jsonFile)$settings, "analysisRef")
+  expect_true(is.na(reloaded$startDay))
+  expect_false(is.character(reloaded$startDay))
+
+  covariateData <- Andromeda::andromeda(analysisRef = data.frame(
+    analysisId = 10, analysisName = "measurement", domainId = "measurement",
+    startDay = -365, endDay = 0, isBinary = "N", missingMeansZero = "N"
+  ))
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+  Andromeda::appendToTable(covariateData$analysisRef, reloaded)
+  expect_setequal(dplyr::pull(covariateData$analysisRef, "analysisId"), c(10, 1010))
+})
+
+test_that("only the package's own feature engineering steps get saved tables repaired", {
+  # a list of records, as a custom step might save it
+  records <- list(list(id = 1, name = "a"), list(id = 2, name = "b"))
+  steps <- featureEngineeringSteps(list(
+    list(funct = "implementCustomStep", settings = list(records = records)),
+    list(funct = "minMaxNormalize", settings = list(records = records))
+  ))
+
+  expect_identical(steps[[1]]$settings$records, records)
+  expect_s3_class(steps[[2]]$settings$records, "data.frame")
+  expect_equal(steps[[2]]$settings$records$id, c(1, 2))
+})
+
 test_that("Full precision JSON writer handles the settings shapes saved with models", {
   object <- list(
     tiny = 1.5e-12,
@@ -393,4 +457,62 @@ test_that("Full precision JSON writer handles the settings shapes saved with mod
   expect_identical(loaded$frame$maxValue, c(0.000012345, 987654.321))
   expect_equal(loaded$date, "2026-01-02")
   expect_identical(loaded$nested$inner, 5e-06)
+})
+
+test_that("a reloaded model with feature engineering predicts exactly as the fitted model", {
+  skip_on_cran()
+  data("simulationProfile", package = "PatientLevelPrediction")
+  simulated <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+  # a continuous measurement that is missing for 30% of patients
+  measured <- withr::with_seed(7, sample(simulated$cohorts$rowId, 700))
+  Andromeda::appendToTable(
+    simulated$covariateData$covariates,
+    data.frame(rowId = measured, covariateId = 9101, covariateValue = withr::with_seed(7, stats::rnorm(700, 5, 2)))
+  )
+  Andromeda::appendToTable(
+    simulated$covariateData$covariateRef,
+    data.frame(
+      covariateId = 9101, covariateName = "measurement", analysisId = 101, conceptId = 0,
+      valueAsConceptId = NA_real_, collisions = NA_real_
+    )
+  )
+  # the simulated analysisRef only has analysisId; age (analysis 2) and the
+  # measurement are continuous
+  analysisIds <- c(dplyr::pull(simulated$covariateData$analysisRef, .data$analysisId), 101)
+  simulated$covariateData$analysisRef <- data.frame(
+    analysisId = analysisIds, analysisName = paste("analysis", analysisIds), domainId = "x",
+    startDay = 0, endDay = 0,
+    isBinary = ifelse(analysisIds %in% c(2, 101), "N", "Y"),
+    missingMeansZero = ifelse(analysisIds %in% c(2, 101), "N", "Y")
+  )
+  populationSettings <- createStudyPopulationSettings(requireTimeAtRisk = FALSE)
+  saveDirectory <- file.path(saveLoc, "reloadedFeatureEngineering")
+
+  result <- runPlp(
+    plpData = simulated,
+    outcomeId = 3,
+    analysisId = "fe",
+    populationSettings = populationSettings,
+    featureEngineeringSettings = list(
+      createSimpleImputer(method = "mean", missingThreshold = 0.5, addMissingIndicator = TRUE),
+      createNormalizer("minmax"),
+      createRareFeatureRemover(threshold = 0.01)
+    ),
+    modelSettings = setLassoLogisticRegression(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE, runFeatureEngineering = TRUE, runPreprocessData = TRUE,
+      runModelDevelopment = TRUE
+    ),
+    saveDirectory = saveDirectory
+  )
+  loaded <- loadPlpModel(file.path(saveDirectory, "fe", "plpResult", "model"))
+  population <- createStudyPopulation(simulated, outcomeId = 3, populationSettings = populationSettings)
+
+  fitted <- predictPlp(result$model, simulated, population)
+  reloaded <- predictPlp(loaded, simulated, population)
+
+  expect_equal(reloaded$rowId, fitted$rowId)
+  expect_equal(reloaded$value, fitted$value, tolerance = 0)
 })

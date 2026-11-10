@@ -38,6 +38,11 @@ The settings for the sklearn iterative imputer of class \code{featureEngineering
 This function creates settings for a dense iterative imputer
 powered by scikit-learn's \code{IterativeImputer} through \code{reticulate}.
 }
+\details{
+The fitted scikit-learn imputer is kept in the R session. A model
+that uses it can be applied in the session it was trained in, but not after
+it is saved and loaded again; refit the model in the new session instead.
+}
 \examples{
 \dontshow{ # dontrun reason: requires python and scikit-learn }
 \dontrun{
