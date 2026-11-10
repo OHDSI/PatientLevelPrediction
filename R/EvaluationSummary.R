@@ -211,11 +211,14 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         summary(survival::survfit(survival::Surv(t, y) ~ 1), times = timepoint)
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "Kaplan-Meier risk could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
-    survVal <- 1 - out$surv
+    # summary() returns no row when the timepoint is past the last follow-up
+    survVal <- if (length(out$surv) == 1) 1 - out$surv else NA_real_
     meanSurvivalTime <- mean(t)
 
     result <- rbind(
@@ -232,13 +235,16 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         survival::concordance(S ~ p, reverse = TRUE)
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "C-statistic could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
-    cStatistic <- 0
-    cStatistic_l95CI <- 0
-    cStatistic_u95CI <- 0
+    # NA rather than a number when estimation fails, as 0 would read as reversed discrimination
+    cStatistic <- NA_real_
+    cStatistic_l95CI <- NA_real_
+    cStatistic_u95CI <- NA_real_
 
     if (!is.null(conc)) {
       cStatistic <- round(conc$concordance, 5)
@@ -287,12 +293,14 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         )
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "E-statistics could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
 
-    eStatistic <- eStatistic90 <- -1
+    eStatistic <- eStatistic90 <- NA_real_
     if (!is.null(w)) {
       eStatistic <- mean(abs(w$actual - w$estimatedSurvival))
       eStatistic90 <- stats::quantile(abs(w$actual - w$estimatedSurvival),

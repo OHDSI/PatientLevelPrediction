@@ -304,3 +304,63 @@ test_that("E statistics binary", {
 # test computePreferenceScore(prediction)
 
 #############################################################################
+
+survivalStatisticsFixture <- function() {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = seq(0.05, 0.6, length.out = 20),
+    outcomeCount = rep(c(0, 1), 10),
+    survivalTime = seq(30, 600, by = 30),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "survival")
+  prediction
+}
+
+survivalStatistic <- function(stats, metric) {
+  stats$value[stats$metric == metric]
+}
+
+test_that("survival statistics are NA rather than placeholders when they cannot be estimated", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
+  prediction <- survivalStatisticsFixture()
+
+  stats <- suppressWarnings(with_mocked_bindings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365),
+    concordance = function(...) stop("concordance failed"),
+    .package = "survival"
+  ))
+  for (metric in c("C-statistic", "C-statistic lower 95% CI", "C-statistic upper 95% CI")) {
+    expect_true(is.na(survivalStatistic(stats, metric)), info = metric)
+  }
+
+  stats <- suppressWarnings(with_mocked_bindings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365),
+    hare = function(...) stop("hare failed"),
+    .package = "polspline"
+  ))
+  expect_true(is.na(survivalStatistic(stats, "E-statistic")))
+  expect_true(is.na(survivalStatistic(stats, "E-statistic 90%")))
+  # the other statistics are still estimated
+  expect_false(is.na(survivalStatistic(stats, "C-statistic")))
+})
+
+test_that("survival risk is NA, in a well-formed row, past the last follow-up", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
+  prediction <- survivalStatisticsFixture()
+  stats <- suppressWarnings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 1000)
+  )
+  survivalRow <- stats[stats$metric == "Survival", ]
+  expect_equal(nrow(survivalRow), 1)
+  expect_equal(survivalRow$evaluation, "Test")
+  expect_equal(as.numeric(survivalRow$timepoint), 1000)
+  expect_true(is.na(survivalRow$value))
+
+  # within follow-up the Kaplan-Meier risk is reported as before
+  within <- getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365)
+  km <- summary(survival::survfit(survival::Surv(prediction$survivalTime, prediction$outcomeCount) ~ 1), times = 365)
+  expect_equal(as.numeric(survivalStatistic(within, "Survival")), 1 - km$surv)
+})
