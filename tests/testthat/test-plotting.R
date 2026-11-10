@@ -68,6 +68,32 @@ test_that("calibration plots tolerate groups that are not estimable at the horiz
   expect_s3_class(plotSparseCalibration(result), "arrangelist")
   expect_s3_class(plotSparseCalibration2(result), "arrangelist")
 })
+
+test_that("demographic plot keeps predicted risk for groups without an estimable outcome", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
+  summary <- data.frame(
+    evaluation = "Test",
+    ageGroup = c("Age group: 50-54", "Age group: 55-59"),
+    genGroup = "Male",
+    averagePredictedProbability = c(0.1, 0.2),
+    StDevPredictedProbability = c(0.02, 0.03),
+    PersonCountAtRisk = c(10, 10),
+    PersonCountWithOutcome = c(2, NA)
+  )
+  result <- list(performanceEvaluation = list(demographicSummary = summary))
+  expect_s3_class(plotDemographicSummary(result), "arrangelist")
+
+  local_mocked_bindings(
+    marrangeGrob = function(grobs, ...) grobs,
+    .package = "gridExtra"
+  )
+  plotted <- plotDemographicSummary(result)[[1]]$data
+  predicted <- plotted[plotted$variable == "averagePredictedProbability", ]
+  expect_setequal(trimws(as.character(predicted$age)), c("50-54", "55-59"))
+  expect_equal(nrow(plotted[plotted$variable == "observed", ]), 1)
+})
+
 test_that("outcomeSurvivalPlot", {
   skip_if_not_installed("survminer")
   skip_on_cran()

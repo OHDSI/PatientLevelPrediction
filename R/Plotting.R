@@ -830,7 +830,7 @@ plotDemographicSummary <- function(
 
     # remove -1 values:
     x$averagePredictedProbability[is.na(x$averagePredictedProbability)] <- 0
-    x <- x[x$PersonCountWithOutcome != -1, ]
+    x <- x[is.na(x$PersonCountWithOutcome) | x$PersonCountWithOutcome != -1, ]
     if (nrow(x) == 0) {
       return(NULL)
     }

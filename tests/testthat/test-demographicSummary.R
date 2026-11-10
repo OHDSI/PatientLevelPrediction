@@ -108,3 +108,39 @@ test_that("survival demographic summary does not count unknown genders as female
   expect_equal(result$PersonCountAtRisk[result$genGroup == "Unknown"], 2)
   expect_equal(as.numeric(result$observedRisk[result$genGroup == "Female"]), 1 / 2)
 })
+
+test_that("survival demographic summary keeps groups without estimable events", {
+  prediction <- data.frame(
+    rowId = 1:10,
+    ageYear = c(rep(52, 4), rep(72, 3), 72, rep(52, 2)),
+    gender = c(rep(8507, 4), rep(8532, 3), 8507, rep(8532, 2)),
+    value = c(0.1, 0.2, 0.3, 0.4, 0.05, 0.06, 0.07, 0.9, 0.15, 0.25),
+    # group A (M, 50-54): 2 events, 2 censored after the horizon
+    # group B (F, 70-74): no events, followed past the horizon
+    # group C (M, 70-74): one person with an event before the horizon
+    # group D (F, 50-54): no events, follow-up ends before the horizon
+    outcomeCount = c(1, 1, 0, 0, 0, 0, 0, 1, 0, 0),
+    survivalTime = c(100, 200, 500, 500, 500, 500, 500, 100, 100, 200),
+    evaluation = "Test"
+  )
+  result <- getDemographicSummary_survival(prediction, "evaluation", timepoint = 365)
+  lookup <- function(age, gen) {
+    result[result$ageGroup == paste0("Age group: ", age) & result$genGroup == gen, ]
+  }
+  expect_equal(nrow(result), 4)
+  groupA <- lookup("50-54", "Male")
+  expect_equal(as.numeric(groupA$observedRisk), 1 / 2) # S(365) = 3/4 * 2/3
+  expect_equal(groupA$PersonCountWithOutcome, 2)
+  groupB <- lookup("70-74", "Female")
+  expect_equal(as.numeric(groupB$observedRisk), 0)
+  expect_equal(groupB$PersonCountAtRisk, 3)
+  expect_equal(groupB$PersonCountWithOutcome, 0)
+  groupC <- lookup("70-74", "Male")
+  expect_equal(as.numeric(groupC$observedRisk), 1)
+  expect_equal(groupC$PersonCountAtRisk, 1)
+  groupD <- lookup("50-54", "Female")
+  expect_true(is.na(as.numeric(groupD$observedRisk)))
+  expect_true(is.na(groupD$PersonCountWithOutcome))
+  expect_equal(groupD$PersonCountAtRisk, 2)
+})
+

@@ -149,37 +149,21 @@ getDemographicSummary_survival <- function(prediction, evalColumn, timepoint = N
         tempDemo <- demographicSum %>%
           dplyr::filter(.data$genGroup == gen & .data$ageGroup == age)
 
-        if (nrow(tempDemo) > 1 && length(unique(tempDemo$y)) > 1) {
-          t <- tempDemo$t
-          y <- tempDemo$y
+        if (nrow(tempDemo) > 0) {
           value <- tempDemo$value
+          km <- kmIncidenceAtTimepoint(tempDemo$t, tempDemo$y, timepoint)
 
-          out <- tryCatch(
-            {
-              summary(
-                survival::survfit(survival::Surv(t, y) ~ 1),
-                times = timepoint
-              )
-            },
-            error = function(e) {
-              ParallelLogger::logError(e)
-              return(NULL)
-            }
+          demoTemp <- c(
+            genGroup = gen,
+            ageGroup = age,
+            PersonCountAtRisk = length(value),
+            PersonCountWithOutcome = round(length(value) * km$incidence),
+            observedRisk = km$incidence,
+            averagePredictedProbability = mean(value, na.rm = TRUE),
+            StDevPredictedProbability = stats::sd(value, na.rm = TRUE)
           )
 
-          if (!is.null(out) && !is.null(out$surv)) {
-            demoTemp <- c(
-              genGroup = gen,
-              ageGroup = age,
-              PersonCountAtRisk = length(value),
-              PersonCountWithOutcome = round(length(value) * (1 - out$surv)),
-              observedRisk = 1 - out$surv,
-              averagePredictedProbability = mean(value, na.rm = TRUE),
-              StDevPredictedProbability = stats::sd(value, na.rm = TRUE)
-            )
-
-            demographicData <- rbind(demographicData, demoTemp)
-          }
+          demographicData <- rbind(demographicData, demoTemp)
         }
       }
     }
