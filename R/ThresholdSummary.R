@@ -570,7 +570,7 @@ f1Score <- function(TP, TN, FN, FP) {
     TN = TN
   )
 
-  return(2 * (TP / (TP + FP)) * (TP / (TP + FN)) / ((TP / (TP + FP)) + (TP / (TP + FN))))
+  return(2 * TP / (2 * TP + FP + FN))
 }
 #' Calculate the accuracy
 #'

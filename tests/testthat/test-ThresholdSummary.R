@@ -49,6 +49,19 @@ test_that("getThresholdSummary binary", {
   expect_equal(thresSumBin, thresSum)
 })
 
+test_that("thresholdSummary reports F1 of zero when no true positives are captured", {
+  prediction <- data.frame(
+    rowId = 1:4,
+    value = c(0.9, 0.8, 0.7, 0.6),
+    outcomeCount = c(0, 0, 1, 1),
+    evaluation = "Test"
+  )
+  result <- getThresholdSummary(prediction)
+  f1 <- result$f1Score[order(-result$predictionThreshold)]
+  # by hand: (TP,FP,FN) = (0,1,2), (0,2,2), (1,2,1), (2,2,0); F1 = 2TP/(2TP+FP+FN)
+  expect_equal(f1, c(0, 0, 0.4, 2 / 3))
+})
+
 test_that("getThresholdSummary survival", {
   ePrediction <- data.frame(
     value = c(
@@ -112,6 +125,10 @@ test_that("survival net benefit is not calculated for values that are not probab
 
 test_that("f1Score", {
   expect_equal(f1Score(TP = 0, TN = 0, FN = 0, FP = 0), NaN)
+  # no true positives with positives present: precision and recall are 0, F1 is 0
+  expect_equal(f1Score(TP = 0, TN = 5, FN = 3, FP = 2), 0)
+  expect_equal(f1Score(TP = c(0, 10), TN = c(5, 3), FN = c(3, 5), FP = c(2, 5)), c(0, 2 / 3))
+  expect_equal(f1Score(TP = 2, TN = 0, FN = 0, FP = 0), 1)
   expect_error(f1Score(TP = -1, TN = 0, FN = 0, FP = 0))
   expect_error(f1Score(TP = 1, TN = -1, FN = 0, FP = 0))
   expect_error(f1Score(TP = 1, TN = 3, FN = -1, FP = 0))
