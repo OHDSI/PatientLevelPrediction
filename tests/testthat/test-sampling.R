@@ -519,3 +519,19 @@ test_that("underSampleData draws controls as before when a fold has several", {
   expect_setequal(sampled$labels$rowId, c(1:10, expected))
   expect_setequal(sampled$folds$rowId, c(1:10, expected))
 })
+
+test_that("overSampleData stops on a fold without outcomes", {
+  labels <- data.frame(
+    rowId = 1:20, subjectId = 1001:1020,
+    outcomeCount = c(1, 1, rep(0, 8), rep(0, 10)), survivalTime = 1
+  )
+  folds <- data.frame(rowId = labels$rowId, index = rep(1:2, each = 10))
+  covariates <- data.frame(rowId = labels$rowId, covariateId = 10, covariateValue = 1)
+  original <- createSamplingFixture(labels, folds, covariates)
+  withr::defer(Andromeda::close(original$covariateData))
+
+  expect_error(
+    overSampleData(original, list(sampleSeed = 1, numberOutcomestoNonOutcomes = 1)),
+    "Cannot oversample fold 2 because it has no outcomes"
+  )
+})

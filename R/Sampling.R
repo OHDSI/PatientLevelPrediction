@@ -235,6 +235,14 @@ overSampleData <- function(trainData, sampleSettings) {
       sampleSize <- sampleSize - length(outcomeIds)
     }
 
+    if (sampleSize > 0 && length(outcomeIds) == 0) {
+      # without a case there is nothing to copy, and the loop below would never end
+      stop(
+        "Cannot oversample fold ", i, " because it has no outcomes. ",
+        "Use a split with at least one outcome in every fold, or another sampling type."
+      )
+    }
+
     while (sampleSize > 0) {
       tempSampleSize <- min(length(outcomeIds), sampleSize)
       # randomly oversample outcome people
