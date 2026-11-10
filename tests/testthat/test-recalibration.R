@@ -568,3 +568,81 @@ test_that("weakRecalibration survival rejects a missing or non-positive horizon"
     "positive timepoint"
   )
 })
+
+test_that("weakRecalibration survival uses survivalTime, not cohort end", {
+  skip_if_not_installed("survival")
+  fixture <- data.frame(
+    rowId = 1:12,
+    rawValue = c(1.2, 0.2, -0.4, 0.9, -0.6, 0.5, 1, -1, 0.3, -0.8, 0.7, -0.1),
+    survivalTime = c(200, 80, 150, 260, 300, 120, rep(365, 6)),
+    outcomeCount = c(rep(1, 6), rep(0, 6)),
+    daysToCohortEnd = c(30, 365, 60, 100, rep(365, 8)),
+    evaluationType = "validation"
+  )
+  fixture$value <- 1 - 0.9^exp(fixture$rawValue)
+  attr(fixture, "metaData") <- list(modelType = "survival", timepoint = 365)
+
+  reference <- survival::coxph(survival::Surv(survivalTime, outcomeCount) ~ rawValue, data = fixture)
+  hazard <- max(survival::basehaz(reference)$hazard)
+  expectedRisk <- as.numeric(1 - exp(-hazard * exp(stats::predict(reference))))
+
+  result <- recalibratePlp(fixture, method = "weakRecalibration")
+  expect_equal(recalRows(result, "weakRecalibration")$value, expectedRisk, tolerance = 1e-6)
+  expect_equal(
+    unname(attr(result, "metaData")$weakRecalibration$adjustGradient),
+    unname(stats::coef(reference)),
+    tolerance = 1e-6
+  )
+
+  # censoring at the horizon still holds: outcomes after the timepoint are censored
+  shortHorizon <- fixture
+  attr(shortHorizon, "metaData")$timepoint <- 150
+  shortResult <- recalibratePlp(shortHorizon, method = "weakRecalibration")
+  censoredTime <- pmin(fixture$survivalTime, 150)
+  censoredEvent <- fixture$outcomeCount == 1 & fixture$survivalTime <= 150
+  shortReference <- survival::coxph(survival::Surv(censoredTime, censoredEvent) ~ fixture$rawValue)
+  expect_equal(
+    unname(attr(shortResult, "metaData")$weakRecalibration$adjustGradient),
+    unname(stats::coef(shortReference)),
+    tolerance = 1e-6
+  )
+})
+
+refitFixture <- function(excludedValue = NULL) {
+  # 60 people with x = 0 (15 cases) and 60 with x = 1 (45 cases)
+  x <- rep(c(0, 1), each = 60)
+  y <- c(rep(0, 45), rep(1, 15), rep(0, 15), rep(1, 45))
+  population <- data.frame(
+    rowId = 1:120, subjectId = 1:120,
+    cohortStartDate = as.Date("2020-01-01"),
+    outcomeCount = y, survivalTime = 365, timeAtRisk = 365
+  )
+  attr(population, "metaData") <- list(
+    targetId = 1, outcomeId = 2,
+    restrictPlpDataSettings = createRestrictPlpDataSettings(),
+    populationSettings = createStudyPopulationSettings()
+  )
+  covariateData <- FeatureExtraction::createEmptyCovariateData(1, FALSE, FALSE)
+  records <- data.frame(rowId = which(x != 0), covariateId = 1001, covariateValue = x[x != 0])
+  if (!is.null(excludedValue)) {
+    records <- rbind(records, data.frame(rowId = 121, covariateId = 1001, covariateValue = excludedValue))
+  }
+  covariateData$covariates <- records
+  covariateData$covariateRef <- data.frame(
+    covariateId = 1001, covariateName = "Selected predictor", analysisId = 1, conceptId = 100
+  )
+  covariateData$analysisRef <- data.frame(
+    analysisId = 1, analysisName = "Test", domainId = "Measurement",
+    startDay = -30, endDay = 0, isBinary = "N", missingMeansZero = "Y"
+  )
+  cohorts <- rbind(population, transform(population[1, ], rowId = 121, subjectId = 121))
+  plpData <- list(covariateData = covariateData, cohorts = cohorts, metaData = list(covariateSettings = NULL))
+  class(plpData) <- "plpData"
+  list(
+    population = population,
+    plpData = plpData,
+    model = createGlmModel(data.frame(covariateId = 1001, coefficient = 1), intercept = -1),
+    y = y,
+    x = x
+  )
+}

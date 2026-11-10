@@ -370,7 +370,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     }
 
 
-    t <- apply(cbind(recalibrated$daysToCohortEnd, recalibrated$survivalTime), 1, min)
+    t <- recalibrated$survivalTime
     y <- ifelse(recalibrated$outcomeCount > 0, 1, 0) # observed outcome
     y[t > timepoint] <- 0
     t[t > timepoint] <- timepoint
