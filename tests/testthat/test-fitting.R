@@ -141,3 +141,36 @@ test_that("candidates without a usable score are not selected as best", {
   expect_equal(result$finalParam$risk, 0.1)
   expect_equal(cvValues(result), c(0.1, 0.9, 0.1, 0.9))
 })
+
+test_that("per-fold tuning scores keep their real fold identifiers", {
+  metric <- createTuningMetric(
+    fun = function(prediction) unique(prediction$index) / 10,
+    maximize = TRUE, name = "foldId"
+  )
+  scores <- function(folds) {
+    fixture <- createTuningFixture(folds)
+    result <- tuneHyperparameters(
+      data = fixture$data, labels = fixture$labels,
+      param = list(risk = list(0.1)), settings = fixture$settings,
+      hyperparamSettings = createHyperparameterSettings(tuningMetric = metric)
+    )
+    result$paramSearch
+  }
+
+  sequential <- scores(rep(1:3, each = 2))
+  summary <- sequential[[1]]$hyperSummary
+  expect_equal(summary$fold, c("CV", "Fold1", "Fold2", "Fold3"))
+  expect_equal(summary$value, c(0.2, 0.1, 0.2, 0.3))
+  expect_equal(sequential[[1]]$cvPerformancePerFold, c(0.1, 0.2, 0.3))
+
+  nonSequential <- scores(rep(c(3, 1, 7), each = 2))
+  summary <- nonSequential[[1]]$hyperSummary
+  expect_equal(summary$fold, c("CV", "Fold3", "Fold1", "Fold7"))
+  expect_equal(summary$value[-1], c(0.3, 0.1, 0.7))
+  expect_equal(summary$value[1], mean(c(0.3, 0.1, 0.7)))
+
+  exported <- normalizeHyperParamSearchForDatabase(nonSequential)
+  expect_equal(exported$fold, c("CV", "Fold3", "Fold1", "Fold7"))
+  expect_equal(exported$value[-1], c(0.3, 0.1, 0.7))
+})
+

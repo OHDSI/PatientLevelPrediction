@@ -358,6 +358,7 @@ tuneHyperparameters <- function(
   history <- list()
   metric <- hyperparamSettings$tuningMetric
   bestCvPrediction <- c()
+  foldIds <- unique(labels$index)
 
   repeat {
     candidate <- iterator$getNext(history)
@@ -367,7 +368,7 @@ tuneHyperparameters <- function(
     cvPrediction <- c()
     cvPerformance <- c()
 
-    for (i in unique(labels$index)) {
+    for (i in foldIds) {
       ind <- labels$index != i
       model <- do.call(
         settings$train,
@@ -388,7 +389,7 @@ tuneHyperparameters <- function(
       )
       performance <- metric$fun(prediction)
       cvPrediction <- rbind(cvPrediction, prediction)
-      cvPerformance <- c(performance, cvPerformance)
+      cvPerformance <- c(cvPerformance, performance)
     }
     meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     history[[length(history) + 1]] <- list(
@@ -400,7 +401,8 @@ tuneHyperparameters <- function(
         metric,
         meanCvPerformance,
         cvPerformance,
-        candidate
+        candidate,
+        foldIds
       )
     )
     # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
@@ -478,10 +480,10 @@ selectBest <- function(history, metric) {
   best
 }
 
-makeHyperSummary <- function(metric, meanScore, foldScores, param) {
+makeHyperSummary <- function(metric, meanScore, foldScores, param, foldIds) {
   perfRows <- data.frame(
     metric = metric$name,
-    fold = c("CV", paste0("Fold", seq_along(foldScores))),
+    fold = c("CV", paste0("Fold", foldIds)),
     value = c(meanScore, foldScores),
     stringsAsFactors = FALSE
   )

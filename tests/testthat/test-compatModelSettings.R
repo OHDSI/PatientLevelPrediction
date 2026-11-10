@@ -82,6 +82,25 @@ test_that("computeGridPerformance remains exported and works", {
   expect_true("hyperSummary" %in% names(result))
 })
 
+test_that("computeGridPerformance labels folds with their real identifiers", {
+  prediction <- data.frame(
+    rowId = 1:6,
+    outcomeCount = c(0, 1, 0, 1, 0, 1),
+    value = c(0.1, 0.9, 0.2, 0.8, 0.3, 0.7),
+    index = c(3, 3, 1, 1, 7, 7)
+  )
+  foldScore <- function(prediction) max(prediction$index) / 10
+  result <- computeGridPerformance(
+    prediction,
+    list(hyperParam1 = 5),
+    performanceFunct = foldScore
+  )
+
+  folds <- result$hyperSummary[result$hyperSummary$fold != "CV", ]
+  expect_equal(folds$fold, c("3", "1", "7"))
+  expect_equal(folds$value, c(0.3, 0.1, 0.7))
+})
+
 test_that("computeGridPerformance resolves metric name in PatientLevelPrediction namespace", {
   prediction <- data.frame(
     rowId = 1:4,

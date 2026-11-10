@@ -286,7 +286,7 @@ computeGridPerformance <- function(
   hyperSummary <- as.data.frame(c(
     data.frame(
       metric = metricName,
-      fold = c("CV", as.character(seq_along(performanceFold))),
+      fold = c("CV", as.character(unique(prediction$index))),
       value = c(performance, performanceFold)
     ),
     paramValues
