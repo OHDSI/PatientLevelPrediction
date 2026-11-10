@@ -498,3 +498,91 @@ test_that("Providing an existing population and skipping population creation wor
     nrow()
   expect_equal(popSize, trainPredictions + testPredictions)
 })
+
+smallPopulationPlpData <- function(daysToCohortEnd, daysToObsEnd, outcomes) {
+  nRows <- length(daysToCohortEnd)
+  cohorts <- data.frame(
+    rowId = seq_len(nRows),
+    subjectId = seq_len(nRows),
+    targetId = rep(1, nRows),
+    cohortStartDate = rep(as.Date("2015-01-01"), nRows),
+    daysFromObsStart = rep(100, nRows),
+    daysToCohortEnd = daysToCohortEnd,
+    daysToObsEnd = daysToObsEnd,
+    ageYear = rep(50, nRows),
+    gender = rep(8507, nRows)
+  )
+  structure(list(cohorts = cohorts, outcomes = outcomes, metaData = list()), class = "plpData")
+}
+
+test_that("restrictTarToCohortEnd censors when every episode ends on index day", {
+  outcomes <- data.frame(
+    rowId = c(1, 2), outcomeId = 1, outcomeCount = 1, daysToEvent = c(10, 0)
+  )
+  samedayData <- smallPopulationPlpData(
+    daysToCohortEnd = c(0, 0), daysToObsEnd = c(365, 365), outcomes = outcomes
+  )
+  settings <- function(restrict, riskWindowStart = 0) {
+    createStudyPopulationSettings(
+      includeAllOutcomes = FALSE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = FALSE, riskWindowStart = riskWindowStart,
+      riskWindowEnd = 30, restrictTarToCohortEnd = restrict
+    )
+  }
+
+  restricted <- createStudyPopulation(samedayData, outcomeId = 1, populationSettings = settings(TRUE))
+  expect_equal(restricted$outcomeCount, c(0, 1))
+  expect_equal(restricted$timeAtRisk, c(1, 1))
+  expect_equal(restricted$survivalTime, c(1, 1))
+
+  # Control: the flag still does nothing when not requested.
+  unrestricted <- createStudyPopulation(samedayData, outcomeId = 1, populationSettings = settings(FALSE))
+  expect_equal(unrestricted$outcomeCount, c(1, 1))
+  expect_equal(unrestricted$timeAtRisk, c(31, 31))
+
+  # Adding an unrelated longer episode must not change the same-day patients.
+  mixedData <- smallPopulationPlpData(
+    daysToCohortEnd = c(0, 0, 20), daysToObsEnd = c(365, 365, 365), outcomes = outcomes
+  )
+  mixed <- createStudyPopulation(mixedData, outcomeId = 1, populationSettings = settings(TRUE))
+  expect_equal(mixed$outcomeCount[1:2], restricted$outcomeCount)
+  expect_equal(mixed$timeAtRisk[1:2], restricted$timeAtRisk)
+  expect_equal(mixed$timeAtRisk[3], 21)
+
+  # With risk starting after index, no same-day episode has time at risk left.
+  afterIndex <- createStudyPopulation(
+    samedayData,
+    outcomeId = 1,
+    populationSettings = settings(TRUE, riskWindowStart = 1)
+  )
+  expect_null(afterIndex)
+})
+
+test_that("restrictTarToCohortEnd warns when every episode ends on index day", {
+  outcomes <- data.frame(rowId = 1, outcomeId = 1, outcomeCount = 1, daysToEvent = 10)
+  settings <- function(restrict) {
+    createStudyPopulationSettings(
+      includeAllOutcomes = FALSE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = FALSE, riskWindowStart = 0,
+      riskWindowEnd = 30, restrictTarToCohortEnd = restrict
+    )
+  }
+  warned <- function(plpData, restrict) {
+    logged <- character(0)
+    testthat::local_mocked_bindings(
+      logWarn = function(...) {
+        logged <<- c(logged, paste0(...))
+        invisible(NULL)
+      },
+      .package = "ParallelLogger"
+    )
+    createStudyPopulation(plpData, outcomeId = 1, populationSettings = settings(restrict))
+    any(grepl("every target episode ends on its index day", logged))
+  }
+
+  sameday <- smallPopulationPlpData(c(0, 0), c(365, 365), outcomes)
+  expect_true(warned(sameday, restrict = TRUE))
+  expect_false(warned(sameday, restrict = FALSE))
+  mixed <- smallPopulationPlpData(c(0, 20), c(365, 365), outcomes)
+  expect_false(warned(mixed, restrict = TRUE))
+})

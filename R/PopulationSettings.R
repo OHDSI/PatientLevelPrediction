@@ -272,8 +272,14 @@ createStudyPopulation <- function(
 
 
   # censor at cohortEndDate:
-  if (max(population$daysToCohortEnd) > 0 && restrictTarToCohortEnd) {
+  if (restrictTarToCohortEnd) {
     ParallelLogger::logInfo("Restricting tarEnd to end of target cohort")
+    if (nrow(population) > 0 && all(population$daysToCohortEnd == 0)) {
+      ParallelLogger::logWarn(
+        "restrictTarToCohortEnd is TRUE but every target episode ends on its index day, ",
+        "so time at risk ends on the index day and none remains after it."
+      )
+    }
     population <- population %>% dplyr::mutate(tarEnd = ifelse(.data$tarEnd > .data$daysToCohortEnd, .data$daysToCohortEnd, .data$tarEnd))
   }
 
