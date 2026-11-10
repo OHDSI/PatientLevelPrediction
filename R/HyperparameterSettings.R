@@ -105,6 +105,18 @@ prepareHyperparameterGrid <- function(paramDefinition,
       }
 
       if (identical(settings$search, "random")) {
+        if (!is.null(settings$randomSeed)) {
+          oldSeedExists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+          if (oldSeedExists) oldSeed <- get(".Random.seed", envir = .GlobalEnv)
+          set.seed(settings$randomSeed)
+          on.exit({
+            if (oldSeedExists) {
+              assign(".Random.seed", oldSeed, envir = .GlobalEnv)
+            } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+              rm(".Random.seed", envir = .GlobalEnv)
+            }
+          }, add = TRUE)
+        }
         idx <- sample.int(
           length(expanded),
           size = min(settings$sampleSize, length(expanded))

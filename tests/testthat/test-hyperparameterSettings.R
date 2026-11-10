@@ -363,3 +363,34 @@ sampleAlphas <- function(ambientSeed, randomSeed, definition = list(alpha = as.l
   ))
   vapply(candidates, function(x) as.numeric(x$alpha), numeric(1))
 }
+
+test_that("random search candidates follow randomSeed, not the ambient RNG", {
+  expect_identical(sampleAlphas(1, 42), sampleAlphas(2, 42))
+  expect_false(identical(sampleAlphas(1, 42), sampleAlphas(1, 99)))
+
+  legacy <- lapply(1:12, function(i) list(alpha = i))
+  expect_identical(sampleAlphas(1, 42, legacy), sampleAlphas(2, 42, legacy))
+})
+
+test_that("random search without randomSeed still follows the ambient RNG", {
+  expect_identical(sampleAlphas(1, NULL), sampleAlphas(1, NULL))
+  expect_false(identical(sampleAlphas(1, NULL), sampleAlphas(2, NULL)))
+})
+
+test_that("seeded random search leaves the ambient RNG untouched", {
+  set.seed(11)
+  expected <- stats::runif(1)
+
+  set.seed(11)
+  sampleSettings <- createHyperparameterSettings(
+    search = "random", sampleSize = 3, randomSeed = 42
+  )
+  prepareHyperparameterGrid(list(alpha = as.list(1:12)), sampleSettings)
+  expect_identical(stats::runif(1), expected)
+
+  withr::with_preserve_seed({
+    rm(".Random.seed", envir = .GlobalEnv)
+    prepareHyperparameterGrid(list(alpha = as.list(1:12)), sampleSettings)
+    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  })
+})
