@@ -203,3 +203,34 @@ test_that("covariateSummary works with strata but no labels", {
   # no outcome groups, so no standardized mean difference
   expect_false("StandardizedMeanDiff" %in% colnames(result))
 })
+
+test_that("covariateSummary applies a saved normalizer from a fitted model", {
+  summaryData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = 2:3, covariateId = 1001, covariateValue = c(1, 2)),
+    covariateRef = data.frame(covariateId = 1001, covariateName = "Score", analysisId = 1, conceptId = 0),
+    analysisRef = data.frame(
+      analysisId = 1, analysisName = "Score", domainId = "Condition",
+      startDay = 0, endDay = 0, isBinary = "N", missingMeansZero = "Y"
+    )
+  )
+  on.exit(Andromeda::close(summaryData), add = TRUE)
+  settings <- createNormalizer("minmax")
+  attr(settings, "minMaxs") <- data.frame(covariateId = 1001, max = 2, min = 0)
+  attr(settings, "implicitZeroCovariateIds") <- 1001
+  featureEngineering <- list(
+    funct = "minMaxNormalize",
+    settings = list(featureEngineeringSettings = settings, done = TRUE)
+  )
+
+  res <- covariateSummary(
+    covariateData = summaryData,
+    cohort = data.frame(rowId = 1:3),
+    labels = NULL,
+    strata = NULL,
+    variableImportance = NULL,
+    featureEngineering = featureEngineering
+  )
+
+  expect_equal(res$CovariateCount[res$covariateId == 1001], 2)
+  expect_equal(res$CovariateMean[res$covariateId == 1001], 0.5)
+})

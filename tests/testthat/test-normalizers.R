@@ -230,3 +230,169 @@ test_that("normalization with constant column doesn't produce NaNs", {
   expect_true(all(is.finite(newTestFeature)))
   expect_equal(newTestFeature, rep(0, nrow(newTestData$labels)))
 })
+
+createZeroData <- function(values, missingMeansZero = "Y", rowIds = seq_along(values), plain = FALSE) {
+  stored <- values != 0
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = rowIds[stored],
+      covariateId = 1001,
+      covariateValue = values[stored]
+    ),
+    covariateRef = data.frame(
+      covariateId = 1001,
+      covariateName = "score",
+      analysisId = 1,
+      conceptId = 0
+    ),
+    analysisRef = data.frame(
+      analysisId = 1,
+      analysisName = "score",
+      domainId = "Condition",
+      startDay = 0,
+      endDay = 0,
+      isBinary = "N",
+      missingMeansZero = missingMeansZero
+    )
+  )
+  class(covariateData) <- "CovariateData"
+  attr(covariateData, "metaData") <- list(populationSize = length(rowIds))
+  if (plain) {
+    return(structure(
+      list(cohorts = data.frame(rowId = rowIds), outcomes = data.frame(), covariateData = covariateData),
+      class = "plpData"
+    ))
+  }
+  structure(
+    list(
+      labels = data.frame(rowId = rowIds, outcomeCount = 0),
+      folds = data.frame(rowId = rowIds, index = 1),
+      covariateData = covariateData
+    ),
+    class = "plpData"
+  )
+}
+
+matrixValues <- function(data, rowIds) {
+  mapped <- toSparseM(data, data.frame(rowId = rowIds))
+  values <- as.numeric(mapped$dataMatrix[, 1])
+  values[order(mapped$labels$originalRowId)]
+}
+
+savedNormalizer <- function(data, name) {
+  attr(data$covariateData, "metaData")$featureEngineering[[name]]$settings$featureEngineeringSettings
+}
+
+test_that("min-max normalization includes implicit zeros", {
+  data <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  normalized <- minMaxNormalize(data, createNormalizer("minmax"))
+
+  expect_equal(matrixValues(normalized, 1:3), c(0, 0.5, 1))
+  # zeros that stay zero are not stored
+  expect_equal(normalized$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(), 2)
+  expect_equal(
+    data$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull(),
+    2
+  )
+})
+
+test_that("robust normalization includes implicit zeros and stores non-zero results", {
+  data <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  normalized <- robustNormalize(data, createNormalizer("robust", settings = list(clip = FALSE)))
+
+  expect_equal(matrixValues(normalized, 1:3), c(-1, 0, 1))
+  rows <- as.data.frame(normalized$covariateData$covariates)
+  expect_equal(rows$covariateValue[rows$rowId == 1], -1)
+})
+
+test_that("robust normalization clips the implicit zero value when requested", {
+  data <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  normalized <- robustNormalize(data, createNormalizer("robust", settings = list(clip = TRUE)))
+
+  expect_equal(matrixValues(normalized, 1:3)[1], -1 / sqrt(1 + (-1 / 3)^2))
+})
+
+test_that("saved normalizers apply implicit zeros to new data", {
+  for (norm in list(
+    list(create = createNormalizer("minmax"), fun = minMaxNormalize, name = "minMaxNormalize", expected = c(0.5, 0, 1)),
+    list(
+      create = createNormalizer("robust", settings = list(clip = FALSE)),
+      fun = robustNormalize, name = "robustNormalize", expected = c(0, -1, 1)
+    )
+  )) {
+    train <- createZeroData(c(0, 1, 2))
+    on.exit(Andromeda::close(train$covariateData), add = TRUE)
+    fitted <- norm$fun(train, norm$create)
+    settings <- savedNormalizer(fitted, norm$name)
+
+    test <- createZeroData(c(1, 0, 2))
+    on.exit(Andromeda::close(test$covariateData), add = TRUE)
+    applied <- norm$fun(test, settings, done = TRUE)
+
+    expect_equal(matrixValues(applied, 1:3), norm$expected)
+  }
+})
+
+test_that("saved normalizers apply implicit zeros to plain plpData", {
+  train <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  fitted <- minMaxNormalize(train, createNormalizer("minmax"))
+  settings <- savedNormalizer(fitted, "minMaxNormalize")
+
+  plain <- createZeroData(c(0, 1, 2), plain = TRUE)
+  on.exit(Andromeda::close(plain$covariateData), add = TRUE)
+  applied <- minMaxNormalize(plain, settings, done = TRUE)
+
+  expect_equal(names(applied), names(plain))
+  expect_equal(matrixValues(applied, 1:3), c(0, 0.5, 1))
+})
+
+test_that("normalizers treat absent rows as missing when missingMeansZero is N", {
+  data <- createZeroData(c(0, 1, 2), missingMeansZero = "N")
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+
+  normalized <- minMaxNormalize(data, createNormalizer("minmax"))
+  rows <- as.data.frame(normalized$covariateData$covariates)
+
+  # statistics come from stored rows, so min=1 and max=2
+  expect_equal(rows$covariateValue[order(rows$rowId)], c(0, 1))
+  expect_equal(nrow(rows), 2)
+})
+
+test_that("models saved before implicit zeros were handled replay unchanged", {
+  data <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(data$covariateData), add = TRUE)
+  settings <- createNormalizer("minmax")
+  attr(settings, "minMaxs") <- data.frame(covariateId = 1001, max = 2, min = 1)
+
+  applied <- minMaxNormalize(data, settings, done = TRUE)
+  rows <- as.data.frame(applied$covariateData$covariates)
+
+  expect_equal(nrow(rows), 2)
+  expect_equal(rows$covariateValue[order(rows$rowId)], c(0, 1))
+})
+
+test_that("implicit zero covariates survive a JSON round trip of the settings", {
+  train <- createZeroData(c(0, 1, 2))
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  fitted <- robustNormalize(train, createNormalizer("robust", settings = list(clip = FALSE)))
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  ParallelLogger::saveSettingsToJson(
+    attr(fitted$covariateData, "metaData")$featureEngineering,
+    jsonFile
+  )
+  loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)
+
+  test <- createZeroData(c(1, 0, 2))
+  on.exit(Andromeda::close(test$covariateData), add = TRUE)
+  applied <- applyFeatureEngineering(test, loaded)
+
+  expect_equal(matrixValues(applied, 1:3), c(0, -1, 1))
+})

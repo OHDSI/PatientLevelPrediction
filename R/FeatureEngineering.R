@@ -52,6 +52,71 @@ isolateCovariateData <- function(data) {
   return(data)
 }
 
+# Data frames stored as attributes come back from the settings JSON as a list of rows.
+restoreSavedTable <- function(savedTable) {
+  if (is.data.frame(savedTable)) {
+    return(savedTable)
+  }
+  return(do.call(rbind, lapply(savedTable, as.data.frame)))
+}
+
+populationRowIds <- function(data) {
+  if (!is.null(data$labels)) {
+    return(unique(data$labels$rowId))
+  }
+  if (!is.null(data$cohorts)) {
+    return(unique(data$cohorts$rowId))
+  }
+  return(NULL)
+}
+
+# Continuous features where a patient without a row has the value zero. Temporal
+# data is excluded because which time points are implicit is not defined.
+implicitZeroCovariateIds <- function(data) {
+  covariateData <- data$covariateData
+  if (is.null(populationRowIds(data)) ||
+    !"missingMeansZero" %in% colnames(covariateData$analysisRef) ||
+    "timeId" %in% colnames(covariateData$covariates)) {
+    return(numeric(0))
+  }
+  covariateData$analysisRef %>%
+    dplyr::filter(.data$isBinary == "N", .data$missingMeansZero == "Y") %>%
+    dplyr::select("analysisId") %>%
+    dplyr::inner_join(covariateData$covariateRef, by = "analysisId") %>%
+    dplyr::pull(.data$covariateId)
+}
+
+# Stores the implicit zeros so that normalization statistics see the whole
+# population and values that do not stay zero after normalization are kept.
+addImplicitZeros <- function(data, covariateIds) {
+  rowIds <- populationRowIds(data)
+  if (length(covariateIds) == 0 || is.null(rowIds)) {
+    return(invisible(NULL))
+  }
+  covariateData <- data$covariateData
+  covariateData$populationRows <- data.frame(rowId = rowIds)
+  on.exit(covariateData$populationRows <- NULL, add = TRUE)
+  for (id in covariateIds) {
+    zeros <- covariateData$populationRows %>%
+      dplyr::anti_join(
+        covariateData$covariates %>% dplyr::filter(.data$covariateId == !!id),
+        by = "rowId"
+      ) %>%
+      dplyr::mutate(covariateId = !!id, covariateValue = 0)
+    Andromeda::appendToTable(covariateData$covariates, zeros)
+  }
+  return(invisible(NULL))
+}
+
+removeStoredZeros <- function(covariateData, covariateIds) {
+  if (length(covariateIds) == 0) {
+    return(invisible(NULL))
+  }
+  covariateData$covariates <- covariateData$covariates %>%
+    dplyr::filter(!(.data$covariateId %in% !!covariateIds & .data$covariateValue == 0))
+  return(invisible(NULL))
+}
+
 # Saved steps may be stored as funct/settings pairs in one flat list (renamed
 # funct.1, settings.1, ... by the JSON round trip), as list entries, or both.
 featureEngineeringSteps <- function(featureEngineering) {
@@ -662,17 +727,11 @@ createNormalizer <- function(type = "minmax",
 minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
   if (!done) {
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
+    implicitZeroIds <- implicitZeroCovariateIds(outData)
+    addImplicitZeros(outData, implicitZeroIds)
+    attr(featureEngineeringSettings, "implicitZeroCovariateIds") <- implicitZeroIds
     # fit the normalization
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
@@ -710,21 +769,17 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
         .data$covariateValue
       )) %>%
       dplyr::select(-c("max", "min"))
+    removeStoredZeros(outData$covariateData, implicitZeroIds)
     outData$covariateData$minMaxs <- NULL
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
+    # NULL for models saved before implicit zeros were handled
+    implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
+    addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$minMaxs <- attr(featureEngineeringSettings, "minMaxs")
+    outData$covariateData$minMaxs <- restoreSavedTable(attr(featureEngineeringSettings, "minMaxs"))
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
       dplyr::left_join(outData$covariateData$minMaxs,
@@ -734,6 +789,7 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
         .data$covariateValue
       )) %>%
       dplyr::select(-c("max", "min"))
+    removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
   featureEngineering <- list(
     funct = "minMaxNormalize",
@@ -770,16 +826,10 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
   start <- Sys.time()
   if (!done) {
     ParallelLogger::logInfo("Starting robust normalization of continuous features")
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
+    implicitZeroIds <- implicitZeroCovariateIds(outData)
+    addImplicitZeros(outData, implicitZeroIds)
+    attr(featureEngineeringSettings, "implicitZeroCovariateIds") <- implicitZeroIds
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -846,20 +896,16 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
         .data$covariateValue
       )) %>%
       dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    removeStoredZeros(outData$covariateData, implicitZeroIds)
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    outData <- isolateCovariateData(trainData)
+    # NULL for models saved before implicit zeros were handled
+    implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
+    addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
+    outData$covariateData$quantiles <- restoreSavedTable(attr(featureEngineeringSettings, "quantiles"))
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
     clip <- featureEngineeringSettings$settings$clip
     outData$covariateData$covariates <- outData$covariateData$covariates %>%
@@ -879,6 +925,7 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
         .data$covariateValue
       )) %>%
       dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
   featureEngineering <- list(
     funct = "robustNormalize",

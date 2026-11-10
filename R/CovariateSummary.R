@@ -81,7 +81,7 @@ covariateSummary <- function(
 
     for (fe in featureEngineeringSteps(featureEngineering)) {
       feSettings <- fe$settings
-      feSettings$trainData <- list(covariateData = covariateData)
+      feSettings$trainData <- list(labels = cohort, covariateData = covariateData)
       covariateData <- do.call(fe$funct, feSettings)$covariateData
     }
   }
