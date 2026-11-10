@@ -357,7 +357,6 @@ tuneHyperparameters <- function(
   )
   history <- list()
   metric <- hyperparamSettings$tuningMetric
-  bestPerformance <- if (metric$maximize) -Inf else Inf
   bestCvPrediction <- c()
 
   repeat {
@@ -404,15 +403,11 @@ tuneHyperparameters <- function(
         candidate
       )
     )
-    bestPerformance <- if (metric$maximize) {
-      max(bestPerformance, meanCvPerformance, na.rm = TRUE)
-    } else {
-      min(bestPerformance, meanCvPerformance, na.rm = TRUE)
-    }
-    if (identical(bestPerformance, meanCvPerformance)) {
+    # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
+    if (identical(selectBest(history, metric), length(history))) {
       ParallelLogger::logInfo(paste0(
         "New best performance ",
-        round(bestPerformance, 4),
+        round(meanCvPerformance, 4),
         " with param: ",
         paste(names(candidate), candidate, sep = "=", collapse = ", ")
       ))
