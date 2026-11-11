@@ -43,30 +43,24 @@ test_that("pfi feature importance returns data.frame", {
 
 test_that("pfi feature importance works with logger or without covariates", {
   skip_if_no_eunomia()
-  # a model on two covariates keeps pfi() quick
-  tinyResults <- runPlp(
-    plpData = nanoData,
-    populationSettings = populationSettings,
-    outcomeId = outcomeId,
-    analysisId = "tinyFit",
-    executeSettings = createExecuteSettings(
-      runSplitData = TRUE,
-      runSampleData = FALSE,
-      runFeatureEngineering = FALSE,
-      runPreprocessData = TRUE,
-      runModelDevelopment = TRUE,
-      runCovariateSummary = FALSE
-    ),
-    saveDirectory = file.path(saveLoc, "tinyResults")
+  # a model on two covariates keeps pfi() quick; the test above runs pfi() on
+  # a fitted model with its preprocessing
+  covariateIds <- nanoData$covariateData$covariateRef %>% dplyr::pull(.data$covariateId)
+  model <- createGlmModel(
+    coefficients = data.frame(covariateId = covariateIds, coefficient = c(0.5, -0.5)),
+    intercept = -2
   )
-  pfiTest <- pfi(tinyResults, population, nanoData,
+  logFile <- file.path(tempdir(), "pfiLog")
+  pfiTest <- pfi(list(model = model), population, nanoData,
     cores = 1,
-    covariates = NULL, log = file.path(tempdir(), "pfiLog")
+    covariates = NULL, log = logFile
   )
 
   expect_equal(class(pfiTest), "data.frame")
   expect_equal(sum(names(pfiTest) %in% c("covariateId", "pfi")), 2)
   expect_true(all(!is.nan(pfiTest$pfi)))
+  # without covariates, every covariate with a non-zero coefficient is permuted
+  expect_setequal(pfiTest$covariateId, covariateIds)
 })
 
 # Saves a synthetic plpData so permute() can load it the way pfi() does.

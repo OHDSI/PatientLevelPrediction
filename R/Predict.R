@@ -108,16 +108,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   ParallelLogger::logTrace("did tidy")
 
   # apply prediction function
-  settings <- plpModel$modelDesign$modelSettings$settings
-  predictFun <- settings$predict
-  if (is.null(predictFun)) {
-    predictFun <- attr(plpModel, "predictionFunction")
-  }
-  if (is.null(predictFun)) {
-    stop("No prediction function available for this model.")
-  }
   prediction <- do.call(
-    if (is.character(predictFun)) eval(parse(text = predictFun)) else predictFun,
+    getPredictionFunction(plpModel),
     list(
       plpModel = plpModel,
       data = plpData,
@@ -301,4 +293,22 @@ applyTidyCovariateData <- function(
 
   # return processed data
   return(newCovariateData)
+}
+
+# The function that predicts with plpModel: the one named in its model
+# settings, or the predictionFunction attribute that Cyclops models and models
+# saved by earlier versions carry. A name may include the package
+# ("PatientLevelPrediction::predictGlm").
+getPredictionFunction <- function(plpModel) {
+  predictFun <- plpModel$modelDesign$modelSettings$settings$predict
+  if (is.null(predictFun)) {
+    predictFun <- attr(plpModel, "predictionFunction")
+  }
+  if (is.null(predictFun)) {
+    stop("No prediction function available for this model.")
+  }
+  if (is.character(predictFun)) {
+    predictFun <- eval(parse(text = predictFun))
+  }
+  predictFun
 }

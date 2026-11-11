@@ -109,7 +109,7 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
 
   # apply prediction function
   pred <- do.call(
-    attr(plpResult$model, "predictionFunction"),
+    getPredictionFunction(plpResult$model),
     list(
       plpModel = plpResult$model,
       data = plpData,
@@ -198,7 +198,7 @@ permutePerf <- function(settings) {
 
     # need to stop preprocessing and do it once...
     pred <- do.call(
-      attr(settings$plpModel, "predictionFunction"),
+      getPredictionFunction(settings$plpModel),
       list(
         plpModel = settings$plpModel,
         data = plpData,
