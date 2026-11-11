@@ -177,34 +177,39 @@ implicitZeroCovariateIds <- function(data) {
 }
 
 # Stores the implicit zeros so that normalization statistics see the whole
-# population and values that do not stay zero after normalization are kept.
+# population and values that do not stay zero after normalization are kept: one
+# append of every population row and covariate pair that has no stored value.
 addImplicitZeros <- function(data, covariateIds) {
   rowIds <- populationRowIds(data)
   if (length(covariateIds) == 0 || is.null(rowIds)) {
     return(invisible(NULL))
   }
   covariateData <- data$covariateData
-  covariateData$populationRows <- data.frame(rowId = rowIds)
+  # not named rowId: in a join of two tables DuckDB's implicit rowid column
+  # would make it ambiguous
+  covariateData$populationRows <- data.frame(personRowId = rowIds, joinKey = 1L)
   on.exit(covariateData$populationRows <- NULL, add = TRUE)
-  for (id in covariateIds) {
-    zeros <- covariateData$populationRows %>%
-      dplyr::anti_join(
-        covariateData$covariates %>% dplyr::filter(.data$covariateId == !!id),
-        by = "rowId"
-      ) %>%
-      dplyr::mutate(covariateId = !!id, covariateValue = 0)
-    Andromeda::appendToTable(covariateData$covariates, zeros)
-  }
+  covariateData$implicitZeroIds <- data.frame(covariateId = covariateIds, joinKey = 1L)
+  on.exit(covariateData$implicitZeroIds <- NULL, add = TRUE)
+  zeros <- covariateData$populationRows %>%
+    dplyr::inner_join(covariateData$implicitZeroIds, by = "joinKey") %>%
+    dplyr::anti_join(
+      covariateData$covariates %>% dplyr::select(personRowId = "rowId", "covariateId"),
+      by = c("personRowId", "covariateId")
+    ) %>%
+    dplyr::transmute(rowId = .data$personRowId, covariateId = .data$covariateId, covariateValue = 0)
+  Andromeda::appendToTable(covariateData$covariates, zeros)
   return(invisible(NULL))
 }
 
-removeStoredZeros <- function(covariateData, covariateIds) {
+# Leaves out the stored values of covariateIds that are zero (after
+# normalization), as a step in the same query.
+dropStoredZeros <- function(covariates, covariateIds) {
   if (length(covariateIds) == 0) {
-    return(invisible(NULL))
+    return(covariates)
   }
-  covariateData$covariates <- covariateData$covariates %>%
+  covariates %>%
     dplyr::filter(!(.data$covariateId %in% !!covariateIds & .data$covariateValue == 0))
-  return(invisible(NULL))
 }
 
 # Fitted steps are stored as a list of list(funct, settings) entries, one per
@@ -1021,10 +1026,12 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     attr(featureEngineeringSettings, "minMaxs") <- minMaxs
     outData$covariateData$minMaxs <- minMaxs
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-    outData$covariateData$covariates <- applyMinMax(
-      outData$covariateData$covariates, outData$covariateData$minMaxs
-    )
-    removeStoredZeros(outData$covariateData, implicitZeroIds)
+    if (NROW(minMaxs) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyMinMax(outData$covariateData$covariates, outData$covariateData$minMaxs),
+        implicitZeroIds
+      )
+    }
     outData$covariateData$minMaxs <- NULL
     done <- TRUE
   } else {
@@ -1033,12 +1040,15 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
     addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$minMaxs <- restoreSavedTable(attr(featureEngineeringSettings, "minMaxs"))
+    minMaxs <- restoreSavedTable(attr(featureEngineeringSettings, "minMaxs"))
+    outData$covariateData$minMaxs <- minMaxs
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-    outData$covariateData$covariates <- applyMinMax(
-      outData$covariateData$covariates, outData$covariateData$minMaxs
-    )
-    removeStoredZeros(outData$covariateData, implicitZeroIds)
+    if (NROW(minMaxs) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyMinMax(outData$covariateData$covariates, outData$covariateData$minMaxs),
+        implicitZeroIds
+      )
+    }
   }
   outData <- recordFeatureEngineeringStep(
     outData,
@@ -1089,11 +1099,15 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     attr(featureEngineeringSettings, "quantiles") <- quantiles
     outData$covariateData$quantiles <- quantiles
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-    outData$covariateData$covariates <- applyRobust(
-      outData$covariateData$covariates, outData$covariateData$quantiles,
-      clip = featureEngineeringSettings$settings$clip
-    )
-    removeStoredZeros(outData$covariateData, implicitZeroIds)
+    if (NROW(quantiles) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyRobust(
+          outData$covariateData$covariates, outData$covariateData$quantiles,
+          clip = featureEngineeringSettings$settings$clip
+        ),
+        implicitZeroIds
+      )
+    }
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
@@ -1101,13 +1115,18 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
     addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$quantiles <- restoreSavedTable(attr(featureEngineeringSettings, "quantiles"))
+    quantiles <- restoreSavedTable(attr(featureEngineeringSettings, "quantiles"))
+    outData$covariateData$quantiles <- quantiles
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-    outData$covariateData$covariates <- applyRobust(
-      outData$covariateData$covariates, outData$covariateData$quantiles,
-      clip = featureEngineeringSettings$settings$clip
-    )
-    removeStoredZeros(outData$covariateData, implicitZeroIds)
+    if (NROW(quantiles) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyRobust(
+          outData$covariateData$covariates, outData$covariateData$quantiles,
+          clip = featureEngineeringSettings$settings$clip
+        ),
+        implicitZeroIds
+      )
+    }
   }
   outData <- recordFeatureEngineeringStep(
     outData,

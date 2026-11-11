@@ -278,3 +278,29 @@ test_that("implicit zero covariates survive a JSON round trip of the settings", 
 
   expect_equal(matrixValues(applied, 1:3), c(0, -1, 1))
 })
+
+test_that("implicit zeros of several covariates are stored in one append", {
+  covariateData <- makeCovariateData(
+    data.frame(rowId = c(1, 2, 3), covariateId = c(1001, 1002, 1002), covariateValue = c(5, 6, 7)),
+    metaData = list(populationSize = 3)
+  )
+  data <- makePlpData(covariateData, labels = zeroLabels(1:3), folds = oneFold(1:3))
+  withr::defer(Andromeda::close(covariateData))
+  appends <- 0
+  appendToTable <- Andromeda::appendToTable
+  local_mocked_bindings(
+    appendToTable = function(...) {
+      appends <<- appends + 1
+      appendToTable(...)
+    },
+    .package = "Andromeda"
+  )
+
+  addImplicitZeros(data, c(1001, 1002))
+
+  rows <- as.data.frame(covariateData$covariates)
+  rows <- rows[order(rows$covariateId, rows$rowId), ]
+  expect_equal(appends, 1)
+  expect_equal(rows$rowId, c(1, 2, 3, 1, 2, 3))
+  expect_equal(rows$covariateValue, c(5, 0, 0, 0, 6, 7))
+})
