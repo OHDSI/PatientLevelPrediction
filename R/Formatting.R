@@ -191,21 +191,18 @@ MapIds <- function(
   on.exit(covariateData$mapping <- NULL, add = TRUE)
 
   newCovariateData <- Andromeda::andromeda()
-  # change the covariateIds in covariates
+  # change the covariateIds and rowIds in covariates, in one copy
   newCovariateData$covariates <- covariateData$covariates %>%
-    dplyr::inner_join(covariateData$mapping, by = "covariateId")
-
+    dplyr::inner_join(covariateData$mapping, by = "covariateId") %>%
+    dplyr::inner_join(covariateData$rowMap, by = "rowId") %>%
+    dplyr::select(-"rowId") %>%
+    dplyr::rename(rowId = "xId")
 
   # change the covariateIds in covariateRef
   newCovariateData$covariateRef <- covariateData$mapping %>%
     dplyr::inner_join(covariateData$covariateRef, by = "covariateId")
 
-  # change the rowId in covariates
   newCovariateData$rowMap <- rowMap
-  newCovariateData$covariates <- newCovariateData$covariates %>%
-    dplyr::inner_join(newCovariateData$rowMap, by = "rowId") %>%
-    dplyr::select(-"rowId") %>%
-    dplyr::rename(rowId = "xId")
 
   if (!is.null(cohort)) {
     # change the rowId in labels
