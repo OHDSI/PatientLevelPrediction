@@ -202,6 +202,19 @@ addImplicitZeros <- function(data, covariateIds) {
   return(invisible(NULL))
 }
 
+# Removes covariateIds from the covariates and covariateRef; leaves both
+# tables as they are when there is nothing to remove.
+removeCovariates <- function(covariateData, covariateIds) {
+  if (length(covariateIds) == 0) {
+    return(invisible(NULL))
+  }
+  covariateData$covariates <- covariateData$covariates %>%
+    dplyr::filter(!.data$covariateId %in% !!covariateIds)
+  covariateData$covariateRef <- covariateData$covariateRef %>%
+    dplyr::filter(!.data$covariateId %in% !!covariateIds)
+  invisible(NULL)
+}
+
 # Leaves out the stored values of covariateIds that are zero (after
 # normalization), as a step in the same query.
 dropStoredZeros <- function(covariates, covariateIds) {
@@ -643,8 +656,15 @@ stratifiedImputeCovariates <- function(
     done = FALSE) {
   covariateId <- featureEngineeringSettings$covariateId
   # a stored NA counts as a missing value
-  trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
-    dplyr::filter(!(.data$covariateId == !!covariateId & is.na(.data$covariateValue)))
+  # stored missing values are rare, so count them before rewriting the table
+  storedMissing <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!covariateId, is.na(.data$covariateValue)) %>%
+    dplyr::count() %>%
+    dplyr::pull()
+  if (storedMissing > 0) {
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(!(.data$covariateId == !!covariateId & is.na(.data$covariateValue)))
+  }
   if (!done) {
     stratifiedMeans <- calculateStratifiedMeans(
       trainData = trainData,
@@ -1217,10 +1237,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       dplyr::filter(.data$ratio <= featureEngineeringSettings$threshold) %>%
       dplyr::pull(c("covariateId"))
 
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::filter(!.data$covariateId %in% rareFeatures)
-    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
-      dplyr::filter(!.data$covariateId %in% rareFeatures)
+    removeCovariates(outData$covariateData, rareFeatures)
 
     attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
 
@@ -1232,10 +1249,7 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
     )
     # an empty set of rare features comes back from the JSON as an empty list
     rareFeatures <- as.numeric(unlist(attr(featureEngineeringSettings, "rareFeatures")))
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::filter(!.data$covariateId %in% !!rareFeatures)
-    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
-      dplyr::filter(!.data$covariateId %in% !!rareFeatures)
+    removeCovariates(outData$covariateData, rareFeatures)
   }
   outData <- recordFeatureEngineeringStep(
     outData,
