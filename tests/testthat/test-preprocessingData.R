@@ -184,33 +184,39 @@ createTemporalData <- function() {
   return(covariateData)
 }
 
+# The tidy settings preprocessData() stores for createTemporalData(): the
+# covariate is kept and normalized by its maximum of 1 ("preprocessData carries
+# recorded temporal deletions into the tidy settings" checks that they match).
 # FeatureExtraction removes redundant covariateId/timeId pairs in temporal data;
-# the tidy settings carry them as deletedRedundantCovariateTimeIds once it records them.
-recordedTidySettings <- function() {
-  raw <- createTemporalData()
-  on.exit(Andromeda::close(raw), add = TRUE)
-  trained <- preprocessData(raw, createPreprocessSettings())
-  settings <- attr(trained, "metaData")$tidyCovariateDataSettings
-  settings$deletedRedundantCovariateTimeIds <- data.frame(covariateId = 1001, timeId = 1)
-  list(settings = settings, trainedTimeIds = as.data.frame(trained$covariates)$timeId)
+# the settings carry them as deletedRedundantCovariateTimeIds once it records
+# them (here time 1, which training dropped).
+temporalTidySettings <- function(recordDeletions = TRUE) {
+  settings <- list(
+    populationSize = 3,
+    cohortIds = 1,
+    deletedInfrequentCovariateIds = numeric(0),
+    normFactors = data.frame(covariateId = 1001, maxValue = 1)
+  )
+  if (recordDeletions) {
+    settings$deletedRedundantCovariateTimeIds <- data.frame(covariateId = 1001, timeId = 1)
+  }
+  settings
 }
 
 test_that("recorded temporal covariate time deletions are replayed at prediction", {
-  recorded <- recordedTidySettings()
   newData <- createTemporalData()
   on.exit(Andromeda::close(newData), add = TRUE)
 
-  replayed <- applyTidyCovariateData(newData, recorded$settings)
+  replayed <- applyTidyCovariateData(newData, temporalTidySettings())
 
+  # the time point training kept
   expect_equal(as.data.frame(replayed$covariates)$timeId, 2)
-  expect_equal(as.data.frame(replayed$covariates)$timeId, recorded$trainedTimeIds)
 })
 
 test_that("recorded temporal deletions survive a JSON round trip of the settings", {
-  settings <- recordedTidySettings()$settings
+  settings <- temporalTidySettings()
   jsonFile <- tempfile(fileext = ".json")
   on.exit(unlink(jsonFile), add = TRUE)
-  settings$normFactors <- as.data.frame(settings$normFactors)
   ParallelLogger::saveSettingsToJson(settings, jsonFile)
   loaded <- ParallelLogger::loadSettingsFromJson(jsonFile)
 
@@ -237,22 +243,23 @@ test_that("preprocessData carries recorded temporal deletions into the tidy sett
     tidyCovariateData = tidyWithRecord,
     .package = "FeatureExtraction"
   )
+  settings <- attr(trained, "metaData")$tidyCovariateDataSettings
   expect_equal(
-    attr(trained, "metaData")$tidyCovariateDataSettings$deletedRedundantCovariateTimeIds,
+    settings$deletedRedundantCovariateTimeIds,
     data.frame(covariateId = 1001, timeId = 1)
   )
+  # the hand-built settings the replay tests use
+  settings$normFactors <- as.data.frame(settings$normFactors)
+  expect_equal(settings[names(temporalTidySettings())], temporalTidySettings())
+  expect_setequal(names(settings), names(temporalTidySettings()))
+  # training dropped time 1
+  expect_equal(as.data.frame(trained$covariates)$timeId, 2)
 })
 
 test_that("tidy settings without recorded temporal deletions replay as before", {
-  raw <- createTemporalData()
-  on.exit(Andromeda::close(raw), add = TRUE)
-  trained <- preprocessData(raw, createPreprocessSettings())
-  settings <- attr(trained, "metaData")$tidyCovariateDataSettings
-  settings$deletedRedundantCovariateTimeIds <- NULL
-
   newData <- createTemporalData()
   on.exit(Andromeda::close(newData), add = TRUE)
-  replayed <- applyTidyCovariateData(newData, settings)
+  replayed <- applyTidyCovariateData(newData, temporalTidySettings(recordDeletions = FALSE))
 
   # only whole-covariate deletions are replayed, so every time point stays
   expect_equal(nrow(as.data.frame(replayed$covariates)), 4)
@@ -266,9 +273,13 @@ test_that("recorded covariate time deletions are ignored for non-temporal data",
   )
   on.exit(Andromeda::close(covariateData), add = TRUE)
 
-  trained <- preprocessData(covariateData, createPreprocessSettings(minFraction = 0, removeRedundancy = FALSE))
-  settings <- attr(trained, "metaData")$tidyCovariateDataSettings
-  settings$deletedRedundantCovariateTimeIds <- data.frame(covariateId = 1, timeId = 1)
+  # as preprocessData() stores them for this data without removing anything
+  settings <- list(
+    populationSize = 2,
+    deletedInfrequentCovariateIds = numeric(0),
+    normFactors = data.frame(covariateId = 1, maxValue = 2),
+    deletedRedundantCovariateTimeIds = data.frame(covariateId = 1, timeId = 1)
+  )
 
   replayed <- applyTidyCovariateData(covariateData, settings)
   expect_equal(nrow(as.data.frame(replayed$covariates)), 2)
