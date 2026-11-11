@@ -131,12 +131,8 @@ test_that("test run multiple", {
   expect_true(file.exists(file.path(saveLoc, "multiple", "settings.csv")))
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Analysis_1")))
   expect_true(file.exists(file.path(saveLoc, "multiple", "Analysis_1", "plpResult", "runPlp.rds")))
-})
 
-test_that("validateMultiplePlp errors", {
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
-  skip_if_no_eunomia()
+  # validate the analyses just made
   PatientLevelPrediction::validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "multiple"),
     validationDatabaseDetails = databaseDetails,
@@ -147,8 +143,12 @@ test_that("validateMultiplePlp errors", {
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Validation", "main")))
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Validation", "main", "Analysis_1", "validationResult")))
   expect_true(file.exists(file.path(saveLoc, "multiple", "Validation", "main", "Analysis_1", "validationResult", "runPlp.rds")))
+})
 
-  # no results error
+test_that("evaluateMultiplePlp errors without results", {
+  skip_if_not_installed("ResultModelManager")
+  skip_on_cran()
+  skip_if_no_eunomia()
   expect_error(evaluateMultiplePlp(
     analysesLocation = file.path(saveLoc, "madeup123"),
     validationDatabaseDetails = databaseDetails,

@@ -639,19 +639,34 @@ test_that("external validation with no outcomes uploads to sqlite", {
 })
 
 # importFromCsv test here as can use previous csv saving
+# plpResult exported to csv: the folder the export test above writes, or, when
+# this test runs on its own, made here the same way
+exportedCsvFolder <- function() {
+  folder <- file.path(saveLoc, "csvFolder")
+  if (!dir.exists(file.path(folder, "models"))) {
+    sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = NULL)
+    extractDatabaseToCsv(
+      connectionDetails = DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation),
+      databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+      csvFolder = folder
+    )
+  }
+  folder
+}
+
 test_that("import from csv", {
-  # TODO remove dependancy on previous test
   skip_if_not_installed("ResultModelManager")
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
+  csvFolder <- exportedCsvFolder()
   cohortDef <- extractCohortDefinitionsCSV(
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(cohortDef, "data.frame"))
   expect_true(ncol(cohortDef) == 4)
 
   databaseList <- extractDatabaseListCSV(
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(databaseList, "list"))
   expect_true(!is.null(databaseList[[1]]$databaseDetails))
@@ -671,14 +686,14 @@ test_that("import from csv", {
 
   modelDesign <- getModelDesignCsv(
     modelDesignSettingTable = res,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(modelDesign, "modelDesign"))
 
   # performance works
   res <- getPerformanceEvaluationCsv(
     performanceId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(res, "list"))
   expect_true(
@@ -694,14 +709,14 @@ test_that("import from csv", {
   # test object extracts
   obj <- extractObjectFromCsv(
     performanceId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(obj, "externalValidatePlp") | inherits(obj, "runPlp"))
 
   # test diagnostic extracted
   diag <- extractDiagnosticFromCsv(
     diagnosticId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(diag, "diagnosePlp") | is.null(diag))
 
@@ -716,7 +731,6 @@ test_that("import from csv", {
     dbms = "sqlite",
     server = file.path(csvServerLoc, "newCsv.sqlite")
   )
-  newResultConn <- DatabaseConnector::connect(newResultConnDetails)
   csvDatabaseSchemaSettings <- PatientLevelPrediction::createDatabaseSchemaSettings(
     resultSchema = "main",
     tablePrefix = "",
@@ -736,7 +750,7 @@ test_that("import from csv", {
   )
 
   res <- insertCsvToDatabase(
-    csvFolder = file.path(saveLoc, "csvFolder"),
+    csvFolder = csvFolder,
     connectionDetails = newResultConnDetails,
     databaseSchemaSettings = csvDatabaseSchemaSettings,
     modelSaveLocation = file.path(csvServerLoc, "models"),
