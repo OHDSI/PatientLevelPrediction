@@ -45,6 +45,7 @@ test_that("loadPlpData", {
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
   loadedData <- loadPlpData(file = file.path(saveLoc, "saveDataTest"))
+  withr::defer(Andromeda::close(loadedData$covariateData))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
   expect_equal(
@@ -276,6 +277,7 @@ test_that("applyMinCellCount leaves missing counts missing", {
 test_that("savePlpData round-trips a custom population with its attributes", {
   data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(simulated$covariateData))
   population <- simulated$cohorts[1:20, ]
   population$outcomeCount <- rep(c(0, 1), 10)
   attr(population, "metaData") <- list(outcomeId = 3, marker = "custom")
@@ -295,6 +297,7 @@ test_that("savePlpData round-trips a custom population with its attributes", {
 test_that("savePlpData leaves plpData without a population unchanged", {
   data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(simulated$covariateData))
   path <- tempfile("saveNoPopulation")
   on.exit(unlink(path, recursive = TRUE), add = TRUE)
   savePlpData(simulated, path)
@@ -307,6 +310,7 @@ test_that("savePlpData leaves plpData without a population unchanged", {
 test_that("savePlpData removes optional files left by an earlier save into the same folder", {
   data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   withPopulation <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(withPopulation$covariateData))
   population <- withPopulation$cohorts[1:20, ]
   population$outcomeCount <- 0
   withPopulation$population <- population
@@ -318,6 +322,7 @@ test_that("savePlpData removes optional files left by an earlier save into the s
   expect_true(file.exists(file.path(path, "simulationTruth.rds")))
 
   withoutPopulation <- simulatePlpData(simulationProfile, n = 100, seed = 18)
+  withr::defer(Andromeda::close(withoutPopulation$covariateData))
   withoutPopulation$simulationTruth <- NULL
   savePlpData(withoutPopulation, path)
   expect_false(file.exists(file.path(path, "population.rds")))

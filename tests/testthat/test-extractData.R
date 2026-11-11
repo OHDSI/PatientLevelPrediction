@@ -73,6 +73,7 @@ test_that("getPlpData checks covariateSettings object", {
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings2)
   )
+  withr::defer(Andromeda::close(plpData$covariateData))
   expect_equal(
     plpData$covariateData$covariateRef %>%
       dplyr::pull(.data$analysisId) %>%
@@ -187,6 +188,7 @@ test_that("getPlpData with restrict by dates only", {
     restrictPlpDataSettings = restrictDatesSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpDateRestricted$covariateData))
 
   # max cohorts$cohortStartDate should be <= 2020-01-01 and >= 2015-01-01
   expect_true(
@@ -212,6 +214,7 @@ test_that("getPlpData with restrict by sample size", {
     restrictPlpDataSettings = restrictSampleSizeSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpSampleSizeRestricted$covariateData))
 
   expect_true(nrow(plpSampleSizeRestricted$cohorts) == 100)
 })
@@ -233,6 +236,7 @@ test_that("getPlpData with restrict by sampleSize and dates", {
     restrictPlpDataSettings = restrictSampleSizeSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpSampleSizeAndDateRestricted$covariateData))
 
   expect_true(
     max(plpSampleSizeAndDateRestricted$cohorts$cohortStartDate) <= "2020-01-01"
@@ -258,6 +262,7 @@ test_that("getPlpData with restrict by washoutPeriod", {
     restrictPlpDataSettings = restrictWashoutSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpWashoutRestricted$covariateData))
 
   expect_true(
     min(plpWashoutRestricted$cohorts$daysFromObsStart) >= 15000
