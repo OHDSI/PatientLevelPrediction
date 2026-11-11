@@ -54,6 +54,9 @@ test_that("MapIds with no cohort", {
 
   # 4 rowIds in the data
   expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(), 4)
+  # without a cohort the rows are numbered in rowId order
+  rowMap <- mappings$rowMap %>% dplyr::collect() %>% dplyr::arrange(.data$xId)
+  expect_equal(rowMap$rowId, sort(rowMap$rowId))
 
   # some covariates not in data 5,6,7 so should be removed from covRef
   expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 7)

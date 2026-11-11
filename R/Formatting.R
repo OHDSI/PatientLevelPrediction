@@ -165,9 +165,11 @@ MapIds <- function(
     )
     rowMap$xId <- 1:nrow(rowMap)
   } else {
+    # in rowId order: the order of distinct() is not defined
     rowMap <- data.frame(
       rowId = covariateData$covariates %>%
         dplyr::distinct(.data$rowId) %>%
+        dplyr::arrange(.data$rowId) %>%
         dplyr::pull()
     )
     rowMap$xId <- 1:nrow(rowMap)
