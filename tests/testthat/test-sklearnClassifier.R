@@ -28,13 +28,15 @@ test_that("DecisionTree settings work checks", {
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(10^-7),
     classWeight = list(NULL),
-    seed = sample(1000000, 1)
+    seed = 42
   )
   expect_false(dtset$settings$requiresDenseMatrix)
   expect_equal(dtset$settings$modelName, "decisionTree")
   expect_equal(dtset$settings$modelType, "binary")
   expect_equal(dtset$settings$pythonModule, "sklearn.tree")
   expect_equal(dtset$settings$pythonClass, "DecisionTreeClassifier")
+  # scikit-learn's random_state only accepts integers
+  expect_identical(dtset$param$seed, list(42L))
 })
 
 
