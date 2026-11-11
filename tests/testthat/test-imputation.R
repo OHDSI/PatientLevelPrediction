@@ -1920,3 +1920,43 @@ test_that("steps whose learned tables are empty replay after saving and loading"
     unlink(jsonFile)
   }
 })
+
+test_that("PMM models without predictors replay from files saved by earlier versions", {
+  skip_if_not_installed("glmnet")
+  train <- createMissingData(makeToyImputationData(n = 120, seed = 1), 0.3)
+  withr::defer(Andromeda::close(train$covariateData))
+  engineered <- withr::with_seed(1, suppressWarnings(featureEngineer(
+    train,
+    createIterativeImputer(
+      method = "pmm", missingThreshold = 0.5,
+      methodSettings = list(pmm = list(k = 1, iterations = 1))
+    )
+  )))
+  withr::defer(Andromeda::close(engineered$covariateData))
+  saved <- attr(engineered$covariateData, "metaData")$featureEngineering
+  # glmnet can select no predictors; the imputer then has an empty coefficient table
+  imputer <- attr(saved[[1]]$settings$featureEngineeringSettings, "imputer")
+  for (variable in names(imputer)) {
+    imputer[[variable]]$coefficients <- imputer[[variable]]$coefficients[0, , drop = FALSE]
+  }
+  attr(saved[[1]]$settings$featureEngineeringSettings, "imputer") <- imputer
+
+  jsonFile <- tempfile(fileext = ".json")
+  withr::defer(unlink(jsonFile))
+  ParallelLogger::saveSettingsToJson(list(featureEngineering = saved), jsonFile)
+  legacy <- ParallelLogger::loadSettingsFromJson(jsonFile)$featureEngineering
+
+  newData <- createMissingData(makeToyImputationData(n = 60, seed = 2), 0.4, test = TRUE)
+  withr::defer(Andromeda::close(newData$covariateData))
+  replay <- function(steps) {
+    replayed <- withr::with_seed(2, suppressWarnings(applyFeatureEngineering(newData, steps)))
+    on.exit(Andromeda::close(replayed$covariateData))
+    as.data.frame(replayed$covariateData$covariates) %>% dplyr::arrange(.data$rowId, .data$covariateId)
+  }
+  inMemory <- replay(saved)
+  fromLegacy <- replay(legacy)
+  expect_equal(fromLegacy$rowId, inMemory$rowId)
+  expect_equal(fromLegacy$covariateId, inMemory$covariateId)
+  # every patient of the new data has the imputed feature
+  expect_setequal(fromLegacy$rowId[fromLegacy$covariateId == 666], newData$labels$rowId)
+})

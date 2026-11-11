@@ -1695,7 +1695,17 @@ pmmFit <- function(data, k = 5, alpha = 1) {
 
 pmmPredict <- function(data, k = 5, imputer) {
   k <- validatePmmK(k)
-  data$coefficients <- imputer$coefficients
+  coefficients <- imputer$coefficients
+  if (!is.data.frame(coefficients)) {
+    # a model without predictors has an empty table, which the four-decimal
+    # format of earlier versions loads back as an empty list
+    coefficients <- if (length(coefficients) == 0) {
+      data.frame(covariateId = numeric(0), values = numeric(0))
+    } else {
+      as.data.frame(dplyr::bind_rows(coefficients))
+    }
+  }
+  data$coefficients <- coefficients
   predictionMissing <- data$xMiss %>%
     dplyr::left_join(data$coefficients, by = "covariateId") %>%
     dplyr::mutate(values = .data$covariateValue * .data$values) %>%
