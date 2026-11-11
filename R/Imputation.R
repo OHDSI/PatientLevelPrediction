@@ -1545,19 +1545,16 @@ pmmFit <- function(data, k = 5, alpha = 1) {
     dplyr::select(c("newCovariateId", "oldCovariateId"))
   on.exit(data$colMap <- NULL, add = TRUE)
 
-  data$xObs <- data$xObs %>%
-    dplyr::left_join(data$rowMap, by = c("rowId" = "oldRowId"), copy = TRUE) %>%
-    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId"), copy = TRUE) %>%
-    dplyr::select(
-      rowId = "newRowId",
-      covariateId = "newCovariateId",
-      covariateValue = "covariateValue"
-    )
-
+  # row, column and value in one query, so the three belong together
+  obsEntries <- data$xObs %>%
+    dplyr::left_join(data$rowMap, by = c("rowId" = "oldRowId")) %>%
+    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId")) %>%
+    dplyr::select("newRowId", "newCovariateId", "covariateValue") %>%
+    dplyr::collect()
   xObs <- Matrix::sparseMatrix(
-    i = data$xObs %>% dplyr::pull(.data$rowId),
-    j = data$xObs %>% dplyr::pull(.data$covariateId),
-    x = data$xObs %>% dplyr::pull(.data$covariateValue),
+    i = obsEntries$newRowId,
+    j = obsEntries$newCovariateId,
+    x = obsEntries$covariateValue,
     dims = c(
       data$rowMap %>% dplyr::pull(.data$newRowId) %>% max(),
       data$colMap %>% dplyr::pull(.data$newCovariateId) %>% max()
@@ -1599,23 +1596,17 @@ pmmFit <- function(data, k = 5, alpha = 1) {
     ) %>%
     dplyr::select(c("newRowId", "oldRowId"))
   on.exit(data$rowMapMiss <- NULL, add = TRUE)
-  data$xMiss <- data$xMiss %>%
-    dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId"), copy = TRUE) %>%
-    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId"), copy = TRUE) %>%
+  missEntries <- data$xMiss %>%
+    dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId")) %>%
+    dplyr::left_join(data$colMap, by = c("covariateId" = "oldCovariateId")) %>%
     dplyr::filter(!is.na(.data$newCovariateId), !is.na(.data$newRowId)) %>%
-    dplyr::select(
-      rowId = "newRowId",
-      covariateId = "newCovariateId",
-      covariateValue = "covariateValue"
-    )
+    dplyr::select("newRowId", "newCovariateId", "covariateValue") %>%
+    dplyr::collect()
 
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- yObsAligned$y
-  nMissRows <- data$xMiss %>%
-    dplyr::pull(.data$rowId) %>%
-    unique() %>%
-    length()
+  nMissRows <- length(unique(missEntries$newRowId))
   nCols <- data$colMap %>%
     dplyr::pull(.data$newCovariateId) %>%
     max()
@@ -1624,9 +1615,9 @@ pmmFit <- function(data, k = 5, alpha = 1) {
     imputedValues <- numeric(0)
   } else {
     xMiss <- Matrix::sparseMatrix(
-      i = data$xMiss %>% dplyr::pull(.data$rowId),
-      j = data$xMiss %>% dplyr::pull(.data$covariateId),
-      x = data$xMiss %>% dplyr::pull(.data$covariateValue),
+      i = missEntries$newRowId,
+      j = missEntries$newCovariateId,
+      x = missEntries$covariateValue,
       dims = c(nMissRows, nCols)
     )
     predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
