@@ -38,7 +38,7 @@ makeCovariateData <- function(covariates,
     analysisRef = analysisRef,
     ...
   )
-  class(covariateData) <- "CovariateData"
+  covariateData <- asCovariateData(covariateData)
   attr(covariateData, "metaData") <- metaData
   covariateData
 }

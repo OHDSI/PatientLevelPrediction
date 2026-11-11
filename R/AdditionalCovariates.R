@@ -205,7 +205,7 @@ getCohortCovariateData <- function(
   )
 
   attr(result, "metaData") <- metaData
-  class(result) <- "CovariateData"
+  result <- asCovariateData(result)
   return(result)
 }
 

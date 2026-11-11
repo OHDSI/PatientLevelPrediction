@@ -50,7 +50,7 @@ featureEngineer <- function(data, featureEngineeringSettings) {
 isolateCovariateData <- function(data) {
   metaData <- attr(data$covariateData, "metaData")
   data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
-  class(data$covariateData) <- "CovariateData"
+  data$covariateData <- asCovariateData(data$covariateData)
   attr(data$covariateData, "metaData") <- metaData
   return(data)
 }

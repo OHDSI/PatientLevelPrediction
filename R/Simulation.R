@@ -356,8 +356,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
     analysisRef = data.frame(analysisId = 1)
   )
 
-  class(covariateData) <- "CovariateData"
-  attr(class(covariateData), "package") <- "FeatureExtraction"
+  covariateData <- asCovariateData(covariateData)
 
   continuousCovariates <- plpDataSimulationProfile$covariateInfo$continuousCovariates
   continuousCovSim <- do.call(rbind, lapply(seq_len(nrow(continuousCovariates)), function(i) {
@@ -939,8 +938,7 @@ resampleBenchmarkCovariateData <- function(covariateData, rowMap, populationSize
       covariateValue = .data$covariateValue
     )
 
-  class(result) <- "CovariateData"
-  attr(class(result), "package") <- "FeatureExtraction"
+  result <- asCovariateData(result)
   metaData <- attr(covariateData, "metaData")
   if (is.null(metaData)) {
     metaData <- list()

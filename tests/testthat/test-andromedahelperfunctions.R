@@ -31,6 +31,19 @@ test_that("limitCovariatesToPopulation preserves metadata", {
   )
 })
 
+test_that("asCovariateData gives an Andromeda FeatureExtraction's CovariateData class", {
+  covariateData <- asCovariateData(Andromeda::andromeda(
+    covariates = data.frame(rowId = 1, covariateId = 2, covariateValue = 3)
+  ))
+  withr::defer(Andromeda::close(covariateData))
+
+  expect_s4_class(covariateData, "CovariateData")
+  expect_true(methods::is(covariateData, "Andromeda"))
+  expect_identical(attr(class(covariateData), "package"), "FeatureExtraction")
+  expect_true("FeatureExtraction" %in% loadedNamespaces())
+  expect_equal(dplyr::collect(covariateData$covariates)$covariateValue, 3)
+})
+
 test_that("limitPop with timeRef", {
   covs <- Andromeda::andromeda(
     covariates = data.frame(
@@ -55,7 +68,7 @@ test_that("limitPop with timeRef", {
       sequenceEndDay = 1
     )
   )
-  class(covs) <- "CovariateData"
+  covs <- asCovariateData(covs)
   rowIds <- c(2)
   limitedCovs <- limitCovariatesToPopulation(covs, rowIds)
   expect_equal(

@@ -15,6 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Gives an Andromeda object the CovariateData class of FeatureExtraction, as
+# FeatureExtraction's own objects have it: with the package the class is defined
+# in. Loading PatientLevelPrediction does not load FeatureExtraction, and until it
+# is loaded R does not know the class, so Andromeda's methods ($, close()) do not
+# apply to an object that has the class name only.
+asCovariateData <- function(covariateData) {
+  loadNamespace("FeatureExtraction")
+  class(covariateData) <- "CovariateData"
+  attr(class(covariateData), "package") <- "FeatureExtraction"
+  covariateData
+}
+
 limitCovariatesToPopulation <- function(covariateData, rowIds) {
   ParallelLogger::logTrace(paste0("Starting to limit covariate data to population..."))
 
@@ -36,7 +48,7 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
 
   metaData$populationSize <- length(rowIds)
   attr(newCovariateData, "metaData") <- metaData
-  class(newCovariateData) <- "CovariateData"
+  newCovariateData <- asCovariateData(newCovariateData)
   ParallelLogger::logTrace(paste0("Finished limiting covariate data to population..."))
   return(newCovariateData)
 }

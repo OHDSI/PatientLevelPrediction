@@ -286,7 +286,7 @@ applyTidyCovariateData <- function(
   newCovariateData$covariateRef <- covariateData$covariateRef %>%
     dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
 
-  class(newCovariateData) <- "CovariateData"
+  newCovariateData <- asCovariateData(newCovariateData)
 
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))

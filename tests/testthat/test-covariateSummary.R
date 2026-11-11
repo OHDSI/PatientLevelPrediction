@@ -107,7 +107,7 @@ test_that("covariateSummarySubset works with temporal data", {
       sequenceEndDay = 1
     )
   )
-  class(covs) <- "CovariateData"
+  covs <- asCovariateData(covs)
   rowIds <- c(2)
   restrictToSubset <- covariateSummarySubset(covs, rowIds)
   expect_equal(nrow(restrictToSubset), 2)

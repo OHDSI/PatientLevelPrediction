@@ -294,8 +294,7 @@ test_that("simulation outcome scoring applies PLP model preprocessing", {
     ),
     analysisRef = data.frame(analysisId = 1)
   )
-  class(covariateData) <- "CovariateData"
-  attr(class(covariateData), "package") <- "FeatureExtraction"
+  covariateData <- asCovariateData(covariateData)
 
   plpModel <- list(
     model = list(

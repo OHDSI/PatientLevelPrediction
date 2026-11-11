@@ -252,7 +252,7 @@ test_that("MapIds with temporalData", {
       timeName = c("time1", "time2", "time3", "time4", "time5")
     )
   )
-  class(formattingCovs) <- "CovariateData"
+  formattingCovs <- asCovariateData(formattingCovs)
   mapped <- MapIds(formattingCovs)
 
   expect_true(!is.null(mapped$timeRef))

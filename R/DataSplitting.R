@@ -285,7 +285,7 @@ splitData <- function(plpData = plpData,
     # add pop size to covariateData as used in tidyCovariates
     attr(trainData$covariateData, "metaData") <- 
       list(populationSize = nrow(trainData$labels))
-    class(trainData$covariateData) <- "CovariateData"
+    trainData$covariateData <- asCovariateData(trainData$covariateData)
 
     result <- list(Train = trainData)
   } else {

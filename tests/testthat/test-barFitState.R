@@ -44,7 +44,7 @@ test_that("BAR tuning matches independent fits and refits all training rows", {
   covariateData <- Andromeda::andromeda(
     covariates = fixture$covariates, labels = fixture$labels
   )
-  class(covariateData) <- "CovariateData"
+  covariateData <- asCovariateData(covariateData)
   withr::defer(Andromeda::close(covariateData))
   trainData <- list(
     labels = fixture$labels, folds = fixture$folds, covariateData = covariateData
@@ -109,7 +109,7 @@ test_that("BAR numeric and BIC penalty CV refits match independent folds", {
   skip_on_cran()
   fixture <- createBarFitStateData()
   covariateData <- Andromeda::andromeda(covariates = fixture$covariates)
-  class(covariateData) <- "CovariateData"
+  covariateData <- asCovariateData(covariateData)
   withr::defer(Andromeda::close(covariateData))
 
   for (penalty in list(0.5, "bic")) {

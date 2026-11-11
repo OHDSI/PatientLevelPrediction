@@ -143,7 +143,7 @@ test_that("apply tidy with temporal data", {
       sequenceEndDay = 1
     )
   )
-  class(covs) <- "CovariateData"
+  covs <- asCovariateData(covs)
   preprocessSettings <- list(
     populationSize = 2,
     cohortIds = -1,

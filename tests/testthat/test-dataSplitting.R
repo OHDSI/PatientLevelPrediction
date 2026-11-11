@@ -749,7 +749,7 @@ test_that("splitData preserves outcome counts above one", {
     covariateRef = data.frame(covariateId = 1001, covariateName = "x", analysisId = 1),
     analysisRef = data.frame(analysisId = 1)
   )
-  class(covariateData) <- "CovariateData"
+  covariateData <- asCovariateData(covariateData)
   withr::defer(Andromeda::close(covariateData))
   splitPlpData <- list(
     covariateData = covariateData,
