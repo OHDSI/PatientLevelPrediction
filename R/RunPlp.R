@@ -330,10 +330,12 @@ runPlp <- function(
       if ("Test" %in% names(data)) {
         predictionTest <- tryCatch(
           {
-            predictPlp(
-              plpModel = model, 
+            # the test split is this run's copy, so prediction can work on it
+            predictPlpData(
+              plpModel = model,
               plpData = data$Test,
-              population = data$Test$labels
+              population = data$Test$labels,
+              ownsData = TRUE
             )
           },
           error = function(e) {

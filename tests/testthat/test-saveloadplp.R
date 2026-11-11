@@ -515,4 +515,9 @@ test_that("a reloaded model with feature engineering predicts exactly as the fit
 
   expect_equal(reloaded$rowId, fitted$rowId)
   expect_equal(reloaded$value, fitted$value, tolerance = 0)
+  # runPlp() predicted its test split on its own copy of the data; predicting
+  # on a copy of the full data gives the same values
+  testRows <- result$prediction[result$prediction$evaluationType == "Test", ]
+  expect_gt(nrow(testRows), 0)
+  expect_equal(fitted$value[match(testRows$rowId, fitted$rowId)], testRows$value, tolerance = 1e-10)
 })

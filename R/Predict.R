@@ -48,6 +48,25 @@
 #' head(prediction)
 #' @export
 predictPlp <- function(plpModel, plpData, population, timepoint) {
+  predictPlpData(
+    plpModel = plpModel,
+    plpData = plpData,
+    population = population,
+    timepoint = if (missing(timepoint)) NULL else timepoint,
+    timepointGiven = !missing(timepoint)
+  )
+}
+
+# predictPlp() for callers that own plpData and do not use its covariates
+# afterwards (runPlp()'s test split): with ownsData, feature engineering and
+# tidying work on plpData itself instead of on a copy. timepointGiven tells a
+# timepoint of NULL that was given apart from one that was not.
+predictPlpData <- function(plpModel,
+                           plpData,
+                           population,
+                           timepoint = NULL,
+                           timepointGiven = !is.null(timepoint),
+                           ownsData = FALSE) {
   start <- Sys.time()
   if (is.null(plpModel)) {
     stop("No model input")
@@ -64,10 +83,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
     # one horizon, on the survivalTime scale, for the prediction and its evaluation
     timepoint <- getSurvivalTimepoint(
       populationSettings,
-      if (missing(timepoint)) NULL else timepoint
+      if (timepointGiven) timepoint else NULL
     )
     attr(population, "timepoint") <- timepoint
-  } else if (!missing(timepoint)) {
+  } else if (timepointGiven) {
     attr(population, "timepoint") <- timepoint
   } else {
     timepoint <- populationSettings$riskWindowEnd
@@ -81,7 +100,8 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
       applyFeatureEngineering,
       list(
         plpData = plpData,
-        settings = plpModel$preprocessing$featureEngineering
+        settings = plpModel$preprocessing$featureEngineering,
+        copy = !ownsData
       )
     )
     featureEngineering <- TRUE
@@ -99,7 +119,7 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
       list(
         covariateData = plpData$covariateData,
         preprocessSettings = plpModel$preprocessing$tidyCovariates,
-        inPlace = featureEngineering
+        inPlace = featureEngineering || ownsData
       )
     )
     tidyCovariates <- TRUE
@@ -210,11 +230,16 @@ baselineSurvivalAt <- function(baselineSurvival, timepoint) {
 # Replays the fitted feature engineering steps on new data. Steps change the
 # data they are given, and the caller's data may be shared with other models,
 # so this makes the one copy they work on.
+# Applies saved feature engineering steps to plpData; with copy (the default)
+# they work on a copy, so the caller's data is left as it was.
 applyFeatureEngineering <- function(
     plpData,
-    settings) {
+    settings,
+    copy = TRUE) {
   steps <- featureEngineeringSteps(settings)
-  plpData <- isolateCovariateData(plpData)
+  if (copy) {
+    plpData <- isolateCovariateData(plpData)
+  }
   for (step in steps) {
     args <- step$settings
     args$trainData <- plpData
