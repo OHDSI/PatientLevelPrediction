@@ -62,7 +62,7 @@ test_that("print.plpData", {
   expect_equal(print.plpData(NULL), NULL)
 })
 
-test_that("summary.plpData", {
+test_that("summary.plpData errors without data", {
   expect_error(summary.plpData(NULL))
 })
 

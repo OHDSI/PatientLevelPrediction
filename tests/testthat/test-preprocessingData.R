@@ -25,10 +25,11 @@ createDefaultSettings <- function(
   return(result)
 }
 
-test_that("createPreprocessSettings", {
-  normalizeDataTest <- sample(c(TRUE, FALSE), 1)
-  removeRedundancyTest <- sample(c(TRUE, FALSE), 1)
-  minCovariateFractionTest <- 1 / (1000 + sample(1000, 1))
+test_that("createPreprocessSettings stores its inputs and checks them", {
+  # fixed values that differ from the defaults, so a failure can be reproduced
+  normalizeDataTest <- FALSE
+  removeRedundancyTest <- FALSE
+  minCovariateFractionTest <- 1 / 1500
 
   settings <- createDefaultSettings(
     minCovariateFraction = minCovariateFractionTest,
@@ -51,7 +52,7 @@ test_that("createPreprocessSettings", {
   expect_error(createDefaultSettings(normalizeData = NULL))
 })
 
-test_that("createPreprocessSettings", {
+test_that("preprocessData removes infrequent covariates and records its settings", {
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
   attr(trainData$covariateData, "metaData")$preprocessSettings <- NULL # removing for test
@@ -77,7 +78,8 @@ test_that("createPreprocessSettings", {
   # metaData should have tidyCovariateDataSettings + preprocessSettings (so 2 bigger)
   expect_equal(length(attr(newData, "metaData")), metaLength + 2)
 
-  expect_true(length(attr(newData, "metaData")$tidyCovariateDataSettings$deletedInfrequentCovariateIds) >= 0)
+  # fewer covariate rows remain, so some infrequent covariates were removed
+  expect_gt(length(attr(newData, "metaData")$tidyCovariateDataSettings$deletedInfrequentCovariateIds), 0)
   expect_equal(attr(newData, "metaData")$tidyCovariateDataSettings$deletedRedundantCovariateIds, NULL)
   expect_equal(attr(newData, "metaData")$tidyCovariateDataSettings$normFactors, NULL)
 

@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-test_that("getDemographicSummary", {
+test_that("getDemographicSummary for binary predictions", {
   prediction <- data.frame(
     rowId = 1:100,
     ageYear = sample(100, 100, replace = TRUE),
@@ -45,7 +45,7 @@ test_that("getDemographicSummary", {
 })
 
 
-test_that("getDemographicSummary", {
+test_that("getDemographicSummary for survival predictions", {
   prediction <- data.frame(
     rowId = 1:100,
     ageYear = sample(100, 100, replace = TRUE),

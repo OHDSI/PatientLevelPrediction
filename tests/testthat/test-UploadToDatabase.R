@@ -518,21 +518,10 @@ test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in
 })
 
 # SQL lite test
-test_that("temporary sqlite with results works", {
+test_that("insertRunPlpToSqlite stores a development result in a temporary sqlite", {
   skip_if_not_installed("ResultModelManager")
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
-  externalVal <- plpResult
-  externalVal$model$model <- "none"
-  externalVal$model$trainDetails <- NULL
-  externalVal$model$validationDetails <- list(
-    targetId = 1,
-    outcomeId = 3,
-    developmentDatabase = "test",
-    validationDatabase = "test",
-    populationSettings = plpResult$model$modelDesign$populationSettings,
-    restrictPlpDataSettings = plpResult$model$modelDesign$restrictPlpDataSettings
-  )
 
   sqliteLocation <- insertRunPlpToSqlite(
     runPlp = plpResult,

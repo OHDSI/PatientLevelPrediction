@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-test_that("summary.plpData", {
+test_that("summary.plpData summarizes extracted data", {
   skip_if_no_eunomia()
   attr(plpData$outcomes, "metaData")$outcomeIds <- c(outcomeId)
   sum <- summary.plpData(plpData)
