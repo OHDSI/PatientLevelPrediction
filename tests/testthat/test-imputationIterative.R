@@ -731,3 +731,24 @@ test_that("PMM imputations depend only on the imputer's seed, not on the random 
   # without a seed in the settings one is drawn
   expect_true(is.numeric(createIterativeImputer()$methodSettings$seed))
 })
+
+test_that("pmmFit imputes a patient whose predictors were all unseen in the observed patients", {
+  skip_if_not_installed("glmnet")
+  data <- withr::with_seed(1, Andromeda::andromeda(
+    xObs = data.frame(
+      rowId = rep(1:20, 2), covariateId = rep(c(2001, 2002), each = 20),
+      covariateValue = c(rep(1, 20), stats::rbinom(20, 1, 0.5))
+    ),
+    # patient 21 only has covariate 2003, which no observed patient has
+    xMiss = data.frame(rowId = c(21, 22), covariateId = c(2003, 2001), covariateValue = 1),
+    yObs = data.frame(rowId = 1:20, y = stats::rnorm(20, 10))
+  ))
+  withr::defer(Andromeda::close(data))
+  observed <- dplyr::pull(data$yObs, .data$y)
+
+  results <- suppressWarnings(pmmFit(data, k = 1, seed = 42))
+
+  imputed <- results$imputedValues[order(results$imputedValues$rowId), ]
+  expect_equal(imputed$rowId, c(21, 22))
+  expect_true(all(imputed$imputedValue %in% observed))
+})

@@ -1639,7 +1639,7 @@ pmmFit <- function(data, k = 5, alpha = 1, seed = NULL) {
   predsObs <- stats::predict(fit, xObs, fit$lambda.min)
   # Keep xMiss on the same scale representation as xObs.
   # Applying an xMiss-only scaling step can distort PMM donor matching.
-  data$rowMapMiss <- data$xMiss %>%
+  rowMapMiss <- data$xMiss %>%
     dplyr::group_by(.data$rowId) %>%
     dplyr::summarise() %>%
     dplyr::collect() %>%
@@ -1649,6 +1649,7 @@ pmmFit <- function(data, k = 5, alpha = 1, seed = NULL) {
       newRowId = dplyr::row_number()
     ) %>%
     dplyr::select(c("newRowId", "oldRowId"))
+  data$rowMapMiss <- rowMapMiss
   on.exit(data$rowMapMiss <- NULL, add = TRUE)
   missEntries <- data$xMiss %>%
     dplyr::left_join(data$rowMapMiss, by = c("rowId" = "oldRowId")) %>%
@@ -1660,7 +1661,10 @@ pmmFit <- function(data, k = 5, alpha = 1, seed = NULL) {
   # precompute mapping to use - straight from xId (row index) to
   # covariateValue of donor
   donorMapping <- yObsAligned$y
-  nMissRows <- length(unique(missEntries$newRowId))
+  # a row for every patient to impute: one whose predictors were all unseen in
+  # the observed patients has no entries, so a prediction from the intercept,
+  # as in pmmPredict()
+  nMissRows <- nrow(rowMapMiss)
   nCols <- data$colMap %>%
     dplyr::pull(.data$newCovariateId) %>%
     max()
