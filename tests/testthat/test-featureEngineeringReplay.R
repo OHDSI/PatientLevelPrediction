@@ -163,7 +163,7 @@ test_that("fitted states saved by earlier versions come back within their roundi
   # earlier versions saved preprocessing with ParallelLogger::saveSettingsToJson(),
   # which wrote the learned tables row by row with four decimals: an absolute
   # error up to 5e-5, under 1% of the values used here (all above 0.009)
-  for (name in grep("Empty$", names(fittedStates()), value = TRUE, invert = TRUE)) {
+  for (name in names(fittedStates())) {
     state <- fittedStates()[[name]]
     expect_equal(
       canonicalState(reloadedSteps(state, ParallelLogger::saveSettingsToJson)),

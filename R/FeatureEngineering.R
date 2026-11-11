@@ -86,6 +86,42 @@ builtInFeatureEngineeringSteps <- function() {
   )
 }
 
+# Columns of the tables that built-in steps keep in the attributes of their
+# fitted settings. The four-decimal format of earlier versions writes an empty
+# table as an empty list, which loads back as an empty or missing attribute and
+# carries no columns, so such tables are rebuilt from these.
+builtInFeatureEngineeringTables <- function() {
+  list(
+    minMaxNormalize = list(minMaxs = c("covariateId", "max", "min")),
+    robustNormalize = list(quantiles = c("covariateId", "median", "iqr")),
+    simpleImpute = list(
+      missingInfo = c("covariateId", "missing"),
+      imputer = c("covariateId", "imputedValues")
+    ),
+    iterativeImpute = list(
+      missingInfo = c("covariateId", "missing"),
+      initialValues = c("covariateId", "initialValue")
+    )
+  )
+}
+
+restoreEmptyTables <- function(funct, settings) {
+  tables <- builtInFeatureEngineeringTables()[[funct]]
+  fitted <- settings$featureEngineeringSettings
+  if (is.null(tables) || is.null(fitted) || !isTRUE(settings$done)) {
+    return(settings)
+  }
+  for (name in names(tables)) {
+    value <- attr(fitted, name)
+    if (!is.data.frame(value) && length(value) == 0) {
+      emptyColumns <- stats::setNames(rep(list(numeric(0)), length(tables[[name]])), tables[[name]])
+      attr(fitted, name) <- as.data.frame(emptyColumns)
+    }
+  }
+  settings$featureEngineeringSettings <- fitted
+  settings
+}
+
 # Turns every saved list of rows in a step's settings, including in attributes
 # and nested lists, back into a data frame.
 restoreSavedTables <- function(x) {
@@ -184,6 +220,7 @@ featureEngineeringSteps <- function(featureEngineering) {
     # rows; custom steps get their settings as they were loaded
     if (funct %in% builtInFeatureEngineeringSteps()) {
       settings <- restoreSavedTables(settings)
+      settings <- restoreEmptyTables(funct, settings)
     }
     list(funct = funct, settings = settings)
   }
