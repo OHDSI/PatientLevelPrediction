@@ -367,14 +367,15 @@ covariateSummarySubset <- function(
   N <- length(subset)
 
   ParallelLogger::logInfo("Restricting to subgroup")
-  newCovariateData <- getCovariatesForGroup(
-    covariateData,
-    restrictIds = subset
-  )
+  # aggregated where the covariates are, without copying them
+  covariateData$restrictIds <- data.frame(rowId = subset)
+  on.exit(covariateData$restrictIds <- NULL, add = TRUE)
+  subsetCovariates <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$restrictIds, by = "rowId")
 
-  if ("timeId" %in% colnames(newCovariateData$covariates)) {
+  if ("timeId" %in% colnames(subsetCovariates)) {
     # For temporal data, aggregate so that each (rowId, covariateId) appears once.
-    covData <- newCovariateData$covariates %>%
+    covData <- subsetCovariates %>%
       dplyr::group_by(.data$rowId, .data$covariateId) %>%
       dplyr::summarise(
         covariateValue = mean(.data$covariateValue, na.rm = TRUE), # or another summary like mean
@@ -382,7 +383,7 @@ covariateSummarySubset <- function(
       )
   } else {
     # For non-temporal data, use the data as is.
-    covData <- newCovariateData$covariates
+    covData <- subsetCovariates
   }
 
   ParallelLogger::logInfo(paste0("Calculating summary for subgroup ", subsetName))
@@ -405,12 +406,3 @@ covariateSummarySubset <- function(
   return(result)
 }
 
-getCovariatesForGroup <- function(covariateData, restrictIds) {
-  # restrict covariateData to specified rowIds
-  newCovariateData <- Andromeda::copyAndromeda(covariateData)
-  covariateData$restrictIds <- data.frame(rowId = restrictIds)
-  on.exit(covariateData$restrictIds <- NULL)
-  newCovariateData$covariates <- covariateData$covariates %>%
-    dplyr::inner_join(covariateData$restrictIds, by = "rowId")
-  return(newCovariateData)
-}

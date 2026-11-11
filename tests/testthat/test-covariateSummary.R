@@ -234,3 +234,31 @@ test_that("covariateSummary applies a saved normalizer from a fitted model", {
   expect_equal(res$CovariateCount[res$covariateId == 1001], 2)
   expect_equal(res$CovariateMean[res$covariateId == 1001], 0.5)
 })
+
+test_that("covariateSummary aggregates subgroups without copying the covariate data", {
+  sparseData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = c(1:6, 1:3), covariateId = c(rep(1001, 6), rep(1002, 3)), covariateValue = 1),
+    covariateRef = data.frame(covariateId = c(1001, 1002), covariateName = c("all", "first three"))
+  )
+  withr::defer(Andromeda::close(sparseData))
+  tables <- names(sparseData)
+  copies <- 0
+  copyAndromeda <- Andromeda::copyAndromeda
+  local_mocked_bindings(
+    copyAndromeda = function(...) {
+      copies <<- copies + 1
+      copyAndromeda(...)
+    },
+    .package = "Andromeda"
+  )
+  labels <- data.frame(rowId = 1:6, outcomeCount = c(1, 1, 0, 0, 0, 0))
+
+  result <- covariateSummary(sparseData, data.frame(rowId = 1:6), labels = labels)
+
+  result <- result[order(result$covariateId), ]
+  expect_equal(result$CovariateMean, c(1, 0.5))
+  expect_equal(result$WithOutcome_CovariateMean, c(1, 1))
+  expect_equal(result$WithNoOutcome_CovariateMean, c(1, 0.25))
+  expect_equal(copies, 0)
+  expect_setequal(names(sparseData), tables)
+})
