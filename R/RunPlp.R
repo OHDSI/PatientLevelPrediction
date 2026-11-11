@@ -133,6 +133,14 @@ runPlp <- function(
   logger <- do.call(createLog, logSettings)
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
+  # the copies of the data this run makes; none is part of the result
+  ownedData <- list()
+  own <- function(covariateData) {
+    if (!is.null(covariateData)) {
+      ownedData[[length(ownedData) + 1]] <<- covariateData
+    }
+  }
+  on.exit(closeAndromedas(ownedData), add = TRUE)
   
   #check inputs + print 
   settingsValid <- tryCatch(
@@ -218,6 +226,8 @@ runPlp <- function(
     if (is.null(data)) {
       stop("data NULL after splitting")
     }
+    own(data$Train$covariateData)
+    own(data$Test$covariateData)
     
     dataSummary(data)
   } 
@@ -239,6 +249,7 @@ runPlp <- function(
     if (is.null(data$Train)) {
       stop("train data NULL after sample")
     }
+    own(data$Train$covariateData)
     dataSummary(data)
   }
   
@@ -279,6 +290,7 @@ runPlp <- function(
     if (is.null(data$Train$covariateData)) {
       stop("train data NULL after preprocessing")
     }
+    own(data$Train$covariateData)
     dataSummary(data)
   }
   

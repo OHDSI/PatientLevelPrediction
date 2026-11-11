@@ -620,6 +620,7 @@ validateExternal <- function(validationDesignList,
             "outcomeId", design$outcomeId
           )
         )
+        closeAndromedas(list(plpData$covariateData))
         next
       }
 
@@ -654,6 +655,8 @@ validateExternal <- function(validationDesignList,
 
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
+      # the next design loads or extracts its own data
+      closeAndromedas(list(plpData$covariateData))
     }
   }
   for (database in databaseDetails) {

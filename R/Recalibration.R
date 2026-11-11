@@ -86,6 +86,7 @@ recalibratePlpRefit <- function(
     covariateData = newData$covariateData,
     rowIds = newPopulation$rowId
   )
+  on.exit(closeAndromedas(list(newData$covariateData)), add = TRUE)
 
   newData$folds <- data.frame(
     rowId = newData$labels$rowId,

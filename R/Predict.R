@@ -108,6 +108,10 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
   }
 
   ParallelLogger::logTrace("did tidy")
+  # feature engineering and tidying worked on copies, which are not returned
+  if (featureEngineering || tidyCovariates) {
+    on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
+  }
 
   # apply prediction function
   prediction <- do.call(

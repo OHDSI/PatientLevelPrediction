@@ -76,3 +76,17 @@ test_that("limitPop with timeRef", {
     as.data.frame(covs$timeRef)
   )
 })
+
+test_that("closeAndromedas closes each open Andromeda once and skips the rest", {
+  first <- Andromeda::andromeda(x = data.frame(a = 1))
+  second <- Andromeda::andromeda(x = data.frame(a = 2))
+  closedBefore <- Andromeda::andromeda()
+  Andromeda::close(closedBefore)
+
+  # the same object twice, a closed one and something that is not an Andromeda
+  closeAndromedas(list(first, first, second, closedBefore, data.frame(a = 1)))
+
+  expect_false(Andromeda::isValidAndromeda(first))
+  expect_false(Andromeda::isValidAndromeda(second))
+  expect_silent(closeAndromedas(list(first)))
+})

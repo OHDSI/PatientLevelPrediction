@@ -81,6 +81,7 @@ covariateSummary <- function(
       plpData = list(labels = replayLabels, covariateData = covariateData),
       settings = featureEngineering
     )$covariateData
+    on.exit(closeAndromedas(list(covariateData)), add = TRUE)
   }
 
   # make this run in parallel for big speed improvements..

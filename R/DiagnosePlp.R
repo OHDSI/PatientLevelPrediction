@@ -140,6 +140,8 @@ diagnoseMultiplePlp <- function(
       )
       if (!is.null(plpData)) {
         savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
+        # each design loads the saved data again
+        closeAndromedas(list(plpData$covariateData))
       }
     } else {
       ParallelLogger::logInfo(paste("Data for cohort", dataSettings$targetId[i], "exists at", file.path(saveDirectory, dataSettings$dataLocation[i])))
@@ -154,10 +156,9 @@ diagnoseMultiplePlp <- function(
     dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation))) > 0
 
     if (dataExists) {
-      plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
-
       diagnoseExists <- file.exists(file.path(saveDirectory, settings$analysisId, "diagnosePlp.rds"))
       if (!diagnoseExists) {
+        plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
         diagnosePlpSettings <- list(
           plpData = plpData,
           outcomeId = modelDesign$outcomeId,
@@ -181,6 +182,7 @@ diagnoseMultiplePlp <- function(
             return(NULL)
           }
         )
+        closeAndromedas(list(plpData$covariateData))
       } else {
         ParallelLogger::logInfo(paste("Diagnosis ", settings$analysisId, "exists at", file.path(saveDirectory, settings$analysisId)))
       }

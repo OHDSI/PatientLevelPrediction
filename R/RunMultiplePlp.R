@@ -174,6 +174,8 @@ runMultiplePlp <- function(
       )
       if (!is.null(plpData)) {
         savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
+        # each design loads the saved data again
+        closeAndromedas(list(plpData$covariateData))
       }
     } else {
       ParallelLogger::logInfo(paste("Data for target", dataSettings$targetId[i], "exists at", file.path(saveDirectory, dataSettings$dataLocation[i])))
@@ -216,6 +218,7 @@ runMultiplePlp <- function(
               return(NULL)
             }
           )
+          closeAndromedas(list(plpData$covariateData))
         } else {
           ParallelLogger::logInfo(paste("Diagnosis ", settings$analysisId, "exists at", file.path(saveDirectory, settings$analysisId)))
         }
@@ -261,6 +264,7 @@ runMultiplePlp <- function(
               return(NULL)
             }
           )
+          closeAndromedas(list(plpData$covariateData))
         } else {
           ParallelLogger::logInfo(paste("Analysis ", settings$analysisId, "exists at", file.path(saveDirectory, settings$analysisId)))
         }

@@ -52,3 +52,18 @@ limitCovariatesToPopulation <- function(covariateData, rowIds) {
   ParallelLogger::logTrace(paste0("Finished limiting covariate data to population..."))
   return(newCovariateData)
 }
+
+# Closes the Andromeda objects in a list that are still open, each once (a step
+# can return the object it was given). For the copies a function makes and does
+# not return, which otherwise stay on disk until garbage collection.
+closeAndromedas <- function(objects) {
+  closed <- character(0)
+  for (x in objects) {
+    if (!Andromeda::isAndromeda(x) || !Andromeda::isValidAndromeda(x) || x@dbname %in% closed) {
+      next
+    }
+    closed <- c(closed, x@dbname)
+    Andromeda::close(x)
+  }
+  invisible(NULL)
+}

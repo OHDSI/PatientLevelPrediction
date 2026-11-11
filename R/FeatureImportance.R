@@ -107,8 +107,14 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
         inPlace = featureEngineering
       )
     )
+    tidyCovariates <- TRUE
   } else {
     ParallelLogger::logInfo("No data tidying done in model")
+    tidyCovariates <- FALSE
+  }
+  # feature engineering and tidying worked on copies, which are not returned
+  if (featureEngineering || tidyCovariates) {
+    on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
   }
 
   # apply prediction function
@@ -198,6 +204,8 @@ permutePerf <- function(settings) {
       ParallelLogger::logInfo(paste0("plpData NULL for covariate: ", settings$covariateId))
       return(0)
     }
+    # each permutation loads its own copy of the data
+    on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
     ParallelLogger::logInfo(paste0("Calculating prediction for permutation of covariate: ", settings$covariateId))
 
     # need to stop preprocessing and do it once...
