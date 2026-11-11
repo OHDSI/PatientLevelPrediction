@@ -625,19 +625,7 @@ withPmmSeed <- function(seed, offset, expr) {
   if (is.null(seed)) {
     return(expr)
   }
-  hadSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
-  if (hadSeed) {
-    savedSeed <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
-  }
-  on.exit({
-    if (hadSeed) {
-      assign(".Random.seed", savedSeed, envir = globalenv())
-    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
-      rm(".Random.seed", envir = globalenv())
-    }
-  }, add = TRUE)
-  set.seed(seed + offset)
-  expr
+  withLocalSeed(seed + offset, expr)
 }
 
 # The seed of the imputation model with index modelIndex (1, 2, ...).

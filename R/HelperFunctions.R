@@ -407,3 +407,26 @@ functionExists <- function(name, envir = parent.frame()) {
   is.character(name) && length(name) == 1L && name != "file" &&
     exists(name, envir = envir, mode = "function", inherits = TRUE)
 }
+
+# Evaluates expr with the random stream set to seed, and gives the caller's
+# stream back as it was, so that draws made under a seed do not depend on what
+# else used the stream (such as Andromeda's names for temporary tables). Without
+# a seed, expr uses the global stream.
+withLocalSeed <- function(seed, expr) {
+  if (is.null(seed)) {
+    return(expr)
+  }
+  hadSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  if (hadSeed) {
+    savedSeed <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  }
+  on.exit({
+    if (hadSeed) {
+      assign(".Random.seed", savedSeed, envir = globalenv())
+    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+      rm(".Random.seed", envir = globalenv())
+    }
+  }, add = TRUE)
+  set.seed(seed)
+  expr
+}

@@ -1102,3 +1102,31 @@ test_that("simulatePlpData outcome metadata drives the default study population"
   expect_equal(unique(attrition$outcomeId), 99)
   expect_equal(attrition$outcomes[1], sum(simulated$outcomes$outcomeId == 99))
 })
+
+test_that("simulated data for a seed does not depend on Andromeda's random draws", {
+  data("simulationProfile", package = "PatientLevelPrediction")
+  simulate <- function() {
+    plpData <- simulatePlpData(simulationProfile, n = 200, seed = 42)
+    withr::defer(Andromeda::close(plpData$covariateData))
+    covariates <- as.data.frame(plpData$covariateData$covariates)
+    list(
+      cohorts = plpData$cohorts,
+      outcomes = plpData$outcomes,
+      covariates = covariates[order(covariates$rowId, covariates$covariateId), ]
+    )
+  }
+  reference <- simulate()
+
+  # Andromeda takes random draws for its temporary tables; here it takes more
+  andromeda <- Andromeda::andromeda
+  local_mocked_bindings(
+    andromeda = function(...) {
+      stats::runif(7)
+      andromeda(...)
+    },
+    .package = "Andromeda"
+  )
+  withMoreDraws <- simulate()
+
+  expect_equal(withMoreDraws, reference, ignore_attr = TRUE)
+})
