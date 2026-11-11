@@ -17,18 +17,19 @@
 # make sure pop is all plpData people
 if (isTRUE(eunomiaAvailable)) {
   populationT <- plpData$cohorts
-  populationT$outcomeCount <- sample(c(0, 1), nrow(populationT), replace = TRUE)
+  populationT$outcomeCount <- withr::with_seed(42, sample(c(0, 1), nrow(populationT), replace = TRUE))
   attr(populationT, "metaData")$outcomeId <- outcomeId
   attr(populationT, "metaData")$populationSettings <- list(madeup = TRUE)
   attr(populationT, "metaData")$restrictPlpDataSettings <- list(madeup = TRUE)
   attr(populationT, "metaData")$attrition <- c(1, 2, 3)
 }
-# check correct inputs
-testFraction1 <- sample(9, 1) / 10
+# fixed inputs that differ from the defaults, so the tests show they are used
+# and a failure can be reproduced
+testFraction1 <- 0.3
 trainFraction1 <- 1 - testFraction1
-splitSeed1 <- sample(100000, 1)
-nfold1 <- 1 + sample(10, 1)
-type1 <- sample(c("stratified", "time", "subject"), 1)
+splitSeed1 <- 1234
+nfold1 <- 4
+type1 <- "stratified"
 
 defaultSetting <- function(
     testFraction = testFraction1,
@@ -52,15 +53,10 @@ test_that("createDefaultSplitSetting", {
 
   expect_s3_class(splitSettings, "splitSettings")
 
-  expectFun <- "randomSplitter"
-  if (type1 == "time") {
-    expectFun <- "timeSplitter"
+  splitters <- c(stratified = "randomSplitter", time = "timeSplitter", subject = "subjectSplitter")
+  for (type in names(splitters)) {
+    expect_equal(attr(defaultSetting(type = type), "fun"), splitters[[type]], info = type)
   }
-  if (type1 == "subject") {
-    expectFun <- "subjectSplitter"
-  }
-
-  expect_equal(attr(splitSettings, "fun"), expectFun)
 
   expect_equal(splitSettings$test, testFraction1)
   expect_equal(splitSettings$train, trainFraction1)
@@ -417,6 +413,7 @@ test_that("dataSummary works", {
 
 test_that("Data stratified splitting", {
   splitSettings <- defaultSetting(
+    train = 0.7,
     test = 0.3,
     nfold = 3
   )
