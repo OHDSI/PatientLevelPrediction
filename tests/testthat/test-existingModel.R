@@ -37,11 +37,11 @@ test_that("Create existing sklearn works", {
     modelLocation = "model.pkl",
     covariateMap = data.frame(
       columnId = c(1),
-      notCovariateId = c(1002),
+      notCovariateId = c(1002)
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
-  ))
+  ), "Column names of covariateMap are not correct")
   # dataframe wrong column types
   expect_error(createSklearnModel(
     modelLocation = "model.pkl",
@@ -213,7 +213,7 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", requiresDenseMatrix = 4))
+  ), mapping = "logistic", requireDenseMatrix = 4), "requireDenseMatrix is wrong class")
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -286,4 +286,11 @@ test_that("Existing glm model works", {
   ), intercept = -2.5)
   prediction <- predictPlp(model, testData, testData$labels)
   expect_correct_predictions(prediction, testData)
+})
+
+test_that("createSklearnModel has a usable default covariate map", {
+  expect_equal(
+    eval(formals(createSklearnModel)$covariateMap),
+    data.frame(columnId = 1:2, covariateId = c(1, 2))
+  )
 })

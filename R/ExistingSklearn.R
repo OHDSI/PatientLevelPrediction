@@ -64,7 +64,7 @@ createSklearnModel <- function(
     modelLocation = "/model", # model needs to be saved here as "model.pkl"
     covariateMap = data.frame(
       columnId = 1:2,
-      covariateId = c(1, 2),
+      covariateId = c(1, 2)
     ),
     isPickle = TRUE,
     targetId = NULL,
