@@ -321,6 +321,68 @@ test_that("toSparseM with a cohort but no stored labels is unchanged", {
   expect_equal(sparse$labels$outcomeCount, 0)
 })
 
+# patients 10, 20 and 30 with covariates 100, 200 and 300; patient 40 has none,
+# and the labels are not in rowId order
+makeMappedData <- function() {
+  makePlpData(
+    covariateData = makeCovariateData(data.frame(
+      rowId = c(10, 10, 20, 30, 30),
+      covariateId = c(100, 200, 100, 300, 200),
+      covariateValue = c(1, 2, 3, 4, 5)
+    )),
+    labels = data.frame(rowId = c(30, 10, 40, 20), outcomeCount = c(1, 0, 0, 1))
+  )
+}
+
+test_that("toSparseM follows the cohort order and a saved map", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  map <- data.frame(covariateId = c(300, 100), columnId = c(1, 2))
+
+  sparse <- toSparseM(data, map = map)
+
+  # rows in cohort order, columns as in the map; covariate 200 is not in the map
+  expect_equal(
+    as.matrix(sparse$dataMatrix),
+    matrix(c(4, 0, 0, 0, 0, 1, 0, 3), nrow = 4)
+  )
+  expect_equal(sparse$labels$originalRowId, c(30, 10, 40, 20))
+  expect_equal(sparse$labels$rowId, 1:4)
+  expect_equal(sparse$covariateMap, map)
+  expect_equal(sparse$covariateRef$columnId[order(sparse$covariateRef$covariateId)], c(2, 1))
+})
+
+test_that("toSparseM numbers columns by covariateId without copying the covariates", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  tables <- names(data$covariateData)
+  created <- 0
+  createAndromeda <- Andromeda::andromeda
+  local_mocked_bindings(
+    andromeda = function(...) {
+      created <<- created + 1
+      createAndromeda(...)
+    },
+    .package = "Andromeda"
+  )
+
+  sparse <- toSparseM(data)
+
+  expect_equal(sparse$covariateMap, data.frame(covariateId = c(100, 200, 300), columnId = 1:3))
+  # patient 30: covariate 200 is 5 and 300 is 4
+  expect_equal(as.matrix(sparse$dataMatrix)[1, ], c(0, 5, 4))
+  # no new Andromeda for a copy of the covariates, and no tables left behind
+  expect_equal(created, 0)
+  expect_setequal(names(data$covariateData), tables)
+})
+
+test_that("toSparseM needs a cohort or stored labels", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  data$labels <- NULL
+  expect_error(toSparseM(data), "needs a cohort")
+})
+
 test_that("predictPlp honours the population for xgboost models", {
   skip_if_not_installed("xgboost")
   plpDataWithLabels <- makeStoredLabelData()

@@ -23,19 +23,21 @@
 #'
 #' @details
 #' This function converts the covariates `Andromeda` table in COO format into a sparse matrix from
-#' the package Matrix
+#' the package Matrix. The matrix is built in one query on the covariates, without copying them.
 #' @param plpData                       An object of type \code{plpData} with covariate in coo format - the patient level prediction
 #'                                      data extracted from the CDM.
 #' @param cohort                        If specified the plpData is restricted to the rowIds in the cohort (otherwise plpData$labels is used)
-#' @param map                           A covariate map (telling us the column number for covariates)
+#' @param map                           A covariate map (telling us the column number for covariates), with
+#'                                      columns covariateId and columnId, for example from a fitted model.
+#'                                      Covariates that are not in the map are left out.
 #'
 #' @return
-#' Returns a list, containing the data as a sparse matrix, the plpData covariateRef
-#' and a data.frame named map that tells us what covariate corresponds to each column
-#' This object is a list with the following components: \describe{
-#' \item{data}{A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
-#' \item{covariateRef}{The plpData covariateRef.}
-#' \item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
+#' A list with the following components: \describe{
+#' \item{dataMatrix}{A sparse matrix with a row for each person in the cohort, in the order of the
+#' cohort, and a column for each covariate in the map.}
+#' \item{labels}{The cohort, with rowId replaced by the matrix row and the original rowId in originalRowId.}
+#' \item{covariateRef}{The covariateRef of the mapped covariates, with their columnId.}
+#' \item{covariateMap}{A data.frame with the covariateId and columnId of each column.}
 #' }
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
@@ -56,62 +58,73 @@ toSparseM <- function(plpData, cohort = NULL, map = NULL) {
   start <- Sys.time()
   ParallelLogger::logInfo(paste0("starting toSparseM"))
 
-  ParallelLogger::logDebug(
-    paste0(
-      "Max covariateId in original covariates: ",
-      plpData$covariateData$covariates %>%
-        dplyr::summarise(max = max(.data$covariateId, na.rm = TRUE)) %>%
-        dplyr::pull()
-    )
-  )
-
-  # assign covariateId to colummId specified in map (if null create columnIds)
-  # assign rowId to xId
-  # return the new covariateData (rowId changes in covariates plus covariates/covariateRef with modified columnIds)
-  # return labels with modified rowId if plpData$labels exists
-
   if (is.null(cohort)) {
     cohort <- plpData$labels
   }
-  newcovariateData <- MapIds(
-    plpData$covariateData,
-    cohort = cohort,
-    mapping = map
-  )
+  if (is.null(cohort)) {
+    stop("toSparseM() needs a cohort, or labels in plpData, to define the rows of the matrix")
+  }
+  if (!is.data.frame(cohort)) {
+    cohort <- dplyr::collect(cohort)
+  }
+  covariateData <- plpData$covariateData
 
+  # matrix row of each patient, in the order of the cohort
+  rowMap <- data.frame(rowId = cohort$rowId, xId = seq_len(nrow(cohort)))
+  covariateData$rowMap <- rowMap
+  on.exit(covariateData$rowMap <- NULL, add = TRUE)
 
-  ParallelLogger::logDebug(paste0("# covariates in mapped covariateRef: ", nrow(newcovariateData$covariateRef)))
+  # matrix column of each covariate: from the map, or every covariate of the
+  # cohort in covariateId order
+  if (is.null(map)) {
+    map <- data.frame(
+      covariateId = covariateData$covariates %>%
+        dplyr::inner_join(covariateData$rowMap, by = "rowId") %>%
+        dplyr::distinct(.data$covariateId) %>%
+        dplyr::arrange(.data$covariateId) %>%
+        dplyr::pull()
+    )
+    map$columnId <- seq_len(nrow(map))
+  }
+  map <- as.data.frame(map)
+  rownames(map) <- NULL
+  covariateData$mapping <- map
+  on.exit(covariateData$mapping <- NULL, add = TRUE)
+  ParallelLogger::logDebug(paste0("Number of columns: ", nrow(map)))
 
-  maxY <- newcovariateData$mapping %>%
-    dplyr::summarise(max = max(.data$columnId, na.rm = TRUE)) %>%
-    dplyr::pull()
-  ParallelLogger::logDebug(paste0("Max newCovariateId in mapping: ", maxY))
-  maxX <- newcovariateData$cohort %>%
-    dplyr::summarise(max = max(.data$rowId, na.rm = TRUE)) %>%
-    dplyr::pull()
-  ParallelLogger::logDebug(paste0("Max rowId in new : ", maxX))
+  checkRam(covariateData) # estimates size of RAM required and prints it
 
-
-  ParallelLogger::logInfo(paste0("toSparseM non temporal used"))
-
-  checkRam(newcovariateData) # estimates size of RAM required and prints it
-
+  # one query for the row, column and value of every entry, so the three
+  # always belong together
+  entries <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$mapping, by = "covariateId") %>%
+    dplyr::inner_join(covariateData$rowMap, by = "rowId") %>%
+    dplyr::select("xId", "columnId", "covariateValue") %>%
+    dplyr::collect()
   data <- Matrix::sparseMatrix(
-    i = newcovariateData$covariates %>% dplyr::select("rowId") %>% dplyr::pull(),
-    j = newcovariateData$covariates %>% dplyr::select("columnId") %>% dplyr::pull(),
-    x = newcovariateData$covariates %>% dplyr::select("covariateValue") %>% dplyr::pull(),
-    dims = c(maxX, maxY)
+    i = entries$xId,
+    j = entries$columnId,
+    x = entries$covariateValue,
+    dims = c(nrow(rowMap), max(c(0, map$columnId)))
   )
-
   ParallelLogger::logDebug(paste0("Sparse matrix with dimensionality: ", paste(dim(data), collapse = ",")))
 
-  ParallelLogger::logInfo(paste0("finishing toSparseM"))
+  labels <- cohort %>%
+    dplyr::inner_join(rowMap, by = "rowId") %>%
+    dplyr::rename(originalRowId = "rowId", rowId = "xId") %>%
+    dplyr::arrange(.data$rowId)
+  covariateRef <- covariateData$mapping %>%
+    dplyr::inner_join(covariateData$covariateRef, by = "covariateId") %>%
+    dplyr::collect()
 
+  ParallelLogger::logInfo(paste0("finishing toSparseM"))
   result <- list(
     dataMatrix = data,
-    labels = newcovariateData$cohort %>% dplyr::collect(),
-    covariateRef = as.data.frame(newcovariateData$covariateRef),
-    covariateMap = as.data.frame(newcovariateData$mapping)
+    # a plain table: the attributes of a population (such as its metaData)
+    # are not part of the labels
+    labels = dplyr::as_tibble(unclass(labels)[names(labels)]),
+    covariateRef = as.data.frame(covariateRef),
+    covariateMap = map
   )
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0("toSparseM took ", delta, " ", attr(delta, "units")))

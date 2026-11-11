@@ -12,15 +12,17 @@ data extracted from the CDM.}
 
 \item{cohort}{If specified the plpData is restricted to the rowIds in the cohort (otherwise plpData$labels is used)}
 
-\item{map}{A covariate map (telling us the column number for covariates)}
+\item{map}{A covariate map (telling us the column number for covariates), with
+columns covariateId and columnId, for example from a fitted model.
+Covariates that are not in the map are left out.}
 }
 \value{
-Returns a list, containing the data as a sparse matrix, the plpData covariateRef
-and a data.frame named map that tells us what covariate corresponds to each column
-This object is a list with the following components: \describe{
-\item{data}{A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.}
-\item{covariateRef}{The plpData covariateRef.}
-\item{map}{A data.frame containing the data column ids and the corresponding covariateId from covariateRef.}
+A list with the following components: \describe{
+\item{dataMatrix}{A sparse matrix with a row for each person in the cohort, in the order of the
+cohort, and a column for each covariate in the map.}
+\item{labels}{The cohort, with rowId replaced by the matrix row and the original rowId in originalRowId.}
+\item{covariateRef}{The covariateRef of the mapped covariates, with their columnId.}
+\item{covariateMap}{A data.frame with the covariateId and columnId of each column.}
 }
 }
 \description{
@@ -28,7 +30,7 @@ Converts the standard plpData to a sparse matrix
 }
 \details{
 This function converts the covariates \code{Andromeda} table in COO format into a sparse matrix from
-the package Matrix
+the package Matrix. The matrix is built in one query on the covariates, without copying them.
 }
 \examples{
 \donttest{ \dontshow{ # takes too long }
