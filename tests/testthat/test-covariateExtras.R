@@ -47,7 +47,7 @@ test_that("settings creation errors", {
     ageInteraction = FALSE,
     lnAgeInteraction = FALSE,
     analysisId = 456
-  ))
+  ), "settingId must be between 1 and 100")
 
   expect_error(createCohortCovariateSettings(
     cohortName = "covariateName",
@@ -61,7 +61,7 @@ test_that("settings creation errors", {
     ageInteraction = FALSE,
     lnAgeInteraction = FALSE,
     analysisId = 456
-  ))
+  ), "settingId must be between 1 and 100")
 
   expect_error(createCohortCovariateSettings(
     cohortName = "covariateName",
@@ -75,7 +75,7 @@ test_that("settings creation errors", {
     ageInteraction = FALSE,
     lnAgeInteraction = FALSE,
     analysisId = 456
-  ))
+  ), "settingId must be between 1 and 100")
 })
 
 test_that("extraction works", {

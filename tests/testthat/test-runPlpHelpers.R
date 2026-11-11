@@ -49,7 +49,7 @@ test_that("checkInputs", {
         outcomeId = outcomeId,
         populationSettings = populationSettings
       )
-    )
+    ), "inputs\\[\\[\"plpData\"\\]\\] is wrong class"
   )
 
   # error as incorrect outcomeId
@@ -60,7 +60,7 @@ test_that("checkInputs", {
         outcomeId = "test",
         populationSettings = populationSettings
       )
-    )
+    ), "inputs\\[\\[\"outcomeId\"\\]\\] is wrong class"
   )
 
   # error as incorrect populationSettings
@@ -71,7 +71,7 @@ test_that("checkInputs", {
         outcomeId = outcomeId,
         populationSettings = "populationSettings"
       )
-    )
+    ), "Bad input"
   )
 })
 
@@ -112,7 +112,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
-    )
+    ), "runSplitData is wrong class"
   )
 
   expect_error(
@@ -123,7 +123,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
-    )
+    ), "runSampleData is wrong class"
   )
 
   expect_error(
@@ -134,7 +134,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
-    )
+    ), "runFeatureEngineering is wrong class"
   )
 
   expect_error(
@@ -145,7 +145,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = 12,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = runCovariateSummary
-    )
+    ), "runPreprocessData is wrong class"
   )
 
   expect_error(
@@ -156,7 +156,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = runPreprocessData,
       runModelDevelopment = 12,
       runCovariateSummary = runCovariateSummary
-    )
+    ), "runModelDevelopment is wrong class"
   )
 
   expect_error(
@@ -167,7 +167,7 @@ test_that("createExecuteSettings", {
       runPreprocessData = runPreprocessData,
       runModelDevelopment = runModelDevelopment,
       runCovariateSummary = 12
-    )
+    ), "runCovariateSummary is wrong class"
   )
 })
 

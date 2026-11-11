@@ -35,9 +35,9 @@ test_that("setAdaBoost settings work checks", {
 test_that("setAdaBoost errors as expected", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  expect_error(setAdaBoost(nEstimators = list(-1)))
-  expect_error(setAdaBoost(learningRate = list(-1)))
-  expect_error(setAdaBoost(seed = list("seed")))
+  expect_error(setAdaBoost(nEstimators = list(-1)), "nEstimators\\[\\[i\\]\\] needs to be > 0")
+  expect_error(setAdaBoost(learningRate = list(-1)), "learningRate\\[\\[i\\]\\] needs to be > 0")
+  expect_error(setAdaBoost(seed = list("seed")), "seed\\[\\[1\\]\\] is wrong class")
 })
 
 

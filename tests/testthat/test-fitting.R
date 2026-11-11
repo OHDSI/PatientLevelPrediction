@@ -44,7 +44,7 @@ test_that("fitPlp input errors", {
       modelSettings = modelSettings,
       analysisId = "fitting",
       analysisPath = tempDir()
-    )
+    ), "covariateData is NULL"
   )
 
   expect_error(
@@ -53,7 +53,7 @@ test_that("fitPlp input errors", {
       modelSettings = NULL,
       analysisId = "fitting",
       analysisPath = tempDir()
-    )
+    ), "modelSettings is wrong class"
   )
 
   expect_error(

@@ -45,9 +45,9 @@ test_that("createUnivariateFeatureSelection correct class", {
   expect_equal(featureEngineeringSettings$k, k)
   expect_equal(attr(featureEngineeringSettings, "fun"), "univariateFeatureSelection")
 
-  expect_error(testUniFun(k = "ffdff"))
-  expect_error(testUniFun(k = NULL))
-  expect_error(testUniFun(k = -1))
+  expect_error(testUniFun(k = "ffdff"), "k is wrong class")
+  expect_error(testUniFun(k = NULL), "k is wrong class")
+  expect_error(testUniFun(k = -1), "k needs to be >= 0")
 })
 
 
@@ -99,28 +99,28 @@ test_that("createRandomForestFeatureSelection correct class", {
     createRandomForestFeatureSelection(
       ntrees = -1,
       maxDepth = maxDepthTest
-    )
+    ), "ntrees needs to be > 0"
   )
 
   expect_error(
     createRandomForestFeatureSelection(
       ntrees = "dfdfd",
       maxDepth = maxDepthTest
-    )
+    ), "ntrees is wrong class"
   )
 
   expect_error(
     createRandomForestFeatureSelection(
       ntrees = 50,
       maxDepth = "maxDepthTest"
-    )
+    ), "maxDepth is wrong class"
   )
 
   expect_error(
     createRandomForestFeatureSelection(
       ntrees = 50,
       maxDepth = -1
-    )
+    ), "maxDepth needs to be > 0"
   )
 })
 
@@ -310,9 +310,9 @@ test_that("createRareFeatureRemover works", {
   expect_equal(remover$threshold, 0.1)
   expect_equal(attr(remover, "fun"), "removeRareFeatures")
 
-  expect_error(createRareFeatureRemover(threshold = -1))
-  expect_error(createRareFeatureRemover(threshold = "0.5"))
-  expect_error(createRareFeatureRemover(threshold = 1))
+  expect_error(createRareFeatureRemover(threshold = -1), "threshold needs to be >= 0")
+  expect_error(createRareFeatureRemover(threshold = "0.5"), "threshold is wrong class")
+  expect_error(createRareFeatureRemover(threshold = 1), "threshold needs to be < 1")
 })
 
 test_that("Removing rare features works", {
@@ -702,7 +702,7 @@ test_that("recordFeatureEngineeringStep appends after steps saved in older forma
     c("univariateFeatureSelection", "simpleImpute", "removeRareFeatures", "removeRareFeatures")
   )
   expect_equal(steps[[1]]$settings, list(covariateIdsInclude = 1))
-  expect_error(recordFeatureEngineeringStep(data, "removeRareFeatures", "not a list"))
+  expect_error(recordFeatureEngineeringStep(data, "removeRareFeatures", "not a list"), "settings is wrong class")
 })
 
 test_that("a custom step written as in the vignette is applied at prediction", {

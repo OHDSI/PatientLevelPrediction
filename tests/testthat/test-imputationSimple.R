@@ -18,11 +18,11 @@ test_that("createSimpleImputer works", {
   expect_s3_class(imputer, "featureEngineeringSettings")
 
   expect_s3_class(imputer, "featureEngineeringSettings")
-  expect_error(createSimpleImputer(method = "mean", missingThreshold = -1))
-  expect_error(createSimpleImputer(method = "mean", missingThreshold = "0.5"))
-  expect_error(createSimpleImputer(method = "mean", missingThreshold = 1))
-  expect_error(createSimpleImputer(method = "notMean"))
-  expect_error(createSimpleImputer(addMissingIndicator = "true"))
+  expect_error(createSimpleImputer(method = "mean", missingThreshold = -1), "missingThreshold needs to be > 0")
+  expect_error(createSimpleImputer(method = "mean", missingThreshold = "0.5"), "missingThreshold is wrong class")
+  expect_error(createSimpleImputer(method = "mean", missingThreshold = 1), "missingThreshold needs to be < 1")
+  expect_error(createSimpleImputer(method = "notMean"), "method has incorrect value")
+  expect_error(createSimpleImputer(addMissingIndicator = "true"), "addMissingIndicator is wrong class")
 })
 
 test_that("simpleImpute works", {

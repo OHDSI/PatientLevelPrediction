@@ -41,22 +41,22 @@ test_that("incorrect input externalValidateDbPlp checks work", {
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
   # fails when plpResult is NULL
-  expect_error(externalValidateDbPlp(setEV(model = NULL)))
+  expect_error(externalValidateDbPlp(setEV(model = NULL)), "outputFolder must be specified")
   # fails when plpResult is not class 'plpResult'
-  expect_error(externalValidateDbPlp(setEV(model = list())))
+  expect_error(externalValidateDbPlp(setEV(model = list())), "outputFolder must be specified")
 
 
   expect_error(externalValidateDbPlp(
     setEV(validationDatabaseDetails = NULL)
-  ))
+  ), "outputFolder must be specified")
 
   expect_error(externalValidateDbPlp(
     setEV(validationRestrictPlpDataSettings = NULL)
-  ))
+  ), "outputFolder must be specified")
 
   expect_error(externalValidateDbPlp(
     setEV(outputFolder = NULL)
-  ))
+  ), "outputFolder must be specified")
 })
 
 
@@ -99,34 +99,34 @@ test_that("createValidationDesign errors", {
   expect_error(createValidationDesign(
     targetId = NULL, outcomeId = 2,
     plpModelList = list()
-  ))
+  ), "targetId is wrong class")
   expect_error(createValidationDesign(
     targetId = 1, outcomeId = NULL,
     plpModelList = list()
-  ))
+  ), "outcomeId is wrong class")
   expect_error(createValidationDesign(
     targetId = "a", outcomeId = 2,
     plpModelList = list()
-  ))
+  ), "targetId is wrong class")
   expect_error(createValidationDesign(
     targetId = 1, outcomeId = "a",
     plpModelList = list()
-  ))
+  ), "outcomeId is wrong class")
   expect_error(createValidationDesign(
     targetId = 1, outcomeId = 2,
     plpModelList = list(),
     populationSettings = list()
-  ))
+  ), "populationSettings is wrong class")
   expect_error(createValidationDesign(
     targetId = 1, outcomeId = 2,
     plpModelList = list(),
     recalibrate = 1
-  ))
+  ), "recalibrate is wrong class")
   expect_error(createValidationDesign(
     targetId = 1, outcomeId = 2,
     plpModelList = list(),
     runCovariateSummary = 1
-  ))
+  ), "runCovariateSummary is wrong class")
 })
 
 test_that("createValidationDesign works with minimal required arguments", {

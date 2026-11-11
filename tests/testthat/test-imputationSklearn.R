@@ -9,14 +9,14 @@ test_that("createSklearnIterativeImputer works", {
   expect_equal(attr(imputer, "fun"), "sklearnIterativeImpute")
   expect_s3_class(imputer, "featureEngineeringSettings")
 
-  expect_error(createSklearnIterativeImputer(missingThreshold = -1))
-  expect_error(createSklearnIterativeImputer(addMissingIndicator = "true"))
-  expect_error(createSklearnIterativeImputer(methodSettings = "bad"))
-  expect_error(createSklearnIterativeImputer(methodSettings = list(maxIter = 0)))
-  expect_error(createSklearnIterativeImputer(methodSettings = list(tol = 0)))
-  expect_error(createSklearnIterativeImputer(methodSettings = list(nNearestFeatures = 0)))
-  expect_error(createSklearnIterativeImputer(methodSettings = list(initialStrategy = "bad")))
-  expect_error(createSklearnIterativeImputer(methodSettings = list(imputationOrder = "bad")))
+  expect_error(createSklearnIterativeImputer(missingThreshold = -1), "missingThreshold needs to be > 0")
+  expect_error(createSklearnIterativeImputer(addMissingIndicator = "true"), "addMissingIndicator is wrong class")
+  expect_error(createSklearnIterativeImputer(methodSettings = "bad"), "methodSettings is wrong class")
+  expect_error(createSklearnIterativeImputer(methodSettings = list(maxIter = 0)), "methodSettings\\$maxIter should be a single integer >= 1")
+  expect_error(createSklearnIterativeImputer(methodSettings = list(tol = 0)), "methodSettings\\$tol should be a single positive finite numeric value")
+  expect_error(createSklearnIterativeImputer(methodSettings = list(nNearestFeatures = 0)), "methodSettings\\$nNearestFeatures should be NULL or a single integer >=")
+  expect_error(createSklearnIterativeImputer(methodSettings = list(initialStrategy = "bad")), "settings\\$initialStrategy has incorrect value")
+  expect_error(createSklearnIterativeImputer(methodSettings = list(imputationOrder = "bad")), "settings\\$imputationOrder has incorrect value")
 })
 
 test_that("sklearnIterativeImpute works and reuses binary predictors", {

@@ -64,11 +64,11 @@ test_that("createStudyPopulation binary", {
 
 test_that("createStudyPopulation includeAllOutcomes", {
   expect_error(
-    createStudyPopulationSettings(includeAllOutcomes = NULL)
+    createStudyPopulationSettings(includeAllOutcomes = NULL), "includeAllOutcomes is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(includeAllOutcomes = 12)
+    createStudyPopulationSettings(includeAllOutcomes = 12), "includeAllOutcomes is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -84,11 +84,11 @@ test_that("createStudyPopulation includeAllOutcomes", {
 
 test_that("createStudyPopulation firstExposureOnly", {
   expect_error(
-    createStudyPopulationSettings(firstExposureOnly = NULL)
+    createStudyPopulationSettings(firstExposureOnly = NULL), "firstExposureOnly is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(firstExposureOnly = 12)
+    createStudyPopulationSettings(firstExposureOnly = 12), "firstExposureOnly is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -105,11 +105,11 @@ test_that("createStudyPopulation firstExposureOnly", {
 
 test_that("createStudyPopulation washoutPeriod", {
   expect_error(
-    createStudyPopulationSettings(washoutPeriod = NULL)
+    createStudyPopulationSettings(washoutPeriod = NULL), "washoutPeriod is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(washoutPeriod = -1)
+    createStudyPopulationSettings(washoutPeriod = -1), "washoutPeriod needs to be >= 0"
   )
 
   rand <- sample(1000, 1)
@@ -122,11 +122,11 @@ test_that("createStudyPopulation washoutPeriod", {
 
 test_that("createStudyPopulation removeSubjectsWithPriorOutcome", {
   expect_error(
-    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = NULL)
+    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = NULL), "removeSubjectsWithPriorOutcome is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = 12)
+    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = 12), "removeSubjectsWithPriorOutcome is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -142,11 +142,11 @@ test_that("createStudyPopulation removeSubjectsWithPriorOutcome", {
 
 test_that("createStudyPopulation priorOutcomeLookback", {
   expect_error(
-    createStudyPopulationSettings(priorOutcomeLookback = NULL)
+    createStudyPopulationSettings(priorOutcomeLookback = NULL), "priorOutcomeLookback is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(priorOutcomeLookback = -1)
+    createStudyPopulationSettings(priorOutcomeLookback = -1), "priorOutcomeLookback needs to be >= 0"
   )
 
   rand <- sample(1000, 1)
@@ -158,11 +158,11 @@ test_that("createStudyPopulation priorOutcomeLookback", {
 
 test_that("createStudyPopulation requireTimeAtRisk", {
   expect_error(
-    createStudyPopulationSettings(requireTimeAtRisk = NULL)
+    createStudyPopulationSettings(requireTimeAtRisk = NULL), "requireTimeAtRisk is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(requireTimeAtRisk = 12)
+    createStudyPopulationSettings(requireTimeAtRisk = 12), "requireTimeAtRisk is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -178,11 +178,11 @@ test_that("createStudyPopulation requireTimeAtRisk", {
 
 test_that("createStudyPopulation minTimeAtRisk", {
   expect_error(
-    createStudyPopulationSettings(minTimeAtRisk = NULL)
+    createStudyPopulationSettings(minTimeAtRisk = NULL), "minTimeAtRisk is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(minTimeAtRisk = -1)
+    createStudyPopulationSettings(minTimeAtRisk = -1), "minTimeAtRisk needs to be >= 0"
   )
 
   rand <- 365 + sample(365, 1)
@@ -196,7 +196,7 @@ test_that("createStudyPopulation minTimeAtRisk", {
 
 test_that("createStudyPopulation riskWindowStart", {
   expect_error(
-    createStudyPopulationSettings(riskWindowStart = NULL)
+    createStudyPopulationSettings(riskWindowStart = NULL), "riskWindowStart is wrong class"
   )
 
 
@@ -210,7 +210,7 @@ test_that("createStudyPopulation riskWindowStart", {
 
 test_that("createStudyPopulation riskWindowEnd", {
   expect_error(
-    createStudyPopulationSettings(riskWindowEnd = NULL)
+    createStudyPopulationSettings(riskWindowEnd = NULL), "riskWindowEnd is wrong class"
   )
 
 
@@ -224,11 +224,11 @@ test_that("createStudyPopulation riskWindowEnd", {
 
 test_that("createStudyPopulation startAnchor", {
   expect_error(
-    createStudyPopulationSettings(startAnchor = NULL)
+    createStudyPopulationSettings(startAnchor = NULL), "startAnchor is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(startAnchor = "blabla")
+    createStudyPopulationSettings(startAnchor = "blabla"), "Incorrect startAnchor"
   )
 
   rand <- c("cohort end", "cohort start")[sample(2, 1)]
@@ -240,11 +240,11 @@ test_that("createStudyPopulation startAnchor", {
 
 test_that("createStudyPopulation endAnchor", {
   expect_error(
-    createStudyPopulationSettings(endAnchor = NULL)
+    createStudyPopulationSettings(endAnchor = NULL), "endAnchor is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(endAnchor = "blabla")
+    createStudyPopulationSettings(endAnchor = "blabla"), "Incorrect endAnchor"
   )
 
   rand <- c("cohort end", "cohort start")[sample(2, 1)]
@@ -319,7 +319,7 @@ test_that("population creation parameters", {
       plpData = plpData,
       outcomeId = outcomeId,
       populationSettings = defaultSettings(washoutPeriod = -1)
-    )
+    ), "washoutPeriod needs to be >= 0"
   )
 
   # priorOutcomeLookback < 0 error
@@ -331,7 +331,7 @@ test_that("population creation parameters", {
         priorOutcomeLookback = -1,
         removeSubjectsWithPriorOutcome = TRUE
       )
-    )
+    ), "priorOutcomeLookback needs to be >= 0"
   )
 
   expect_error(
@@ -342,7 +342,7 @@ test_that("population creation parameters", {
         minTimeAtRisk = -1,
         requireTimeAtRisk = TRUE
       )
-    )
+    ), "minTimeAtRisk needs to be >= 0"
   )
 
   # Incorrect startAnchor
@@ -353,7 +353,7 @@ test_that("population creation parameters", {
       populationSettings = defaultSettings(
         startAnchor = "cohort stard"
       )
-    )
+    ), "Incorrect startAnchor"
   )
 
   # Incorrect endAnchor
@@ -364,7 +364,7 @@ test_that("population creation parameters", {
       populationSettings = defaultSettings(
         endAnchor = "cohort ent"
       )
-    )
+    ), "Incorrect endAnchor"
   )
 
 

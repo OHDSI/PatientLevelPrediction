@@ -23,14 +23,14 @@ test_that("createNormalizer works", {
   normalizer <- createNormalizer(type = "robust", settings = list(clip = TRUE))
   expect_equal(normalizer$type, "robust")
 
-  expect_error(createNormalizer(type = "mean"))
-  expect_error(createNormalizer(type = "median"))
-  expect_error(createNormalizer(type = "zscore"))
-  expect_error(createNormalizer(type = "none"))
+  expect_error(createNormalizer(type = "mean"), "type has incorrect value")
+  expect_error(createNormalizer(type = "median"), "type has incorrect value")
+  expect_error(createNormalizer(type = "zscore"), "type has incorrect value")
+  expect_error(createNormalizer(type = "none"), "type has incorrect value")
   expect_error(createNormalizer(
     type = "robust",
     settings = list(clip = 3)
-  ))
+  ), "settings\\$clip not defined correctly")
 })
 
 # The normalization arithmetic on data frames. The steps run the same functions

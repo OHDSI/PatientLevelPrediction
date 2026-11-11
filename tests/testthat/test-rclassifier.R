@@ -53,14 +53,14 @@ test_that("GBM settings expected errors", {
   # checking Gradient Boosting Machine
   # =====================================
 
-  expect_error(setGradientBoostingMachine(ntrees = -1))
-  expect_error(setGradientBoostingMachine(minChildWeight = -1))
-  expect_error(setGradientBoostingMachine(maxDepth = 0))
-  expect_error(setGradientBoostingMachine(learnRate = -2))
-  expect_error(setGradientBoostingMachine(seed = "F"))
-  expect_error(setGradientBoostingMachine(lambda = -1))
-  expect_error(setGradientBoostingMachine(alpha = -1))
-  expect_error(setGradientBoostingMachine(scalePosWeight = -1))
+  expect_error(setGradientBoostingMachine(ntrees = -1), "ntrees must be greater than 0 or -1")
+  expect_error(setGradientBoostingMachine(minChildWeight = -1), "minChildWeight must be greater that 0")
+  expect_error(setGradientBoostingMachine(maxDepth = 0), "maxDepth must be greater that 0")
+  expect_error(setGradientBoostingMachine(learnRate = -2), "learnRate must be greater that 0")
+  expect_error(setGradientBoostingMachine(seed = "F"), "seed is wrong class")
+  expect_error(setGradientBoostingMachine(lambda = -1), "lambda must be 0 or greater")
+  expect_error(setGradientBoostingMachine(alpha = -1), "alpha must be 0 or greater")
+  expect_error(setGradientBoostingMachine(scalePosWeight = -1), "scalePosWeight must be 0 or greater")
 })
 
 

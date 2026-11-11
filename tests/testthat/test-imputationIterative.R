@@ -4,12 +4,12 @@ test_that("createIterativeImputer works", {
 
   expect_equal(imputer$method, "pmm")
   expect_false(imputer$addMissingIndicator)
-  expect_error(createIterativeImputer(method = "notPmm"))
+  expect_error(createIterativeImputer(method = "notPmm"), "method has incorrect value")
   expect_equal(attr(imputer, "fun"), "iterativeImpute")
   expect_s3_class(imputer, "featureEngineeringSettings")
-  expect_error(createIterativeImputer(method = "pmm", missingThreshold = -1))
-  expect_error(createIterativeImputer(method = "pmm", missingThreshold = "0.5"))
-  expect_error(createIterativeImputer(method = "pmm", missingThreshold = 1))
+  expect_error(createIterativeImputer(method = "pmm", missingThreshold = -1), "missingThreshold needs to be > 0")
+  expect_error(createIterativeImputer(method = "pmm", missingThreshold = "0.5"), "missingThreshold is wrong class")
+  expect_error(createIterativeImputer(method = "pmm", missingThreshold = 1), "missingThreshold needs to be < 1")
 
   imputer <- createIterativeImputer(
     method = "pmm",
@@ -19,7 +19,7 @@ test_that("createIterativeImputer works", {
   expect_equal(imputer$missingThreshold, 0.5)
   expect_true(imputer$addMissingIndicator)
   expect_s3_class(imputer, "featureEngineeringSettings")
-  expect_error(createIterativeImputer(addMissingIndicator = "true"))
+  expect_error(createIterativeImputer(addMissingIndicator = "true"), "addMissingIndicator is wrong class")
 })
 
 test_that("IterativeImputer works", {

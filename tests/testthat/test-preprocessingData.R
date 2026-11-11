@@ -42,14 +42,14 @@ test_that("createPreprocessSettings stores its inputs and checks them", {
   expect_equal(settings$normalize, normalizeDataTest)
   expect_equal(settings$removeRedundancy, removeRedundancyTest)
 
-  expect_error(createDefaultSettings(minCovariateFraction = -1))
-  expect_error(createDefaultSettings(minCovariateFraction = "dfdfdf"))
+  expect_error(createDefaultSettings(minCovariateFraction = -1), "minFraction needs to be >= 0")
+  expect_error(createDefaultSettings(minCovariateFraction = "dfdfdf"), "minFraction is wrong class")
 
-  expect_error(createDefaultSettings(removeRedundancy = "dfdfdf"))
-  expect_error(createDefaultSettings(removeRedundancy = NULL))
+  expect_error(createDefaultSettings(removeRedundancy = "dfdfdf"), "removeRedundancy is wrong class")
+  expect_error(createDefaultSettings(removeRedundancy = NULL), "removeRedundancy is wrong class")
 
-  expect_error(createDefaultSettings(normalizeData = "dfdfdf"))
-  expect_error(createDefaultSettings(normalizeData = NULL))
+  expect_error(createDefaultSettings(normalizeData = "dfdfdf"), "normalize is wrong class")
+  expect_error(createDefaultSettings(normalizeData = NULL), "normalize is wrong class")
 })
 
 test_that("preprocessData removes infrequent covariates and records its settings", {

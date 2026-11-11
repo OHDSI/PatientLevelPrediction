@@ -43,11 +43,11 @@ test_that("DecisionTree settings work checks", {
 test_that("DecisionTree errors as expected", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  expect_error(setDecisionTree(criterion = list("madeup")))
+  expect_error(setDecisionTree(criterion = list("madeup")), "Incorrect criterion")
 
-  expect_error(setDecisionTree(maxDepth = list(-1)))
-  expect_error(setDecisionTree(minSamplesSplit = list(-1)))
-  expect_error(setDecisionTree(minSamplesLeaf = list(-1)))
+  expect_error(setDecisionTree(maxDepth = list(-1)), "ifelse\\(is\\.null\\(maxDepth\\[\\[i\\]\\]\\), 1, maxDepth\\[\\[i\\]\\]\\) needs to be > 0")
+  expect_error(setDecisionTree(minSamplesSplit = list(-1)), "ifelse\\(is\\.null\\(minSamplesSplit\\[\\[i\\]\\]\\), 1, minSamplesSplit\\[\\[i\\]\\]\\) needs")
+  expect_error(setDecisionTree(minSamplesLeaf = list(-1)), "minSamplesLeaf\\[\\[i\\]\\] needs to be > 0")
 })
 
 
@@ -128,7 +128,7 @@ test_that("fitClassifier errors with wrong covariateData", {
   expect_error(fitClassifier(newTrainData,
     modelSettings,
     analysisId = analysisId
-  ))
+  ), "Needs correct covariateData")
 })
 
 

@@ -15,9 +15,9 @@
 # limitations under the License.
 
 test_that("savePlpDataError", {
-  expect_error(savePlpData())
-  expect_error(savePlpData(plpData = 1))
-  expect_error(savePlpData(plpData = 1, file = "testing"))
+  expect_error(savePlpData(), "Must specify plpData")
+  expect_error(savePlpData(plpData = 1), "Must specify file")
+  expect_error(savePlpData(plpData = 1, file = "testing"), "Data not of class plpData")
 })
 
 if (isTRUE(eunomiaAvailable)) {
@@ -38,7 +38,7 @@ test_that("savePlpData", {
 })
 
 test_that("loadPlpDataError", {
-  expect_error(loadPlpData(file = "madeup/dffdf/testing"))
+  expect_error(loadPlpData(file = "madeup/dffdf/testing"), "Cannot find folder madeup/dffdf/testing")
 })
 
 test_that("loadPlpData", {
@@ -64,23 +64,23 @@ test_that("print.plpData", {
 })
 
 test_that("summary.plpData errors without data", {
-  expect_error(summary.plpData(NULL))
+  expect_error(summary.plpData(NULL), "arguments imply differing number of rows: 0, 1")
 })
 
 test_that("print.summary.plpData", {
-  expect_error(print.summary.plpData(NULL))
+  expect_error(print.summary.plpData(NULL), "attempt to set 'colnames' on an object with less than two dimensions")
 })
 
 
 test_that("savePlpModelError", {
-  expect_error(savePlpModel(dirPath = NULL))
-  expect_error(savePlpModel(plpModel = NULL))
-  expect_error(savePlpModel(plpModel = NULL, dirPath = NULL))
+  expect_error(savePlpModel(dirPath = NULL), "Must specify plpModel")
+  expect_error(savePlpModel(plpModel = NULL), "Must specify directory path")
+  expect_error(savePlpModel(plpModel = NULL, dirPath = NULL), "Not a plpModel")
 })
 
 test_that("loadPlpModelError", {
-  expect_error(loadPlpModel(dirPath = NULL))
-  expect_error(loadPlpModel(dirPath = "madeup.txt"))
+  expect_error(loadPlpModel(dirPath = NULL), "invalid 'file' argument")
+  expect_error(loadPlpModel(dirPath = "madeup.txt"), "Cannot find folder madeup\\.txt")
 })
 
 test_that("move model files when saveType is file", {
@@ -113,8 +113,8 @@ test_that("loadPrediction", {
 
 
 test_that("savePlpResultError", {
-  expect_error(savePlpResult(dirPath = NULL))
-  expect_error(savePlpResult(result = NULL))
+  expect_error(savePlpResult(dirPath = NULL), "Must specify runPlp output")
+  expect_error(savePlpResult(result = NULL), "Must specify directory location")
 })
 
 test_that("savePlpResult", {
@@ -138,10 +138,10 @@ test_that("savePlpResult", {
 
 
 test_that("loadPlpResultError", {
-  expect_error(loadPlpResult(dirPath = NULL))
-  expect_error(loadPlpResult(dirPath = "madeup/dfdfd/j"))
+  expect_error(loadPlpResult(dirPath = NULL), "invalid 'file' argument")
+  expect_error(loadPlpResult(dirPath = "madeup/dfdfd/j"), "Cannot find folder madeup/dfdfd/j")
   write.csv(c(0), file.path(saveLoc, "file2.csv"))
-  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file1.csv")))
+  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file1.csv")), "Cannot find folder")
 })
 
 test_that("loadPlpResult", {

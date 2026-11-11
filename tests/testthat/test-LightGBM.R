@@ -56,15 +56,15 @@ test_that("LightGBM settings expected errors", {
   # checking Gradient Boosting Machine
   # =====================================
 
-  expect_error(setLightGBM(numIterations = -1))
-  expect_error(setLightGBM(numLeaves = -1))
-  expect_error(setLightGBM(numLeaves = 10000000))
-  expect_error(setLightGBM(learningRate = -2))
-  expect_error(setLightGBM(seed = "F"))
-  expect_error(setLightGBM(lambdaL1 = -1))
-  expect_error(setLightGBM(lambdaL2 = -1))
-  expect_error(setLightGBM(scalePosWeight = -1))
-  expect_error(setLightGBM(isUnbalance = TRUE, scalePosWeight = 0.5))
+  expect_error(setLightGBM(numIterations = -1), "numIterations must be greater that 0")
+  expect_error(setLightGBM(numLeaves = -1), "numLeaves must be greater that 1")
+  expect_error(setLightGBM(numLeaves = 10000000), "numLeaves must be less that or equal 131072")
+  expect_error(setLightGBM(learningRate = -2), "learningRate must be greater that 0")
+  expect_error(setLightGBM(seed = "F"), "seed is wrong class")
+  expect_error(setLightGBM(lambdaL1 = -1), "lambdaL1 must be 0 or greater")
+  expect_error(setLightGBM(lambdaL2 = -1), "lambdaL2 must be 0 or greater")
+  expect_error(setLightGBM(scalePosWeight = -1), "scalePosWeight must be 0 or greater")
+  expect_error(setLightGBM(isUnbalance = TRUE, scalePosWeight = 0.5), "isUnbalance cannot be used at the same time with scale_pos_weight !=")
 })
 
 
@@ -159,7 +159,7 @@ test_that("LightGBM working checks", {
 
   # backwards compatibility: old LightGBM serialization (raw text in model.json)
   lightgbm::lgb.save(fitModel$model, file.path(savePath, "model.json"))
-  expect_error(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")))
+  expect_error(ParallelLogger::loadSettingsFromJson(file.path(savePath, "model.json")), "lexical error: invalid string in json text\\.")
   loadModelOld <- loadPlpModel(savePath)
   expect_s3_class(loadModelOld, "plpModel")
   expect_equal(class(loadModelOld$model), c("lgb.Booster", "R6"))

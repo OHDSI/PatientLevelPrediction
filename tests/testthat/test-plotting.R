@@ -103,9 +103,9 @@ test_that("outcomeSurvivalPlot", {
   test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
   expect_s3_class(test, "ggsurvplot")
 
-  expect_error(outcomeSurvivalPlot())
-  expect_error(outcomeSurvivalPlot(plpData = NULL))
-  expect_error(outcomeSurvivalPlot(outcomeId = 094954))
+  expect_error(outcomeSurvivalPlot(), "plpData missing")
+  expect_error(outcomeSurvivalPlot(plpData = NULL), "outcomeId missing")
+  expect_error(outcomeSurvivalPlot(outcomeId = 094954), "plpData missing")
 })
 
 

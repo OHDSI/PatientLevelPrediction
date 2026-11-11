@@ -67,21 +67,21 @@ test_that("createSampleSettings works", {
 
 test_that("createSampleSettings expected errors", {
   expect_error(
-    sampleSettingFunc(numberOutcomestoNonOutcomes = "fsfd")
+    sampleSettingFunc(numberOutcomestoNonOutcomes = "fsfd"), "numberOutcomestoNonOutcomes is wrong class"
   )
   expect_error(
-    sampleSettingFunc(numberOutcomestoNonOutcomes = -1)
-  )
-
-  expect_error(
-    sampleSettingFunc(sampleSeed = "fsfd")
+    sampleSettingFunc(numberOutcomestoNonOutcomes = -1), "numberOutcomestoNonOutcomes needs to be > 0"
   )
 
   expect_error(
-    sampleSettingFunc(type = "fsfd")
+    sampleSettingFunc(sampleSeed = "fsfd"), "sampleSeed is wrong class"
+  )
+
+  expect_error(
+    sampleSettingFunc(type = "fsfd"), "Incorrect type\\.  Pick: none/underSample/overSample"
   )
   expect_error(
-    sampleSettingFunc(type = NULL)
+    sampleSettingFunc(type = NULL), "type is wrong class"
   )
 })
 

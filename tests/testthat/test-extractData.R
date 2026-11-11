@@ -24,17 +24,17 @@ test_that("getPlpData errors", {
   expect_error(
     getPlpData(
       databaseDetails = list(targetId = NULL)
-    )
+    ), "databaseDetails is wrong class"
   )
   expect_error(
     getPlpData(
       databaseDetails = list(targetId = c(1, 2))
-    )
+    ), "databaseDetails is wrong class"
   )
   expect_error(
     getPlpData(
       databaseDetails = list(targetId = 1, outcomeIds = NULL)
-    )
+    ), "databaseDetails is wrong class"
   )
 })
 
@@ -55,7 +55,7 @@ test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
     cdmDatabaseId = NULL,
     targetId = 1,
     outcomeIds = 3
-  ))
+  ), "cdmDatabaseId must be a string with length > 0")
 })
 
 test_that("getPlpData checks covariateSettings object", {
@@ -63,7 +63,7 @@ test_that("getPlpData checks covariateSettings object", {
   expect_error(getPlpData(
     databaseDetails = list(targetId = 1, outcomeIds = outcomeId),
     covariateSettings = list()
-  ))
+  ), "databaseDetails is wrong class")
 
   settings1 <-
     FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE)
@@ -87,7 +87,7 @@ test_that("getPlpData checks covariateSettings object", {
   expect_error(getPlpData(
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings3)
-  ))
+  ), "covariateSettings\\[\\[i\\]\\] is wrong class")
 })
 
 test_that("Get Eunomia plp data works", {

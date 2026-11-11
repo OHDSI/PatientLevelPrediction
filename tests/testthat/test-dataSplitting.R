@@ -65,57 +65,57 @@ test_that("createDefaultSplitSetting", {
 
   # check input errors for testFraction
   expect_error(
-    defaultSetting(testFraction = "character")
+    defaultSetting(testFraction = "character"), "testFraction is wrong class"
   )
 
   expect_error(
-    defaultSetting(testFraction = -0.1)
+    defaultSetting(testFraction = -0.1), "testFraction needs to be >= 0"
   )
 
   expect_error(
-    defaultSetting(testFraction = 1.001)
+    defaultSetting(testFraction = 1.001), "-1 \\* testFraction needs to be > -1"
   )
 
   # check input error for trainFraction
   expect_error(
-    defaultSetting(trainFraction = "trainFraction")
+    defaultSetting(trainFraction = "trainFraction"), "trainFraction is wrong class"
   )
 
   expect_error(
-    defaultSetting(trainFraction = 1.2)
+    defaultSetting(trainFraction = 1.2), "-1 \\* trainFraction needs to be >= -1"
   )
 
   expect_error(
-    defaultSetting(trainFraction = -0.2)
+    defaultSetting(trainFraction = -0.2), "trainFraction needs to be > 0"
   )
 
   # check error for splitSeed
 
   expect_error(
-    defaultSetting(splitSeed = NULL)
+    defaultSetting(splitSeed = NULL), "splitSeed is wrong class"
   )
 
   expect_error(
-    defaultSetting(splitSeed = "NULL")
+    defaultSetting(splitSeed = "NULL"), "splitSeed is wrong class"
   )
 
   # check error for nfold
   expect_error(
-    defaultSetting(nfold = NULL)
+    defaultSetting(nfold = NULL), "nfold is wrong class"
   )
   expect_error(
-    defaultSetting(nfold = "NULL")
+    defaultSetting(nfold = "NULL"), "nfold is wrong class"
   )
 
   # incorrect type
   expect_error(
-    defaultSetting(type = "madeup")
+    defaultSetting(type = "madeup"), "Incorrect Type"
   )
   expect_error(
-    defaultSetting(type = NULL)
+    defaultSetting(type = NULL), "type is wrong class"
   )
   expect_error(
-    defaultSetting(type = 1)
+    defaultSetting(type = 1), "type is wrong class"
   )
 })
 
@@ -134,14 +134,14 @@ test_that("createOutcomeLimitedSplitSettings", {
   expect_equal(splitSettings$nfold, 5)
   expect_equal(splitSettings$type, "subject")
 
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 0))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = "50"))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10.5))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, splitSeed = NULL))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 1))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 2.5))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10, nfold = 3))
-  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, type = "time"))
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 0), "maxTrainingOutcomes needs to be > 0")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = "50"), "maxTrainingOutcomes is wrong class")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10.5), "maxTrainingOutcomes must be a single whole number")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, splitSeed = NULL), "splitSeed is wrong class")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 1), "nfold needs to be > 1")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, nfold = 2.5), "nfold must be a single whole number")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 10, nfold = 3), "Insufficient maxTrainingOutcomes for chosen nfold value, please")
+  expect_error(createOutcomeLimitedSplitSettings(maxTrainingOutcomes = 50, type = "time"), "type has incorrect value")
 })
 
 
@@ -420,7 +420,7 @@ test_that("Data stratified splitting", {
 
   # error due to insufficient outcomes
   dsPopulation1 <- data.frame(rowId = 1:20, outcomeCount = c(1, 1, 1, 1, rep(0, 16)))
-  expect_error(randomSplitter(population = dsPopulation1, splitSettings = splitSettings))
+  expect_error(randomSplitter(population = dsPopulation1, splitSettings = splitSettings), "Outcome only occurs in fewer than 10 people or only one class")
 
   dsPopulation2 <- data.frame(rowId = 1:200, outcomeCount = c(rep(1, 42), rep(0, 158)))
   splitSettings <- defaultSetting(
@@ -554,7 +554,7 @@ test_that("Data splitting by subject", {
     test = 0.3,
     nfold = 3
   )
-  expect_error(subjectSplitter(population = dsPopulation1, splitSettings = splitSettings))
+  expect_error(subjectSplitter(population = dsPopulation1, splitSettings = splitSettings), "Outcome only occurs in fewer than 10 people or only one class")
 
   dsPopulation2 <- data.frame(rowId = 1:200, subjectId = 1:200, outcomeCount = c(rep(1, 42), rep(0, 158)))
   splitSettings <- defaultSetting(
@@ -625,11 +625,11 @@ test_that("Existing data splitter works", {
 test_that("Outcome options works", {
   testPop <- data.frame(outcomeCount = sample(c(0, 1), 9, replace = TRUE))
   # regular plp outcome check
-  expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3))
+  expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3), "Outcome only occurs in fewer than 10 people or only one class")
 
   withr::with_options(list("plp.outcomes" = 100), {
     testPop <- data.frame(outcomeCount = sample(c(0, 1), 90, replace = TRUE))
-    expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3))
+    expect_error(checkOutcomes(testPop, train = 0.75, nfold = 3), "Outcome count is less than specified option plp\\.outcomes: 100")
   })
 })
 
