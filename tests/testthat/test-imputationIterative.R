@@ -684,3 +684,24 @@ test_that("iterativeImpute leaves sparse missing-means-zero covariates alone at 
     dplyr::collect()
   expect_equal(nrow(imputedFake), nrow(testData$labels))
 })
+
+test_that("pmmPredict imputes from the intercept when a model has no predictors", {
+  data <- Andromeda::andromeda(
+    xMiss = data.frame(rowId = c(1, 1, 2), covariateId = c(10, 20, 10), covariateValue = c(0.5, 1, 0.7))
+  )
+  withr::defer(Andromeda::close(data))
+  predictions <- data.frame(rowId = 1:3, prediction = c(0.1, 0.4, 0.9), observedValue = c(10, 40, 90))
+  # an empty table as fitted, and the empty list that the four-decimal format of
+  # earlier versions loads back for it
+  for (coefficients in list(data.frame(covariateId = numeric(0), values = numeric(0)), list())) {
+    result <- suppressWarnings(pmmPredict(
+      data,
+      k = 1,
+      imputer = list(intercept = 0.35, coefficients = coefficients, predictions = predictions)
+    ))
+    imputed <- result$imputedValues[order(result$imputedValues$rowId), ]
+    # every prediction is the intercept, so k = 1 takes the donor predicted nearest to 0.35
+    expect_equal(imputed$rowId, c(1, 2))
+    expect_equal(imputed$imputedValue, c(40, 40))
+  }
+})
