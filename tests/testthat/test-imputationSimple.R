@@ -377,3 +377,35 @@ test_that("imputers remove features above the threshold when patients have no co
   withr::defer(Andromeda::close(iterative$covariateData))
   expect_equal(nrow(covariateRowsOf(iterative, 10)), 0)
 })
+
+test_that("covariates above the missing threshold are removed, and only then rewritten", {
+  covariateData <- makeCovariateData(data.frame(
+    rowId = c(1, 2, 1, 2, 1),
+    covariateId = c(10, 10, 20, 20, 30),
+    covariateValue = c(1, 2, 3, 4, 5)
+  ))
+  withr::defer(Andromeda::close(covariateData))
+  ids <- function() sort(unique(dplyr::pull(covariateData$covariates, .data$covariateId)))
+  # covariate 30 has no missing information and is kept
+  missingInfo <- data.frame(covariateId = c(10, 20), missing = c(0.2, 0.6))
+
+  # nothing above the threshold: the table is left alone
+  expect_false(removeCovariatesAboveMissingThreshold(covariateData, missingInfo, 0.7))
+  expect_equal(ids(), c(10, 20, 30))
+  # above the threshold but not in the data: left alone as well
+  expect_false(removeCovariatesAboveMissingThreshold(
+    covariateData, data.frame(covariateId = 99, missing = 0.9), 0.5
+  ))
+
+  expect_true(removeCovariatesAboveMissingThreshold(covariateData, missingInfo, 0.5))
+  expect_equal(ids(), c(10, 30))
+  # covariates not in keepCovariateIds go too
+  expect_true(removeCovariatesAboveMissingThreshold(
+    covariateData, missingInfo, 0.5, keepCovariateIds = c(10, 20)
+  ))
+  expect_equal(ids(), 10)
+  expect_false(removeCovariatesAboveMissingThreshold(
+    covariateData, missingInfo, 0.5, keepCovariateIds = c(10, 20)
+  ))
+  expect_false("tmpMissingDropIds" %in% names(covariateData))
+})
