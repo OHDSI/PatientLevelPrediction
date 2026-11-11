@@ -597,8 +597,11 @@ validateMultiplePlp <- function(
 
   # now fine all analysis folders..
   analyses <- analyses[grep("Analysis_", analyses)]
+  if (length(analyses) == 0) {
+    stop("No analyses (Analysis_ folders) found in ", analysesLocation)
+  }
 
-  for (i in 1:length(analyses)) {
+  for (i in seq_along(analyses)) {
     if (is.null(saveDirectory)) {
       saveLocation <- file.path(analysesLocation, "Validation")
     } else {

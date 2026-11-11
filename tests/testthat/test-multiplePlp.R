@@ -145,14 +145,14 @@ test_that("test run multiple", {
   expect_true(file.exists(file.path(saveLoc, "multiple", "Validation", "main", "Analysis_1", "validationResult", "runPlp.rds")))
 })
 
-test_that("evaluateMultiplePlp errors without results", {
+test_that("validateMultiplePlp errors without results", {
   skip_if_not_installed("ResultModelManager")
   skip_on_cran()
   skip_if_no_eunomia()
-  expect_error(evaluateMultiplePlp(
+  expect_error(validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "madeup123"),
     validationDatabaseDetails = databaseDetails,
     validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
     recalibrate = NULL
-  ))
+  ), "No analyses \\(Analysis_ folders\\) found in")
 })
