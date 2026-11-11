@@ -93,6 +93,11 @@ test_that("LightGBM working checks", {
 
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
   expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
+  # every prediction carries its own patient's outcome
+  expect_equal(
+    fitModel$prediction$outcomeCount,
+    trainData$labels$outcomeCount[match(fitModel$prediction$rowId, trainData$labels$rowId)]
+  )
 
   # check prediction between 0 and 1
   expect_gte(min(fitModel$prediction$value), 0)

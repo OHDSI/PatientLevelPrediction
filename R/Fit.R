@@ -241,6 +241,18 @@ fitClassifier <- function(
   labels <- preparedData$labels
   covariateRef <- preparedData$covariateRef
 
+  # These classifiers are binary, so they are trained on outcome presence, as
+  # Cyclops clamps counts; with binary = FALSE outcomeCount can be above 1.
+  # The original counts are put back in the predictions used for evaluation.
+  # They are taken from trainData: prepareData() can number the matrix rows
+  # differently (toSparseM() keeps the original rowId in originalRowId), but
+  # the predictions come back with the original rowIds.
+  originalLabels <- data.frame(
+    rowId = trainData$labels$rowId,
+    outcomeCount = trainData$labels$outcomeCount
+  )
+  labels$outcomeCount <- as.numeric(labels$outcomeCount > 0)
+
   # Hyperparameter optimization
   # input: matrixData, labels, settings, hyperparamSettings
   # output: model, prediction, finalParam, hyperSummary
@@ -251,6 +263,14 @@ fitClassifier <- function(
     settings = settings,
     hyperparamSettings = hyperparameterSettings
   )
+  labelRows <- match(tuneResult$prediction$rowId, originalLabels$rowId)
+  if (anyNA(labelRows)) {
+    stop(
+      "The predictions of ", settings$modelName, " have rowIds that are not in the training labels; ",
+      "its predict function must return the original rowIds (toSparseM() keeps them in originalRowId)"
+    )
+  }
+  tuneResult$prediction$outcomeCount <- originalLabels$outcomeCount[labelRows]
 
   # add code for var imp here - model and settings
 

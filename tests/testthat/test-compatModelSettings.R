@@ -273,8 +273,11 @@ test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClass
   dummyPredict <- function(plpModel, data, cohort) {
     prediction <- cohort
     prediction$value <- rep(0.5, nrow(cohort))
-    if (is.null(prediction$originalRowId)) {
-      prediction$originalRowId <- prediction$rowId
+    # like the package's classifiers, return the original rowIds that
+    # toSparseM() keeps in originalRowId
+    if (!is.null(prediction$originalRowId)) {
+      prediction$rowId <- prediction$originalRowId
+      prediction$originalRowId <- NULL
     }
     prediction
   }

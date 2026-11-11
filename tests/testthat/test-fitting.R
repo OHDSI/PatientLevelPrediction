@@ -174,3 +174,82 @@ test_that("per-fold tuning scores keep their real fold identifiers", {
   expect_equal(exported$value[-1], c(0.3, 0.1, 0.7))
 })
 
+
+test_that("fitClassifier trains on outcome presence and keeps outcome counts in predictions", {
+  n <- 12
+  # rowIds that are not the matrix rows, as after a split
+  rowIds <- seq(5, by = 7, length.out = n)
+  labels <- data.frame(rowId = rowIds, outcomeCount = rep(c(0, 1, 2), 4))
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = rowIds, covariateId = 1001, covariateValue = 1),
+    covariateRef = data.frame(covariateId = 1001, covariateName = "x", analysisId = 1, conceptId = 1),
+    analysisRef = data.frame(analysisId = 1, analysisName = "a", domainId = "d", isBinary = "Y", missingMeansZero = "Y")
+  )
+  class(covariateData) <- "CovariateData"
+  attr(class(covariateData), "package") <- "FeatureExtraction"
+  withr::defer(Andromeda::close(covariateData))
+  trainData <- list(
+    labels = labels,
+    folds = data.frame(rowId = rowIds, index = rep(1:2, each = 6)),
+    covariateData = covariateData
+  )
+  attr(trainData, "metaData") <- list(targetId = 1, outcomeId = 2)
+
+  # like toSparseM(): the labels are numbered by matrix row (in reverse here)
+  # with the original rowId in originalRowId, and predictions map back to it
+  trainedOn <- list()
+  modelSettings <- list(
+    param = list(risk = list(0.5)),
+    settings = list(
+      modelName = "toy", modelType = "binary", seed = 1,
+      prepareData = function(trainData, map) {
+        matrixLabels <- trainData$labels
+        matrixLabels$originalRowId <- matrixLabels$rowId
+        matrixLabels$rowId <- rev(seq_len(nrow(matrixLabels)))
+        list(
+          dataMatrix = matrix(1, nrow = nrow(matrixLabels), ncol = 1),
+          labels = matrixLabels,
+          covariateRef = data.frame(covariateId = 1001, columnId = 1)
+        )
+      },
+      train = function(dataMatrix, labels, hyperParameters, settings) {
+        trainedOn[[length(trainedOn) + 1]] <<- labels$outcomeCount
+        list(risk = mean(labels$outcomeCount))
+      },
+      predict = function(plpModel, data, cohort) {
+        cohort$value <- plpModel$risk
+        cohort$rowId <- cohort$originalRowId
+        cohort$originalRowId <- NULL
+        cohort
+      },
+      variableImportance = function(model, covariateMap) NULL
+    )
+  )
+  class(modelSettings) <- "modelSettings"
+
+  model <- fitClassifier(trainData, modelSettings, analysisId = "binaryLabels")
+
+  # every fit, in the CV folds and the final one, saw only 0 and 1
+  expect_true(length(trainedOn) > 1)
+  for (outcomes in trainedOn) {
+    expect_true(all(outcomes %in% c(0, 1)))
+  }
+  expect_equal(model$model$risk, 8 / 12)
+  # the predictions keep each patient's own original count for evaluation
+  for (type in unique(model$prediction$evaluationType)) {
+    rows <- model$prediction[model$prediction$evaluationType == type, ]
+    expect_setequal(rows$rowId, labels$rowId)
+    expect_equal(rows$outcomeCount, labels$outcomeCount[match(rows$rowId, labels$rowId)])
+  }
+  expect_true(2 %in% model$prediction$outcomeCount)
+
+  # predictions with rowIds that are not in the labels stop
+  modelSettings$settings$predict <- function(plpModel, data, cohort) {
+    cohort$value <- plpModel$risk
+    cohort
+  }
+  expect_error(
+    fitClassifier(trainData, modelSettings, analysisId = "matrixRowIds"),
+    "rowIds that are not in the training labels"
+  )
+})
