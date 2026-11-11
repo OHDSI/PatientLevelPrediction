@@ -93,11 +93,13 @@ predictPlp <- function(plpModel, plpData, population, timepoint) {
 
   if (!is.null(plpModel$preprocessing$tidyCovariates)) {
     # do preprocessing
+    # after feature engineering the data is already a private copy
     plpData$covariateData <- do.call(
       applyTidyCovariateData,
       list(
         covariateData = plpData$covariateData,
-        preprocessSettings = plpModel$preprocessing$tidyCovariates
+        preprocessSettings = plpModel$preprocessing$tidyCovariates,
+        inPlace = featureEngineering
       )
     )
     tidyCovariates <- TRUE
@@ -218,38 +220,36 @@ applyFeatureEngineering <- function(
 }
 
 
-# NEED TO UPDATE....
-# fucntion for implementing the pre-processing (normalisation and redundant features removal)
+# Applies the tidy settings of a model (removal of infrequent and redundant
+# covariates, normalization) to covariateData in one query. With inPlace, the
+# covariates are rewritten in covariateData itself, for data the caller already
+# owns, such as the copy feature engineering made; otherwise the result is a new
+# CovariateData and covariateData is left as it was.
 applyTidyCovariateData <- function(
     covariateData,
-    preprocessSettings) {
+    preprocessSettings,
+    inPlace = FALSE) {
   if (!FeatureExtraction::isCovariateData(covariateData)) {
     stop("Data not of class CovariateData")
-  }
-
-  newCovariateData <- Andromeda::andromeda(
-    covariateRef = covariateData$covariateRef,
-    analysisRef = covariateData$analysisRef
-  )
-  if (!is.null(covariateData$timeRef)) {
-    newCovariateData$timeRef <- covariateData$timeRef
   }
 
   maxs <- preprocessSettings$normFactors
   deleteRedundantCovariateIds <- preprocessSettings$deletedRedundantCovariateIds
   deletedInfrequentCovariateIds <- preprocessSettings$deletedInfrequentCovariateIds
 
-  # --- added for speed
   deleteCovariateIds <- c(deleteRedundantCovariateIds, deletedInfrequentCovariateIds)
-  temp <- covariateData$covariateRef %>% dplyr::collect()
-  allCovariateIds <- temp$covariateId
-  covariateData$includeCovariates <- data.frame(covariateId = allCovariateIds[!allCovariateIds %in% deleteCovariateIds])
+  covariateRef <- covariateData$covariateRef %>% dplyr::collect()
+  includeCovariates <- data.frame(
+    covariateId = covariateRef$covariateId[!covariateRef$covariateId %in% deleteCovariateIds]
+  )
+  covariateData$includeCovariates <- includeCovariates
   on.exit(covariateData$includeCovariates <- NULL, add = TRUE)
-  # ---
 
   ParallelLogger::logInfo("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()
 
+  covariates <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
   # models trained without normalization and saved by earlier versions have a
   # data frame without columns instead of no factors
   if (!is.null(maxs) && ncol(maxs) > 0) {
@@ -261,32 +261,40 @@ applyTidyCovariateData <- function(
       covariateData$maxes <- maxs
     }
     on.exit(covariateData$maxes <- NULL, add = TRUE)
-
-    newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$includeCovariates, by = "covariateId") %>% # added as join
+    covariates <- covariates %>%
       dplyr::inner_join(covariateData$maxes, by = "covariateId") %>%
       dplyr::mutate(value = 1.0 * .data$covariateValue / .data$maxValue) %>%
       dplyr::select(-"covariateValue") %>%
       dplyr::rename(covariateValue = "value")
-  } else {
-    newCovariateData$covariates <- covariateData$covariates %>%
-      dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
   }
 
   deletedCovariateTimeIds <- preprocessSettings$deletedRedundantCovariateTimeIds
   if (length(deletedCovariateTimeIds) > 0 &&
-    "timeId" %in% colnames(newCovariateData$covariates)) {
-    newCovariateData$deletedCovariateTimeIds <- as.data.frame(deletedCovariateTimeIds)
-    newCovariateData$covariates <- newCovariateData$covariates %>%
-      dplyr::anti_join(newCovariateData$deletedCovariateTimeIds, by = c("covariateId", "timeId"))
-    newCovariateData$deletedCovariateTimeIds <- NULL
+    "timeId" %in% colnames(covariateData$covariates)) {
+    covariateData$deletedCovariateTimeIds <- as.data.frame(deletedCovariateTimeIds)
+    on.exit(covariateData$deletedCovariateTimeIds <- NULL, add = TRUE)
+    covariates <- covariates %>%
+      dplyr::anti_join(covariateData$deletedCovariateTimeIds, by = c("covariateId", "timeId"))
   }
 
-  # reduce covariateRef
-  newCovariateData$covariateRef <- covariateData$covariateRef %>%
-    dplyr::inner_join(covariateData$includeCovariates, by = "covariateId")
-
-  newCovariateData <- asCovariateData(newCovariateData)
+  # the reference tables are small: written once, as data frames
+  covariateRef <- covariateRef %>%
+    dplyr::inner_join(includeCovariates, by = "covariateId")
+  if (inPlace) {
+    covariateData$covariates <- covariates
+    covariateData$covariateRef <- covariateRef
+    newCovariateData <- covariateData
+  } else {
+    newCovariateData <- Andromeda::andromeda(
+      covariateRef = covariateRef,
+      analysisRef = covariateData$analysisRef %>% dplyr::collect()
+    )
+    if (!is.null(covariateData$timeRef)) {
+      newCovariateData$timeRef <- covariateData$timeRef %>% dplyr::collect()
+    }
+    newCovariateData$covariates <- covariates
+    newCovariateData <- asCovariateData(newCovariateData)
+  }
 
   delta <- Sys.time() - start
   writeLines(paste("Removing infrequent and redundant covariates covariates and normalizing took", signif(delta, 3), attr(delta, "units")))

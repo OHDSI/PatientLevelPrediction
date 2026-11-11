@@ -284,3 +284,31 @@ test_that("recorded covariate time deletions are ignored for non-temporal data",
   replayed <- applyTidyCovariateData(covariateData, settings)
   expect_equal(nrow(as.data.frame(replayed$covariates)), 2)
 })
+
+test_that("tidying in place gives the same covariates as tidying into new data", {
+  settings <- temporalTidySettings()
+  settings$normFactors <- data.frame(covariateId = 1001, maxValue = 2)
+  separate <- createTemporalData()
+  on.exit(Andromeda::close(separate), add = TRUE)
+  owned <- createTemporalData()
+  on.exit(Andromeda::close(owned), add = TRUE)
+
+  tidied <- applyTidyCovariateData(separate, settings)
+  on.exit(Andromeda::close(tidied), add = TRUE)
+  inPlace <- applyTidyCovariateData(owned, settings, inPlace = TRUE)
+
+  sortedRows <- function(x) {
+    x <- as.data.frame(x)
+    x <- x[do.call(order, x[c("rowId", "covariateId", "timeId")]), ]
+    rownames(x) <- NULL
+    x
+  }
+  # time 1 is deleted and the values are divided by the normalization factor
+  expect_equal(sortedRows(tidied$covariates)$timeId, 2)
+  expect_equal(sortedRows(tidied$covariates)$covariateValue, 0.5)
+  expect_equal(sortedRows(inPlace$covariates), sortedRows(tidied$covariates))
+  expect_equal(as.data.frame(inPlace$covariateRef), as.data.frame(tidied$covariateRef))
+  # in place rewrites the given data; otherwise it is left as it was
+  expect_identical(inPlace, owned)
+  expect_equal(nrow(as.data.frame(separate$covariates)), 4)
+})

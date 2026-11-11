@@ -89,8 +89,10 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
         settings = plpResult$model$preprocessing$featureEngineering
       )
     )
+    featureEngineering <- TRUE
   } else {
     ParallelLogger::logInfo("No FE in model")
+    featureEngineering <- FALSE
   }
 
   if (!is.null(plpResult$model$preprocessing$tidyCovariates)) {
@@ -100,7 +102,9 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
       applyTidyCovariateData,
       list(
         covariateData = plpData$covariateData,
-        preprocessSettings = plpResult$model$preprocessing$tidyCovariates
+        preprocessSettings = plpResult$model$preprocessing$tidyCovariates,
+        # after feature engineering the data is already a private copy
+        inPlace = featureEngineering
       )
     )
   } else {
