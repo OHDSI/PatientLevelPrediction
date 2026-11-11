@@ -20,32 +20,27 @@ test_that("summary.plpData summarizes extracted data", {
   expect_equal(class(sum), "summary.plpData")
 })
 
+# database details of the right class with the given fields; the checks that
+# use them stop before any database is used
+partialDatabaseDetails <- function(...) {
+  structure(list(...), class = "databaseDetails")
+}
+
 test_that("getPlpData errors", {
+  settings <- FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE)
+  expect_error(getPlpData(databaseDetails = list(targetId = 1, outcomeIds = 3), covariateSettings = settings), "databaseDetails is wrong class")
+  expect_error(getPlpData(databaseDetails = partialDatabaseDetails(outcomeIds = 3), covariateSettings = settings), "User must input targetId")
   expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = NULL)
-    ), "databaseDetails is wrong class"
+    getPlpData(databaseDetails = partialDatabaseDetails(targetId = c(1, 2), outcomeIds = 3), covariateSettings = settings),
+    "Currently only supports one targetId at a time"
   )
-  expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = c(1, 2))
-    ), "databaseDetails is wrong class"
-  )
-  expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = 1, outcomeIds = NULL)
-    ), "databaseDetails is wrong class"
-  )
+  expect_error(getPlpData(databaseDetails = partialDatabaseDetails(targetId = 1), covariateSettings = settings), "User must input outcomeIds")
 })
 
 
 test_that("getPlpData works", {
   skip_if_no_eunomia()
   expect_true(is(plpData, "plpData"))
-})
-
-test_that("getCovariateData", {
-  expect_error(getCovariateData())
 })
 
 test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
@@ -61,9 +56,13 @@ test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
 test_that("getPlpData checks covariateSettings object", {
   skip_if_no_eunomia()
   expect_error(getPlpData(
-    databaseDetails = list(targetId = 1, outcomeIds = outcomeId),
-    covariateSettings = list()
-  ), "databaseDetails is wrong class")
+    databaseDetails = databaseDetails,
+    covariateSettings = "notCovariateSettings"
+  ), "covariateSettings is wrong class")
+  expect_error(getPlpData(
+    databaseDetails = databaseDetails,
+    covariateSettings = list(FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE), "notCovariateSettings")
+  ), "covariateSettings\\[\\[i\\]\\] is wrong class")
 
   settings1 <-
     FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE)

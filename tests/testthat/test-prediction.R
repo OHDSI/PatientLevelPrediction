@@ -20,17 +20,17 @@ test_that("prediction inputs", {
   # check prediction
   # =====================================
   expect_error(predictPlp(
-    model = NULL, population = population,
+    plpModel = NULL, population = population,
     plpData = plpData
-  ))
+  ), "No model input")
   expect_error(predictPlp(
-    model = list(), population = NULL,
+    plpModel = list(), population = NULL,
     plpData = plpData
-  ))
+  ), "No population input")
   expect_error(predictPlp(
-    model = list(), population = population,
+    plpModel = list(), population = population,
     plpData = NULL
-  ))
+  ), "No plpData input")
 })
 
 

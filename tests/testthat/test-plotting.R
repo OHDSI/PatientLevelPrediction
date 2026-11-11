@@ -260,7 +260,10 @@ test_that("Plot net benefit errors", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
   skip_if_no_eunomia()
-  expect_error(plotNetBenefit(plpResults, modelNames = c("Model1", "Model2")))
+  expect_error(
+    plotNetBenefit(plpResult, modelNames = c("Model1", "Model2")),
+    "modelNames must have the same length as plpResults"
+  )
 })
 
 test_that("getNetBenefit works with thresholdSummary", { 

@@ -40,23 +40,12 @@ if (isTRUE(eunomiaAvailable) && identical(Sys.getenv("NOT_CRAN"), "true")) {
 test_that("incorrect input externalValidateDbPlp checks work", {
   skip_if_not_installed("Eunomia")
   skip_if_no_eunomia()
-  # fails when plpResult is NULL
-  expect_error(externalValidateDbPlp(setEV(model = NULL)), "outputFolder must be specified")
-  # fails when plpResult is not class 'plpResult'
-  expect_error(externalValidateDbPlp(setEV(model = list())), "outputFolder must be specified")
-
-
-  expect_error(externalValidateDbPlp(
-    setEV(validationDatabaseDetails = NULL)
-  ), "outputFolder must be specified")
-
-  expect_error(externalValidateDbPlp(
-    setEV(validationRestrictPlpDataSettings = NULL)
-  ), "outputFolder must be specified")
-
-  expect_error(externalValidateDbPlp(
-    setEV(outputFolder = NULL)
-  ), "outputFolder must be specified")
+  # setEV() calls externalValidateDbPlp() with one input changed
+  expect_error(setEV(model = NULL), "plpModel is wrong class")
+  expect_error(setEV(model = list()), "plpModel is wrong class")
+  expect_error(setEV(validationDatabaseDetails = NULL), "validationDatabaseDetails is wrong class")
+  expect_error(setEV(validationRestrictPlpDataSettings = "notSettings"), "validationRestrictPlpDataSettings is wrong class")
+  expect_error(setEV(outputFolder = NULL), "outputFolder must be specified")
 })
 
 

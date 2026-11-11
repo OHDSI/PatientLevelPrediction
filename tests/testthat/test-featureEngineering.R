@@ -195,8 +195,8 @@ test_that("createSplineSettings correct class", {
   expect_equal(featureEngineeringSettings$continousCovariateId, 12)
   expect_equal(attr(featureEngineeringSettings, "fun"), "splineCovariates")
 
-  expect_error(createSplineSettings(knots = "ffdff"))
-  expect_error(createSplineSettings(knots = NULL))
+  expect_error(createSplineSettings(continousCovariateId = 12, knots = "ffdff"), "knots is wrong class")
+  expect_error(createSplineSettings(continousCovariateId = 12, knots = NULL), "knots is wrong class")
 })
 
 test_that("splineCovariates works", {

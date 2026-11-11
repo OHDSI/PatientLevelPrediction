@@ -34,8 +34,8 @@ test_that("fitPlp input errors", {
     fitPlp(
       trainData = trainData,
       modelSettings = modelSettings,
-      analysisPath = tempDir()
-    )
+      analysisPath = tempdir()
+    ), 'argument "analysisId" is missing'
   )
 
   expect_error(
@@ -43,7 +43,7 @@ test_that("fitPlp input errors", {
       trainData = list(covariateData = NULL),
       modelSettings = modelSettings,
       analysisId = "fitting",
-      analysisPath = tempDir()
+      analysisPath = tempdir()
     ), "covariateData is NULL"
   )
 
@@ -52,7 +52,7 @@ test_that("fitPlp input errors", {
       trainData = trainData,
       modelSettings = NULL,
       analysisId = "fitting",
-      analysisPath = tempDir()
+      analysisPath = tempdir()
     ), "modelSettings is wrong class"
   )
 
@@ -61,7 +61,7 @@ test_that("fitPlp input errors", {
       trainData = trainData,
       modelSettings = modelSettings,
       analysisId = "fitting"
-    )
+    ), 'argument "analysisPath" is missing'
   )
 })
 
