@@ -41,7 +41,8 @@ test_that("null-default operator uses right-hand side only for NULL", {
 test_that("setPythonEnvironment", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  expect_error(setPythonEnvironment(envname = "madeup34343"))
+  # an environment that does not exist gives a message, not an error
+  expect_match(setPythonEnvironment(envname = "madeup34343", envtype = "python"), "not found")
 })
 
 test_that("Borrowed cut2", {

@@ -202,8 +202,9 @@ setPythonEnvironment <- function(envname = "PLP", envtype = NULL) {
     reticulate::use_condaenv(envname)
     return(paste0("Using conda environment ", envname))
   } else {
+    # virtualenv_list() gives the names; conda_list() a table with a name column
     pEnvironments <- reticulate::virtualenv_list()
-    if (!envname %in% pEnvironments$name) {
+    if (!envname %in% pEnvironments) {
       return(paste0("Python environment ", envname, " not found.  Please set up using configurePython()"))
     }
     reticulate::use_virtualenv(envname)
