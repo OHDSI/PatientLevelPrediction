@@ -210,6 +210,7 @@ overSampleData <- function(trainData, sampleSettings) {
   sampleTrainData$covariateData <- Andromeda::copyAndromeda(trainData$covariateData)
 
   lastRowId <- max(sampleTrainData$labels$rowId)
+  rowIdMaps <- list()
 
   for (i in unique(folds$index)) {
     outcomeIds <- population$rowId[population$outcomeCount > 0 & population$index == i]
@@ -239,39 +240,33 @@ overSampleData <- function(trainData, sampleSettings) {
       pplOfInterest <- unique(sampleOutcomeIds) # to enable oversampling with replacement
       sampleSize <- sampleSize - length(pplOfInterest)
 
-      rowIdMap <- data.frame(
+      rowIdMaps[[length(rowIdMaps) + 1]] <- data.frame(
         originalRowId = pplOfInterest,
         newRowId = lastRowId + seq_along(pplOfInterest)
       )
       lastRowId <- lastRowId + length(pplOfInterest)
-
-      addTrainData <- Andromeda::andromeda(rowIdMap = rowIdMap)
-      addTrainData$covariates <- trainData$covariateData$covariates %>%
-        dplyr::filter(.data$rowId %in% pplOfInterest)
-      addTrainData$covariates <- replaceRowIds(addTrainData$covariates, addTrainData$rowIdMap)
-
-      labels <- trainData$labels %>%
-        dplyr::filter(.data$rowId %in% pplOfInterest) %>%
-        dplyr::collect() %>%
-        replaceRowIds(rowIdMap)
-      addFolds <- trainData$folds %>%
-        dplyr::filter(.data$rowId %in% pplOfInterest) %>%
-        dplyr::collect() %>%
-        replaceRowIds(rowIdMap)
-
-      sampleTrainData$labels <- dplyr::bind_rows(
-        sampleTrainData$labels,
-        labels
-      )
-      sampleTrainData$folds <- dplyr::bind_rows(
-        sampleTrainData$folds,
-        addFolds
-      )
-      Andromeda::appendToTable(
-        sampleTrainData$covariateData$covariates,
-        addTrainData$covariates
-      )
     }
+  }
+
+  # Add all copies in one pass. sampleTrainData$covariateData is a copy of the
+  # training covariates, so the copies can be joined within it.
+  if (length(rowIdMaps) > 0) {
+    rowIdMap <- dplyr::bind_rows(rowIdMaps)
+    covariateData <- sampleTrainData$covariateData
+    covariateData$rowIdMap <- rowIdMap
+    covariateData$copiedCovariates <- replaceRowIds(covariateData$covariates, covariateData$rowIdMap)
+    Andromeda::appendToTable(covariateData$covariates, covariateData$copiedCovariates)
+    covariateData$copiedCovariates <- NULL
+    covariateData$rowIdMap <- NULL
+
+    copyRows <- function(table) {
+      table %>%
+        dplyr::filter(.data$rowId %in% rowIdMap$originalRowId) %>%
+        replaceRowIds(rowIdMap) %>%
+        dplyr::arrange(.data$rowId)
+    }
+    sampleTrainData$labels <- dplyr::bind_rows(sampleTrainData$labels, copyRows(sampleTrainData$labels))
+    sampleTrainData$folds <- dplyr::bind_rows(sampleTrainData$folds, copyRows(sampleTrainData$folds))
   }
 
   # update metaData$populationSize = nrow(trainData$labels)

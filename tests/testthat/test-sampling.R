@@ -349,7 +349,8 @@ test_that("Cyclops fits oversampled data as complete patient copies", {
   )
   original <- createSamplingFixture(labels, data.frame(rowId = 1:6, index = 1L), covariates)
   withr::defer(Andromeda::close(original$covariateData))
-  sampled <- overSampleData(original, list(sampleSeed = 42, numberOutcomestoNonOutcomes = 1))
+  # seed 1 copies both cases, so the unpenalized fit has a finite solution
+  sampled <- overSampleData(original, list(sampleSeed = 1, numberOutcomestoNonOutcomes = 1))
   withr::defer(Andromeda::close(sampled$covariateData))
 
   fitData <- Andromeda::andromeda(
