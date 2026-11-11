@@ -813,7 +813,7 @@ createSyntheticTrain <- function(covariates, labels, folds, covariateIds) {
 }
 
 createCoxTrain <- function(timepoint = 100) {
-  set.seed(7)
+  withr::local_seed(7)
   n <- 300L
   x <- cbind(rbinom(n, 1, 0.5), rbinom(n, 1, 0.3))
   covariates <- rbind(

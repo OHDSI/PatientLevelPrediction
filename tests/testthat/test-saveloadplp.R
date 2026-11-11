@@ -461,7 +461,7 @@ test_that("Full precision JSON writer handles the settings shapes saved with mod
 
 test_that("a reloaded model with feature engineering predicts exactly as the fitted model", {
   skip_on_cran()
-  data("simulationProfile", package = "PatientLevelPrediction")
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   simulated <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
   on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
   # a continuous measurement that is missing for 30% of patients

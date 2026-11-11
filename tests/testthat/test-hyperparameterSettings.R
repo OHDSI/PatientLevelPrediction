@@ -135,7 +135,7 @@ test_that("prepareHyperparameterGrid respects random sampling size", {
     randomSeed = NULL
   )
 
-  set.seed(100)
+  withr::local_seed(100)
   iterator <- prepareHyperparameterGrid(paramDefinition, settings)
 
   combos <- list()
@@ -356,7 +356,7 @@ test_that("expanded legacy grids still run every candidate under grid search", {
 })
 
 sampleAlphas <- function(ambientSeed, randomSeed, definition = list(alpha = as.list(1:12))) {
-  set.seed(ambientSeed)
+  withr::local_seed(ambientSeed)
   candidates <- drainIterator(prepareHyperparameterGrid(
     definition,
     createHyperparameterSettings(search = "random", sampleSize = 3, randomSeed = randomSeed)
@@ -378,10 +378,10 @@ test_that("random search without randomSeed still follows the ambient RNG", {
 })
 
 test_that("seeded random search leaves the ambient RNG untouched", {
-  set.seed(11)
+  withr::local_seed(11)
   expected <- stats::runif(1)
 
-  set.seed(11)
+  withr::local_seed(11)
   sampleSettings <- createHyperparameterSettings(
     search = "random", sampleSize = 3, randomSeed = 42
   )

@@ -716,7 +716,7 @@ test_that("PMM imputations depend only on the imputer's seed, not on the random 
   impute <- function(streamSeed, extraDraws) {
     data <- createMissingData(makeToyImputationData(n = 80, seed = 7), 0.2)
     withr::defer(Andromeda::close(data$covariateData))
-    set.seed(streamSeed)
+    withr::local_seed(streamSeed)
     # other code using the random stream before and during the step, as
     # Andromeda does for its temporary table names
     stats::runif(extraDraws)

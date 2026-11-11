@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 makeTransferFixture <- function(nfold = 3) {
-  set.seed(43)
+  withr::local_seed(43)
   n <- 300L
   x <- cbind(rbinom(n, 1, 0.4), rbinom(n, 1, 0.6))
   y <- rbinom(n, 1, plogis(-1 + x[, 1] - 2 * x[, 2]))
@@ -197,7 +197,7 @@ test_that("CV predictions are invariant to label and fold row order", {
       threads = 1, seed = 42
     )
     fit <- fitCyclopsModel(train, settings, analysisId = "test")
-    set.seed(123)
+    withr::local_seed(123)
     shuffledTrain <- train
     shuffledTrain$labels <- train$labels[sample(nrow(train$labels)), ]
     shuffledTrain$folds <- train$folds[sample(nrow(train$folds)), ]

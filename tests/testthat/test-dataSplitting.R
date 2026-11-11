@@ -490,7 +490,7 @@ test_that("Data stratified splitting", {
 test_that("Data splitting by time", {
   # fold creation check (sum)
   size <- 500
-  set.seed(1)
+  withr::local_seed(1)
   dsPopulation2 <- data.frame(
     rowId = 1:size,
     outcomeCount = sample(0:1, size, replace = TRUE),
@@ -509,7 +509,7 @@ test_that("Data splitting by time", {
 
   # test the training fraction parameter for learning curves
   size <- 500
-  set.seed(1)
+  withr::local_seed(1)
   dsPopulation3 <- data.frame(
     rowId = 1:size,
     outcomeCount = sample(0:1, size, replace = TRUE),

@@ -292,7 +292,7 @@ test_that("Hosmer-Lemeshow is unavailable with too few occupied groups", {
 })
 
 test_that("Hosmer-Lemeshow df is unchanged when all requested strata are occupied", {
-  set.seed(42)
+  withr::local_seed(42)
   prediction <- data.frame(
     rowId = 1:200,
     value = stats::runif(200, 0.05, 0.95),

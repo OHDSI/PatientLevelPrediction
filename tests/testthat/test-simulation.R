@@ -1031,7 +1031,7 @@ test_that("simulatePlpData keeps cohort gender consistent with the gender covari
 })
 
 test_that("simulateGenderCovariates handles profiles missing gender covariates", {
-  set.seed(1)
+  withr::local_seed(1)
   noGender <- simulateGenderCovariates(c("1002" = 1), n = 100)
   expect_null(noGender$covariates)
   expect_equal(sum(noGender$gender == 8507), 50)
@@ -1104,7 +1104,7 @@ test_that("simulatePlpData outcome metadata drives the default study population"
 })
 
 test_that("simulated data for a seed does not depend on Andromeda's random draws", {
-  data("simulationProfile", package = "PatientLevelPrediction")
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   simulate <- function() {
     plpData <- simulatePlpData(simulationProfile, n = 200, seed = 42)
     withr::defer(Andromeda::close(plpData$covariateData))

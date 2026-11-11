@@ -40,8 +40,11 @@ if (runPostgresUploadTests) {
   conn <- DatabaseConnector::connect(connectionRedshift)
   targetDialect <- "postgresql"
 
-  set.seed(NULL)
-  randVar <- rawToChar(as.raw(sample(c(65:90, 97:122), 5, replace = TRUE)))
+  # a random table prefix, without reseeding the random stream of later tests
+  randVar <- withr::with_preserve_seed({
+    set.seed(NULL)
+    rawToChar(as.raw(sample(c(65:90, 97:122), 5, replace = TRUE)))
+  })
 
   appendRandom <- function(x, rand = randVar) {
     return(paste("plp", rand, x, sep = ""))
@@ -1156,7 +1159,7 @@ test_that("addCalibrationSummary warns about calibration summaries it cannot sto
     ))[1, 1]
   }
 
-  set.seed(1)
+  withr::local_seed(1)
   prediction <- data.frame(
     rowId = 1:300, value = stats::runif(300, 0.01, 0.5),
     outcomeCount = stats::rbinom(300, 1, 0.3), survivalTime = stats::rexp(300, 0.002),

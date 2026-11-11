@@ -509,7 +509,7 @@ test_that("underSampleData draws controls as before when a fold has several", {
   sampled <- underSampleData(original, list(sampleSeed = 5, numberOutcomestoNonOutcomes = 1))
   withr::defer(Andromeda::close(sampled$covariateData))
 
-  set.seed(5)
+  withr::local_seed(5)
   expected <- sample(11:40, 10)
   expect_setequal(sampled$labels$rowId, c(1:10, expected))
   expect_setequal(sampled$folds$rowId, c(1:10, expected))

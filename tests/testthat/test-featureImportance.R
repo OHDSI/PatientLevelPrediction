@@ -115,7 +115,7 @@ test_that("permute only reassigns feature rows of the evaluated population", {
   )
   location <- permutePlpDataLocation(covariates, continuousRef(1101), continuousAnalysisRef(), 1000)
   for (seed in 1:5) {
-    set.seed(seed)
+    withr::local_seed(seed)
     permuted <- permutedCovariates(location, 1101, population)
     inPopulation <- permuted[permuted$rowId %in% population$rowId, ]
     expect_equal(nrow(inPopulation), 1)
@@ -133,7 +133,7 @@ test_that("permute keeps the empirical distribution of a feature inside the popu
     covariateValue = c(seq(1, 40), rep(99, 5))
   )
   location <- permutePlpDataLocation(covariates, continuousRef(1101), continuousAnalysisRef(), 1000)
-  set.seed(2)
+  withr::local_seed(2)
   permuted <- permutedCovariates(location, 1101, population)
   inPopulation <- permuted[permuted$rowId %in% population$rowId, ]
   expect_equal(sort(inPopulation$covariateValue), seq(1, 40))
@@ -160,7 +160,7 @@ test_that("permute keeps unrelated predictors when permuting a categorical block
   location <- permutePlpDataLocation(rbind(ageGroup, unrelated), ageGroupRef(), ageGroupAnalysisRef(), n)
 
   for (seed in 1:5) {
-    set.seed(seed)
+    withr::local_seed(seed)
     permuted <- permutedCovariates(location, 1003, population)
     keptOther <- permuted[permuted$covariateId == 5002, ]
     expect_equal(keptOther$covariateValue[order(keptOther$rowId)], 2:(n + 1))
@@ -188,7 +188,7 @@ test_that("permute handles missing category rows and holders outside the populat
   ref$analysisId[ref$covariateId %in% c(1003, 2003, 3003)] <- 4
   location <- permutePlpDataLocation(rbind(race, unrelated), ref, ageGroupAnalysisRef(), n)
 
-  set.seed(4)
+  withr::local_seed(4)
   permuted <- permutedCovariates(location, 1003, population)
   block <- permuted[permuted$covariateId %in% c(1003, 2003), ]
   inPop <- block[block$rowId %in% population$rowId, ]
@@ -210,7 +210,7 @@ test_that("permute leaves a categorical block unchanged when nobody needs to swa
     data.frame(rowId = 1:n, covariateId = 1003, covariateValue = 1),
     ageGroupRef(), ageGroupAnalysisRef(), n
   )
-  set.seed(1)
+  withr::local_seed(1)
   permuted <- permutedCovariates(location, 1003, population)
   expect_equal(sort(permuted$rowId), 1:n)
   expect_equal(unique(permuted$covariateId), 1003)

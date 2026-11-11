@@ -206,7 +206,7 @@ test_that("splineCovariates works", {
     continousCovariateId = 12101,
     knots = knots
   )
-  data(simulationProfile)
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   trainData <- simulatePlpData(simulationProfile, n = 200, seed = 42)
 
   n <- 50
@@ -995,7 +995,7 @@ test_that("stratified imputation without training values warns and replays after
 
 test_that("runPlp with stratified imputation completes with the covariate summary", {
   skip_on_cran()
-  data("simulationProfile", package = "PatientLevelPrediction")
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
   simulated <- simulatePlpData(simulationProfile, n = 800, seed = 42)
   on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
   before <- simulated$covariateData$covariates %>% dplyr::tally() %>% dplyr::pull()

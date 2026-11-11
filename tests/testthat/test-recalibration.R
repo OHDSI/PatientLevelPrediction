@@ -98,7 +98,7 @@ test_that("recalibratePlpRefit", {
 
 
 test_that("recalibratePlpRefit augments missing columns and raw values", {
-  set.seed(123)
+  withr::local_seed(123)
 
   plpModel <- structure(
     list(
@@ -219,7 +219,7 @@ test_that("recalibrationInTheLarge adjusts raw values when available", {
 test_that("weakRecalibration survival uses baseline when missing raw values", {
   skip_if_not_installed("survival")
 
-  set.seed(42)
+  withr::local_seed(42)
   n <- 40
   survPrediction <- data.frame(
     rowId = seq_len(n),
@@ -252,7 +252,7 @@ test_that("weakRecalibration survival uses baseline when missing raw values", {
 test_that("weakRecalibration survival propagates raw values", {
   skip_if_not_installed("survival")
 
-  set.seed(99)
+  withr::local_seed(99)
   n <- 40
   rawVals <- rnorm(n, mean = -0.2, sd = 0.6)
   survPrediction <- data.frame(

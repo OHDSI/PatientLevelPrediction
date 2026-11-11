@@ -168,7 +168,7 @@ test_that("LightGBM working checks", {
 test_that("LightGBM importance is reported against the correct covariates", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
-  set.seed(42)
+  withr::local_seed(42)
   n <- 1000L
   x <- matrix(rbinom(3 * n, 1, 0.5), ncol = 3)
   fitImportance <- function(y) {

@@ -15,7 +15,8 @@
 # limitations under the License.
 
 # TODO: add input checks and test these...
-pdf(file = NULL)
+# a null device for the whole file, closed when the file is done
+withr::local_pdf(NULL)
 test_that("plots", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
@@ -274,7 +275,6 @@ test_that("getNetBenefit works with thresholdSummary", {
   expect_true(!is.null(netBenefit$netBenefit))
   expect_true(is.numeric(netBenefit$netBenefit))
 })
-dev.off()
 
 # Keeps the ggplot objects that plot functions would hand to marrangeGrob.
 capturePlots <- function(expr, env = parent.frame()) {
@@ -528,7 +528,7 @@ test_that("plotSmoothCalibration refuses survival models", {
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("survival")
   n <- 200
-  set.seed(1)
+  withr::local_seed(1)
   prediction <- data.frame(
     rowId = 1:n,
     value = stats::runif(n, 0.2, 0.5),
