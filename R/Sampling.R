@@ -254,9 +254,11 @@ overSampleData <- function(trainData, sampleSettings) {
     rowIdMap <- dplyr::bind_rows(rowIdMaps)
     covariateData <- sampleTrainData$covariateData
     covariateData$rowIdMap <- rowIdMap
-    covariateData$copiedCovariates <- replaceRowIds(covariateData$covariates, covariateData$rowIdMap)
-    Andromeda::appendToTable(covariateData$covariates, covariateData$copiedCovariates)
-    covariateData$copiedCovariates <- NULL
+    # appended straight from the query: DuckDB reads the rows before it adds them
+    Andromeda::appendToTable(
+      covariateData$covariates,
+      replaceRowIds(covariateData$covariates, covariateData$rowIdMap)
+    )
     covariateData$rowIdMap <- NULL
 
     copyRows <- function(table) {
