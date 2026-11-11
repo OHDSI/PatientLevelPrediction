@@ -87,6 +87,12 @@ jobs:
           path: ${{ env.EUNOMIA_DATA_FOLDER }}
           key: eunomia-v1-${{ runner.os }}-GiBleed_5.3
 
+      # The parallel test processes share EUNOMIA_DATA_FOLDER: build the dataset
+      # once here (nothing to do on a cache hit), so they don't all download it
+      - name: Build the Eunomia dataset
+        run: invisible(Eunomia::getEunomiaConnectionDetails())
+        shell: Rscript {0}
+
       - name: Prepare uv cache
         run: |
           dir.create(Sys.getenv("UV_CACHE_DIR"), recursive = TRUE, showWarnings = FALSE)
@@ -98,11 +104,39 @@ jobs:
           path: ${{ env.UV_CACHE_DIR }}
           key: uv-v1-${{ runner.os }}-py${{ env.RETICULATE_PY_VERSION }}
 
+      # Each parallel test process sets up Python through reticulate's uv; on
+      # Windows one process can't install uv while another runs it, so set it up once
+      - name: Set up Python for the tests
+        run: |
+          reticulate::py_require("scikit-learn", python_version = Sys.getenv("RETICULATE_PY_VERSION"))
+          invisible(reticulate::import("sklearn"))
+        shell: Rscript {0}
+
+      # the tests run in parallel (DESCRIPTION), one process per core
+      - name: Use one test process per core
+        run: cat(sprintf("TESTTHAT_CPUS=%d\n", parallel::detectCores()), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        shell: Rscript {0}
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran")'
           error-on: '"warning"'
           check-dir: '"check"'
+
+      # A test process that dies stops a parallel run and names only its file;
+      # in one process the output shows every test up to the failure.
+      - name: Run the tests again in one process
+        if: failure()
+        env:
+          TESTTHAT_PARALLEL: "FALSE"
+          NOT_CRAN: "true"
+        run: |
+          if (length(Sys.glob("check/*.Rcheck/tests/testthat.Rout.fail")) == 0) {
+            cat("The tests did not fail; not running them again.\n")
+          } else {
+            testthat::test_local(reporter = testthat::ProgressReporter$new(show_praise = FALSE), stop_on_failure = FALSE)
+          }
+        shell: Rscript {0}
 
       - name: Upload source package
         if: success() && runner.os == 'macOS' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -130,6 +164,10 @@ jobs:
             (github.event_name == 'push' && (github.ref_name == 'develop' || github.ref_name == 'main')) ||
             (github.event_name == 'pull_request' && (github.base_ref == 'develop' || github.base_ref == 'main'))
           )
+        # covr runs the tests in-process; code run by parallel test processes
+        # would not be counted
+        env:
+          TESTTHAT_PARALLEL: "FALSE"
         run: covr::codecov(token = "${{ secrets.CODECOV_TOKEN }}")
         shell: Rscript {0}
 

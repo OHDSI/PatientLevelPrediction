@@ -1,4 +1,12 @@
 # this files contains the objects used in the tests:
+
+# Parallel test processes (testthat starts them with callr): libraries that use
+# every core by default get one thread each, so the processes do not compete for
+# the cores. Set before Python starts.
+if (identical(Sys.getenv("CALLR_IS_RUNNING"), "true")) {
+  Sys.setenv(OMP_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1", MKL_NUM_THREADS = "1")
+  options(andromedaThreads = 1)
+}
 if (Sys.getenv("GITHUB_ACTIONS") == "true") {
   # Download the PostreSQL driver ---------------------------
   # If DATABASECONNECTOR_JAR_FOLDER exists, assume driver has been downloaded
