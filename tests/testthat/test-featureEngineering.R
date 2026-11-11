@@ -253,16 +253,19 @@ test_that("createStratifiedImputationSettings correct class", {
     ageSplits = ageSplits
   )
 
-  numSubjects <- nanoData$covariateData$covariates %>%
+  # appends to the covariates, so it works on a copy of the shared fixture
+  stratData <- isolateCovariateData(nanoData)
+  withr::defer(Andromeda::close(stratData$covariateData))
+  numSubjects <- stratData$covariateData$covariates %>%
     dplyr::pull(.data$rowId) %>%
     dplyr::n_distinct()
-  Andromeda::appendToTable(nanoData$covariateData$covariates, data.frame(
-    rowId = sample(nanoData$cohorts$rowId, floor(numSubjects / 2)),
+  Andromeda::appendToTable(stratData$covariateData$covariates, data.frame(
+    rowId = sample(stratData$cohorts$rowId, floor(numSubjects / 2)),
     covariateId = rep(12101, floor(numSubjects / 2)),
     covariateValue = sample(10, floor(numSubjects / 2), replace = TRUE)
   ))
 
-  Andromeda::appendToTable(nanoData$covariateData$analysisRef, data.frame(
+  Andromeda::appendToTable(stratData$covariateData$analysisRef, data.frame(
     analysisId = 101,
     analysisName = "cond",
     domainId = "madeup",
@@ -272,7 +275,7 @@ test_that("createStratifiedImputationSettings correct class", {
     missingMeansZero = "N"
   ))
 
-  Andromeda::appendToTable(nanoData$covariateData$covariateRef, data.frame(
+  Andromeda::appendToTable(stratData$covariateData$covariateRef, data.frame(
     covariateId = 12101,
     covariateName = "test",
     analysisId = 101,
@@ -280,14 +283,14 @@ test_that("createStratifiedImputationSettings correct class", {
   ))
 
   stratifiedMeans <- calculateStratifiedMeans(
-    trainData = nanoData,
+    trainData = stratData,
     featureEngineeringSettings = featureEngineeringSettings
   )
 
   expect_true(nrow(stratifiedMeans) == 8)
 
   imputedData <- imputeMissingMeans(
-    trainData = nanoData,
+    trainData = stratData,
     covariateId = 12101,
     ageSplits = ageSplits,
     stratifiedMeans = stratifiedMeans

@@ -131,7 +131,17 @@ if (rlang::is_installed("curl")) {
 saveLoc <- tempfile("saveLoc")
 dir.create(saveLoc)
 
-if (internet && rlang::is_installed("Eunomia")) {
+# Eunomia downloads its dataset once into EUNOMIA_DATA_FOLDER (or tempdir()),
+# so the fixtures can be built offline when it is cached. Tests that use them
+# call skip_if_no_eunomia().
+eunomiaDataFolder <- Sys.getenv("EUNOMIA_DATA_FOLDER")
+if (!nzchar(eunomiaDataFolder)) {
+  eunomiaDataFolder <- tempdir()
+}
+eunomiaAvailable <- rlang::is_installed("Eunomia") &&
+  (internet || file.exists(file.path(eunomiaDataFolder, "GiBleed_5.3.zip")))
+
+if (eunomiaAvailable) {
   # PLPDATA
   connectionDetails <- Eunomia::getEunomiaConnectionDetails()
   Eunomia::createCohorts(connectionDetails)
@@ -195,27 +205,6 @@ if (internet && rlang::is_installed("Eunomia")) {
   )
 
 
-  # now diagnose
-  diagnoseResult <- diagnosePlp(
-    plpData = plpData,
-    outcomeId = outcomeId,
-    analysisId = "Test",
-    populationSettings = populationSettings,
-    splitSettings = createDefaultSplitSetting(splitSeed = 12),
-    saveDirectory = saveLoc,
-    modelSettings = lrSet,
-    logSettings = createLogSettings(
-      verbosity = "DEBUG",
-      timeStamp = TRUE,
-      logName = "diagnosePlp Log"
-    ),
-    preprocessSettings = createPreprocessSettings(),
-    sampleSettings = NULL,
-    featureEngineeringSettings = NULL
-  )
-
-  #
-
 
   population <- createStudyPopulation(
     plpData = plpData,
@@ -223,21 +212,14 @@ if (internet && rlang::is_installed("Eunomia")) {
     populationSettings = populationSettings
   )
 
-  createSplitData <- function(plpData, population, split = "train") {
-    data <- PatientLevelPrediction::splitData(
-      plpData = plpData,
-      population = population,
-      splitSettings = PatientLevelPrediction::createDefaultSplitSetting(splitSeed = 12)
-    )
-    if (split == "train") {
-      return(data$Train)
-    } else {
-      return(data$Test)
-    }
-  }
-
-  trainData <- createSplitData(plpData, population)
-  testData <- createSplitData(plpData, population, split = "test")
+  splitResult <- splitData(
+    plpData = plpData,
+    population = population,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12)
+  )
+  trainData <- splitResult$Train
+  testData <- splitResult$Test
+  rm(splitResult)
 
 
   # reduced Data to only use n most important features (as decided by LR)
@@ -259,20 +241,19 @@ if (internet && rlang::is_installed("Eunomia")) {
     )
 
 
-    reducedData$covariateData$covariates <- trainData$covariateData$covariates %>%
+    reducedData$covariateData$covariates <- data$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% covariates)
-    reducedData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
+    reducedData$covariateData$covariateRef <- data$covariateData$covariateRef %>%
       dplyr::filter(.data$covariateId %in% covariates)
 
-    attributes(reducedData$covariateData)$metaData <- attributes(trainData$covariateData)$metaData
-    class(reducedData$covariateData) <- class(trainData$covariateData)
-    attributes(reducedData)$metaData <- attributes(trainData)$metaData
+    attributes(reducedData$covariateData)$metaData <- attributes(data$covariateData)$metaData
+    class(reducedData$covariateData) <- class(data$covariateData)
+    attributes(reducedData)$metaData <- attributes(data)$metaData
     class(reducedData) <- class(data)
     return(reducedData)
   }
 
-  tinyTrainData <- reduceData(trainData, includeAge = TRUE)  
-  tinyTestData <- reduceData(testData, includeAge = TRUE)
+  tinyTrainData <- reduceData(trainData, includeAge = TRUE)
 
   oneTrainData <- copyTrainData(tinyTrainData)
   oneTrainData$covariateData$covariates <- oneTrainData$covariateData$covariates %>%
@@ -280,21 +261,6 @@ if (internet && rlang::is_installed("Eunomia")) {
   tinyPlpData <- createTinyPlpData(plpData, plpResult)
 
   nanoData <- createTinyPlpData(plpData, plpResult, n = 2)
-  tinyResults <- runPlp(
-    plpData = nanoData,
-    populationSettings = populationSettings,
-    outcomeId = outcomeId,
-    analysisId = "tinyFit",
-    executeSettings = createExecuteSettings(
-      runSplitData = TRUE,
-      runSampleData = FALSE,
-      runFeatureEngineering = FALSE,
-      runPreprocessData = TRUE,
-      runModelDevelopment = TRUE,
-      runCovariateSummary = FALSE
-    ),
-    saveDirectory = file.path(saveLoc, "tinyResults")
-  )
 }
 
 register_cleanup(function() {
@@ -306,7 +272,7 @@ register_cleanup(function() {
     }
   }
   unlink(saveLoc, recursive = TRUE)
-  if (internet && rlang::is_installed("Eunomia")) {
+  if (eunomiaAvailable) {
     unlink(connectionDetails$server())
   }
 })

@@ -213,6 +213,19 @@ test_that("temporary sqlite with results works", {
 
   savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
   # save diagnostic
+  diagnoseResult <- diagnosePlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    analysisId = "Test",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12),
+    saveDirectory = file.path(saveLoc, "diagnose"),
+    modelSettings = setLassoLogisticRegression(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    preprocessSettings = createPreprocessSettings(),
+    sampleSettings = NULL,
+    featureEngineeringSettings = NULL
+  )
   saveRDS(diagnoseResult, file.path(resultsLoc, "Analysis_1", "diagnosePlp.rds"))
 
   sqliteLocation <- insertResultsToSqlite(

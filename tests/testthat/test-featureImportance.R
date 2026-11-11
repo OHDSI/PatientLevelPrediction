@@ -43,6 +43,22 @@ test_that("pfi feature importance returns data.frame", {
 
 test_that("pfi feature importance works with logger or without covariates", {
   skip_if_offline()
+  # a model on two covariates keeps pfi() quick
+  tinyResults <- runPlp(
+    plpData = nanoData,
+    populationSettings = populationSettings,
+    outcomeId = outcomeId,
+    analysisId = "tinyFit",
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE,
+      runSampleData = FALSE,
+      runFeatureEngineering = FALSE,
+      runPreprocessData = TRUE,
+      runModelDevelopment = TRUE,
+      runCovariateSummary = FALSE
+    ),
+    saveDirectory = file.path(saveLoc, "tinyResults")
+  )
   pfiTest <- pfi(tinyResults, population, nanoData,
     cores = 1,
     covariates = NULL, log = file.path(tempdir(), "pfiLog")
