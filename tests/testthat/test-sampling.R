@@ -88,7 +88,7 @@ test_that("createSampleSettings expected errors", {
 
 test_that("sampleData outputs are correct", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   newTrainData <- trainData
   attr(newTrainData, "metaData")$sampleSettings <- NULL # remove for test
 
@@ -129,7 +129,7 @@ test_that("sampleData outputs are correct", {
 
 test_that("underSampleData works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   newTrainData <- trainData
 
   sampleSettings <- list(
@@ -165,7 +165,7 @@ test_that("underSampleData works", {
 
 test_that("overSampleData works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   newTrainData <- trainData
 
   sampleSettings <- list(

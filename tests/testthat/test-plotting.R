@@ -19,7 +19,7 @@ pdf(file = NULL)
 test_that("plots", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # test all the outputs are ggplots
   test <- plotSparseRoc(plpResult, typeColumn = "evaluation")
   expect_s3_class(test, "arrangelist")
@@ -97,7 +97,7 @@ test_that("demographic plot keeps predicted risk for groups without an estimable
 test_that("outcomeSurvivalPlot", {
   skip_if_not_installed("survminer")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # test the plot works
   test <- outcomeSurvivalPlot(plpData = plpData, outcomeId = outcomeId)
   expect_s3_class(test, "ggsurvplot")
@@ -109,9 +109,10 @@ test_that("outcomeSurvivalPlot", {
 
 
 test_that("plotPlp", {
-  skip_if_not_installed(c("ggplot2", "gridExtra"))
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("gridExtra")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # test the plot works
   test <- plotPlp(
     plpResult = plpResult,
@@ -126,9 +127,10 @@ test_that("plotPlp", {
 })
 
 test_that("plotSmoothCalibration", {
-  skip_if_not_installed(c("ggplot2", "mgcv"))
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("mgcv")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # test the plot works
   test <- plotSmoothCalibration(
     plpResult = plpResult,
@@ -160,6 +162,7 @@ test_that("plotSmoothCalibration", {
 })
 
 test_that("Smooth calibration plot works with rcs", {
+  skip_if_no_eunomia()
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("mgcv")
   skip_on_cran()
@@ -180,18 +183,18 @@ test_that("Smooth calibration plot works with rcs", {
   )
 })
 
-if (internet && rlang::is_installed("Eunomia")) {
+if (isTRUE(eunomiaAvailable)) {
   nbData <- getNetBenefit(plpResult, evalType = "Test")
 }
 test_that("getNetBenefit returns the correct dataframe", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_s3_class(nbData, "data.frame")
   expectedColumns <- c("threshold", "TP", "FP", "netBenefit", "treatAll", "treatNone")
   expect_true(all(expectedColumns %in% colnames(nbData)))
 })
 
 test_that("getNetBenefit computes the net benefit correctly", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   threshold <- nbData$threshold[[1]]
   truePositives <- nbData$TP[[1]]
   falsePositives <- nbData$FP[[1]]
@@ -201,7 +204,7 @@ test_that("getNetBenefit computes the net benefit correctly", {
 })
 
 test_that("getNetBenefit handles invalid evalType gracefully", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_error(
     getNetBenefit(plpResult, evalType = "InvalidType"),
     "No prediction data found for evaluation type InvalidType"
@@ -211,7 +214,7 @@ test_that("getNetBenefit handles invalid evalType gracefully", {
 test_that("plotNetBenefit returns a ggplot object", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   plot <- plotNetBenefit(plpResult, evalType = "Test", showPlot = FALSE)
   expect_true(inherits(plot, "ggplot"))
 })
@@ -219,7 +222,7 @@ test_that("plotNetBenefit returns a ggplot object", {
 test_that("plotNetBenefit saves plot when saveLocation is specified", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   tempDir <- tempfile()
   plotNetBenefit(
     plpResult,
@@ -236,7 +239,7 @@ test_that("plotNetBenefit saves plot when saveLocation is specified", {
 test_that("plotNetBenefit handles NULL evalType", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   expect_true(inherits(plot, "ggplot"))
 })
@@ -245,7 +248,7 @@ test_that("plotNetBenefit handles NULL evalType", {
 test_that("plotNetBenefit creates correct number of plots when evalType is NULL", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   plot <- plotNetBenefit(plpResult, evalType = NULL)
   # Since evalType is NULL, it should plot for all unique evaluation types
   evalTypes <- unique(plpResult$performanceEvaluation$thresholdSummary$evaluation)
@@ -255,14 +258,14 @@ test_that("plotNetBenefit creates correct number of plots when evalType is NULL"
 test_that("Plot net benefit errors", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_error(plotNetBenefit(plpResults, modelNames = c("Model1", "Model2")))
 })
 
 test_that("getNetBenefit works with thresholdSummary", { 
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
 
   result <- plpResult
   result$prediction <- NULL

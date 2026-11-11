@@ -133,12 +133,14 @@ dir.create(saveLoc)
 
 # Eunomia downloads its dataset once into EUNOMIA_DATA_FOLDER (or tempdir()),
 # so the fixtures can be built offline when it is cached. Tests that use them
-# call skip_if_no_eunomia().
+# call skip_if_no_eunomia(), which also skips on CRAN, so they are not built
+# there: that would download the dataset and fit models during R CMD check.
 eunomiaDataFolder <- Sys.getenv("EUNOMIA_DATA_FOLDER")
 if (!nzchar(eunomiaDataFolder)) {
   eunomiaDataFolder <- tempdir()
 }
-eunomiaAvailable <- rlang::is_installed("Eunomia") &&
+eunomiaAvailable <- identical(Sys.getenv("NOT_CRAN"), "true") &&
+  rlang::is_installed("Eunomia") &&
   (internet || file.exists(file.path(eunomiaDataFolder, "GiBleed_5.3.zip")))
 
 if (eunomiaAvailable) {

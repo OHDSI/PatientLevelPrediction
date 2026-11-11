@@ -100,7 +100,7 @@ test_that("MapIds with a cohort", {
 
 # switch of all messages
 test_that("toSparseM", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   cohorts <- data.frame(
     rowId = 1:6,
     subjectId = 1:6,

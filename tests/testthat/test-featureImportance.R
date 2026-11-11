@@ -16,7 +16,7 @@
 
 
 test_that("pfi feature importance returns data.frame", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   # limit to a sample of 2 covariates for faster test
   covariates <- plpResult$model$covariateImportance %>%
     dplyr::filter("covariateValue" != 0) %>%
@@ -42,7 +42,7 @@ test_that("pfi feature importance returns data.frame", {
 })
 
 test_that("pfi feature importance works with logger or without covariates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   # a model on two covariates keeps pfi() quick
   tinyResults <- runPlp(
     plpData = nanoData,

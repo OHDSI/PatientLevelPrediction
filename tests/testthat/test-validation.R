@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # Test unit for the creation of the study externalValidatePlp
-if (internet &&
-  identical(Sys.getenv("NOT_CRAN"), "true") &&
-  rlang::is_installed("Eunomia")) {
+if (isTRUE(eunomiaAvailable) && identical(Sys.getenv("NOT_CRAN"), "true")) {
   modelVal <- loadPlpModel(file.path(saveLoc, "Test", "plpResult", "model"))
   validationDatabaseDetailsVal <- databaseDetails # from run multiple tests
   validationRestrictPlpDataSettingsVal <- createRestrictPlpDataSettings(washoutPeriod = 0, sampleSize = NULL)
@@ -41,7 +39,7 @@ if (internet &&
 
 test_that("incorrect input externalValidateDbPlp checks work", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   # fails when plpResult is NULL
   expect_error(externalValidateDbPlp(setEV(model = NULL)))
   # fails when plpResult is not class 'plpResult'
@@ -65,7 +63,7 @@ test_that("incorrect input externalValidateDbPlp checks work", {
 
 test_that("external validate", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   exVal <- setEV()
   expect_equal(class(exVal[[1]]), "externalValidatePlp")
 })
@@ -198,7 +196,7 @@ test_that("createValidationDesigns correctly handles multiple restrictSettings",
 
 test_that("createValidationSettings errors with <10 outcomes", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   tinyRestrictPlpDataSettings <- createRestrictPlpDataSettings(
     sampleSize = 30,
   )
@@ -223,7 +221,7 @@ test_that("createValidationSettings errors with <10 outcomes", {
 
 test_that("createDownloadTasks handles single design correctly", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -238,7 +236,7 @@ test_that("createDownloadTasks handles single design correctly", {
 
 test_that("createDownloadTasks handles multiple designs correctly", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -259,7 +257,7 @@ test_that("createDownloadTasks handles multiple designs correctly", {
 
 test_that("createDownloadTasks handles duplicated designs correctly", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -284,7 +282,7 @@ test_that("createDownloadTasks handles duplicated designs correctly", {
 
 test_that("createDownloadTasks with different restrictSettings", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -312,7 +310,7 @@ test_that("createDownloadTasks with different restrictSettings", {
 
 test_that("createDownloadTasks works with multiple outcomeIds", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,
@@ -342,7 +340,7 @@ test_that("createDownloadTasks works with multiple outcomeIds", {
 
 test_that("createDownloadTasks with multiple covSettings", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelVal2 <- modelVal
   design1 <- createValidationDesign(
     targetId = 1,
@@ -365,7 +363,7 @@ test_that("createDownloadTasks with multiple covSettings", {
 
 test_that("createDownloadTasks when restrictSettings come from models", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   design1 <- createValidationDesign(
     targetId = 1,
     outcomeId = 2,

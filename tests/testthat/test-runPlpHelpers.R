@@ -15,7 +15,7 @@
 # limitations under the License.
 test_that("check printHeader runs", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   header <- printHeader(
     plpData = plpData,
     targetId = 1,
@@ -29,7 +29,7 @@ test_that("check printHeader runs", {
 
 test_that("checkInputs", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   check <- checkInputs(
     list(
       plpData = plpData,

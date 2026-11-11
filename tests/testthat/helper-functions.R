@@ -81,3 +81,14 @@ createData <- function(observations, features, totalFeatures,
   data <- list(covariates = covariates, labels = labels)
   return(data)
 }
+
+# Skips a test that uses the Eunomia fixtures built in setup.R: on CRAN, and
+# when setup could not build them (Eunomia not installed, or its dataset
+# neither cached nor downloadable).
+skip_if_no_eunomia <- function() {
+  testthat::skip_on_cran()
+  # setup.R objects are visible from the calling test, not from this helper
+  if (!isTRUE(get0("eunomiaAvailable", envir = parent.frame(), ifnotfound = FALSE))) {
+    testthat::skip("Eunomia fixtures are not available")
+  }
+}

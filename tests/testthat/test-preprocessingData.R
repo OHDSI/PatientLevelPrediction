@@ -53,7 +53,7 @@ test_that("createPreprocessSettings", {
 
 test_that("createPreprocessSettings", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   attr(trainData$covariateData, "metaData")$preprocessSettings <- NULL # removing for test
   metaData <- attr(trainData$covariateData, "metaData")
   metaLength <- length(metaData)
@@ -115,7 +115,7 @@ test_that("createPreprocessSettings", {
 
 test_that("Did tidy on test", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_true(attr(plpResult$prediction, "metaData")$tidyCovariates)
 })
 

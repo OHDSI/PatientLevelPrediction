@@ -469,6 +469,7 @@ test_that("BAR prior parameters resolve auto values", {
 })
 
 test_that("BAR automatic penalty validates folds before resolving its prior", {
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -616,7 +617,7 @@ test_that("Cyclops CV prior fails clearly for invalid per-covariate prior inputs
 })
 
 test_that("test IHT returns CV predictions", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("IterativeHardThresholding")
   skip_on_cran()
 
@@ -638,7 +639,7 @@ test_that("test IHT returns CV predictions", {
 })
 
 test_that("test BAR automatic penalty search runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -678,7 +679,7 @@ test_that("test BAR automatic penalty search runs", {
 })
 
 test_that("test BAR fixed BIC penalty runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -710,7 +711,7 @@ test_that("test BAR fixed BIC penalty runs", {
 })
 
 test_that("test BAR fixed numeric penalty runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -737,7 +738,7 @@ test_that("test BAR fixed numeric penalty runs", {
 })
 
 test_that("test logistic regression runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setLassoLogisticRegression()
 
   fitModel <- fitPlp(
@@ -774,7 +775,7 @@ test_that("test logistic regression runs", {
 
 
 test_that("test ridge regression runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setRidgeRegression()
 
   fitModel <- fitPlp(

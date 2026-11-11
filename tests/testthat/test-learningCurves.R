@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (internet) {
+if (isTRUE(eunomiaAvailable)) {
 # learningCurve
 learningCurve <- PatientLevelPrediction::createLearningCurve(
   plpData = plpData,
@@ -32,7 +32,7 @@ learningCurve <- PatientLevelPrediction::createLearningCurve(
 }
 
 test_that("learningCurve output correct", {
-  skip_if_offline()  
+  skip_if_no_eunomia()  
   expect_true(is.data.frame(learningCurve))
   expect_equal(sum(colnames(learningCurve) %in% c(
     "trainFraction",
@@ -48,7 +48,7 @@ test_that("learningCurve output correct", {
 test_that("plotLearningCurve", {
   skip_if_not_installed("ggplot2")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   test <- plotLearningCurve(
     learningCurve = learningCurve,
     metric = "AUROC"
@@ -71,7 +71,7 @@ test_that("plotLearningCurve", {
 })
 
 test_that("getTrainFractions works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   learningCurve <- PatientLevelPrediction::createLearningCurve(
     plpData = tinyPlpData,
     outcomeId = outcomeId, parallel = FALSE, cores = -1,

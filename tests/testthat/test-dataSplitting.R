@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # make sure pop is all plpData people
-if (internet) {
+if (isTRUE(eunomiaAvailable)) {
   populationT <- plpData$cohorts
   populationT$outcomeCount <- sample(c(0, 1), nrow(populationT), replace = TRUE)
   attr(populationT, "metaData")$outcomeId <- outcomeId
@@ -151,7 +151,7 @@ test_that("createOutcomeLimitedSplitSettings", {
 
 
 test_that("Main split function: splitData", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   # check default settings with test/train
   splitSettings <- defaultSetting()
 
@@ -375,7 +375,7 @@ test_that("outcome-limited splitting falls back when outcome cap is not triggere
 })
 
 test_that("splitData supports outcome-limited split settings", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   splitSettings <- createOutcomeLimitedSplitSettings(
     maxTrainingOutcomes = 10,
     splitSeed = 42,
@@ -398,7 +398,7 @@ test_that("splitData supports outcome-limited split settings", {
 })
 
 test_that("dataSummary works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   splitSettings <- defaultSetting(
     testFraction = 0,
     trainFraction = 1
@@ -592,7 +592,7 @@ test_that("Data splitting by subject", {
 })
 
 test_that("Existing data splitter works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   # split by age
   age <- population$ageYear
   # create empty index same lengths as age

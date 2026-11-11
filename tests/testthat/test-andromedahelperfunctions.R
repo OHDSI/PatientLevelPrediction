@@ -16,7 +16,7 @@
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test
 test_that("limitCovariatesToPopulation preserves metadata", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   metaData <- attr(plpData$covariateData, "metaData")
   covariateData <-
     PatientLevelPrediction:::limitCovariatesToPopulation(

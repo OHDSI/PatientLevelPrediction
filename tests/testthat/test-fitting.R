@@ -17,7 +17,7 @@
 modelSettings <- setLassoLogisticRegression()
 
 test_that("fitPlp", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   plpModel <- fitPlp(
     trainData = trainData,
     modelSettings = modelSettings,
@@ -29,7 +29,7 @@ test_that("fitPlp", {
 })
 
 test_that("fitPlp input errors", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_error(
     fitPlp(
       trainData = trainData,

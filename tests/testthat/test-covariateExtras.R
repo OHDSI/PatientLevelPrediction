@@ -79,7 +79,7 @@ test_that("settings creation errors", {
 })
 
 test_that("extraction works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   covSet <- createCohortCovariateSettings(
     cohortName = "covariateName",
     settingId = 4,
@@ -412,7 +412,7 @@ test_that("mergeDuplicateAnalysisRef stops when one analysisId mixes covariate t
 })
 
 test_that("getPlpData keeps one analysisRef row per analysisId for several cohort covariates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   cohortSettings <- function(settingId, startDay, count = FALSE) {
     createCohortCovariateSettings(
       cohortName = paste("cohort", settingId), settingId = settingId,

@@ -34,6 +34,7 @@ test_that("createNormalizer works", {
 })
 
 test_that("normalization works", {
+  skip_if_no_eunomia()
   addFeature <- function(data, covariateId, minValue,
                          maxValue, outliers = FALSE) {
     data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
@@ -160,6 +161,7 @@ test_that("normalization works", {
 })
 
 test_that("normalization with constant column doesn't produce NaNs", {
+  skip_if_no_eunomia()
   addConstantFeature <- function(data, covariateId, value) {
     data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
     nSubjects <- nrow(data$labels)

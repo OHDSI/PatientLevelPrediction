@@ -58,7 +58,7 @@ test_that("weakRecalibration", {
 
 test_that("recalibratePlpRefit", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   newPop <- plpResult$prediction %>%
     dplyr::select(-"value") %>%
     dplyr::filter(.data$evaluationType %in% c("Test", "Train"))

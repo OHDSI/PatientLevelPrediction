@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 test_that("evaluatePlp", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   eval <- evaluatePlp(
     prediction = plpResult$prediction,
     typeColumn = "evaluationType"
@@ -43,7 +43,7 @@ test_that("evaluatePlp uses All when type column is absent", {
 })
 
 test_that("modelBasedConcordance", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   concordance <- PatientLevelPrediction::modelBasedConcordance(prediction = plpResult$prediction)
   expect_type(concordance, "double")
 })

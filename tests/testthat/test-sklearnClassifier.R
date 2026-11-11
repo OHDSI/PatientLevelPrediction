@@ -50,6 +50,7 @@ test_that("DecisionTree errors as expected", {
 
 
 test_that("check fit of DecisionTree", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setDecisionTree(
@@ -113,6 +114,7 @@ test_that("check fit of DecisionTree", {
 })
 
 test_that("fitClassifier errors with wrong covariateData", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   newTrainData <- copyTrainData(trainData)
@@ -128,6 +130,7 @@ test_that("fitClassifier errors with wrong covariateData", {
 
 
 test_that("AdaBoost fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setAdaBoost(
@@ -160,6 +163,7 @@ test_that("AdaBoost fit works", {
 
 
 test_that("RandomForest fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setRandomForest(
@@ -197,6 +201,7 @@ test_that("RandomForest fit works", {
 
 
 test_that("MLP fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setMLP(
@@ -233,6 +238,7 @@ test_that("MLP fit works", {
 
 
 test_that("Naive bayes fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setNaiveBayes()
@@ -277,6 +283,7 @@ test_that("Naive bayes fit works", {
 
 
 test_that("Support vector machine fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setSVM(
@@ -297,6 +304,7 @@ test_that("Support vector machine fit works", {
 })
 
 test_that("Sklearn predict works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setAdaBoost(

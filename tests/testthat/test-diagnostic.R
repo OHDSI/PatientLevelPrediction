@@ -54,7 +54,7 @@ test_that("getMaxEndDaysFromCovariates works", {
 })
 
 test_that("test diagnosePlp works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   test <- diagnosePlp(
     plpData = tinyPlpData,
     outcomeId = outcomeId,
@@ -105,7 +105,7 @@ test_that("test diagnosePlp works", {
 
 
 test_that("test diagnoseMultiplePlp works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   analysis1 <- createModelDesign(
     targetId = 1,
     outcomeId = outcomeId,

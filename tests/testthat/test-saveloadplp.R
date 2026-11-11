@@ -20,7 +20,7 @@ test_that("savePlpDataError", {
   expect_error(savePlpData(plpData = 1, file = "testing"))
 })
 
-if (internet && rlang::is_installed("Eunomia")) {
+if (isTRUE(eunomiaAvailable)) {
   oldCohorts <- plpData$cohorts
   oldOutcomes <- plpData$outcomes
   oldCovariates <- as.data.frame(plpData$covariateData$covariates)
@@ -28,7 +28,7 @@ if (internet && rlang::is_installed("Eunomia")) {
 }
 test_that("savePlpData", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   savePlpData(
     plpData = plpData,
     file = file.path(saveLoc, "saveDataTest"), overwrite = TRUE
@@ -43,7 +43,7 @@ test_that("loadPlpDataError", {
 
 test_that("loadPlpData", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   loadedData <- loadPlpData(file = file.path(saveLoc, "saveDataTest"))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
@@ -84,7 +84,7 @@ test_that("loadPlpModelError", {
 
 test_that("move model files when saveType is file", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
 # make an sklearn model to test file transport
   dir.create(file.path(saveLoc, "testMoveStart"))
   write.csv(data.frame(a = 1, b = 2), file = file.path(saveLoc, "testMoveStart", "file.csv"), row.names = FALSE)
@@ -168,7 +168,7 @@ test_that("loadPlpResult", {
 
 test_that("savePlpShareable works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   # check it works
   savePlpShareable(plpResult, file.path(saveLoc, "plpFriendly"), minCellCount = 0)
   shareableLoad <- loadPlpShareable(file.path(saveLoc, "plpFriendly"))

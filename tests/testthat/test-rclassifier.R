@@ -67,9 +67,10 @@ test_that("GBM settings expected errors", {
 
 
 test_that("GBM working checks", {
-  skip_if_not_installed(c("xgboost", "Eunomia"))
+  skip_if_not_installed("xgboost")
+  skip_if_not_installed("Eunomia")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setGradientBoostingMachine(ntrees = 10,
     maxDepth = 3, learnRate = 0.1)
 

@@ -73,7 +73,7 @@ test_that("LightGBM settings expected errors", {
 test_that("LightGBM working checks", {
   skip_if_not_installed("lightgbm")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setLightGBM(
     numIterations = 10, 
     maxDepth = 3, 

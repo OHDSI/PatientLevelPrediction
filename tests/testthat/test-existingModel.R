@@ -72,7 +72,7 @@ test_that("Create existing sklearn works", {
 test_that("existing sklearn model works", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # fit a simple sklearn model with plp
   modelSettings <- setDecisionTree(
     criterion = list("gini"),
@@ -122,7 +122,7 @@ test_that("existing sklearn model works", {
 test_that("Externally trained sklearn model works", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # change map to be some random order
   covariateIds <- tinyTrainData$covariateData$covariates %>%
     dplyr::pull(.data$covariateId) %>%
@@ -279,6 +279,7 @@ test_that("Create existing GLM model works", {
 })
 
 test_that("Existing glm model works", {
+  skip_if_no_eunomia()
   model <- createGlmModel(coefficients = data.frame(
     coefficient = c(0.05),
     covariateId = c(1002)

@@ -15,7 +15,7 @@
 # limitations under the License.
 test_that("prediction inputs", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   # =====================================
   # check prediction
   # =====================================
@@ -36,7 +36,7 @@ test_that("prediction inputs", {
 
 test_that("prediction works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   # =====================================
   # check prediction
   # =====================================
@@ -75,7 +75,7 @@ test_that("prediction works", {
 
 test_that("applyTidyCovariateData", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   covariateIds <- plpData$covariateData$covariateRef %>%
     dplyr::select("covariateId") %>%
     dplyr::pull()
@@ -153,7 +153,7 @@ test_that("Cox baseline survival is read as a step function at the timepoint", {
 
 test_that("a Cox model with a delayed risk window is predicted and evaluated at the window length", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("survival")
   skip_if_not_installed("polspline")
   skip_on_cran()
@@ -202,7 +202,7 @@ test_that("a Cox model with a delayed risk window is predicted and evaluated at 
 
 test_that("runPlp stops a survival model when the window ends have different anchors", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   mixed <- survivalWindow(1, 365, endAnchor = "cohort end")
   expect_error(
     checkInputs(list(

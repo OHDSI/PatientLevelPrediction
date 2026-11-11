@@ -20,7 +20,7 @@ test_that("createSklearnIterativeImputer works", {
 })
 
 test_that("sklearnIterativeImpute works and reuses binary predictors", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_on_cran()
   skip_if_no_sklearn_iterative()
   trainData <- subsetSplitData(tinyTrainData, n = 150, seed = 1)
@@ -70,7 +70,7 @@ test_that("sklearnIterativeImpute works and reuses binary predictors", {
 })
 
 test_that("sklearnIterativeImpute applies its saved steps without the session's Python object", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_on_cran()
   skip_if_no_sklearn_iterative()
   trainData <- subsetSplitData(tinyTrainData, n = 150, seed = 3)

@@ -260,7 +260,7 @@ test_that("createStudyPopulation endAnchor", {
 
 test_that("population creation parameters", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
     outcomeId = outcomeId,
@@ -468,7 +468,7 @@ test_that("population creation parameters", {
 
 test_that("Providing an existing population and skipping population creation works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   popSize <- 400
   newPopulation <- population[sample.int(nrow(population), popSize), ]
 

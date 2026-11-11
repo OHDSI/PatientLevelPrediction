@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 test_that("summary.plpData", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   attr(plpData$outcomes, "metaData")$outcomeIds <- c(outcomeId)
   sum <- summary.plpData(plpData)
   expect_equal(class(sum), "summary.plpData")
@@ -40,7 +40,7 @@ test_that("getPlpData errors", {
 
 
 test_that("getPlpData works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_true(is(plpData, "plpData"))
 })
 
@@ -59,7 +59,7 @@ test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
 })
 
 test_that("getPlpData checks covariateSettings object", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_error(getPlpData(
     databaseDetails = list(targetId = 1, outcomeIds = outcomeId),
     covariateSettings = list()
@@ -90,7 +90,7 @@ test_that("getPlpData checks covariateSettings object", {
 })
 
 test_that("Get Eunomia plp data works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   plpData <- getEunomiaPlpData()
 
@@ -109,7 +109,7 @@ test_that("Get Eunomia plp data works", {
 })
 
 test_that("Get eunomia with custom covariates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   cs <- FeatureExtraction::createCovariateSettings(
     useDemographicsAge = FALSE,
@@ -134,6 +134,7 @@ test_that("plpDataObjectDoc returns expected documentation text", {
 })
 
 test_that("Print and print summary plpData work", {
+  skip_if_no_eunomia()
   out <- capture.output(print(plpData))
   expect_true(any(grepl("plpData object", out)))
   expect_true(any(grepl("At risk concept ID: 1", out)))
@@ -168,7 +169,7 @@ test_that("summary.plpData counts distinct people per outcome", {
 })
 
 test_that("getPlpData with restrict by dates only", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictDatesSettings <- createRestrictPlpDataSettings(
     studyStartDate = "20150101",
@@ -197,7 +198,7 @@ test_that("getPlpData with restrict by dates only", {
 })
 
 test_that("getPlpData with restrict by sample size", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictSampleSizeSettings <- createRestrictPlpDataSettings(
     sampleSize = 100
@@ -216,7 +217,7 @@ test_that("getPlpData with restrict by sample size", {
 })
 
 test_that("getPlpData with restrict by sampleSize and dates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictSampleSizeSettings <- createRestrictPlpDataSettings(
     studyStartDate = "20150101",
@@ -243,7 +244,7 @@ test_that("getPlpData with restrict by sampleSize and dates", {
 })
 
 test_that("getPlpData with restrict by washoutPeriod", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictWashoutSettings <- createRestrictPlpDataSettings(
     washoutPeriod = 15000

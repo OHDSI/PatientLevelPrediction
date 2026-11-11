@@ -54,7 +54,7 @@ test_that("createUnivariateFeatureSelection correct class", {
 test_that("univariateFeatureSelection", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   k <- 20 + sample(10, 1)
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -128,7 +128,7 @@ test_that("createRandomForestFeatureSelection correct class", {
 test_that("randomForestFeatureSelection", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   ntreesTest <- sample(1000, 1)
   maxDepthTest <- sample(20, 1)
   featureEngineeringSettings <- createRandomForestFeatureSelection(
@@ -156,7 +156,7 @@ test_that("randomForestFeatureSelection", {
 test_that("featureSelection is applied on test_data", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   k <- 20
   featureEngineeringSettings <- testUniFun(k = k)
   newTrainData <- copyTrainData(trainData)
@@ -200,7 +200,7 @@ test_that("createSplineSettings correct class", {
 })
 
 test_that("splineCovariates works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   knots <- 4
   featureEngineeringSettings <- createSplineSettings(
     continousCovariateId = 12101,
@@ -245,7 +245,7 @@ test_that("splineCovariates works", {
 
 
 test_that("createStratifiedImputationSettings correct class", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   ageSplits <- c(33, 38, 42)
 
   featureEngineeringSettings <- createStratifiedImputationSettings(
@@ -316,7 +316,7 @@ test_that("createRareFeatureRemover works", {
 })
 
 test_that("Removing rare features works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   remover <- createRareFeatureRemover(threshold = 0.1)
   distinctCovariates <- function(data) {
     data$covariateData$covariates %>%
@@ -338,7 +338,7 @@ test_that("Removing rare features works", {
 })
 
 test_that("two step FE and RClassifier works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("xgboost")
 
   remover <- createRareFeatureRemover(threshold = 0.1)

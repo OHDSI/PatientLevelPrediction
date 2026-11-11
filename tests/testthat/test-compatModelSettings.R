@@ -264,7 +264,7 @@ test_that("tuneHyperparameters defaults tuning metric when missing", {
 
 test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClassifier", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_on_cran()
 
   dummyTrain <- function(dataMatrix, labels, hyperParameters, settings) {
@@ -321,8 +321,9 @@ test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClass
 })
 
 test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitRclassifier modelSettings", {
-  skip_if_not_installed(c("Eunomia", "xgboost"))
-  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  skip_if_not_installed("xgboost")
+  skip_if_no_eunomia()
   skip_on_cran()
 
   paramGrid <- list(
@@ -385,8 +386,9 @@ test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitRclassi
 })
 
 test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitSklearn modelSettings", {
-  skip_if_not_installed(c("Eunomia", "reticulate"))
-  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  skip_if_not_installed("reticulate")
+  skip_if_no_eunomia()
   skip_on_cran()
 
   paramGrid <- list(

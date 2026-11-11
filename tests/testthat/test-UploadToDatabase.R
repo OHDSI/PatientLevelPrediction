@@ -206,8 +206,9 @@ if (runPostgresUploadTests) {
 
 # code to test sqlite creation, result and diagnostic upload all in one
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   resultsLoc <- file.path(saveLoc, "sqliteTest")
 
@@ -293,8 +294,9 @@ test_that("temporary sqlite with results works", {
 })
 
 test_that("list hyperParamSearch is flattened for sqlite uploads", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   runPlpListHyper <- plpResult
   runPlpListHyper$model$trainDetails$hyperParamSearch <- list(
@@ -465,8 +467,9 @@ test_that("sanitizeHyperparameterSettingsForDatabase handles optional and non-js
 })
 
 test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in runPlp model", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   sqliteLocation <- file.path(tempdir(), "issue620-modeldesign-fallback.sqlite")
   if (file.exists(sqliteLocation)) {
@@ -516,8 +519,9 @@ test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in
 
 # SQL lite test
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   externalVal <- plpResult
   externalVal$model$model <- "none"
   externalVal$model$trainDetails <- NULL
@@ -580,8 +584,9 @@ test_that("temporary sqlite with results works", {
 })
 
 test_that("external validation with no outcomes uploads to sqlite", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   validationPopulation <- population
   validationPopulation$outcomeCount <- 0
@@ -644,8 +649,9 @@ test_that("external validation with no outcomes uploads to sqlite", {
 # importFromCsv test here as can use previous csv saving
 test_that("import from csv", {
   # TODO remove dependancy on previous test
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   cohortDef <- extractCohortDefinitionsCSV(
     csvFolder = file.path(saveLoc, "csvFolder")
   )
@@ -752,8 +758,9 @@ test_that("import from csv", {
 
 # new - check null model just reports message
 test_that("message if model is null", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   model2 <- list(noModel = TRUE)
   model2$modelDesign$modelSettings$settings$predict <- "noModel"
   model2$modelDesign$modelSettings$settings$saveType <- "RtoJson"
@@ -815,8 +822,9 @@ newUploadDb <- function(env = parent.frame()) {
 }
 
 test_that("insertRunPlpToSqlite stores a single externalValidatePlp result", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   externalVal <- plpResult
   externalVal$model$model <- "none"
   externalVal$model$trainDetails <- NULL
@@ -936,8 +944,9 @@ test_that("createPlpResultTables deleteTables honours a table prefix", {
 })
 
 test_that("insertResultsToSqlite replaces results by default and can add to them", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   resultsLoc <- tempfile("insertResultsDeleteTables")
   on.exit(unlink(resultsLoc, recursive = TRUE), add = TRUE)
   savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
@@ -1139,7 +1148,8 @@ test_that("insertPerformanceInDatabase clears attrition and covariate summary wh
 })
 
 test_that("addCalibrationSummary warns about calibration summaries it cannot store", {
-  skip_if_not_installed(c("ResultModelManager", "survival"))
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("survival")
   connectionDetails <- newUploadDb()
   conn <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
@@ -1195,7 +1205,8 @@ test_that("addCalibrationSummary warns about calibration summaries it cannot sto
 
 test_that("addCalibrationSummary stores survival calibration summaries", {
   testthat::skip("Storing survival calibration needs a results schema migration, see issue #691")
-  skip_if_not_installed(c("ResultModelManager", "survival"))
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("survival")
   connectionDetails <- newUploadDb()
   conn <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
