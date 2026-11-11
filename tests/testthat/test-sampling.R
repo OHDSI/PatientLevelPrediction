@@ -200,27 +200,21 @@ test_that("overSampleData works", {
 
 # synthetic train data for the oversampling and undersampling regressions
 createSamplingFixture <- function(labels, folds, covariates) {
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = data.frame(
-      covariateId = sort(unique(covariates$covariateId)),
-      covariateName = "covariate",
-      analysisId = 1,
-      conceptId = 0
-    ),
-    analysisRef = data.frame(
-      analysisId = 1,
-      analysisName = "analysis",
-      domainId = "domain",
-      isBinary = "N",
-      missingMeansZero = "Y"
+  makePlpData(
+    labels = labels,
+    folds = folds,
+    covariateData = makeCovariateData(
+      covariates,
+      analysisRef = data.frame(
+        analysisId = 1,
+        analysisName = "analysis",
+        domainId = "domain",
+        isBinary = "N",
+        missingMeansZero = "Y"
+      ),
+      metaData = list(populationSize = nrow(labels))
     )
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = nrow(labels))
-  fixture <- list(labels = labels, folds = folds, covariateData = covariateData)
-  class(fixture) <- "plpData"
-  return(fixture)
 }
 
 # subjectId is unique per original row, so it identifies the source of a copy

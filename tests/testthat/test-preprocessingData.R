@@ -259,13 +259,11 @@ test_that("tidy settings without recorded temporal deletions replay as before", 
 })
 
 test_that("recorded covariate time deletions are ignored for non-temporal data", {
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(rowId = 1:2, covariateId = 1, covariateValue = c(1, 2)),
-    covariateRef = data.frame(covariateId = 1, covariateName = "a", analysisId = 1, conceptId = 0),
-    analysisRef = data.frame(analysisId = 1, analysisName = "a", domainId = "d", startDay = 0, endDay = 0, isBinary = "N", missingMeansZero = "N")
+    analysisRef = defaultAnalysisRef(data.frame(analysisId = 1), missingMeansZero = "N"),
+    metaData = list(populationSize = 2)
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = 2)
   on.exit(Andromeda::close(covariateData), add = TRUE)
 
   trained <- preprocessData(covariateData, createPreprocessSettings(minFraction = 0, removeRedundancy = FALSE))

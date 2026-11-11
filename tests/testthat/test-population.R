@@ -568,15 +568,9 @@ test_that("restrictTarToCohortEnd warns when every episode ends on index day", {
     )
   }
   warned <- function(plpData, restrict) {
-    logged <- character(0)
-    testthat::local_mocked_bindings(
-      logWarn = function(...) {
-        logged <<- c(logged, paste0(...))
-        invisible(NULL)
-      },
-      .package = "ParallelLogger"
+    logged <- capturedWarnings(
+      createStudyPopulation(plpData, outcomeId = 1, populationSettings = settings(restrict))
     )
-    createStudyPopulation(plpData, outcomeId = 1, populationSettings = settings(restrict))
     any(grepl("every target episode ends on its index day", logged))
   }
 

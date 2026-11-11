@@ -1153,23 +1153,13 @@ test_that("addCalibrationSummary warns about calibration summaries it cannot sto
   connectionDetails <- newUploadDb()
   conn <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
-  logged <- character(0)
-  testthat::local_mocked_bindings(
-    logWarn = function(...) {
-      logged <<- c(logged, paste0(...))
-      invisible(NULL)
-    },
-    .package = "ParallelLogger"
-  )
   upload <- function(calibration, performanceId) {
-    logged <<- character(0)
-    PatientLevelPrediction:::addCalibrationSummary(
+    capturedWarnings(PatientLevelPrediction:::addCalibrationSummary(
       conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
       performanceId = performanceId,
       performanceEvaluation = list(calibrationSummary = calibration), overWriteIfExists = TRUE,
       tempEmulationSchema = NULL
-    )
-    logged
+    ))
   }
   stored <- function(performanceId) {
     DatabaseConnector::querySql(conn, paste(

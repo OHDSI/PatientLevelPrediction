@@ -72,14 +72,8 @@ test_that("pfi feature importance works with logger or without covariates", {
 # Saves a synthetic plpData so permute() can load it the way pfi() does.
 permutePlpDataLocation <- function(covariates, covariateRef, analysisRef, nRows, env = parent.frame()) {
   location <- withr::local_tempdir(.local_envir = env)
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = covariateRef,
-    analysisRef = analysisRef
-  )
+  covariateData <- makeCovariateData(covariates, covariateRef, analysisRef)
   withr::defer(Andromeda::close(covariateData), envir = env)
-  attr(covariateData, "metaData") <- list()
-  class(covariateData) <- "CovariateData"
   plpData <- list(
     covariateData = covariateData,
     cohorts = data.frame(rowId = seq_len(nRows), subjectId = seq_len(nRows), targetId = 1),

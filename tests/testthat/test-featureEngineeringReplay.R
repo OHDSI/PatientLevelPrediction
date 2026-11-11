@@ -74,23 +74,15 @@ test_that("fitted feature engineering replays after saving and loading, now and 
 
 test_that("steps whose learned tables are empty replay after saving and loading", {
   binaryOnly <- function(n) {
-    covariateData <- Andromeda::andromeda(
-      covariates = data.frame(rowId = seq_len(n), covariateId = 20, covariateValue = 1),
-      covariateRef = data.frame(covariateId = 20, covariateName = "b", analysisId = 20, conceptId = 0),
-      analysisRef = data.frame(
-        analysisId = 20, analysisName = "b", domainId = "x", startDay = 0, endDay = 0,
-        isBinary = "Y", missingMeansZero = "Y"
+    covariates <- data.frame(rowId = seq_len(n), covariateId = 20, covariateValue = 1)
+    covariateRef <- defaultCovariateRef(covariates, analysisId = 20)
+    makePlpData(
+      labels = zeroLabels(seq_len(n)),
+      folds = oneFold(seq_len(n)),
+      covariateData = makeCovariateData(
+        covariates, covariateRef,
+        analysisRef = defaultAnalysisRef(covariateRef, isBinary = "Y")
       )
-    )
-    class(covariateData) <- "CovariateData"
-    attr(covariateData, "metaData") <- list()
-    structure(
-      list(
-        labels = data.frame(rowId = seq_len(n), outcomeCount = 0),
-        folds = data.frame(rowId = seq_len(n), index = 1),
-        covariateData = covariateData
-      ),
-      class = "plpData"
     )
   }
   for (settings in list(

@@ -18,7 +18,7 @@ makeTransferFixture <- function(nfold = 3) {
   n <- 300L
   x <- cbind(rbinom(n, 1, 0.4), rbinom(n, 1, 0.6))
   y <- rbinom(n, 1, plogis(-1 + x[, 1] - 2 * x[, 2]))
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(
       rowId = rep(seq_len(n), 2),
       covariateId = rep(c(10, 20), each = n),
@@ -30,28 +30,19 @@ makeTransferFixture <- function(nfold = 3) {
     ),
     analysisRef = data.frame(
       analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
-    )
+    ),
+    metaData = list(populationSize = n)
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = n)
   labels <- data.frame(
     rowId = seq_len(n), subjectId = seq_len(n), outcomeCount = y,
     survivalTime = 365, cohortStartDate = as.Date("2000-01-01"),
     daysToCohortEnd = 365, daysToObsEnd = 365, ageYear = 40, gender = 1
   )
-  train <- list(
+  makePlpData(
     covariateData = covariateData, labels = labels,
-    folds = data.frame(rowId = seq_len(n), index = rep(seq_len(nfold), length.out = n))
+    folds = data.frame(rowId = seq_len(n), index = rep(seq_len(nfold), length.out = n)),
+    metaData = syntheticTrainMetaData()
   )
-  class(train) <- "plpData"
-  attr(train, "metaData") <- list(
-    targetId = 1L, outcomeId = 2L,
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE),
-    splitSettings = createDefaultSplitSetting(splitSeed = 42),
-    cdmDatabaseId = "synthetic", cdmDatabaseName = "synthetic"
-  )
-  train
 }
 
 test_that("transfer coefficients match IDs without mutating caller data", {

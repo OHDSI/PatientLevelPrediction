@@ -231,7 +231,7 @@ test_that("normalization with constant column doesn't produce NaNs", {
 
 createZeroData <- function(values, missingMeansZero = "Y", rowIds = seq_along(values), plain = FALSE) {
   stored <- values != 0
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(
       rowId = rowIds[stored],
       covariateId = 1001,
@@ -251,24 +251,13 @@ createZeroData <- function(values, missingMeansZero = "Y", rowIds = seq_along(va
       endDay = 0,
       isBinary = "N",
       missingMeansZero = missingMeansZero
-    )
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = length(rowIds))
-  if (plain) {
-    return(structure(
-      list(cohorts = data.frame(rowId = rowIds), outcomes = data.frame(), covariateData = covariateData),
-      class = "plpData"
-    ))
-  }
-  structure(
-    list(
-      labels = data.frame(rowId = rowIds, outcomeCount = 0),
-      folds = data.frame(rowId = rowIds, index = 1),
-      covariateData = covariateData
     ),
-    class = "plpData"
+    metaData = list(populationSize = length(rowIds))
   )
+  if (plain) {
+    return(makePlpData(covariateData, cohorts = data.frame(rowId = rowIds), outcomes = data.frame()))
+  }
+  makePlpData(covariateData, labels = zeroLabels(rowIds), folds = oneFold(rowIds))
 }
 
 matrixValues <- function(data, rowIds) {

@@ -180,13 +180,11 @@ test_that("fitClassifier trains on outcome presence and keeps outcome counts in 
   # rowIds that are not the matrix rows, as after a split
   rowIds <- seq(5, by = 7, length.out = n)
   labels <- data.frame(rowId = rowIds, outcomeCount = rep(c(0, 1, 2), 4))
-  covariateData <- Andromeda::andromeda(
-    covariates = data.frame(rowId = rowIds, covariateId = 1001, covariateValue = 1),
-    covariateRef = data.frame(covariateId = 1001, covariateName = "x", analysisId = 1, conceptId = 1),
-    analysisRef = data.frame(analysisId = 1, analysisName = "a", domainId = "d", isBinary = "Y", missingMeansZero = "Y")
+  covariates <- data.frame(rowId = rowIds, covariateId = 1001, covariateValue = 1)
+  covariateData <- makeCovariateData(
+    covariates,
+    analysisRef = defaultAnalysisRef(defaultCovariateRef(covariates), isBinary = "Y")
   )
-  class(covariateData) <- "CovariateData"
-  attr(class(covariateData), "package") <- "FeatureExtraction"
   withr::defer(Andromeda::close(covariateData))
   trainData <- list(
     labels = labels,

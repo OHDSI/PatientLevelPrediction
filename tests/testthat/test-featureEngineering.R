@@ -422,33 +422,31 @@ test_that("two step FE and RClassifier works", {
 
 createSplineData <- function(ageValues = c(20, 80, 40, 60), charlsonValues = c(4, 0, 1, 3)) {
   n <- length(ageValues)
-  covariateData <- Andromeda::andromeda(
-    covariates = data.frame(
-      rowId = rep(seq_len(n), 2),
-      covariateId = rep(c(1002, 1901), each = n),
-      covariateValue = c(ageValues, charlsonValues)
-    ),
-    covariateRef = data.frame(
-      covariateId = c(1002, 1901),
-      covariateName = c("Age", "Charlson index"),
-      conceptId = c(0, 0),
-      analysisId = c(2, 901)
-    ),
-    analysisRef = data.frame(
-      analysisId = c(2, 901),
-      analysisName = c("Age", "Charlson index"),
-      domainId = c("Demographics", "Condition"),
-      startDay = c(0, 0),
-      endDay = c(0, 0),
-      isBinary = c("N", "N"),
-      missingMeansZero = c("N", "N")
+  makePlpData(
+    labels = zeroLabels(seq_len(n)),
+    covariateData = makeCovariateData(
+      covariates = data.frame(
+        rowId = rep(seq_len(n), 2),
+        covariateId = rep(c(1002, 1901), each = n),
+        covariateValue = c(ageValues, charlsonValues)
+      ),
+      covariateRef = data.frame(
+        covariateId = c(1002, 1901),
+        covariateName = c("Age", "Charlson index"),
+        conceptId = c(0, 0),
+        analysisId = c(2, 901)
+      ),
+      analysisRef = data.frame(
+        analysisId = c(2, 901),
+        analysisName = c("Age", "Charlson index"),
+        domainId = c("Demographics", "Condition"),
+        startDay = c(0, 0),
+        endDay = c(0, 0),
+        isBinary = c("N", "N"),
+        missingMeansZero = c("N", "N")
+      ),
+      metaData = list(populationSize = n)
     )
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = n)
-  structure(
-    list(labels = data.frame(rowId = seq_len(n), outcomeCount = 0), covariateData = covariateData),
-    class = "plpData"
   )
 }
 
@@ -534,29 +532,24 @@ test_that("allocateSplineIds avoids collisions and stops when it cannot", {
 })
 
 createRareData <- function(nPatients, featureRowIds, rowsPerPatient = 1) {
-  covariateData <- Andromeda::andromeda(
-    covariates = data.frame(
-      rowId = c(1:100, rep(featureRowIds, each = rowsPerPatient)),
-      covariateId = c(rep(1, 100), rep(2, length(featureRowIds) * rowsPerPatient)),
-      covariateValue = 1
-    ),
-    covariateRef = data.frame(
-      covariateId = c(1, 2),
-      covariateName = c("background", "candidate"),
-      analysisId = 1,
-      conceptId = 0
-    ),
-    analysisRef = data.frame(analysisId = 1, analysisName = "binary features")
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = nPatients)
-  structure(
-    list(
-      labels = data.frame(rowId = seq_len(nPatients), outcomeCount = 0),
-      folds = data.frame(rowId = seq_len(nPatients), index = 1),
-      covariateData = covariateData
-    ),
-    class = "plpData"
+  makePlpData(
+    labels = zeroLabels(seq_len(nPatients)),
+    folds = oneFold(seq_len(nPatients)),
+    covariateData = makeCovariateData(
+      covariates = data.frame(
+        rowId = c(1:100, rep(featureRowIds, each = rowsPerPatient)),
+        covariateId = c(rep(1, 100), rep(2, length(featureRowIds) * rowsPerPatient)),
+        covariateValue = 1
+      ),
+      covariateRef = data.frame(
+        covariateId = c(1, 2),
+        covariateName = c("background", "candidate"),
+        analysisId = 1,
+        conceptId = 0
+      ),
+      analysisRef = data.frame(analysisId = 1, analysisName = "binary features"),
+      metaData = list(populationSize = nPatients)
+    )
   )
 }
 
@@ -872,29 +865,25 @@ test_that("covariateSummary replays steps with the population columns and the la
 
 createStratifiedData <- function(rowIds, ageYear, gender, values, labels = TRUE) {
   observed <- !is.na(values)
-  covariateData <- Andromeda::andromeda(
-    covariates = data.frame(
-      rowId = rowIds[observed], covariateId = rep(12101, sum(observed)),
-      covariateValue = as.numeric(values[observed])
-    ),
-    covariateRef = data.frame(
-      covariateId = 12101, covariateName = "lab", analysisId = 101, conceptId = 0
-    ),
-    analysisRef = data.frame(
-      analysisId = 101, analysisName = "lab", domainId = "Measurement",
-      startDay = 0, endDay = 0, isBinary = "N", missingMeansZero = "N"
+  people <- data.frame(rowId = rowIds, ageYear = ageYear, gender = gender)
+  makePlpData(
+    labels = if (labels) cbind(people, outcomeCount = 0),
+    cohorts = if (!labels) people,
+    covariateData = makeCovariateData(
+      covariates = data.frame(
+        rowId = rowIds[observed], covariateId = rep(12101, sum(observed)),
+        covariateValue = as.numeric(values[observed])
+      ),
+      covariateRef = data.frame(
+        covariateId = 12101, covariateName = "lab", analysisId = 101, conceptId = 0
+      ),
+      analysisRef = data.frame(
+        analysisId = 101, analysisName = "lab", domainId = "Measurement",
+        startDay = 0, endDay = 0, isBinary = "N", missingMeansZero = "N"
+      ),
+      metaData = list(populationSize = length(rowIds))
     )
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = length(rowIds))
-  people <- data.frame(rowId = rowIds, ageYear = ageYear, gender = gender)
-  data <- list(covariateData = covariateData)
-  if (labels) {
-    data$labels <- cbind(people, outcomeCount = 0)
-  } else {
-    data$cohorts <- people
-  }
-  structure(data, class = "plpData")
 }
 
 labValues <- function(data) {

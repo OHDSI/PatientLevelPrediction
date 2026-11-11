@@ -68,23 +68,12 @@ makeToyImputationData <- function(n = 150, seed = 1) {
     isBinary = c("N", "Y"),
     missingMeansZero = c("N", "Y")
   )
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = covariateRef,
-    analysisRef = analysisRef
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list()
-
-  trainData <- list(
+  makePlpData(
     labels = labels,
     folds = folds,
-    covariateData = covariateData
+    covariateData = makeCovariateData(covariates, covariateRef, analysisRef),
+    metaData = list()
   )
-  class(trainData) <- "plpData"
-  attr(trainData, "metaData") <- list()
-
-  trainData
 }
 
 createMissingData <- function(trainData, missingness, test = FALSE) {
@@ -229,26 +218,21 @@ makeImputationFixture <- function(rowIds,
       "N"
     )
   ) %>% dplyr::distinct()
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = data.frame(
-      covariateId = covariateIds,
-      covariateName = paste0("feature", covariateIds),
-      analysisId = analysisIds,
-      conceptId = covariateIds
+  makePlpData(
+    labels = zeroLabels(rowIds),
+    folds = if (folds) data.frame(rowId = rowIds, index = 1L),
+    covariateData = makeCovariateData(
+      covariates,
+      covariateRef = data.frame(
+        covariateId = covariateIds,
+        covariateName = paste0("feature", covariateIds),
+        analysisId = analysisIds,
+        conceptId = covariateIds
+      ),
+      analysisRef = analysisRef
     ),
-    analysisRef = analysisRef
+    metaData = list()
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list()
-  data <- list(labels = data.frame(rowId = rowIds, outcomeCount = 0))
-  if (folds) {
-    data$folds <- data.frame(rowId = rowIds, index = 1L)
-  }
-  data$covariateData <- covariateData
-  class(data) <- "plpData"
-  attr(data, "metaData") <- list()
-  data
 }
 
 covariateRowsOf <- function(data, covariateId) {

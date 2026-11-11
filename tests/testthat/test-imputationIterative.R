@@ -177,22 +177,11 @@ makeApplyImputeDataForKTest <- function() {
     isBinary = c("N", "Y"),
     missingMeansZero = c("N", "Y")
   )
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = covariateRef,
-    analysisRef = analysisRef
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list()
-
-  trainData <- list(
+  makePlpData(
     labels = data.frame(rowId = 1:4),
-    covariateData = covariateData
+    covariateData = makeCovariateData(covariates, covariateRef, analysisRef),
+    metaData = list()
   )
-  class(trainData) <- "plpData"
-  attr(trainData, "metaData") <- list()
-
-  trainData
 }
 
 makeApplyImputeDataForParityTest <- function() {
@@ -216,22 +205,11 @@ makeApplyImputeDataForParityTest <- function() {
     isBinary = c("N", "Y"),
     missingMeansZero = c("Y", "Y")
   )
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = covariateRef,
-    analysisRef = analysisRef
-  )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list()
-
-  trainData <- list(
+  makePlpData(
     labels = data.frame(rowId = 1:4),
-    covariateData = covariateData
+    covariateData = makeCovariateData(covariates, covariateRef, analysisRef),
+    metaData = list()
   )
-  class(trainData) <- "plpData"
-  attr(trainData, "metaData") <- list()
-
-  trainData
 }
 
 makeApplyImputerSettingsForKTest <- function(k = 3) {

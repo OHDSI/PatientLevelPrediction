@@ -293,20 +293,15 @@ test_that("normalizers scale count covariates and leave binary cohort covariates
   count <- extractCohortCovariate(connection, countSettings)
 
   makeTrainData <- function() {
-    covariateData <- Andromeda::andromeda(
-      covariates = rbind(binary$covariates, count$covariates),
-      covariateRef = rbind(binary$covariateRef, count$covariateRef),
-      analysisRef = rbind(binary$analysisRef, count$analysisRef)
-    )
-    class(covariateData) <- "CovariateData"
-    attr(covariateData, "metaData") <- list()
-    trainData <- list(
+    makePlpData(
       labels = data.frame(rowId = 1:3),
-      folds = data.frame(rowId = 1:3, index = 1),
-      covariateData = covariateData
+      folds = oneFold(1:3),
+      covariateData = makeCovariateData(
+        covariates = rbind(binary$covariates, count$covariates),
+        covariateRef = rbind(binary$covariateRef, count$covariateRef),
+        analysisRef = rbind(binary$analysisRef, count$analysisRef)
+      )
     )
-    class(trainData) <- "plpData"
-    trainData
   }
   valuesFor <- function(normalized, covariateId) {
     stored <- normalized$covariateData$covariates %>%
@@ -363,7 +358,7 @@ test_that("getCohortCovariateData reports the analysisId stored in the settings"
 })
 
 test_that("mergeDuplicateAnalysisRef keeps one row per analysisId so aggregation counts covariates once", {
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(
       rowId = c(1, 1, 2, 1, 2),
       covariateId = c(201456, 203456, 203456, 202456, 202456),
@@ -378,10 +373,9 @@ test_that("mergeDuplicateAnalysisRef keeps one row per analysisId so aggregation
       analysisId = c(456, 1456, 456), analysisName = "cohort covariate",
       domainId = "cohort covariate", startDay = c(-30, -365, -365), endDay = 0,
       isBinary = c("Y", "N", "Y"), missingMeansZero = "Y"
-    )
+    ),
+    metaData = list(populationSize = 3)
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = 3)
   withr::defer(Andromeda::close(covariateData))
 
   PatientLevelPrediction:::mergeDuplicateAnalysisRef(covariateData)

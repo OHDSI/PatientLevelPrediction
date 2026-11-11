@@ -794,28 +794,22 @@ test_that("test ridge regression runs", {
 })
 
 createSyntheticTrain <- function(covariates, labels, folds, covariateIds) {
-  covariateData <- Andromeda::andromeda(
-    covariates = covariates,
-    covariateRef = data.frame(
-      covariateId = covariateIds, covariateName = paste0("x", covariateIds),
-      analysisId = 1L, conceptId = covariateIds
+  makePlpData(
+    labels = labels,
+    folds = folds,
+    covariateData = makeCovariateData(
+      covariates,
+      covariateRef = data.frame(
+        covariateId = covariateIds, covariateName = paste0("x", covariateIds),
+        analysisId = 1L, conceptId = covariateIds
+      ),
+      analysisRef = data.frame(
+        analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
+      ),
+      metaData = list(populationSize = nrow(labels))
     ),
-    analysisRef = data.frame(
-      analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
-    )
+    metaData = syntheticTrainMetaData()
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = nrow(labels))
-  train <- list(covariateData = covariateData, labels = labels, folds = folds)
-  class(train) <- "plpData"
-  attr(train, "metaData") <- list(
-    targetId = 1L, outcomeId = 2L,
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE),
-    splitSettings = createDefaultSplitSetting(splitSeed = 42),
-    cdmDatabaseId = "synthetic", cdmDatabaseName = "synthetic"
-  )
-  train
 }
 
 createCoxTrain <- function(timepoint = 100) {

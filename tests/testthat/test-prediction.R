@@ -231,7 +231,7 @@ test_that("runPlp stops a survival model when the window ends have different anc
 })
 
 createSharedPlpData <- function() {
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(
       rowId = c(1, 2, 1, 2),
       covariateId = c(101, 101, 202, 202),
@@ -251,14 +251,10 @@ createSharedPlpData <- function() {
       endDay = 0,
       isBinary = "N",
       missingMeansZero = "N"
-    )
+    ),
+    metaData = list(populationSize = 2)
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = 2)
-  structure(
-    list(cohorts = data.frame(rowId = c(1, 2)), outcomes = data.frame(), covariateData = covariateData),
-    class = "plpData"
-  )
+  makePlpData(covariateData, cohorts = data.frame(rowId = c(1, 2)), outcomes = data.frame())
 }
 
 covariateRows <- function(plpData) {
