@@ -909,6 +909,90 @@ createNormalizer <- function(type = "minmax",
   return(featureEngineeringSettings)
 }
 
+# Normalization statistics and transformations. They take the covariates as a
+# data frame or as an Andromeda table, so the steps compute on the database and
+# the arithmetic can be tested on data frames.
+
+# Minimum and maximum of each covariate in covariateIds; a constant covariate
+# gets max = min + 1, so it normalizes to 0 instead of dividing by zero.
+minMaxStatistics <- function(covariates, covariateIds) {
+  covariates %>%
+    dplyr::filter(.data$covariateId %in% covariateIds) %>%
+    dplyr::group_by(.data$covariateId) %>%
+    dplyr::summarise(
+      max = max(.data$covariateValue, na.rm = TRUE),
+      min = min(.data$covariateValue, na.rm = TRUE)
+    ) %>%
+    dplyr::mutate(
+      range = .data$max - .data$min,
+      max = dplyr::if_else(.data$range == 0, .data$min + 1, .data$max)
+    ) %>%
+    dplyr::select(-"range") %>%
+    dplyr::collect()
+}
+
+# Scales covariates with a minMaxs row to (value - min) / (max - min); others
+# are left as they are. minMaxs must come from the same source as covariates.
+applyMinMax <- function(covariates, minMaxs) {
+  covariates %>%
+    dplyr::left_join(minMaxs, by = "covariateId") %>%
+    dplyr::mutate(covariateValue = dplyr::coalesce(
+      (.data$covariateValue - .data$min) / (.data$max - .data$min),
+      .data$covariateValue
+    )) %>%
+    dplyr::select(-c("max", "min"))
+}
+
+# Median and interquartile range of each covariate in covariateIds; a zero IQR
+# becomes 1 to avoid dividing by zero. The quartiles interpolate linearly, as
+# DuckDB's quantile_cont and R's default quantile type do.
+robustStatistics <- function(covariates, covariateIds) {
+  selected <- covariates %>%
+    dplyr::filter(.data$covariateId %in% covariateIds) %>%
+    dplyr::group_by(.data$covariateId)
+  if (inherits(covariates, "tbl_sql")) {
+    selected <- selected %>%
+      dplyr::summarise(
+        q25 = dbplyr::sql("quantile_cont(covariateValue, 0.25)"),
+        q75 = dbplyr::sql("quantile_cont(covariateValue, 0.75)"),
+        median = dbplyr::sql("median(covariateValue)")
+      )
+  } else {
+    selected <- selected %>%
+      dplyr::summarise(
+        q25 = unname(stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE)),
+        q75 = unname(stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE)),
+        median = stats::median(.data$covariateValue, na.rm = TRUE)
+      )
+  }
+  selected %>%
+    dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+    dplyr::mutate(iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr)) %>%
+    dplyr::select(-c("q75", "q25")) %>%
+    dplyr::collect()
+}
+
+# Scales covariates with a quantiles row to (value - median) / iqr and, when
+# clip is TRUE, smoothly into (-3, 3) with x / sqrt(1 + (x / 3)^2)
+# (https://arxiv.org/abs/2407.04491); others are left as they are.
+applyRobust <- function(covariates, quantiles, clip) {
+  covariates %>%
+    dplyr::left_join(quantiles, by = "covariateId", copy = TRUE) %>%
+    dplyr::mutate(normalizeCovariate = dplyr::coalesce(
+      (.data$iqr == .data$iqr) & (.data$median == .data$median),
+      FALSE
+    )) %>%
+    dplyr::mutate(covariateValue = dplyr::coalesce(
+      (.data$covariateValue - .data$median) / .data$iqr,
+      .data$covariateValue
+    )) %>%
+    dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
+      .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+      .data$covariateValue
+    )) %>%
+    dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+}
+
 #' A function that normalizes continous features to have values between 0 and 1
 #' @details uses value - min / (max - min) to normalize the data
 #' @param trainData The data to normalize: the training data, or new data when
@@ -933,35 +1017,13 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
-    # get max of each feature
-    outData$covariateData$minMaxs <- outData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(
-        max = max(.data$covariateValue, na.rm = TRUE),
-        min = min(.data$covariateValue, na.rm = TRUE),
-      ) %>%
-      dplyr::mutate(
-        range = .data$max - .data$min,
-        max = dplyr::if_else(.data$range == 0, .data$min + 1, .data$max),
-      ) %>%
-      dplyr::select(-"range") %>% 
-      dplyr::collect()
+    minMaxs <- minMaxStatistics(outData$covariateData$covariates, continousFeatures)
+    attr(featureEngineeringSettings, "minMaxs") <- minMaxs
+    outData$covariateData$minMaxs <- minMaxs
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-
-    # save the normalization
-    attr(featureEngineeringSettings, "minMaxs") <-
-      outData$covariateData$minMaxs %>% dplyr::collect()
-
-    # apply the normalization to trainData
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$minMaxs, by = "covariateId") %>%
-      # Only continuous features have min/max rows after the join.
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$min) / (.data$max - .data$min),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("max", "min"))
+    outData$covariateData$covariates <- applyMinMax(
+      outData$covariateData$covariates, outData$covariateData$minMaxs
+    )
     removeStoredZeros(outData$covariateData, implicitZeroIds)
     outData$covariateData$minMaxs <- NULL
     done <- TRUE
@@ -973,14 +1035,9 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$minMaxs <- restoreSavedTable(attr(featureEngineeringSettings, "minMaxs"))
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$minMaxs,
-        by = "covariateId") %>%
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$min) / (.data$max - .data$min),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("max", "min"))
+    outData$covariateData$covariates <- applyMinMax(
+      outData$covariateData$covariates, outData$covariateData$minMaxs
+    )
     removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
   outData <- recordFeatureEngineeringStep(
@@ -1028,65 +1085,14 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
-    # get (25, 75)% quantiles of each feature
-    if (inherits(outData$covariateData$covariates, "tbl_sql")) {
-      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::summarise(
-          q25 = dbplyr::sql("quantile_cont(covariateValue, 0.25)"),
-          q75 = dbplyr::sql("quantile_cont(covariateValue, 0.75)"),
-          median = dbplyr::sql("median(covariateValue)")
-        ) %>%
-        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-        dplyr::mutate(
-          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr) # if iqr is 0, set it to 1 to avoid division by 0
-        ) %>%
-        dplyr::select(-c("q75", "q25")) %>%
-        dplyr::collect()
-    } else {
-      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::summarise(
-          q25 = stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE), 
-          q75 = stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE),
-          median = stats::median(.data$covariateValue, na.rm = TRUE)
-        ) %>%
-        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-        dplyr::mutate(
-          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr), # if iqr is 0, set it to 1 to avoid division by 0
-        ) %>%
-        dplyr::select(-c("q75", "q25")) %>%
-        dplyr::collect()
-    }
+    quantiles <- robustStatistics(outData$covariateData$covariates, continousFeatures)
+    attr(featureEngineeringSettings, "quantiles") <- quantiles
+    outData$covariateData$quantiles <- quantiles
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-
-    # save the normalization
-    attr(featureEngineeringSettings, "quantiles") <-
-      outData$covariateData$quantiles %>% dplyr::collect()
-    clip <- featureEngineeringSettings$settings$clip
-
-    # apply the normalization to trainData
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
-      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
-        (.data$iqr == .data$iqr) & (.data$median == .data$median),
-        FALSE
-      )) %>%
-      # Only continuous features have median/iqr rows after the join.
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$median) / .data$iqr,
-        .data$covariateValue
-      )) %>%
-      # optionally if settings$clip is TRUE.
-      # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
-      # ref: https://arxiv.org/abs/2407.04491
-      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
-        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    outData$covariateData$covariates <- applyRobust(
+      outData$covariateData$covariates, outData$covariateData$quantiles,
+      clip = featureEngineeringSettings$settings$clip
+    )
     removeStoredZeros(outData$covariateData, implicitZeroIds)
     done <- TRUE
   } else {
@@ -1097,24 +1103,10 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
     # apply the normalization to test data by using saved normalization values
     outData$covariateData$quantiles <- restoreSavedTable(attr(featureEngineeringSettings, "quantiles"))
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-    clip <- featureEngineeringSettings$settings$clip
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$quantiles,
-        by = "covariateId", copy = TRUE
-      ) %>%
-      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
-        (.data$iqr == .data$iqr) & (.data$median == .data$median),
-        FALSE
-      )) %>%
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$median) / .data$iqr,
-        .data$covariateValue
-      )) %>%
-      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
-        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    outData$covariateData$covariates <- applyRobust(
+      outData$covariateData$covariates, outData$covariateData$quantiles,
+      clip = featureEngineeringSettings$settings$clip
+    )
     removeStoredZeros(outData$covariateData, implicitZeroIds)
   }
   outData <- recordFeatureEngineeringStep(
