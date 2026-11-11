@@ -398,7 +398,7 @@ randomSplitter <- function(population, splitSettings) {
     nfold,
     " folds) random stratified split by class"
   ))
-  outPpl <- population$rowId[population$outcomeCount == 1]
+  outPpl <- population$rowId[population$outcomeCount > 0]
   nonPpl <- population$rowId[population$outcomeCount == 0]
 
   nonPpl <- nonPpl[order(stats::runif(length(nonPpl)))]
@@ -481,8 +481,8 @@ timeSplitter <- function(population, splitSettings) {
   }
 
   outPpl <- data.frame(
-    rowId = population$rowId[population$outcomeCount == 1],
-    date = dates[population$outcomeCount == 1]
+    rowId = population$rowId[population$outcomeCount > 0],
+    date = dates[population$outcomeCount > 0]
   )
   nonPpl <- data.frame(
     rowId = population$rowId[population$outcomeCount == 0],
@@ -546,7 +546,7 @@ subjectSplitter <- function(population, splitSettings) {
     set.seed(seed)
   }
 
-  if (length(table(population$outcomeCount)) <= 1 ||
+  if (length(table(population$outcomeCount > 0)) <= 1 ||
     sum(population$outcomeCount > 0) < 10) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
@@ -561,7 +561,7 @@ subjectSplitter <- function(population, splitSettings) {
   ))
 
   # get subejct ids for outcome and split them up
-  outPpl <- unique(population$subjectId[population$outcomeCount == 1])
+  outPpl <- unique(population$subjectId[population$outcomeCount > 0])
 
   # get subject id for non outcome and split them up
   nonPpl <- setdiff(unique(population$subjectId), outPpl)
@@ -880,7 +880,7 @@ checkOutcomes <- function(population, train, nfold) {
 
   } else {
     # plp default minimum outcomes, less < 10 in total or less than 5 in train folds
-    if (length(table(population$outcomeCount)) <= 1 ||
+    if (length(table(population$outcomeCount > 0)) <= 1 ||
       sum(population$outcomeCount > 0) < 10) {
       stop("Outcome only occurs in fewer than 10 people or only one class")
     }

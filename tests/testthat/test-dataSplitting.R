@@ -712,3 +712,84 @@ test_that("no test set uses all rows for training when only testFraction is set"
     expect_equal(sum(split$index == 0), 0, info = type)
   }
 })
+
+test_that("splitters keep rows with more than one outcome", {
+  withr::local_options(plp.outcomes = NULL)
+  population <- createSplitPopulation(rep(0:2, 40))
+  for (type in c("stratified", "time", "subject")) {
+    settings <- createDefaultSplitSetting(
+      testFraction = 0.25, trainFraction = 0.75,
+      nfold = 3, splitSeed = 42, type = type
+    )
+    split <- runSplitter(population, settings)
+    expect_equal(nrow(split), 120, info = type)
+    expect_setequal(split$rowId, population$rowId)
+    expect_equal(sum(split$index < 0), 30, info = type)
+    expect_equal(sum(split$index > 0), 90, info = type)
+  }
+})
+
+test_that("recurrent outcomes are stratified with the other outcomes", {
+  withr::local_options(plp.outcomes = NULL)
+  population <- createSplitPopulation(rep(c(0, 0, 0, 1, 2, 2), 20))
+  for (type in c("stratified", "subject")) {
+    settings <- createDefaultSplitSetting(
+      testFraction = 0.25, trainFraction = 0.75,
+      nfold = 3, splitSeed = 42, type = type
+    )
+    split <- merge(runSplitter(population, settings), population, by = "rowId")
+    expect_equal(sum(split$index < 0 & split$outcomeCount > 0), 15, info = type)
+    byFold <- table(split$index[split$index > 0], split$outcomeCount[split$index > 0] > 0)
+    expect_equal(unname(byFold[, "TRUE"]), c(15, 15, 15), info = type)
+  }
+})
+
+test_that("splitData preserves outcome counts above one", {
+  withr::local_options(plp.outcomes = NULL)
+  population <- createSplitPopulation(rep(0:2, 40))
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(rowId = population$rowId, covariateId = 1001, covariateValue = 1),
+    covariateRef = data.frame(covariateId = 1001, covariateName = "x", analysisId = 1),
+    analysisRef = data.frame(analysisId = 1)
+  )
+  class(covariateData) <- "CovariateData"
+  withr::defer(Andromeda::close(covariateData))
+  splitPlpData <- list(
+    covariateData = covariateData,
+    metaData = list(databaseDetails = list())
+  )
+  class(splitPlpData) <- "plpData"
+
+  for (type in c("stratified", "time")) {
+    result <- splitData(
+      plpData = splitPlpData,
+      population = population,
+      splitSettings = createDefaultSplitSetting(
+        testFraction = 0.25, trainFraction = 0.75,
+        nfold = 3, splitSeed = 42, type = type
+      )
+    )
+    combined <- rbind(result$Train$labels, result$Test$labels)
+    expect_equal(nrow(combined), 120, info = type)
+    expect_equal(sum(combined$outcomeCount), sum(population$outcomeCount), info = type)
+    expect_equal(sum(combined$outcomeCount == 2), 40, info = type)
+    Andromeda::close(result$Train$covariateData)
+    Andromeda::close(result$Test$covariateData)
+  }
+})
+
+test_that("outcome counts above one are not a second class", {
+  withr::local_options(plp.outcomes = NULL)
+  population <- createSplitPopulation(rep(1:2, 40))
+  expect_error(
+    checkOutcomes(population, train = 0.75, nfold = 3),
+    "only one class"
+  )
+  expect_error(
+    runSplitter(
+      population,
+      createDefaultSplitSetting(splitSeed = 42, type = "subject")
+    ),
+    "only one class"
+  )
+})

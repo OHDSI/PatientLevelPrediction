@@ -394,3 +394,15 @@ test_that("seeded random search leaves the ambient RNG untouched", {
     expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
   })
 })
+
+test_that("auprcMetric treats outcome counts above one as positive", {
+  skip_if_not_installed("PRROC")
+  prediction <- data.frame(
+    value = c(0.9, 0.8, 0.7, 0.4, 0.3, 0.2, 0.1),
+    outcomeCount = c(2, 1, 0, 2, 0, 1, 0)
+  )
+  binaryPrediction <- prediction
+  binaryPrediction$outcomeCount <- as.numeric(prediction$outcomeCount > 0)
+
+  expect_equal(auprcMetric$fun(prediction), auprcMetric$fun(binaryPrediction))
+})

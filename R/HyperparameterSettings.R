@@ -202,7 +202,7 @@ aucMetric <- createTuningMetric(
 
 auprcMetric <- createTuningMetric(
   fun = function(prediction) {
-    positive <- prediction$value[prediction$outcomeCount == 1]
+    positive <- prediction$value[prediction$outcomeCount > 0]
     negative <- prediction$value[prediction$outcomeCount == 0]
     pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
     auprc <- pr$auc.integral
