@@ -26,6 +26,9 @@
 #' - k: The number of donors to use for matching
 #' - iterations: The number of iterations to use for imputation
 #' - alpha: Elastic-net mixing parameter for PMM fit (`1` = lasso, `0` = ridge)
+#' - seed: The seed of the random draws of the imputation (the cross-validation
+#'   folds of each imputation model and the donor sampling), drawn at random when
+#'   not given. The imputations then depend only on the settings and the data.
 #' @param addMissingIndicator Add a binary missingness indicator per feature that
 #' passes the imputation missingness threshold.
 #' @return The settings for the iterative imputer of class `featureEngineeringSettings`
@@ -69,6 +72,13 @@ createIterativeImputer <- function(missingThreshold = 0.3,
       methodSettings$pmm$alpha < 0 ||
       methodSettings$pmm$alpha > 1) {
       stop("methodSettings$pmm$alpha should be a single numeric value in [0, 1]")
+    }
+    if (is.null(methodSettings$pmm$seed)) {
+      methodSettings$pmm$seed <- sample(100000, 1)
+    }
+    checkIsClass(methodSettings$pmm$seed, c("numeric", "integer"))
+    if (length(methodSettings$pmm$seed) != 1) {
+      stop("methodSettings$pmm$seed should be a single number")
     }
   }
   checkHigher(missingThreshold, 0)
@@ -604,6 +614,44 @@ validatePmmK <- function(k) {
     stop("k must be a single positive integer")
   }
   as.integer(k)
+}
+
+# PMM's random draws (the cross-validation folds of a fit, the donor sampling)
+# run under seeds derived from the imputer's seed, one pair per imputation
+# model, so they do not depend on what else used the random stream, such as
+# Andromeda's names for temporary tables, and do not advance the global stream.
+# Without a seed the draws use the global stream.
+withPmmSeed <- function(seed, offset, expr) {
+  if (is.null(seed)) {
+    return(expr)
+  }
+  hadSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  if (hadSeed) {
+    savedSeed <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  }
+  on.exit({
+    if (hadSeed) {
+      assign(".Random.seed", savedSeed, envir = globalenv())
+    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+      rm(".Random.seed", envir = globalenv())
+    }
+  }, add = TRUE)
+  set.seed(seed + offset)
+  expr
+}
+
+# The seed of the imputation model with index modelIndex (1, 2, ...).
+pmmModelSeed <- function(baseSeed, modelIndex) {
+  baseSeed + 2 * modelIndex
+}
+
+# The imputer's seed; models saved before it existed get one drawn once.
+pmmBaseSeed <- function(featureEngineeringSettings) {
+  seed <- featureEngineeringSettings$methodSettings$seed
+  if (is.null(seed)) {
+    seed <- sample(100000, 1)
+  }
+  as.numeric(seed)
 }
 
 findNearestSortedIndices <- function(sortedPredictions, prediction, k) {
@@ -1207,7 +1255,10 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
     varsToImpute <- numericData$missingIndex %>%
       dplyr::pull(.data$covariateId) %>%
       unique()
+    baseSeed <- pmmBaseSeed(featureEngineeringSettings)
+    modelIndex <- 0
     for (varId in varsToImpute) {
+      modelIndex <- modelIndex + 1
       varName <- outputData$covariateData$covariateRef %>%
         dplyr::filter(.data$covariateId == varId) %>%
         dplyr::pull(.data$covariateName)
@@ -1235,7 +1286,7 @@ iterativeImpute <- function(trainData, featureEngineeringSettings, done = FALSE)
       }
       nMissRows <- length(missRowIds)
       nDonors <- if (!is.null(imputer$predictions)) nrow(imputer$predictions) else 0
-      pmmResults <- pmmPredict(numericData, k = kPmm, imputer)
+      pmmResults <- pmmPredict(numericData, k = kPmm, imputer, seed = pmmModelSeed(baseSeed, modelIndex))
       varDelta <- Sys.time() - varStart
       varNameSafe <- if (length(varName) == 0 || is.na(varName[1])) as.character(varId) else varName[1]
       ParallelLogger::logInfo(
@@ -1515,8 +1566,11 @@ sklearnIterativeImpute <- function(trainData, featureEngineeringSettings, done =
 #'      xMiss: covariates table for missing data
 #'      yObs: outcome variable that we want to impute
 #' @param k The number of donors to use for matching (default 5)
+#' @param alpha Elastic-net mixing parameter (`1` = lasso, `0` = ridge)
+#' @param seed The seed of the model's random draws (cross-validation folds and
+#'   donor sampling), or NULL to use the global random stream
 #' @keywords internal
-pmmFit <- function(data, k = 5, alpha = 1) {
+pmmFit <- function(data, k = 5, alpha = 1, seed = NULL) {
   rlang::check_installed("glmnet")
   k <- validatePmmK(k)
   if (!is.numeric(alpha) || length(alpha) != 1 || alpha < 0 || alpha > 1) {
@@ -1574,12 +1628,12 @@ pmmFit <- function(data, k = 5, alpha = 1) {
     stop("Missing y values after xObs/yObs alignment in pmmFit")
   }
 
-  fit <- glmnet::cv.glmnet(
+  fit <- withPmmSeed(seed, 0, glmnet::cv.glmnet(
     xObs,
     yObsAligned$y,
     alpha = alpha,
     nfolds = 3
-  )
+  ))
 
   # predict on both XObs and XMiss
   predsObs <- stats::predict(fit, xObs, fit$lambda.min)
@@ -1621,7 +1675,7 @@ pmmFit <- function(data, k = 5, alpha = 1) {
       dims = c(nMissRows, nCols)
     )
     predsMiss <- stats::predict(fit, xMiss, fit$lambda.min)
-    imputedValues <- samplePmmDonors(predsObs, donorMapping, predsMiss, k)
+    imputedValues <- withPmmSeed(seed, 1, samplePmmDonors(predsObs, donorMapping, predsMiss, k))
   }
 
   results <- list()
@@ -1653,7 +1707,7 @@ pmmFit <- function(data, k = 5, alpha = 1) {
   return(results)
 }
 
-pmmPredict <- function(data, k = 5, imputer) {
+pmmPredict <- function(data, k = 5, imputer, seed = NULL) {
   k <- validatePmmK(k)
   coefficients <- imputer$coefficients
   if (!is.data.frame(coefficients)) {
@@ -1707,12 +1761,12 @@ pmmPredict <- function(data, k = 5, imputer) {
   if (nRows == 0) {
     imputedValues <- numeric(0)
   } else {
-    imputedValues <- samplePmmDonors(
+    imputedValues <- withPmmSeed(seed, 1, samplePmmDonors(
       predsObs = predsObs,
       donorMapping = donorMapping,
       predsTarget = predictionMissing$value,
       k = k
-    )
+    ))
   }
 
   results <- list()
@@ -1859,6 +1913,8 @@ iterativeChainedImpute <- function(numericData,
     unique()
   convergenceParameters <- list()
   modelInfo <- list()
+  baseSeed <- pmmBaseSeed(featureEngineeringSettings)
+  modelIndex <- 0
 
   for (iter in 1:maxIter) {
     ParallelLogger::logInfo("Imputation iteration: ", iter)
@@ -1887,10 +1943,12 @@ iterativeChainedImpute <- function(numericData,
       numericData$xMiss <- predictors %>% dplyr::filter(.data$rowId %in% !!allRowIds[missIdx])
       on.exit(numericData$xMiss <- NULL, add = TRUE)
 
+      modelIndex <- modelIndex + 1
       pmmResults <- pmmFit(
         numericData,
         k = featureEngineeringSettings$methodSettings$k,
-        alpha = featureEngineeringSettings$methodSettings$alpha
+        alpha = featureEngineeringSettings$methodSettings$alpha,
+        seed = pmmModelSeed(baseSeed, modelIndex)
       )
 
       # update imputations in data

@@ -38,7 +38,7 @@ test_that("IterativeImputer works", {
   )
 
   testthat::local_mocked_bindings(
-    pmmFit = function(data, k = 5, alpha = 1) {
+    pmmFit = function(data, k = 5, alpha = 1, seed = NULL) {
       rows <- data$xMiss %>%
         dplyr::pull(.data$rowId) %>%
         unique()
@@ -281,7 +281,7 @@ test_that("iterativeImpute apply path uses configured PMM k and keeps covariateD
   originalPmmPredict <- PatientLevelPrediction:::pmmPredict
 
   testthat::local_mocked_bindings(
-    pmmPredict = function(data, k = 5, imputer) {
+    pmmPredict = function(data, k = 5, imputer, seed = NULL) {
       observed$k <- k
       originalPmmPredict(data = data, k = k, imputer = imputer)
     },
@@ -704,4 +704,30 @@ test_that("pmmPredict imputes from the intercept when a model has no predictors"
     expect_equal(imputed$rowId, c(1, 2))
     expect_equal(imputed$imputedValue, c(40, 40))
   }
+})
+
+test_that("PMM imputations depend only on the imputer's seed, not on the random stream", {
+  skip_if_not_installed("glmnet")
+  settings <- createIterativeImputer(
+    method = "pmm", missingThreshold = 0.5,
+    methodSettings = list(pmm = list(k = 5, iterations = 2, seed = 123))
+  )
+  expect_equal(settings$methodSettings$seed, 123)
+  impute <- function(streamSeed, extraDraws) {
+    data <- createMissingData(makeToyImputationData(n = 80, seed = 7), 0.2)
+    withr::defer(Andromeda::close(data$covariateData))
+    set.seed(streamSeed)
+    # other code using the random stream before and during the step, as
+    # Andromeda does for its temporary table names
+    stats::runif(extraDraws)
+    fitted <- suppressWarnings(iterativeImpute(data, settings, done = FALSE))
+    rows <- as.data.frame(fitted$covariateData$covariates)
+    list(rows = rows[order(rows$rowId, rows$covariateId), ])
+  }
+  first <- impute(streamSeed = 1, extraDraws = 0)
+  second <- impute(streamSeed = 2, extraDraws = 17)
+  expect_equal(second$rows, first$rows, ignore_attr = TRUE)
+
+  # without a seed in the settings one is drawn
+  expect_true(is.numeric(createIterativeImputer()$methodSettings$seed))
 })
