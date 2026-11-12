@@ -309,6 +309,23 @@ createServerConnectionDetails <- function(dbms) {
   )
 }
 
+# Cleanup after a server test. It writes its own error report and only warns,
+# so a failing cleanup can't replace the error report of the failure that ended
+# the test, which the workflow prints.
+executeCleanupSql <- function(connection, sql, ...) {
+  tryCatch(
+    DatabaseConnector::renderTranslateExecuteSql(
+      connection,
+      sql,
+      ...,
+      progressBar = FALSE,
+      reportOverallTime = FALSE,
+      errorReportFile = tempfile("cleanupErrorReport", fileext = ".txt")
+    ),
+    error = function(e) warning("Cleanup failed: ", conditionMessage(e), call. = FALSE)
+  )
+}
+
 for (serverDbms in names(databaseServers)) {
   test_that(paste("sampleSize runs on", serverDbms), {
     dbms <- serverDbms
@@ -319,6 +336,7 @@ for (serverDbms in names(databaseServers)) {
 
     connectionDetails <- createServerConnectionDetails(dbms)
     connection <- DatabaseConnector::connect(connectionDetails)
+    withr::defer(if (DatabaseConnector::dbIsValid(connection)) DatabaseConnector::disconnect(connection))
     expectExactPersonHashes(connection, cdmSchema, dbms)
 
     # Other jobs may run at the same time on the same server
@@ -326,19 +344,6 @@ for (serverDbms in names(databaseServers)) {
       "plp_ss_", substr(.Platform$OS.type, 1, 3),
       format(Sys.time(), "%m%d%H%M%S"), sample.int(99L, 1L)
     )
-    withr::defer({
-      cleanupConnection <- DatabaseConnector::connect(connectionDetails)
-      DatabaseConnector::renderTranslateExecuteSql(
-        cleanupConnection,
-        "DROP TABLE @schema.@table;",
-        schema = ohdsiSchema,
-        table = cohortTable,
-        tempEmulationSchema = ohdsiSchema,
-        progressBar = FALSE,
-        reportOverallTime = FALSE
-      )
-      DatabaseConnector::disconnect(cleanupConnection)
-    })
     DatabaseConnector::renderTranslateExecuteSql(
       connection,
       "SELECT cohort_definition_id, subject_id, cohort_start_date, cohort_end_date
@@ -363,6 +368,19 @@ for (serverDbms in names(databaseServers)) {
       progressBar = FALSE,
       reportOverallTime = FALSE
     )
+    # Registered now that the table exists, with its own connection, as the one
+    # above is closed before the extractions
+    withr::defer({
+      cleanupConnection <- DatabaseConnector::connect(connectionDetails)
+      executeCleanupSql(
+        cleanupConnection,
+        "DROP TABLE @schema.@table;",
+        schema = ohdsiSchema,
+        table = cohortTable,
+        tempEmulationSchema = ohdsiSchema
+      )
+      DatabaseConnector::disconnect(cleanupConnection)
+    })
 
     # The sampling SQL on its own, without the covariate extraction below
     DatabaseConnector::renderTranslateExecuteSql(
@@ -387,6 +405,11 @@ for (serverDbms in names(databaseServers)) {
       progressBar = FALSE,
       reportOverallTime = FALSE
     )
+    # On Oracle, BigQuery, Spark and IRIS this temp table is a real table in the
+    # schema; dropped below, or here if the test stops before that
+    withr::defer(if (DatabaseConnector::dbIsValid(connection)) {
+      executeCleanupSql(connection, "DROP TABLE #cohort_person;", tempEmulationSchema = ohdsiSchema)
+    })
     nPersons <- DatabaseConnector::renderTranslateQuerySql(
       connection,
       "SELECT COUNT(DISTINCT subject_id) AS n_persons FROM #cohort_person;",
