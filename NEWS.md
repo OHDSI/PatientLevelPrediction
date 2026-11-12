@@ -171,6 +171,9 @@ can be refitted or re-evaluated.
 - Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
   scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
   failed since 6.6.0 with "'what' must be a function or character string".
+- Fixed `createSklearnModel()` without a `covariateMap`, which failed since
+  6.4.0 (#531).
+- Fixed `setPythonEnvironment()` with virtual environments.
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.
@@ -194,6 +197,7 @@ can be refitted or re-evaluated.
   after `savePlpModel()` and `loadPlpModel()`, also when saved by earlier
   versions; `predictPlp()` stopped with "Data frame with at least one column
   required".
+- `validateMultiplePlp()` stops with a clear message when it finds no analyses.
 
 PatientLevelPrediction 6.7.0
 ============================
