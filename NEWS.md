@@ -155,13 +155,19 @@ can be refitted or re-evaluated.
   platforms.
 
 ## Bug fixes
+- Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
+  scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
+  failed since 6.6.0 with "'what' must be a function or character string".
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.
 - Fixed imputers that apply saved settings to full `plpData` objects, and
   iterative imputers saved in the old format whose PMM model has no
   predictors.
+- Fixed models saved by earlier versions whose normalizer or imputer learned an
+  empty table.
 - Fixed `createStratifiedImputationSettings()`, which did not work before.
+- Fixed `setDecisionTree()` with a seed that is not an integer.
 - Fixed loading tree models saved with older scikit-learn versions, which
   returned class counts instead of probabilities.
 - Fixed `covariateSummary()` with strata and no labels.
