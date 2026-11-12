@@ -23,6 +23,14 @@ can be refitted or re-evaluated.
   themselves with the new exported `recordFeatureEngineeringStep()`; the custom
   feature engineering vignette describes the contract. Steps recorded the old
   way still work.
+- `createIterativeImputer()` keeps a seed for the random draws of predictive
+  mean matching (`methodSettings$pmm$seed`, drawn when not given), so
+  imputations can be reproduced from the settings.
+- Faster runs that use less disk: fewer copies of the covariate data in
+  covariate summaries, tidying and feature engineering at prediction,
+  imputation, normalization, sampling and sparse matrix building, and the
+  copies a run makes are closed instead of staying on disk until garbage
+  collection.
 
 ## Changes to results
 ### Evaluation
@@ -113,6 +121,8 @@ can be refitted or re-evaluated.
   covariates.
 - `createIterativeImputer()` imputes trained features missing from a prediction
   batch, and selects the rows to impute by rowId.
+- `createIterativeImputer()` draws from its own seed, so its imputations differ
+  from earlier versions for the same global seed.
 - The scikit-learn iterative imputer saves its fitted steps and applies them in
   R at prediction, without Python.
 - Temporal models with `removeRedundancy = TRUE` replay the deleted
@@ -129,6 +139,9 @@ can be refitted or re-evaluated.
 - `simulatePlpData()` derives cohort gender and the gender covariates from one
   draw, so seeded output from profiles with gender covariates changes, and keeps
   the configured outcome IDs in metadata and attrition.
+- `simulatePlpData()` builds the covariates before any Andromeda work and gives
+  each outcome its own seed, so its output for a given seed changes once and no
+  longer depends on Andromeda.
 
 ### Validation, recalibration, diagnostics and importance
 - External validation extracts data separately for models that define
@@ -166,6 +179,8 @@ can be refitted or re-evaluated.
   predictors.
 - Fixed models saved by earlier versions whose normalizer or imputer learned an
   empty table.
+- Fixed iterative imputation of patients whose PMM predictors were all unseen
+  in training.
 - Fixed `createStratifiedImputationSettings()`, which did not work before.
 - Fixed `setDecisionTree()` with a seed that is not an integer.
 - Fixed loading tree models saved with older scikit-learn versions, which
