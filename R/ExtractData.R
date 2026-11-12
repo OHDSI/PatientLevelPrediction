@@ -578,7 +578,10 @@ personHashSql <- function(personId, dbms) {
   }
   linear <- modSql(sprintf(
     "(%s) * %s + %s",
-    modSql(sprintf("ABS(%s)", personId)),
+    # the remainder before the absolute value: ABS() of the smallest INT or BIGINT
+    # overflows, and both orders give the same value as the remainder has the
+    # sign of the ID on every platform
+    sprintf("ABS(%s)", modSql(personId)),
     multiplier,
     seed
   ))

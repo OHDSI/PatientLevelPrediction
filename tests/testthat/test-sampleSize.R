@@ -103,11 +103,14 @@ extractCohorts <- function(databaseDetails, ...) {
 expectExactPersonHashes <- function(connection, cdmSchema, dbms) {
   personIds <- c(
     "1", "2", "3", "41", "123", "2147483646", "2147483647", "2147483648",
-    "9876543210123", "-5"
+    "9876543210123", "-5",
+    # the smallest INT and BIGINT, whose absolute values overflow
+    "-2147483648", "(-9223372036854775807 - 1)"
   )
   expected <- c(
     1336803046, 1291209903, 986201256, 1468070621, 1547973436,
-    1764037554, 2102416845, 1336803046, 1800987649, 990296103
+    1764037554, 2102416845, 1336803046, 1800987649, 990296103,
+    1336803046, 1291209903
   )
   columns <- vapply(seq_along(personIds), function(i) {
     hash <- PatientLevelPrediction:::personHashSql(personIds[i], dbms)
