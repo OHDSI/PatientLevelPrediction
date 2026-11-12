@@ -7,6 +7,13 @@ on:
       - 'R/ExtractData.R'
       - 'tests/testthat/test-sampleSize.R'
       - '.github/workflows/database-tests.yaml'
+  # Pull requests, also from forks without the secrets, test the local databases
+  pull_request:
+    paths:
+      - 'inst/sql/sql_server/CreateCohorts.sql'
+      - 'R/ExtractData.R'
+      - 'tests/testthat/test-sampleSize.R'
+      - '.github/workflows/database-tests.yaml'
   workflow_dispatch:
 
 name: Database tests
@@ -20,19 +27,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        database:
-          - sqlite
-          - duckdb
-          - oracle
-          - postgresql
-          - sql server
-          - redshift
-          - spark
-          # Add snowflake back when the test account works without a password login.
-          # It fails with "Multi-factor authentication is required for this account",
-          # and DatabaseConnector disabled its Snowflake tests for this too (849dc8dc).
-          - iris
-          - bigquery
+        # Add snowflake back when the test account works without a password login.
+        # It fails with "Multi-factor authentication is required for this account",
+        # and DatabaseConnector disabled its Snowflake tests for this too (849dc8dc).
+        database: ${{ github.event_name == 'pull_request' && fromJSON('["sqlite", "duckdb"]') || fromJSON('["sqlite", "duckdb", "oracle", "postgresql", "sql server", "redshift", "spark", "iris", "bigquery"]') }}
 
     env:
       GITHUB_PAT: ${{ secrets.GH_TOKEN }}
