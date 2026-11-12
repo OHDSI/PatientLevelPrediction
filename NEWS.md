@@ -6,9 +6,17 @@ fixes change results; "Changes to results" says where, so that affected models
 can be refitted or re-evaluated.
 
 ## Breaking changes
+- `createPlpResultTables()` now defaults to `deleteTables = FALSE`, and
+  `deleteTables = TRUE` removes the existing results from a complete schema.
+  `insertResultsToSqlite()` (new `deleteTables` argument, default `TRUE`) and
+  `viewPlp()` replace the database contents instead of keeping the analyses of
+  earlier runs.
 - `createDefaultSplitSetting()` defaults `trainFraction` to `1 - testFraction`
   and stops when the fractions sum to more than 1. Calls that set `testFraction`
   other than 0.25 without `trainFraction` get different splits.
+- scikit-learn AdaBoost models are fitted with SAMME and keep the saved
+  algorithm when loaded. SAMME.R models stop with an error on recent
+  scikit-learn instead of giving different risks.
 
 ## Changes to results
 ### Evaluation
@@ -64,6 +72,8 @@ can be refitted or re-evaluated.
   Every model trained with `type = "overSample"` changes and should be
   refitted; oversampling a fold without outcomes stops instead of hanging.
 - Under- and oversampling keep the sole control or case of a fold.
+- `plpData` saved with a custom population trains and evaluates on that
+  population after loading.
 
 ### Models and tuning
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
@@ -78,6 +88,7 @@ can be refitted or re-evaluated.
   selected candidate; per-fold scores are reported against their real folds.
 - LightGBM covariate importance is mapped to the right covariates; predictions
   do not change.
+- Newly saved GLM and Cyclops models keep full numeric precision.
 
 ### Feature engineering and imputation
 - Replaying saved feature engineering no longer changes the caller's data, and
@@ -125,13 +136,29 @@ can be refitted or re-evaluated.
 - Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
   scikit-learn) return exactly the given population.
 
+### Results database
+- Analyses that differ only in a custom generator, a custom tuning metric or
+  disabled preprocessing keep separate model designs.
+- Re-uploading a model updates its stored row, and a re-upload without a
+  summary removes the earlier one.
+- Full cohort definitions are stored on PostgreSQL, SQL Server and other
+  platforms.
+
 ## Bug fixes
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.
+- Fixed loading tree models saved with older scikit-learn versions, which
+  returned class counts instead of probabilities.
 - Fixed `covariateSummary()` with strata and no labels.
 - Fixed `extractDatabaseToCsv()` with missing counts, which are now left
   uncensored.
+- Fixed `viewPlp()` with a single external validation result.
+- Uploads that drop a survival calibration summary now warn (#691).
+- Models trained with `createPreprocessSettings(normalize = FALSE)` predict
+  after `savePlpModel()` and `loadPlpModel()`, also when saved by earlier
+  versions; `predictPlp()` stopped with "Data frame with at least one column
+  required".
 
 PatientLevelPrediction 6.7.0
 ============================
