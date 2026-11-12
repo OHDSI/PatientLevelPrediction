@@ -27,6 +27,7 @@ can be refitted or re-evaluated.
   and strata also outcome-group means and `StandardizedMeanDiff`.
 - Unknown gender concepts are reported as Unknown instead of Female in
   demographic summaries, stored results and plots.
+- The "Person count" per outcome in `summary.plpData()` counts distinct people.
 
 ### Survival models
 - Survival models are predicted and evaluated at the end of the risk window.
@@ -47,6 +48,8 @@ can be refitted or re-evaluated.
   groups, some with NA observed risk.
 
 ### Population, splitting and sampling
+- With `restrictTarToCohortEnd = TRUE` and only same-day episodes, time at risk
+  ends at cohort end.
 - With `binary = FALSE` and recurrent outcomes, patients with more than one
   outcome stay in stratified and time splits, and xgboost, LightGBM and
   scikit-learn models train on outcome presence.
@@ -87,6 +90,17 @@ can be refitted or re-evaluated.
 - Temporal models with `removeRedundancy = TRUE` replay the deleted
   covariate-time pairs at prediction, with a FeatureExtraction version that
   records them.
+
+### Cohort covariates and simulation
+- Count covariates with an age interaction hold count times age (or log age).
+- Count and age-interaction cohort covariates are marked as non-binary, so
+  normalizers scale them; their analysisId is the configured value plus 1000.
+- `getCohortCovariateData()` applies `cohortIds` to the target cohort.
+- The `analysisRef` of cohort covariates has one row per analysisId, so
+  FeatureExtraction aggregates them correctly.
+- `simulatePlpData()` derives cohort gender and the gender covariates from one
+  draw, so seeded output from profiles with gender covariates changes, and keeps
+  the configured outcome IDs in metadata and attrition.
 
 ### Validation, recalibration, diagnostics and importance
 - Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
