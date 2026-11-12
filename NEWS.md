@@ -69,7 +69,33 @@ can be refitted or re-evaluated.
 - LightGBM covariate importance is mapped to the right covariates; predictions
   do not change.
 
+### Feature engineering and imputation
+- Replaying saved feature engineering no longer changes the caller's data, and
+  every saved selector or spline step is applied at prediction.
+- Spline components of covariates that share an ID prefix get separate columns.
+- Normalizers include the implicit zeros of `missingMeansZero = "Y"` covariates
+  when fitting and applying.
+- The rare feature remover measures prevalence over the whole training
+  population.
+- Missingness is measured over the labeled population, so imputers can remove
+  more features when some patients have no covariates.
+- Missingness indicators get IDs that cannot collide with covariate IDs.
+- `createSimpleImputer()` imputes prediction patients who have no numeric
+  covariates.
+- `createIterativeImputer()` imputes trained features missing from a prediction
+  batch, and selects the rows to impute by rowId.
+- Temporal models with `removeRedundancy = TRUE` replay the deleted
+  covariate-time pairs at prediction, with a FeatureExtraction version that
+  records them.
+
+### Validation, recalibration, diagnostics and importance
+- Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
+  scikit-learn) return exactly the given population.
+
 ## Bug fixes
+- Fixed normalizer models in external validation, after reloading, and in
+  `runPlp()` with a covariate summary, and saved rare feature removers on plain
+  `plpData`, which all failed.
 - Fixed `covariateSummary()` with strata and no labels.
 - Fixed `extractDatabaseToCsv()` with missing counts, which are now left
   uncensored.
