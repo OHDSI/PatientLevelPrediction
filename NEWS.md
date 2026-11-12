@@ -5,6 +5,11 @@ This release fixes the findings of a review of the whole package. Many of the
 fixes change results; "Changes to results" says where, so that affected models
 can be refitted or re-evaluated.
 
+## Breaking changes
+- `createDefaultSplitSetting()` defaults `trainFraction` to `1 - testFraction`
+  and stops when the fractions sum to more than 1. Calls that set `testFraction`
+  other than 0.25 without `trainFraction` get different splits.
+
 ## Changes to results
 ### Evaluation
 - The scaled Brier score is scaled by the observed prevalence. It changes
@@ -41,11 +46,28 @@ can be refitted or re-evaluated.
 - Survival demographic summaries keep event-free, all-event and single-person
   groups, some with NA observed risk.
 
+### Population, splitting and sampling
+- With `binary = FALSE` and recurrent outcomes, patients with more than one
+  outcome stay in stratified and time splits, and xgboost, LightGBM and
+  scikit-learn models train on outcome presence.
+- Oversampled cases get unique rowIds with matching folds and covariates.
+  Every model trained with `type = "overSample"` changes and should be
+  refitted; oversampling a fold without outcomes stops instead of hanging.
+- Under- and oversampling keep the sole control or case of a fold.
+
 ### Models and tuning
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
   are dropped, with their count logged (#684).
+- Random hyperparameter searches use `randomSeed` when it is set, and restore
+  the global random stream.
+- Legacy and JSON-restored settings that request random or custom search get
+  it.
+- On ties in the tuning metric, the cross-validation predictions come from the
+  selected candidate; per-fold scores are reported against their real folds.
+- LightGBM covariate importance is mapped to the right covariates; predictions
+  do not change.
 
 ## Bug fixes
 - Fixed `covariateSummary()` with strata and no labels.
