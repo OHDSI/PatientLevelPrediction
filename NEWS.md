@@ -18,6 +18,12 @@ can be refitted or re-evaluated.
   algorithm when loaded. SAMME.R models stop with an error on recent
   scikit-learn instead of giving different risks.
 
+## New features
+- Custom feature engineering steps change the data they are given and record
+  themselves with the new exported `recordFeatureEngineeringStep()`; the custom
+  feature engineering vignette describes the contract. Steps recorded the old
+  way still work.
+
 ## Changes to results
 ### Evaluation
 - The scaled Brier score is scaled by the observed prevalence. It changes
@@ -93,6 +99,8 @@ can be refitted or re-evaluated.
 ### Feature engineering and imputation
 - Replaying saved feature engineering no longer changes the caller's data, and
   every saved selector or spline step is applied at prediction.
+- Models with feature engineering predict after saving and loading exactly as
+  before saving.
 - Spline components of covariates that share an ID prefix get separate columns.
 - Normalizers include the implicit zeros of `missingMeansZero = "Y"` covariates
   when fitting and applying.
@@ -105,6 +113,8 @@ can be refitted or re-evaluated.
   covariates.
 - `createIterativeImputer()` imputes trained features missing from a prediction
   batch, and selects the rows to impute by rowId.
+- The scikit-learn iterative imputer saves its fitted steps and applies them in
+  R at prediction, without Python.
 - Temporal models with `removeRedundancy = TRUE` replay the deleted
   covariate-time pairs at prediction, with a FeatureExtraction version that
   records them.
@@ -148,6 +158,10 @@ can be refitted or re-evaluated.
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.
+- Fixed imputers that apply saved settings to full `plpData` objects, and
+  iterative imputers saved in the old format whose PMM model has no
+  predictors.
+- Fixed `createStratifiedImputationSettings()`, which did not work before.
 - Fixed loading tree models saved with older scikit-learn versions, which
   returned class counts instead of probabilities.
 - Fixed `covariateSummary()` with strata and no labels.
