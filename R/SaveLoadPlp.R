@@ -222,8 +222,10 @@ savePlpModel <- function(plpModel, dirPath) {
   )
 
   if (!is.null(plpModel$preprocessing)) {
-    # cheap fix to get past bug in ParallelLogger::saveSettingsToJson with tibbles
-    if (!is.null(plpModel$preprocessing$tidyCovariates)) {
+    # cheap fix to get past bug in ParallelLogger::saveSettingsToJson with tibbles;
+    # without normalization there are no factors, and as.data.frame(NULL) would
+    # save a data frame without columns
+    if (!is.null(plpModel$preprocessing$tidyCovariates$normFactors)) {
       plpModel$preprocessing$tidyCovariates$normFactors <-
         as.data.frame(plpModel$preprocessing$tidyCovariates$normFactors)
     }

@@ -372,3 +372,34 @@ test_that("applyFeatureEngineering keeps class, metaData and plpData shape", {
   expect_equal(attr(result$covariateData, "metaData")$populationSize, 2)
   expect_equal(unique(covariateRows(result)$covariateId), 101)
 })
+
+test_that("a model trained without normalization predicts after saving and loading", {
+  # tidyCovariateData(normalize = FALSE) leaves no normalization factors
+  model <- createGlmModel(
+    data.frame(covariateId = c(101, 202), coefficient = c(0.5, -0.25)),
+    intercept = -1,
+    tidyCovariates = list(
+      deletedInfrequentCovariateIds = c(),
+      deletedRedundantCovariateIds = c(),
+      normFactors = NULL
+    )
+  )
+  path <- tempfile("withoutNormalization")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpModel(model, path)
+  loaded <- loadPlpModel(path)
+  expect_null(loaded$preprocessing$tidyCovariates$normFactors)
+
+  shared <- createSharedPlpData()
+  on.exit(Andromeda::close(shared$covariateData), add = TRUE)
+  fitted <- predictPlp(model, shared, shared$cohorts)
+  reloaded <- predictPlp(loaded, shared, shared$cohorts)
+  expect_equal(reloaded$value[order(reloaded$rowId)], stats::plogis(c(-0.75, -1)))
+  expect_equal(reloaded$value[order(reloaded$rowId)], fitted$value[order(fitted$rowId)])
+
+  # models saved by earlier versions have a data frame without columns instead
+  oldStyle <- model
+  oldStyle$preprocessing$tidyCovariates$normFactors <- data.frame()
+  oldPrediction <- predictPlp(oldStyle, shared, shared$cohorts)
+  expect_equal(oldPrediction$value[order(oldPrediction$rowId)], stats::plogis(c(-0.75, -1)))
+})

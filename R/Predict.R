@@ -261,7 +261,9 @@ applyTidyCovariateData <- function(
   ParallelLogger::logInfo("Removing infrequent and redundant covariates and normalizing")
   start <- Sys.time()
 
-  if (!is.null(maxs)) {
+  # models trained without normalization and saved by earlier versions have a
+  # data frame without columns instead of no factors
+  if (!is.null(maxs) && ncol(maxs) > 0) {
     if ("bins" %in% colnames(maxs)) {
       covariateData$maxes <- dplyr::as_tibble(maxs) %>%
         dplyr::rename(covariateId = "bins") %>%
