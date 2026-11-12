@@ -48,6 +48,11 @@ can be refitted or re-evaluated.
   groups, some with NA observed risk.
 - Survival `weakRecalibration` uses the prediction horizon and no longer
   truncates follow-up at cohort end.
+- `outcomeSurvivalPlot()` measures time from the start of the risk window.
+- Plots: survival net benefit curves account for censoring,
+  `plotSparseCalibration2()` uses the stored Kaplan-Meier bounds, and
+  `plotSparseCalibration()` draws the pointwise interval of the fitted line.
+  `plotSmoothCalibration()` stops for survival models (#270).
 
 ### Population, splitting and sampling
 - With `restrictTarToCohortEnd = TRUE` and only same-day episodes, time at risk
@@ -112,6 +117,11 @@ can be refitted or re-evaluated.
   `recalibratePlpRefit()` restricts covariates to the new population and
   returns one prediction per patient. A failed recalibration no longer discards
   the validation results.
+- Leakage diagnostics read temporal, detailed and cohort covariate windows;
+  windows that cannot be determined give Unknown. Risk sets are counted on the
+  index time axis.
+- `pfi()` permutes features only within the evaluated population and keeps
+  unrelated predictors when permuting categorical features.
 - Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
   scikit-learn) return exactly the given population.
 
