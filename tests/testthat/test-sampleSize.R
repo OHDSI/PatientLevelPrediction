@@ -329,7 +329,12 @@ executeCleanupSql <- function(connection, sql, ...) {
 for (serverDbms in names(databaseServers)) {
   test_that(paste("sampleSize runs on", serverDbms), {
     dbms <- serverDbms
-    skip_if_not(serverIsAvailable(dbms), paste(dbms, "is not configured"))
+    skip_if(Sys.getenv("PLP_TEST_DATABASE") != dbms, paste(dbms, "is not selected"))
+    # The job that selects a database must test it: missing settings fail instead
+    # of skipping every test and passing
+    if (!serverIsAvailable(dbms)) {
+      stop(dbms, " is selected in PLP_TEST_DATABASE but not configured")
+    }
     isLocal <- isTRUE(databaseServers[[dbms]]$local)
     cdmSchema <- if (isLocal) "main" else serverCdmSchema(dbms)
     ohdsiSchema <- if (isLocal) "main" else serverSetting(dbms, "OHDSI_SCHEMA")
