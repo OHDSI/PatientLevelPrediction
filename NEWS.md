@@ -1,10 +1,56 @@
 PatientLevelPrediction development
 =================================
 
+This release fixes the findings of a review of the whole package. Many of the
+fixes change results; "Changes to results" says where, so that affected models
+can be refitted or re-evaluated.
+
+## Changes to results
+### Evaluation
+- The scaled Brier score is scaled by the observed prevalence. It changes
+  wherever mean predicted risk differs from prevalence and can be negative for
+  miscalibrated models; single-class groups give NA.
+- Calibration E-statistics (Eavg, E90, Emax) include predictions of exactly 0
+  or 1, and give NA instead of 0 when they cannot be estimated.
+- Average precision treats tied scores as one threshold, which changes it for
+  models with tied predictions such as tree models.
+- F1 is 0 instead of NaN or NA at thresholds that capture no cases.
+- `calibrationLine()` bases the Hosmer-Lemeshow degrees of freedom on occupied
+  groups.
+- Pooled covariate summaries count the subgroups in which a sparse covariate is
+  absent, so pooled `CovariateMean` and `CovariateStDev` change, and with labels
+  and strata also outcome-group means and `StandardizedMeanDiff`.
+- Unknown gender concepts are reported as Unknown instead of Female in
+  demographic summaries, stored results and plots.
+
+### Survival models
+- Survival models are predicted and evaluated at the end of the risk window.
+  The default window (days 1 to 365) keeps its 365-day horizon; windows that
+  start at day 0 use day 366, and delayed windows get their statistics and
+  calibration at the window end. Models whose window ends are anchored
+  differently stop instead of giving risks at the wrong time.
+- Survival calibration is evaluated at the prediction timepoint; bins without
+  enough follow-up give NA.
+- Survival statistics that cannot be estimated give NA instead of 0 or -1.
+- Survival net benefit and threshold summaries are computed on predicted
+  probabilities. Models whose predictions are not probabilities, such as a Cox
+  model without baseline survival, get no threshold summary and a logged error.
+- Cox absolute risks from `setCoxModel()` include the Cyclops baseline offset,
+  which changes calibration and the Brier score but not the AUC. Models saved by
+  earlier versions keep the old risks until refitted.
+- Survival demographic summaries keep event-free, all-event and single-person
+  groups, some with NA observed risk.
+
+### Models and tuning
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
   are dropped, with their count logged (#684).
+
+## Bug fixes
+- Fixed `covariateSummary()` with strata and no labels.
+- Fixed `extractDatabaseToCsv()` with missing counts, which are now left
+  uncensored.
 
 PatientLevelPrediction 6.7.0
 ============================
