@@ -46,6 +46,8 @@ can be refitted or re-evaluated.
   earlier versions keep the old risks until refitted.
 - Survival demographic summaries keep event-free, all-event and single-person
   groups, some with NA observed risk.
+- Survival `weakRecalibration` uses the prediction horizon and no longer
+  truncates follow-up at cohort end.
 
 ### Population, splitting and sampling
 - With `restrictTarToCohortEnd = TRUE` and only same-day episodes, time at risk
@@ -103,6 +105,13 @@ can be refitted or re-evaluated.
   the configured outcome IDs in metadata and attrition.
 
 ### Validation, recalibration, diagnostics and importance
+- External validation extracts data separately for models that define
+  covariates differently.
+- `recalibrationInTheLarge` matches mean predicted and observed risk, each
+  recalibration method is fitted on the original predictions, and
+  `recalibratePlpRefit()` restricts covariates to the new population and
+  returns one prediction per patient. A failed recalibration no longer discards
+  the validation results.
 - Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
   scikit-learn) return exactly the given population.
 
