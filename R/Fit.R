@@ -87,7 +87,7 @@ fitPlp <- function(
   } else {
     fun <- "fitClassifier"
   }
-  fun <- eval(parse(text = fun))
+  fun <- resolveHook(fun, "fitFunction")
   args <- list(
     trainData = trainData,
     modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
@@ -223,10 +223,24 @@ fitClassifier <- function(
   #TODO: make this generic
   #checkPySettings(settings)
 
-  # prepare data for training (if needed) 
-  if (!is.null(settings$prepareData)) {
+  # find every hook before fitting, so that a misspelled or missing one fails
+  # now rather than after the search
+  prepareData <- if (!is.null(settings$prepareData)) {
+    resolveHook(settings$prepareData, "prepareData")
+  }
+  resolveHook(settings$train, "train")
+  resolveHook(settings$predict, "predict")
+  variableImportanceFun <- if (!is.null(settings$variableImportance)) {
+    resolveHook(settings$variableImportance, "variableImportance")
+  }
+  if (!is.null(settings$saveType)) {
+    saveHandler(settings$saveType)
+  }
+
+  # prepare data for training (if needed)
+  if (!is.null(prepareData)) {
     preparedData <- do.call(
-      settings$prepareData,
+      prepareData,
       args = list(
         trainData,
         map = NULL
@@ -274,19 +288,23 @@ fitClassifier <- function(
 
   # add code for var imp here - model and settings
 
-  variableImportance <- tryCatch(
-    {
+  # the model is still usable without importances, so an error here is reported
+  # and the covariates get importance 0
+  variableImportance <- if (!is.null(variableImportanceFun)) {
+    tryCatch(
       do.call(
-        settings$variableImportance,
+        variableImportanceFun,
         list(model = tuneResult$model, covariateMap = covariateRef)
-      )
-    },
-    error = function(e) {
-      ParallelLogger::logInfo("Error calculating variableImportance")
-      ParallelLogger::logInfo(e)
-      return(NULL)
-    }
-  )
+      ),
+      error = function(e) {
+        ParallelLogger::logWarn(paste0(
+          "Could not compute the variable importance of ", settings$modelName, ": ",
+          conditionMessage(e)
+        ))
+        NULL
+      }
+    )
+  }
 
   if (!is.null(variableImportance)) {
     covariateRef <- merge(
@@ -371,6 +389,8 @@ tuneHyperparameters <- function(
   if (is.null(hyperparamSettings) || is.null(hyperparamSettings$tuningMetric)) {
     hyperparamSettings <- createHyperparameterSettings()
   }
+  trainFun <- resolveHook(settings$train, "train")
+  predictFun <- resolveHook(settings$predict, "predict")
   iterator <- prepareHyperparameterGrid(
     paramDefinition = param,
     hyperSettings = hyperparamSettings
@@ -391,7 +411,7 @@ tuneHyperparameters <- function(
     for (i in foldIds) {
       ind <- labels$index != i
       model <- do.call(
-        settings$train,
+        trainFun,
         list(
           dataMatrix = data[ind, , drop = FALSE],
           labels = labels[ind, ],
@@ -400,7 +420,7 @@ tuneHyperparameters <- function(
         )
       )
       prediction <- do.call(
-        settings$predict,
+        predictFun,
         list(
           plpModel = model,
           data = data[!ind, , drop = FALSE],
@@ -454,7 +474,7 @@ tuneHyperparameters <- function(
   # fit final model
   ParallelLogger::logInfo("Fit best model on whole training set")
   finalModel <- do.call(
-    settings$train,
+    trainFun,
     list(
       dataMatrix = data,
       labels = labels,
@@ -464,7 +484,7 @@ tuneHyperparameters <- function(
   )
 
   prediction <- do.call(
-    settings$predict,
+    predictFun,
     list(
       plpModel = finalModel,
       data = data,

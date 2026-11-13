@@ -257,11 +257,14 @@ savePlpModel <- function(plpModel, dirPath) {
 
 
 saveModelPart <- function(model, savetype, dirPath) {
-  # save the model based on saveType
-  if (functionExists(savetype)) {
-    do.call(savetype, args = list())$save(model, file.path(dirPath, "model.json"))
-  } else if (savetype == "file") {
-    # move the model into model
+  if (is.null(savetype)) {
+    stop("The model settings have no saveType, so the model cannot be saved", call. = FALSE)
+  }
+  handler <- saveHandler(savetype)
+  if (!is.null(handler)) {
+    handler$save(model, file.path(dirPath, handler$fileName))
+  } else {
+    # the model is a folder of files: copy them into model
     if (!dir.exists(file.path(dirPath, "model"))) {
       dir.create(file.path(dirPath, "model"), recursive = TRUE)
     }
@@ -275,8 +278,6 @@ saveModelPart <- function(model, savetype, dirPath) {
         copy.date = FALSE
       )
     }
-  } else {
-    ParallelLogger::logWarn("Not sure how to save model - invalid saveType")
   }
 }
 
@@ -383,10 +384,9 @@ loadPlpModel <- function(dirPath) {
   }
 
 
-  if (functionExists(plpModel$modelDesign$modelSettings$settings$saveType)) { 
-    plpModel$model <- do.call(
-      plpModel$modelDesign$modelSettings$settings$saveType,
-      args = list())$load(file.path(dirPath, "model.json"))
+  handler <- saveHandler(plpModel$modelDesign$modelSettings$settings$saveType)
+  if (!is.null(handler)) {
+    plpModel$model <- handler$load(file.path(dirPath, handler$fileName))
   } else {
     plpModel$model <- file.path(dirPath, "model")
   }

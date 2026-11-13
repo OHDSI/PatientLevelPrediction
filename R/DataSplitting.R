@@ -250,7 +250,7 @@ splitData <- function(plpData = plpData,
     population = population,
     splitSettings = splitSettings
   )
-  splitId <- do.call(eval(parse(text = fun)), args)
+  splitId <- do.call(resolveHook(fun, "splitting"), args)
 
   # now separate the data:
   if (sum(splitId$index < 0) == 0) {
@@ -661,7 +661,7 @@ outcomeLimitedSplitter <- function(population, splitSettings) {
       type = type
     )
     fallbackFun <- attr(fallbackSettings, "fun")
-    return(do.call(eval(parse(text = fallbackFun)), list(
+    return(do.call(resolveHook(fallbackFun, "splitting"), list(
       population = population,
       splitSettings = fallbackSettings
     )))

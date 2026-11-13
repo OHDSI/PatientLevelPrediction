@@ -93,7 +93,7 @@ sampleData <- function(trainData, sampleSettings) {
       sampleSettings = sampleSetting
     )
     ParallelLogger::logInfo(paste0("Applying ", fun))
-    trainData <- do.call(eval(parse(text = fun)), args)
+    trainData <- do.call(resolveHook(fun, "sampling"), args)
   }
 
   ParallelLogger::logInfo("Finished data sampling")

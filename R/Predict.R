@@ -243,7 +243,7 @@ applyFeatureEngineering <- function(
   for (step in steps) {
     args <- step$settings
     args$trainData <- plpData
-    plpData <- do.call(eval(parse(text = step$funct)), args)
+    plpData <- do.call(resolveHook(step$funct, "feature engineering"), args)
   }
   return(plpData)
 }
@@ -332,10 +332,9 @@ applyTidyCovariateData <- function(
   return(newCovariateData)
 }
 
-# The function that predicts with plpModel: the one named in its model
+# The function that predicts with plpModel: the predict hook of its model
 # settings, or the predictionFunction attribute that Cyclops models and models
-# saved by earlier versions carry. A name may include the package
-# ("PatientLevelPrediction::predictGlm").
+# saved by earlier versions carry, resolved as resolveHook() does.
 getPredictionFunction <- function(plpModel) {
   predictFun <- plpModel$modelDesign$modelSettings$settings$predict
   if (is.null(predictFun)) {
@@ -344,8 +343,5 @@ getPredictionFunction <- function(plpModel) {
   if (is.null(predictFun)) {
     stop("No prediction function available for this model.")
   }
-  if (is.character(predictFun)) {
-    predictFun <- eval(parse(text = predictFun))
-  }
-  predictFun
+  resolveHook(predictFun, "predict")
 }
