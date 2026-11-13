@@ -24,149 +24,49 @@ This vignette describes how you can add your own custom algorithms in the Observ
 
 # Algorithm Code Structure
 
-Each algorithm in the package should be implemented in its own \<Name\>.R file containing a set\<Name\> function, a fit\<Name\> function and a predict\<Name\> function. Occasionally the fit and prediction functions may be reused (if using an R classifier see RClassifier.R or if using a scikit-learn classifier see SklearnClassifier.R). We will now describe each of these functions in more detail below.
+A model is described by a set\<Name\> function that returns its `modelSettings`. PatientLevelPrediction does the rest: `fitClassifier()` prepares the data, runs the hyperparameter search with cross-validation, fits the final model and builds the `plpModel`, and `predictPlp()`, `savePlpModel()` and `loadPlpModel()` use the same settings later. The model itself supplies a few functions, the hooks, which are named in its settings. The xgboost model in `GradientBoostingMachine.R` is a complete example.
 
 ## Set
 
-The set\<Name\> is a function that takes as input the different hyper-parameter values to do a grid search when training. The output of the functions needs to be a list as class `modelSettings` containing:
+The set\<Name\> function takes the hyperparameter values to search and returns a list of class `modelSettings` with:
 
--   param - a list of hyper-parameter values that can be used by `createHyperparameterSettings`
--   settings - the settings such as modelName, trainRFunction, predictRFunction, varImpRFunction and seed
--   fitFunction - a string specifying what function to call to fit the model, generally the existing fitBinaryClassifier can be used for most models
+-   param - a named list of hyperparameter values; `createHyperparameterSettings()` decides how candidates are drawn from them (a grid by default)
+-   settings - the model's settings and its hooks:
+    -   modelName, modelType (`"binary"`) and seed
+    -   prepareData - turns the training data into what train expects, usually `"toSparseM"` (a sparse matrix with one row per patient). If it has a `settings` argument, it also gets these settings.
+    -   train - fits the model for one set of hyperparameters
+    -   predict - predicts risks with a fitted model
+    -   variableImportance - gives the importance of each covariate
+    -   saveType - how the fitted model is saved: the name of a save handler (see below), `"RtoJson"` for a model that is an R list, or `"file"` for a model that is a folder of files
 
+Each hook can be a function, the name of a function, or `"pkg::function"`. A name is looked up in PatientLevelPrediction and then on the search path, so plain names are meant for the package's own functions; `"pkg::function"` is an exported function of an installed package, which is loaded but does not need to be attached. Use the `"pkg::function"` form for hooks in your own package, so that saved models still work in a new R session. All hooks are looked up before fitting starts, so a misspelled one fails at once.
 
-The param object can have a setttings attribute containing any extra settings. For example to specify the model name and the seed used for reproducibility:
-
-```{r, echo = TRUE, eval=FALSE}
-settings <- list(
-  seed = 12,
-  modelName = "Special classifier",
-  trainRFunction = 'madeupFit', # this will be called to train the made up model
-  predictRFunction = 'madeupPrediction', # this will be called to make predictions
-  varImpRFunction = 'madeupVarImp' # this will be called to get variable importance
-)
-```
-
-For example, if you were adding a model called madeUp that has two hyper-parameters then the set function should be:
+For example, a model called madeUp with two hyperparameters:
 
 ```{r tidy=FALSE,eval=FALSE}
 setMadeUp <- function(a = c(1, 4, 10), b = 2, seed = NULL) {
   # add input checks here...
-
-  param <- list(
-    a = a,
-    b = b
-    )
-
-  settings <- list(
-    modelName = "Made Up",
-    requiresDenseMatrix = TRUE,
-    seed = seed,
-    trainRFunction = 'madeupFit', # this will be called to train the made up model
-    predictRFunction = 'madeupPrediction', # this will be called to make predictions
-    varImpRFunction = 'madeupVarImp', # this will be called to get variable importance
-    saveToJson = TRUE,
-    saveType = "file"
-  )
-
-  # now create list of all combinations:
-  result <- list(
-    fitFunction = "fitBinaryClassifier", # this will be called to train the made up model
-    param = param,
-    settings = settings
-  )
-  class(result) <- "modelSettings"
-
-  return(result)
-}
-```
-
-## Fit
-
-This function specified by `trainRFunction` should train your custom model for a given hyper parameter setting.  The takes as input:
-
-- dataMatrix - a sparse matrix with rows as patient and columns as features
-- labels - a list where labels$outcomeCount is the class label per patient
-- hyperParameters - a named list of the hyperparameters
-- settings - the settings object defined in the set function that has details such as seed.
-
-The output should be the trained model.
-
-```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(
-    dataMatrix,
-    labels,
-    hyperParameters,
-    settings
-    ) {
-  # set the seed for reproducibility
-  set.seed(settings$seed)
-
-  # add code here to call a function to train the classifier using the data
-  # for the specified hyperparameters that are a named list in hyperParameters
-  model <- madeUpModel(
-    X = dataMatrix, 
-    Y = labels$outcomeCount,
-    hyperparameter1 = hyperParameters$hyperparameter1,
-    hyperparameter2 = hyperParameters$hyperparameter2
-    )
-  
-  return(model)
-}
-```
-
-## Predict
-
-The prediction function specified by `predictRFunction` takes as input:
-
-- plpModel: the model that was fit using trainRFunction
-- data: either a new plpData object or the output of toSparseM()
-- cohort: a target cohort or population data.frame
-
-The predict function needs to apply the model and then add a column called 'value' to the cohort data.frame with the predicted risks per patient.
-
-## VarImp
-
-The varImp function `varImpRFunction` must take as input the model and the covariateMap that is a data.frame with columns including covariateId, columnId.
-
-The output is covariateMap data.frame with two additional columns:
-
-- included: (0 or 1) specifying whether the variable was used in the model
-- covariateValue: the variable importance for the variable
-
-# Algorithm Example
-
-Below a fully functional algorithm example is given, however we highly recommend you to have a look at the available algorithms in the package (see GradientBoostingMachine.R for the set function, RClassifier.R for the fit and prediction function for R classifiers).
-
-## Set
-
-```{r tidy=FALSE,eval=FALSE}
-setMadeUp <- function(a = c(1, 4, 6), b = 2, seed = NULL) {
-  # add input checks here...
-
   if (is.null(seed)) {
     seed <- sample(100000, 1)
   }
 
   param <- list(
-      a = a,
-      b = b
-    )
+    a = a,
+    b = b
+  )
 
   settings <- list(
     modelName = "Made Up",
-    requiresDenseMatrix = TRUE,
+    modelType = "binary",
     seed = seed,
-    trainRFunction = 'fitMadeUp',
-    predictRFunction = 'predictMadeUp',
-    varImpRFunction = 'varImpMadeUp',
-    saveToJson = TRUE,
-    saveType = "file"
+    prepareData = "toSparseM",
+    train = "myPackage::fitMadeUp",
+    predict = "myPackage::predictMadeUp",
+    variableImportance = "myPackage::varImpMadeUp",
+    saveType = "myPackage::saveLoadMadeUp"
   )
 
-  # now create list of all combinations:
   result <- list(
-    fitFunction = "fitBinaryClassifier", # this is an existing wrapper fit function
     param = param,
     settings = settings
   )
@@ -176,103 +76,122 @@ setMadeUp <- function(a = c(1, 4, 6), b = 2, seed = NULL) {
 }
 ```
 
-## Fit
+## Train
 
-The fit function needs to take a dataMatrix with the features per patient, a label vector with the class labels for each patient, the hyperparameters and the model settings.
+The train hook fits the model for one candidate. It gets:
+
+- dataMatrix - the prepared data, a sparse matrix with rows as patients and columns as features when prepareData is `"toSparseM"`
+- labels - a data.frame where labels$outcomeCount is the class label (0 or 1) per patient
+- hyperParameters - a named list with one value per hyperparameter
+- settings - the settings from the set function, such as the seed
+
+and returns the fitted model.
 
 ```{r tidy=FALSE,eval=FALSE}
-fitMadeUp <- function(
-    dataMatrix,
-    labels,
-    hyperParameters,
-    settings
-    ) {
+fitMadeUp <- function(dataMatrix, labels, hyperParameters, settings) {
   # set the seed for reproducibility
   set.seed(settings$seed)
 
-  # add code here to call a function to train the classifier using the data
-  # for the specified hyperparameters that are a named list in hyperParameters
   model <- madeUpModel(
-    X = dataMatrix, 
+    X = dataMatrix,
     Y = labels$outcomeCount,
-    hyperparameter1 = hyperParameters$hyperparameter1,
-    hyperparameter2 = hyperParameters$hyperparameter2
-    )
-  
+    a = hyperParameters$a,
+    b = hyperParameters$b
+  )
+
+  return(model)
+}
+```
+
+An error in train or predict stops the search, so that problems in the model's code show up at once. When the model knows that a candidate simply cannot be fitted, for example because it runs out of memory, it can call `stopCandidate()` instead. The search then warns, records the candidate with a missing performance and the message, and goes on with the next one; it stops only if every candidate is skipped.
+
+```{r tidy=FALSE,eval=FALSE}
+fitMadeUp <- function(dataMatrix, labels, hyperParameters, settings) {
+  model <- tryCatch(
+    madeUpModel(X = dataMatrix, Y = labels$outcomeCount, a = hyperParameters$a),
+    madeUpOutOfMemory = function(e) stopCandidate("out of memory")
+  )
   return(model)
 }
 ```
 
 ## Predict
 
-The final step is to create a predict function for the model. In the example above the prediction function in the settings was `predictRFunction = 'predictMadeUp'`, so a `predictMadeUp` function is required when applying the model. The predict function needs to take as input the plpModel returned by the fit function, new data to apply the model on and the cohort specifying the patients of interest to make the prediction for.
+The predict hook gets:
+
+- plpModel - during the search the model returned by train, and after fitting the `plpModel`
+- data - during the search a part of the prepared data, and when predicting on new data a `plpData` object
+- cohort - the patients to predict for
+
+It returns the cohort with a column `value` holding the predicted risks. The rows must keep the original `rowId`s: `toSparseM()` numbers the matrix rows and keeps the original in `originalRowId`.
 
 ```{r tidy=FALSE,eval=FALSE}
 predictMadeUp <- function(plpModel, data, cohort) {
-  if (class(data) == "plpData") {
-    # convert
+  if (inherits(data, "plpData")) {
     matrixObjects <- toSparseM(
       plpData = data,
       cohort = cohort,
       map = plpModel$covariateImportance %>%
         dplyr::select("columnId", "covariateId")
     )
-
     newData <- matrixObjects$dataMatrix
     cohort <- matrixObjects$labels
   } else {
     newData <- data
   }
 
-  if (class(plpModel) == "plpModel") {
+  if (inherits(plpModel, "plpModel")) {
     model <- plpModel$model
   } else {
     model <- plpModel
   }
 
-  cohort$value <- stats::predict(model, newData)
+  prediction <- cohort
+  prediction$value <- stats::predict(model, newData)
 
-  # fix the rowIds to be the old ones
-  # now use the originalRowId and remove the matrix rowId
-  cohort <- cohort %>%
+  # give back the original rowIds
+  prediction <- prediction %>%
     dplyr::select(-"rowId") %>%
     dplyr::rename(rowId = "originalRowId")
 
-  attr(cohort, "metaData") <- list(modelType = attr(plpModel, "modelType"))
-  return(cohort)
+  attr(prediction, "metaData") <- list(modelType = attr(plpModel, "modelType"))
+  return(prediction)
 }
 ```
 
-As the madeup model uses the standard R prediction, it has the same prediction function as xgboost, so we could have not added a new prediction function and instead made the `predictRFunction = 'predictXgboost'`.
-
+As the madeUp model uses the standard R prediction, it could reuse xgboost's prediction function instead: `predict = "PatientLevelPrediction::predictXgboost"`.
 
 ## Variable importance
 
-Each classifier needs a variable importance function specified.  This takes as input the model and a data.frame called covariateMap that specifies the covariateIds and their corresponding columnId in the feature matrix.
+The variableImportance hook gets the fitted model and a data.frame called covariateMap with the covariateId and columnId of each column of the feature matrix. It returns a data.frame with the columns covariateId, covariateValue (the importance) and included (1 if the model uses the covariate, otherwise 0). If it fails, the model is still fitted, without importances.
 
 ```{r tidy=FALSE,eval=FALSE}
-varImpMadeUp <- function(
-    model,
-    covariateMap
-    ) {
-  
-  variableImportance <- tryCatch(
-      {
-        varImp <- reticulate::py_to_r(model$feature_importances_)
-        varImp[is.na(varImp)] <- 0
-        
-        covariateMap$covariateValue <- unlist(varImp)
-        covariateMap$included <- 1
-      },
-      error = function(e) {
-        ParallelLogger::logInfo(e)
-        return(NULL)
-      }
-    )
-  
-  return(variableImportance)
+varImpMadeUp <- function(model, covariateMap) {
+  covariateMap$covariateValue <- madeUpImportance(model)[covariateMap$columnId]
+  covariateMap$included <- as.numeric(covariateMap$covariateValue != 0)
+  return(covariateMap[, c("covariateId", "covariateValue", "included")])
 }
 ```
+
+## Saving and loading
+
+A save handler is a function that returns a list with:
+
+- save - a function of the fitted model and a file path that writes the model
+- load - a function of a file path that reads it back
+- fileName - optionally, the name of the file (or folder) to write in the model folder, a plain name without a path; the default is `"model.json"`
+
+```{r tidy=FALSE,eval=FALSE}
+saveLoadMadeUp <- function() {
+  list(
+    fileName = "model.rds",
+    save = function(model, file) saveRDS(model, file),
+    load = function(file) readRDS(file)
+  )
+}
+```
+
+`savePlpModel()` calls save with `file.path(modelFolder, fileName)` and `loadPlpModel()` calls load with the same path.
 
 # Acknowledgments
 
