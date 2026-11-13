@@ -451,8 +451,8 @@ createModelDesign(
 #>     }
 #>     result
 #> }
-#> <bytecode: 0x607aaeb9eb30>
-#> <environment: 0x607aaeb9aeb0>
+#> <bytecode: 0x57e3d763b080>
+#> <environment: 0x57e3d76354a8>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
@@ -472,6 +472,9 @@ createModelDesign(
 #> 
 #> $generator
 #> NULL
+#> 
+#> $validation
+#> [1] "cv"
 #> 
 #> attr(,"class")
 #> [1] "hyperparameterSettings"

@@ -53,11 +53,11 @@ preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettin
 #> Removing 3 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.09 secs
+#> Tidying covariates took 1.23 secs
 # check age is normalized by max value
 preProcessedData$covariates %>% dplyr::filter(.data$covariateId == 1002)
 #> # A query:  ?? x 3
-#> # Database: DuckDB 2.0.0 [unknown@Linux 7.0.0-1019-azure:R 4.6.2//tmp/RtmpGx3hts/file2c815e82ca04.duckdb]
+#> # Database: DuckDB 2.0.0 [unknown@Linux 7.0.0-1019-azure:R 4.6.2//tmp/RtmpGKyq1Y/file1c1e43669e05.duckdb]
 #>    rowId covariateId covariateValue
 #>    <int>       <dbl>          <dbl>
 #>  1     1        1002          0.660

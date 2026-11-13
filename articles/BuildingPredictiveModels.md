@@ -815,10 +815,13 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the
-bestcross-validation performance will then be chosen for the final
-model. For our problem we choose to build a logistic regression model
-with the default hyper-parameters
+hyper-parameters. The hyper-parameters that lead to the best
+cross-validation performance will then be chosen for the final model.
+When one fit takes long,
+`createHyperparameterSettings(validation = "trainValidation")` fits each
+candidate only once, on all folds but the last, and scores it on the
+last fold. For our problem we choose to build a logistic regression
+model with the default hyper-parameters
 
 ``` r
 
@@ -1406,10 +1409,13 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the
-bestcross-validation performance will then be chosen for the final
-model. For our problem we choose to build a logistic regression model
-with the default hyper-parameters
+hyper-parameters. The hyper-parameters that lead to the best
+cross-validation performance will then be chosen for the final model.
+When one fit takes long,
+`createHyperparameterSettings(validation = "trainValidation")` fits each
+candidate only once, on all folds but the last, and scores it on the
+last fold. For our problem we choose to build a logistic regression
+model with the default hyper-parameters
 
 ``` r
 

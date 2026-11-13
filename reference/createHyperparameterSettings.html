@@ -69,7 +69,8 @@
 <span>  tuningMetric <span class="op">=</span> <span class="va">aucMetric</span>,</span>
 <span>  sampleSize <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  randomSeed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  generator <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  generator <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  validation <span class="op">=</span> <span class="st">"cv"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,6 +104,17 @@ settings)</code> and <code>getNext(history)</code> methods, and may provide an o
 <code>finalize(history)</code> method. A candidate the model skipped with
 <code><a href="stopCandidate.html">stopCandidate()</a></code> is in the history with <code>cvPerformance = NA</code> and its
 message in <code>error</code>.</p></dd>
+
+
+<dt id="arg-validation">validation<a class="anchor" aria-label="anchor" href="#arg-validation"></a></dt>
+<dd><p>How each candidate is scored: <code>"cv"</code> (the default) fits it
+once per fold and scores it on the left-out fold, <code>"trainValidation"</code> fits
+it once on all folds but the last and scores it on the last fold, for
+models where one fit takes long. The size of the validation part is set by
+the number of folds in the split settings (with <code>nfold = 5</code> it is a fifth of
+the training data). The retained predictions of the selected candidate
+have evaluationType <code>"CV"</code> or <code>"TrainValidation"</code>. Cyclops models select
+their penalty with their own cross-validation and ignore this setting.</p></dd>
 
 </dl></div>
 

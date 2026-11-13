@@ -1040,10 +1040,13 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the
-bestcross-validation performance will then be chosen for the final
-model. For our problem we choose to build a logistic regression model
-with the default hyper-parameters</p>
+hyper-parameters. The hyper-parameters that lead to the best
+cross-validation performance will then be chosen for the final model.
+When one fit takes long,
+<code>createHyperparameterSettings(validation = "trainValidation")</code>
+fits each candidate only once, on all folds but the last, and scores it
+on the last fold. For our problem we choose to build a logistic
+regression model with the default hyper-parameters</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lrModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>The <code>runPlP</code> function requires the <code>plpData</code>,
@@ -1631,10 +1634,13 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the
-bestcross-validation performance will then be chosen for the final
-model. For our problem we choose to build a logistic regression model
-with the default hyper-parameters</p>
+hyper-parameters. The hyper-parameters that lead to the best
+cross-validation performance will then be chosen for the final model.
+When one fit takes long,
+<code>createHyperparameterSettings(validation = "trainValidation")</code>
+fits each candidate only once, on all folds but the last, and scores it
+on the last fold. For our problem we choose to build a logistic
+regression model with the default hyper-parameters</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gbmModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/setGradientBoostingMachine.html">setGradientBoostingMachine</a></span><span class="op">(</span>ntrees <span class="op">=</span> <span class="fl">5000</span>, maxDepth <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">7</span>, <span class="fl">10</span><span class="op">)</span>, learnRate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.001</span>,</span>
 <span>    <span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>

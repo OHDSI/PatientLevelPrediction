@@ -10,7 +10,8 @@ createHyperparameterSettings(
   tuningMetric = aucMetric,
   sampleSize = NULL,
   randomSeed = NULL,
-  generator = NULL
+  generator = NULL,
+  validation = "cv"
 )
 ```
 
@@ -47,3 +48,15 @@ createHyperparameterSettings(
   [`stopCandidate()`](https://ohdsi.github.io/PatientLevelPrediction/reference/stopCandidate.md)
   is in the history with `cvPerformance = NA` and its message in
   `error`.
+
+- validation:
+
+  How each candidate is scored: `"cv"` (the default) fits it once per
+  fold and scores it on the left-out fold, `"trainValidation"` fits it
+  once on all folds but the last and scores it on the last fold, for
+  models where one fit takes long. The size of the validation part is
+  set by the number of folds in the split settings (with `nfold = 5` it
+  is a fifth of the training data). The retained predictions of the
+  selected candidate have evaluationType `"CV"` or `"TrainValidation"`.
+  Cyclops models select their penalty with their own cross-validation
+  and ignore this setting.
