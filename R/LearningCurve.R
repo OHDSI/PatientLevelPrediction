@@ -58,6 +58,9 @@
 #'                                         \item \code{setNaiveBayes()} A naive Bayes model
 #'                                         \item \code{setLightGBM()} A LightGBM model
 #'                                         }
+#' @param hyperparameterSettings     An object of \code{hyperparameterSettings} created using
+#'                                   \code{createHyperparameterSettings}, used to tune the model
+#'                                   at every training fraction (default: the default search and AUC)
 #' @param logSettings                An object of \code{logSettings} created using \code{createLogSettings}
 #'                                   specifying how the logging is done
 #' @param executeSettings            An object of \code{executeSettings} specifying which parts of the analysis to run
@@ -108,7 +111,8 @@ createLearningCurve <- function(
       runPreprocessData = TRUE,
       runModelDevelopment = TRUE,
       runCovariateSummary = FALSE
-    )) {
+    ),
+    hyperparameterSettings = createHyperparameterSettings()) {
   if (is.null(saveDirectory)) {
     stop("saveDirectory must be specified")
   }
@@ -156,6 +160,7 @@ createLearningCurve <- function(
         featureEngineeringSettings = featureEngineeringSettings,
         preprocessSettings = preprocessSettings,
         modelSettings = modelSettings,
+        hyperparameterSettings = hyperparameterSettings,
         logSettings = logSettings,
         executeSettings = executeSettings,
         saveDirectory = saveDirectory
@@ -192,6 +197,7 @@ createLearningCurve <- function(
       featureEngineeringSettings = featureEngineeringSettings,
       preprocessSettings = preprocessSettings,
       modelSettings = modelSettings,
+      hyperparameterSettings = hyperparameterSettings,
       logSettings = logSettings,
       executeSettings = executeSettings,
       saveDirectory = saveDirectory

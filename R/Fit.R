@@ -87,7 +87,7 @@ fitPlp <- function(
   } else {
     fun <- "fitClassifier"
   }
-  fun <- eval(parse(text = fun))
+  fun <- resolveHook(fun, "fitFunction")
   args <- list(
     trainData = trainData,
     modelSettings = modelSettings, # old: param = modelSettings$param, # make this model settings?
@@ -223,15 +223,29 @@ fitClassifier <- function(
   #TODO: make this generic
   #checkPySettings(settings)
 
-  # prepare data for training (if needed) 
-  if (!is.null(settings$prepareData)) {
-    preparedData <- do.call(
-      settings$prepareData,
-      args = list(
-        trainData,
-        map = NULL
-      )
-    )
+  # find every hook before fitting, so that a misspelled or missing one fails
+  # now rather than after the search
+  prepareData <- if (!is.null(settings$prepareData)) {
+    resolveHook(settings$prepareData, "prepareData")
+  }
+  resolveHook(settings$train, "train")
+  resolveHook(settings$predict, "predict")
+  variableImportanceFun <- if (!is.null(settings$variableImportance)) {
+    resolveHook(settings$variableImportance, "variableImportance")
+  }
+  if (!is.null(settings$saveType)) {
+    saveHandler(settings$saveType)
+  }
+
+  # prepare data for training (if needed)
+  if (!is.null(prepareData)) {
+    prepareArgs <- list(trainData, map = NULL)
+    # the model's settings, such as dataset options, for a prepareData with a
+    # settings argument; others, such as toSparseM(), are called as before
+    if ("settings" %in% names(formals(prepareData))) {
+      prepareArgs$settings <- settings
+    }
+    preparedData <- do.call(prepareData, args = prepareArgs)
     covariates <- preparedData$dataMatrix
   } else {
     preparedData <- trainData
@@ -274,19 +288,23 @@ fitClassifier <- function(
 
   # add code for var imp here - model and settings
 
-  variableImportance <- tryCatch(
-    {
+  # the model is still usable without importances, so an error here is reported
+  # and the covariates get importance 0
+  variableImportance <- if (!is.null(variableImportanceFun)) {
+    tryCatch(
       do.call(
-        settings$variableImportance,
+        variableImportanceFun,
         list(model = tuneResult$model, covariateMap = covariateRef)
-      )
-    },
-    error = function(e) {
-      ParallelLogger::logInfo("Error calculating variableImportance")
-      ParallelLogger::logInfo(e)
-      return(NULL)
-    }
-  )
+      ),
+      error = function(e) {
+        ParallelLogger::logWarn(paste0(
+          "Could not compute the variable importance of ", settings$modelName, ": ",
+          conditionMessage(e)
+        ))
+        NULL
+      }
+    )
+  }
 
   if (!is.null(variableImportance)) {
     covariateRef <- merge(
@@ -371,6 +389,8 @@ tuneHyperparameters <- function(
   if (is.null(hyperparamSettings) || is.null(hyperparamSettings$tuningMetric)) {
     hyperparamSettings <- createHyperparameterSettings()
   }
+  trainFun <- resolveHook(settings$train, "train")
+  predictFun <- resolveHook(settings$predict, "predict")
   iterator <- prepareHyperparameterGrid(
     paramDefinition = param,
     hyperSettings = hyperparamSettings
@@ -385,38 +405,65 @@ tuneHyperparameters <- function(
     if (is.null(candidate)) {
       break
     }
-    cvPrediction <- c()
-    cvPerformance <- c()
-
-    for (i in foldIds) {
-      ind <- labels$index != i
-      model <- do.call(
-        settings$train,
-        list(
-          dataMatrix = data[ind, , drop = FALSE],
-          labels = labels[ind, ],
-          hyperParameters = candidate,
-          settings = settings
-        )
+    # A candidate the model cannot run (it signals this with stopCandidate(),
+    # for example when it runs out of memory) is recorded with a missing
+    # performance and the search goes on with the next one; selectBest() skips
+    # missing performances. Any other error stops the search.
+    folds <- tryCatch(
+      {
+        cvPrediction <- c()
+        cvPerformance <- c()
+        for (i in foldIds) {
+          ind <- labels$index != i
+          model <- do.call(
+            trainFun,
+            list(
+              dataMatrix = data[ind, , drop = FALSE],
+              labels = labels[ind, ],
+              hyperParameters = candidate,
+              settings = settings
+            )
+          )
+          prediction <- do.call(
+            predictFun,
+            list(
+              plpModel = model,
+              data = data[!ind, , drop = FALSE],
+              cohort = labels[!ind, ]
+            )
+          )
+          performance <- metric$fun(prediction)
+          cvPrediction <- rbind(cvPrediction, prediction)
+          cvPerformance <- c(cvPerformance, performance)
+        }
+        list(prediction = cvPrediction, performance = cvPerformance)
+      },
+      plpCandidateError = function(e) e
+    )
+    candidateError <- NULL
+    if (inherits(folds, "plpCandidateError")) {
+      candidateError <- conditionMessage(folds)
+      skipMessage <- paste0(
+        "Skipping param ",
+        paste(names(candidate), candidate, sep = "=", collapse = ", "),
+        " of ", settings$modelName, ": ", candidateError
       )
-      prediction <- do.call(
-        settings$predict,
-        list(
-          plpModel = model,
-          data = data[!ind, , drop = FALSE],
-          cohort = labels[!ind, ]
-        )
-      )
-      performance <- metric$fun(prediction)
-      cvPrediction <- rbind(cvPrediction, prediction)
-      cvPerformance <- c(cvPerformance, performance)
+      ParallelLogger::logWarn(skipMessage)
+      warning(warningCondition(skipMessage, class = "plpCandidateWarning"))
+      cvPrediction <- NULL
+      cvPerformance <- rep(NA_real_, length(foldIds))
+      meanCvPerformance <- NA_real_
+    } else {
+      cvPrediction <- folds$prediction
+      cvPerformance <- folds$performance
+      meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     }
-    meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     history[[length(history) + 1]] <- list(
       metric = metric$name,
       param = candidate,
       cvPerformance = meanCvPerformance,
       cvPerformancePerFold = cvPerformance,
+      error = candidateError,
       hyperSummary = makeHyperSummary(
         metric,
         meanCvPerformance,
@@ -425,6 +472,9 @@ tuneHyperparameters <- function(
         foldIds
       )
     )
+    if (!is.null(candidateError)) {
+      next
+    }
     # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
     if (identical(selectBest(history, metric), length(history))) {
       ParallelLogger::logInfo(paste0(
@@ -445,6 +495,14 @@ tuneHyperparameters <- function(
   }
   iterator$finalize(history)
   best <- selectBest(history, metric)
+  if (length(best) == 0) {
+    errors <- unique(unlist(lapply(history, function(x) x$error)))
+    stop(
+      "All ", length(history), " hyperparameter candidates of ", settings$modelName,
+      " were skipped: ", paste(errors, collapse = "; "),
+      call. = FALSE
+    )
+  }
 
   finalParam <- history[[best]]$param
 
@@ -454,7 +512,7 @@ tuneHyperparameters <- function(
   # fit final model
   ParallelLogger::logInfo("Fit best model on whole training set")
   finalModel <- do.call(
-    settings$train,
+    trainFun,
     list(
       dataMatrix = data,
       labels = labels,
@@ -464,7 +522,7 @@ tuneHyperparameters <- function(
   )
 
   prediction <- do.call(
-    settings$predict,
+    predictFun,
     list(
       plpModel = finalModel,
       data = data,
@@ -488,6 +546,37 @@ tuneHyperparameters <- function(
     finalParam = finalParam,
     paramSearch = history
   )
+}
+
+#' Skip a hyperparameter candidate that cannot be fitted
+#'
+#' @description
+#' Called from a model's train or predict function to say that the current
+#' hyperparameter candidate cannot be fitted, for example because it runs out
+#' of memory. The hyperparameter search records the candidate with a missing
+#' performance and this message, warns, and goes on with the next candidate.
+#' The search stops if every candidate is skipped.
+#'
+#' Any other error in train or predict stops the search, so a model that never
+#' calls `stopCandidate()` behaves as before.
+#'
+#' @param message Why the candidate cannot be fitted.
+#' @param ... Further fields for the condition, passed to [errorCondition()].
+#' @return Does not return; signals an error of class `plpCandidateError`.
+#' @examples
+#' train <- function(dataMatrix, labels, hyperParameters, settings) {
+#'   if (hyperParameters$size > 1000) {
+#'     stopCandidate("size larger than the memory allows")
+#'   }
+#'   list(size = hyperParameters$size)
+#' }
+#' tryCatch(
+#'   train(NULL, NULL, list(size = 5000), NULL),
+#'   plpCandidateError = function(e) conditionMessage(e)
+#' )
+#' @export
+stopCandidate <- function(message, ...) {
+  stop(errorCondition(message, ..., class = "plpCandidateError", call = sys.call(-1)))
 }
 
 selectBest <- function(history, metric) {

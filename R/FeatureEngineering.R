@@ -34,7 +34,7 @@ featureEngineer <- function(data, featureEngineeringSettings) {
       featureEngineeringSettings = featureEngineeringSetting
     )
     ParallelLogger::logInfo(paste0("Applying ", fun))
-    data <- do.call(eval(parse(text = fun)), args)
+    data <- do.call(resolveHook(fun, "feature engineering"), args)
   }
 
   attr(data, "metaData")$featureEngineeringSettings <- featureEngineeringSettings

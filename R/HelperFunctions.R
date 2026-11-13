@@ -404,9 +404,76 @@ kmIncidenceAtTimepoint <- function(time, event, timepoint) {
   return(list(incidence = 1 - km$surv, lower = 1 - km$upper, upper = 1 - km$lower))
 }
 
-functionExists <- function(name, envir = parent.frame()) {
-  is.character(name) && length(name) == 1L && name != "file" &&
-    exists(name, envir = envir, mode = "function", inherits = TRUE)
+# Finds the function a model stores for one of its hooks (fitFunction,
+# prepareData, train, predict, variableImportance, saveType, or the function of
+# a feature engineering step). A hook can be:
+# - a function;
+# - the name of a function, looked up from this package's namespace, so the
+#   package's own functions are found, and then on the search path;
+# - "pkg::fn", an exported function of an installed package, which is loaded
+#   if needed but not attached (or "pkg:::fn" for an internal one).
+# Every hook is resolved here, so a model behaves the same in fitting,
+# prediction, saving, loading and feature importance.
+resolveHook <- function(hook, hookName) {
+  if (is.function(hook)) {
+    return(hook)
+  }
+  if (!is.character(hook) || length(hook) != 1L || is.na(hook) || !nzchar(hook)) {
+    stop("The ", hookName, " hook must be a function or the name of one", call. = FALSE)
+  }
+  if (grepl("::", hook, fixed = TRUE)) {
+    internal <- grepl(":::", hook, fixed = TRUE)
+    parts <- strsplit(hook, if (internal) ":::" else "::", fixed = TRUE)[[1]]
+    if (length(parts) != 2L || !all(nzchar(parts))) {
+      stop("The ", hookName, " hook '", hook, "' is not of the form pkg::function", call. = FALSE)
+    }
+    if (!requireNamespace(parts[1], quietly = TRUE)) {
+      stop(
+        "The ", hookName, " hook '", hook, "' needs the package ", parts[1],
+        ", which is not installed",
+        call. = FALSE
+      )
+    }
+    fun <- if (internal) {
+      get0(parts[2], envir = asNamespace(parts[1]), inherits = FALSE)
+    } else if (parts[2] %in% getNamespaceExports(parts[1])) {
+      getExportedValue(parts[1], parts[2])
+    }
+  } else {
+    fun <- get0(hook, envir = asNamespace("PatientLevelPrediction"), mode = "function", inherits = TRUE)
+  }
+  if (!is.function(fun)) {
+    stop("Could not find the function '", hook, "' given as the ", hookName, " hook", call. = FALSE)
+  }
+  fun
+}
+
+# saveType values that are not save handlers: the model is a folder of files.
+# "file" is current; "xgboost" and "lightgbm" come from models saved by 6.5.0
+# and earlier.
+modelFolderSaveTypes <- c("file", "xgboost", "lightgbm")
+
+# The save handler a saveType names, a list with save(model, path) and
+# load(path) and optionally the fileName (default "model.json") it writes in the
+# model folder; NULL when the saveType means the model is a folder of files.
+saveHandler <- function(saveType) {
+  if (is.null(saveType) || (is.character(saveType) && saveType %in% modelFolderSaveTypes)) {
+    return(NULL)
+  }
+  handler <- resolveHook(saveType, "saveType")()
+  if (!is.function(handler$save) || !is.function(handler$load)) {
+    stop("The saveType hook must return a list with save and load functions", call. = FALSE)
+  }
+  if (is.null(handler$fileName)) {
+    handler$fileName <- "model.json"
+  }
+  # saved models are shared, so the handler writes only inside the model folder
+  if (!is.character(handler$fileName) || length(handler$fileName) != 1L ||
+    !nzchar(handler$fileName) || basename(handler$fileName) != handler$fileName ||
+    handler$fileName %in% c(".", "..")) {
+    stop("The fileName of a save handler must be a plain file or folder name", call. = FALSE)
+  }
+  handler
 }
 
 # Evaluates expr with the random stream set to seed, and gives the caller's

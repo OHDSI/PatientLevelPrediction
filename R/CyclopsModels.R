@@ -145,7 +145,7 @@ fitCyclopsModel <- function(
       prior <- do.call(BrokenAdaptiveRidge::createBarPrior, param$priorParams)
       cvPrior <- prior
     } else {
-      prior <- do.call(eval(parse(text = settings$priorfunction)), param$priorParams)
+      prior <- do.call(resolveHook(settings$priorfunction, "priorfunction"), param$priorParams)
     }
   }
 
@@ -600,7 +600,7 @@ createCyclopsCvPrior <- function(modelSettings, fit, cyclopsData) {
   if (identical(priorFunction, "Cyclops::createPrior")) {
     priorParams$variance <- fit$variance
     priorParams$useCrossValidation <- FALSE
-    return(do.call(eval(parse(text = priorFunction)), priorParams))
+    return(do.call(resolveHook(priorFunction, "priorfunction"), priorParams))
   }
 
   cvVariance <- getFittedPriorVariance(fit)

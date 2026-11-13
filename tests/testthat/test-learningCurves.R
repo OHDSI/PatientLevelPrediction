@@ -125,3 +125,59 @@ test_that("createLearningCurve with trainEvents runs one model per derived fract
   # covariates with a non-zero coefficient
   expect_equal(as.numeric(learningCurve$nPredictors), c(2, 2))
 })
+
+test_that("createLearningCurve passes hyperparameterSettings to every runPlp", {
+  tuning <- createHyperparameterSettings(
+    tuningMetric = createTuningMetric(fun = function(prediction) 0.5, name = "constant")
+  )
+  fakeResult <- list(
+    executionSummary = list(TotalExecutionElapsedTime = 1),
+    model = list(covariateImportance = data.frame(covariateValue = c(0, 0.5))),
+    performanceEvaluation = list(evaluationStatistics = data.frame(
+      evaluation = "Train",
+      metric = c("AUROC", "populationSize", "outcomeCount"),
+      value = c(0.7, 750, 75)
+    ))
+  )
+  received <- list()
+  local_mocked_bindings(
+    runPlp = function(...) {
+      received[[length(received) + 1]] <<- list(...)$hyperparameterSettings
+      fakeResult
+    }
+  )
+  createLearningCurve(
+    plpData = NULL, outcomeId = 3, parallel = FALSE,
+    modelSettings = setLassoLogisticRegression(),
+    hyperparameterSettings = tuning,
+    saveDirectory = tempfile("learningCurve"),
+    trainFractions = c(0.25, 0.5)
+  )
+  expect_length(received, 2)
+  expect_true(all(vapply(received, function(x) x$tuningMetric$name == "constant", logical(1))))
+
+  # the parallel runs get them in their settings
+  parallelSettings <- NULL
+  local_mocked_bindings(savePlpData = function(...) invisible(NULL))
+  local_mocked_bindings(
+    makeCluster = function(...) "cluster",
+    clusterRequire = function(...) invisible(NULL),
+    clusterApply = function(cluster, x, ...) {
+      parallelSettings <<- x
+      rep(list(data.frame(trainFraction = 25)), length(x))
+    },
+    stopCluster = function(...) invisible(NULL),
+    .package = "ParallelLogger"
+  )
+  try(createLearningCurve(
+    plpData = NULL, outcomeId = 3, parallel = TRUE, cores = 1,
+    modelSettings = setLassoLogisticRegression(),
+    hyperparameterSettings = tuning,
+    saveDirectory = tempfile("learningCurve"),
+    trainFractions = c(0.25, 0.5)
+  ), silent = TRUE)
+  expect_length(parallelSettings, 2)
+  expect_true(all(vapply(
+    parallelSettings, function(x) x$hyperparameterSettings$tuningMetric$name == "constant", logical(1)
+  )))
+})
