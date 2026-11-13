@@ -553,3 +553,16 @@ test_that("transfer matches the penalized likelihood with the source as offset o
   )
 })
 
+test_that("a transfer fit that fails does not take the source coefficients", {
+  train <- makeTransferFixture(nfold = 1)
+  on.exit(Andromeda::close(train$covariateData))
+  settings <- setLassoLogisticRegression(
+    priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
+    variance = 1, threads = 1, seed = 42, maxIterations = 1
+  )
+  fit <- suppressWarnings(fitCyclopsModel(train, settings, analysisId = "test"))
+  expect_match(fit$model$modelStatus, "MAXIMUM NUMBER OF ITERATIONS")
+  expect_false(any(c("10", "20") %in% fit$model$coefficients$covariateIds))
+  # as a failed fit without transfer: the same risk for everyone
+  expect_length(unique(round(fit$prediction$value, 12)), 1)
+})

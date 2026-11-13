@@ -124,6 +124,8 @@ can be refitted or re-evaluated.
   `threads = -1`), which on a dense source made fitting up to 14 times slower and
   selected the wrong penalty. The copies also doubled the data for a dense
   source.
+- A transfer model whose fit failed predicts the same risk for everyone, as
+  other failed fits do, instead of predicting like the source model.
 - Random hyperparameter searches use `randomSeed` when it is set, and restore
   the global random stream.
 - Legacy and JSON-restored settings that request random or custom search get

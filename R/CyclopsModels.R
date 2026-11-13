@@ -216,7 +216,9 @@ fitCyclopsModel <- function(
     transferMap = transferMap
   )
 
-  if (!is.null(param$priorCoefs)) {
+  # a failed fit has no coefficients to add the source to; it predicts the same
+  # for everyone, as a failed fit without transfer does
+  if (!is.null(param$priorCoefs) && identical(modelTrained$modelStatus, "OK")) {
     modelTrained$coefficients <- reparamTransferCoefs(
       inCoefs = modelTrained$coefficients,
       transferMap = transferMap
