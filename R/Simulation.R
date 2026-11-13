@@ -96,11 +96,47 @@ createSimulationProfile <- function(plpData, outcomeModels = NULL) {
     outcomeModels = outcomeModels,
     outcomeModelPlpModels = outcomeModelPlpModels,
     metaData = plpData$metaData,
-    covariateRef = plpData$covariateData$covariateRef %>% dplyr::collect()
+    covariateRef = plpData$covariateData$covariateRef %>% dplyr::collect(),
+    analysisRef = plpData$covariateData$analysisRef %>% dplyr::collect()
   )
   class(result) <- "plpDataSimulationProfile"
   validateSimulationOutcomeModels(result)
   return(result)
+}
+
+# The analysisRef of simulated data. Feature engineering reads isBinary and
+# missingMeansZero from it, for example to find the continuous covariates a
+# normalizer scales, so it needs the columns FeatureExtraction writes. A profile
+# made by createSimulationProfile() keeps the analysisRef of its data. Older
+# profiles, such as the one shipped with the package, only have the
+# covariateRef, so the analyses are rebuilt from it: an analysis with a
+# continuous covariate is not binary and, like FeatureExtraction's age, a
+# missing value means zero.
+simulationAnalysisRef <- function(plpDataSimulationProfile) {
+  analysisIds <- sort(unique(plpDataSimulationProfile$covariateRef$analysisId))
+  analysisRef <- plpDataSimulationProfile$analysisRef
+  if (!is.null(analysisRef) && "isBinary" %in% colnames(analysisRef) &&
+    all(analysisIds %in% analysisRef$analysisId)) {
+    analysisRef <- as.data.frame(analysisRef)
+    if (!"missingMeansZero" %in% colnames(analysisRef)) {
+      analysisRef$missingMeansZero <- NA_character_
+    }
+    return(analysisRef)
+  }
+  continuousIds <- plpDataSimulationProfile$covariateInfo$continuousCovariates$covariateId
+  continuousAnalysisIds <- plpDataSimulationProfile$covariateRef$analysisId[
+    plpDataSimulationProfile$covariateRef$covariateId %in% continuousIds
+  ]
+  isBinary <- !analysisIds %in% continuousAnalysisIds
+  data.frame(
+    analysisId = as.numeric(analysisIds),
+    analysisName = rep(NA_character_, length(analysisIds)),
+    domainId = rep(NA_character_, length(analysisIds)),
+    startDay = rep(NA_real_, length(analysisIds)),
+    endDay = rep(NA_real_, length(analysisIds)),
+    isBinary = ifelse(isBinary, "Y", "N"),
+    missingMeansZero = ifelse(isBinary, NA_character_, "Y")
+  )
 }
 
 normalizeSimulationOutcomeModels <- function(outcomeModels, numberOfOutcomeIds) {
@@ -394,7 +430,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
   covariateData <- Andromeda::andromeda(
     covariates = covariates,
     covariateRef = plpDataSimulationProfile$covariateRef,
-    analysisRef = data.frame(analysisId = 1)
+    analysisRef = simulationAnalysisRef(plpDataSimulationProfile)
   )
   covariateData <- asCovariateData(covariateData)
 

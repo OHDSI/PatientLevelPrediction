@@ -174,6 +174,10 @@ can be refitted or re-evaluated.
 - Fixed `createSklearnModel()` without a `covariateMap`, which failed since
   6.4.0 (#531).
 - Fixed `setPythonEnvironment()` with virtual environments.
+- Fixed feature engineering on `simulatePlpData()` data: its `analysisRef` had
+  no `isBinary` or `missingMeansZero`, so normalizers and imputers failed.
+  Profiles made by `createSimulationProfile()` keep the `analysisRef` of their
+  data.
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.

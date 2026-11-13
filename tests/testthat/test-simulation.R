@@ -1130,3 +1130,55 @@ test_that("simulated data for a seed does not depend on Andromeda's random draws
 
   expect_equal(withMoreDraws, reference, ignore_attr = TRUE)
 })
+
+test_that("simulated data has an analysisRef that feature engineering can use", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  plpData <- simulatePlpData(simulationProfile, n = 300, seed = 42)
+  analysisRef <- as.data.frame(plpData$covariateData$analysisRef)
+  expect_setequal(analysisRef$analysisId, unique(simulationProfile$covariateRef$analysisId))
+  # age in years (analysis 2) is the profile's continuous covariate
+  expect_equal(analysisRef$isBinary[analysisRef$analysisId == 2], "N")
+  expect_equal(analysisRef$missingMeansZero[analysisRef$analysisId == 2], "Y")
+  expect_true(all(analysisRef$isBinary[analysisRef$analysisId != 2] == "Y"))
+
+  # a normalizer finds the continuous covariates through isBinary
+  population <- createStudyPopulation(
+    plpData, 3,
+    createStudyPopulationSettings(requireTimeAtRisk = FALSE, riskWindowStart = 1, riskWindowEnd = 365)
+  )
+  trainData <- splitData(
+    plpData, population,
+    createDefaultSplitSetting(testFraction = 0.25, splitSeed = 42, nfold = 2)
+  )$Train
+  engineered <- featureEngineer(trainData, list(createNormalizer(type = "minmax")))
+  age <- engineered$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == 1002) %>%
+    dplyr::pull(.data$covariateValue)
+  expect_true(length(age) > 0)
+  expect_gte(min(age), 0)
+  expect_lte(max(age), 1)
+})
+
+test_that("a simulation profile keeps the analysisRef of its data", {
+  profile <- list(
+    covariateRef = data.frame(covariateId = c(1002, 8532001), analysisId = c(2, 1)),
+    covariateInfo = list(continuousCovariates = data.frame(covariateId = 1002)),
+    analysisRef = data.frame(
+      analysisId = c(1, 2), analysisName = c("gender", "age"), isBinary = c("Y", "N")
+    )
+  )
+  analysisRef <- simulationAnalysisRef(profile)
+  expect_equal(analysisRef$analysisName, c("gender", "age"))
+  expect_true(all(is.na(analysisRef$missingMeansZero)))
+  # without one, the analyses are rebuilt from the covariateRef
+  profile$analysisRef <- NULL
+  analysisRef <- simulationAnalysisRef(profile)
+  expect_equal(analysisRef$analysisId, c(1, 2))
+  expect_equal(analysisRef$isBinary, c("Y", "N"))
+  expect_equal(analysisRef$missingMeansZero, c(NA, "Y"))
+  # a covariateRef without analysis ids gives an empty analysisRef with the columns
+  profile$covariateRef$analysisId <- NULL
+  analysisRef <- simulationAnalysisRef(profile)
+  expect_equal(nrow(analysisRef), 0)
+  expect_true(all(c("isBinary", "missingMeansZero") %in% colnames(analysisRef)))
+})
