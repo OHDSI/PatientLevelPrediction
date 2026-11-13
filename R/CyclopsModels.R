@@ -62,10 +62,19 @@ fitCyclopsModel <- function(
 
   covariates <- filterCovariateIds(param, trainData$covariateData)
 
+  # Transfer learning: the source model enters as one offset covariate holding
+  # each patient's source linear predictor, so the fitted coefficients are the
+  # target's changes to the source and only those are penalized.
   transferMap <- NULL
+  transferOffset <- FALSE
   if (!is.null(param$priorCoefs)) {
-    # Andromeda tables share storage; append transfer covariates to a separate table.
-    fitData <- Andromeda::andromeda(covariates = covariates)
+    # Andromeda tables share storage; add the offset to a separate table. The
+    # values are stored as doubles, as covariate values can be integers and the
+    # offset rows are appended to the same column.
+    fitData <- Andromeda::andromeda(
+      covariates = covariates %>%
+        dplyr::mutate(covariateValue = as.numeric(.data$covariateValue))
+    )
     on.exit(Andromeda::close(fitData), add = TRUE)
     covariates <- fitData$covariates
     covariateIds <- covariates %>%
@@ -78,21 +87,8 @@ fitCyclopsModel <- function(
       excludeCovariateIds = param$excludeCovariateIds
     )
     if (nrow(transferMap) > 0) {
-      matchedIds <- match(normalizeTransferCovariateIds(covariateIds), transferMap$covariateIds)
-      present <- !is.na(matchedIds)
-      fitData$transferIds <- data.frame(
-        covariateId = covariateIds[present],
-        syntheticId = as.integer(transferMap$syntheticId[matchedIds[present]])
-      )
-      # Rename rowId before joining: DuckDB also has an implicit rowid column.
-      fitData$transferCovariates <- covariates %>%
-        dplyr::semi_join(fitData$transferIds, by = "covariateId") %>%
-        dplyr::rename(patientRowId = "rowId")
-      newCovariates <- fitData$transferCovariates %>%
-        dplyr::inner_join(fitData$transferIds, by = "covariateId") %>%
-        dplyr::select(-"covariateId") %>%
-        dplyr::rename(covariateId = "syntheticId", rowId = "patientRowId")
-      Andromeda::appendToTable(tbl = covariates, data = newCovariates)
+      addTransferOffset(fitData, transferMap, covariateIds)
+      transferOffset <- TRUE
     }
   }
 
@@ -108,18 +104,8 @@ fitCyclopsModel <- function(
     quiet = TRUE
   )
 
-  startingCoefficients <- NULL
-  fixedCoefficients <- NULL
-  if (!is.null(transferMap)) {
-    matches <- match(cyclopsData$coefficientNames, transferMap$syntheticId)
-    fixedCoefficients <- !is.na(matches)
-    startingCoefficients <- numeric(length(matches))
-    startingCoefficients[fixedCoefficients] <- transferMap$betas[matches[fixedCoefficients]]
-    # Only the changes to the source coefficients should be penalized.
-    param$priorParams$exclude <- unique(c(
-      param$priorParams$exclude,
-      as.integer(cyclopsData$coefficientNames[fixedCoefficients])
-    ))
+  if (transferOffset) {
+    useTransferOffset(cyclopsData)
   }
   if (settings$crossValidationInPrior) {
     param$priorParams$useCrossValidation <- max(trainData$folds$index) > 1
@@ -186,9 +172,7 @@ fitCyclopsModel <- function(
           cyclopsData = cyclopsData,
           prior = prior,
           control = control,
-          forceNewObject = isBar,
-          fixedCoefficients = fixedCoefficients,
-          startingCoefficients = startingCoefficients
+          forceNewObject = isBar
         )
       },
       finally = ParallelLogger::logInfo("Done.")
@@ -198,9 +182,7 @@ fitCyclopsModel <- function(
       trainData = trainData,
       cyclopsData = cyclopsData,
       modelSettings = modelSettings,
-      priorParams = param$priorParams,
-      fixedCoefficients = fixedCoefficients,
-      startingCoefficients = startingCoefficients
+      priorParams = param$priorParams
     )
     fit <- result$modelFit
     hyperParamSearch <- result$hyperParamSearch
@@ -212,9 +194,7 @@ fitCyclopsModel <- function(
         ParallelLogger::logInfo("Running Cyclops with fixed varience")
         Cyclops::fitCyclopsModel(
           cyclopsData = cyclopsData,
-          prior = prior,
-          fixedCoefficients = fixedCoefficients,
-          startingCoefficients = startingCoefficients
+          prior = prior
         )
       },
       finally = ParallelLogger::logInfo("Done.")
@@ -233,12 +213,12 @@ fitCyclopsModel <- function(
     covariateData  = trainData$covariateData,
     control = createCyclopsRefitControl(modelSettings),
     cvPrior = cvPrior,
-    fixedCoefficients = fixedCoefficients,
-    startingCoefficients = startingCoefficients,
     transferMap = transferMap
   )
 
-  if (!is.null(param$priorCoefs)) {
+  # a failed fit has no coefficients to add the source to; it predicts the same
+  # for everyone, as a failed fit without transfer does
+  if (!is.null(param$priorCoefs) && identical(modelTrained$modelStatus, "OK")) {
     modelTrained$coefficients <- reparamTransferCoefs(
       inCoefs = modelTrained$coefficients,
       transferMap = transferMap
@@ -488,8 +468,7 @@ getCyclopsCoefficientNames <- function(cyclopsData) {
 
 createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, labels, folds,
                                modelSettings, covariateData = NULL, control = NULL,
-                               cvPrior = NULL, fixedCoefficients = NULL,
-                               startingCoefficients = NULL, transferMap = NULL) {
+                               cvPrior = NULL, transferMap = NULL) {
   if (is.character(fit)) {
     coefficients <- c(0)
     names(coefficients) <- ""
@@ -555,12 +534,6 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
         cyclopsData = cyclopsData
       )
     }
-    if (!is.null(transferMap)) {
-      cvPrior$exclude <- unique(c(
-        cvPrior$exclude,
-        as.integer(cyclopsData$coefficientNames[fixedCoefficients])
-      ))
-    }
     outcomeModel$cv <- getCV(
       cyclopsData, 
       labels,
@@ -569,10 +542,9 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
       covariateData = covariateData,
       modelType = modelType,
       control = control,
-      fixedCoefficients = fixedCoefficients,
-      startingCoefficients = startingCoefficients,
       transferMap = transferMap,
-      forceNewObject = !is.null(transferMap) || identical(
+      # the offset is part of the data, so refits on the same object keep it
+      forceNewObject = identical(
         modelSettings$settings$priorfunction,
         "BrokenAdaptiveRidge::createBarPrior"
       )
@@ -746,9 +718,7 @@ doCyclopsCvPenalty <- function(
     trainData,
     cyclopsData,
     modelSettings,
-    priorParams,
-    fixedCoefficients = NULL,
-    startingCoefficients = NULL) {
+    priorParams) {
   penalties <- createBarPenaltyGrid(
     labels = trainData$labels,
     penaltyRatio = modelSettings$settings$penaltyRatio,
@@ -779,9 +749,7 @@ doCyclopsCvPenalty <- function(
         control = control,
         weights = weights,
         # BAR fixes eliminated coefficients at zero; do not carry that state to another fit.
-        forceNewObject = TRUE,
-        fixedCoefficients = fixedCoefficients,
-        startingCoefficients = startingCoefficients
+        forceNewObject = TRUE
       ))
       coefficients <- stats::coef(subsetFit)
 
@@ -845,9 +813,7 @@ doCyclopsCvPenalty <- function(
         prior = prior,
         control = control,
         weights = rep(1.0, Cyclops::getNumberOfRows(cyclopsData)),
-        forceNewObject = TRUE,
-        fixedCoefficients = fixedCoefficients,
-        startingCoefficients = startingCoefficients
+        forceNewObject = TRUE
       )
     },
     finally = ParallelLogger::logInfo("Done.")
@@ -881,8 +847,6 @@ getCV <- function(
     modelType = "logistic",
     control = NULL,
     forceNewObject = FALSE,
-    fixedCoefficients = NULL,
-    startingCoefficients = NULL,
     transferMap = NULL
 ) {
   # merge sorts by rowId, matching Cyclops' ordering of logistic outcomes.
@@ -896,9 +860,7 @@ getCV <- function(
       prior = cvPrior,
       weights = weights,
       control = control,
-      forceNewObject = forceNewObject,
-      fixedCoefficients = fixedCoefficients,
-      startingCoefficients = startingCoefficients
+      forceNewObject = forceNewObject
     ))
     coefficients <- stats::coef(subset_fit)
     if (!is.null(transferMap)) {
@@ -1046,12 +1008,62 @@ createTransferMap <- function(priorCoefs, covariateIds,
     )
     priorCoefs <- priorCoefs[present, , drop = FALSE]
   }
-  priorCoefs$syntheticId <- as.character(-seq_len(nrow(priorCoefs)))
+  rownames(priorCoefs) <- NULL
   return(priorCoefs)
 }
 
+# Covariate ID of the transfer offset. Transfer requires positive covariate IDs
+# (createTransferMap()), so no real covariate has it; Cyclops reserves -1.
+transferOffsetCovariateId <- -1e9
+
+# Adds each patient's source linear predictor, sum(covariateValue * beta) over
+# the source covariates in transferMap, to fitData$covariates as the
+# transferOffsetCovariateId covariate. Patients without source covariates get no
+# entry, which Cyclops reads as an offset of 0.
+addTransferOffset <- function(fitData, transferMap, covariateIds) {
+  matched <- match(normalizeTransferCovariateIds(covariateIds), transferMap$covariateIds)
+  present <- !is.na(matched)
+  fitData$transferBetas <- data.frame(
+    covariateId = covariateIds[present],
+    beta = transferMap$betas[matched[present]]
+  )
+  on.exit(fitData$transferBetas <- NULL, add = TRUE)
+  # Rename rowId before joining: DuckDB also has an implicit rowid column.
+  fitData$transferCovariates <- fitData$covariates %>%
+    dplyr::semi_join(fitData$transferBetas, by = "covariateId") %>%
+    dplyr::rename(patientRowId = "rowId")
+  on.exit(fitData$transferCovariates <- NULL, add = TRUE)
+  offset <- fitData$transferCovariates %>%
+    dplyr::inner_join(fitData$transferBetas, by = "covariateId") %>%
+    dplyr::group_by(.data$patientRowId) %>%
+    dplyr::summarise(covariateValue = sum(.data$covariateValue * .data$beta, na.rm = TRUE)) %>%
+    dplyr::transmute(
+      rowId = .data$patientRowId,
+      covariateId = transferOffsetCovariateId,
+      covariateValue = .data$covariateValue
+    )
+  Andromeda::appendToTable(tbl = fitData$covariates, data = offset)
+  invisible(NULL)
+}
+
+# Makes the transfer offset covariate Cyclops's offset, on the linear predictor
+# scale. Cyclops 3.7.1 loses the coefficient names when it removes the offset
+# from them, so they are rebuilt from the native covariate IDs, which no longer
+# include the offset.
+useTransferOffset <- function(cyclopsData) {
+  Cyclops::finalizeSqlCyclopsData(
+    cyclopsData,
+    useOffsetCovariate = transferOffsetCovariateId,
+    offsetAlreadyOnLogScale = TRUE
+  )
+  cyclopsData$coefficientNames <- getCyclopsCoefficientNames(cyclopsData)
+  invisible(cyclopsData)
+}
+
+# The coefficients of the transfer model, which were fitted as changes to the
+# source coefficients: the source coefficient plus the change for each covariate.
 reparamTransferCoefs <- function(inCoefs, transferMap) {
-  coefs <- inCoefs[!inCoefs$covariateIds %in% transferMap$syntheticId, ]
+  coefs <- inCoefs
   coefs$covariateIds <- normalizeTransferCovariateIds(coefs$covariateIds)
   coefs <- rbind(coefs, transferMap[, c("betas", "covariateIds"), drop = FALSE])
   coefs <- rowsum(coefs$betas, group = coefs$covariateIds)

@@ -117,6 +117,15 @@ can be refitted or re-evaluated.
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
   are dropped, with their count logged (#684).
+- `priorCoefs` passes the source model to Cyclops as one offset covariate,
+  each patient's source linear predictor, instead of copied columns held at the
+  source coefficients. The model is the same, but the copies lost their fixed
+  values on Cyclops 3.7.1's extra cross-validation threads (the default
+  `threads = -1`), which on a dense source made fitting up to 14 times slower and
+  selected the wrong penalty. The copies also doubled the data for a dense
+  source.
+- A transfer model whose fit failed predicts the same risk for everyone, as
+  other failed fits do, instead of predicting like the source model.
 - Random hyperparameter searches use `randomSeed` when it is set, and restore
   the global random stream.
 - Legacy and JSON-restored settings that request random or custom search get

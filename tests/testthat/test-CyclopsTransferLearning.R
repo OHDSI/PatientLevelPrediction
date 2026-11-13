@@ -162,30 +162,94 @@ test_that("native CV transfer fits preserve caller data and source predictions",
   }
 })
 
-test_that("native CV refits retain explicitly fixed source coefficients", {
-  train <- makeTransferFixture()
+test_that("transfer fits the source as an unpenalized column held at 1", {
+  # the reference: Cyclops with the source linear predictor as a column whose
+  # coefficient is fixed at 1 and not penalized, the definition of the model
+  train <- makeTransferFixture(nfold = 1)
   on.exit(Andromeda::close(train$covariateData))
+  source <- data.frame(covariateIds = c("10", "20"), betas = c(0.8, -1.5))
+  settings <- setLassoLogisticRegression(priorCoefs = source, variance = 0.05, threads = 1, seed = 42)
+  fit <- fitCyclopsModel(train, settings, analysisId = "test")
+
   covariates <- dplyr::collect(train$covariateData$covariates)
-  duplicates <- covariates
-  duplicates$covariateId <- -duplicates$covariateId
-  labels <- train$labels
-  labels$y <- labels$outcomeCount
+  sourceLp <- stats::aggregate(
+    list(covariateValue = covariates$covariateValue * source$betas[match(covariates$covariateId, c(10, 20))]),
+    list(rowId = covariates$rowId), sum
+  )
+  sourceLp$covariateId <- -5
+  outcomes <- data.frame(rowId = train$labels$rowId, y = train$labels$outcomeCount)
   cyclopsData <- Cyclops::convertToCyclopsData(
-    labels, rbind(covariates, duplicates), modelType = "lr", quiet = TRUE
+    outcomes, rbind(covariates, sourceLp[, names(covariates)]),
+    modelType = "lr", addIntercept = TRUE, quiet = TRUE
   )
-  ids <- cyclopsData$coefficientNames
-  start <- numeric(length(ids))
-  start[match(c("-10", "-20"), ids)] <- c(1, -2)
-  cv <- getCV(
-    cyclopsData, labels,
-    Cyclops::createPrior("laplace", variance = 0.1, exclude = c(0, -10, -20)),
-    train$folds, fixedCoefficients = ids %in% c("-10", "-20"),
-    startingCoefficients = start, forceNewObject = TRUE,
-    control = Cyclops::createControl(threads = 1, noiseLevel = "silent")
+  fixed <- cyclopsData$coefficientNames == "-5"
+  reference <- Cyclops::fitCyclopsModel(
+    cyclopsData,
+    prior = Cyclops::createPrior("laplace", variance = 0.05, exclude = c(0, -5)),
+    fixedCoefficients = fixed, startingCoefficients = as.numeric(fixed),
+    control = Cyclops::createControl(threads = 1, noiseLevel = "silent", tolerance = 1e-10)
   )
-  for (fold in cv) {
-    expect_equal(unname(fold$coef[c("-10", "-20")]), c(1, -2))
-  }
+  changes <- stats::coef(reference)[!fixed]
+  coefs <- fit$model$coefficients
+  expect_equal(
+    coefs$betas[match(c("10", "20"), coefs$covariateIds)],
+    unname(changes[c("10", "20")] + source$betas),
+    tolerance = 1e-5
+  )
+  expect_equal(
+    coefs$betas[coefs$covariateIds == "(Intercept)"], unname(changes["(Intercept)"]),
+    tolerance = 1e-5
+  )
+  # the offset does not appear as a coefficient
+  expect_false(any(as.numeric(coefs$covariateIds[coefs$covariateIds != "(Intercept)"]) < 0))
+})
+
+test_that("transfer with cross-validation does not depend on the number of threads", {
+  # Cyclops 3.7.1 loses fixed coefficients in the solver copies it makes for
+  # extra threads, so source coefficients held fixed in copied columns became
+  # free on some folds (here the selected variance went from 1.1 to 5e14 on 3
+  # threads). The offset is part of the data, so every copy keeps it.
+  withr::local_seed(7)
+  n <- 2000L
+  p <- 30L
+  x <- matrix(rbinom(n * p, 1, 0.15), n, p)
+  target <- c(rnorm(10, 0, 0.8), rep(0, p - 10))
+  # a related but imperfect source, so CV has a clear optimum
+  source <- target + c(rnorm(10, 0, 0.4), rnorm(p - 10, 0, 0.3))
+  y <- rbinom(n, 1, plogis(-1.5 + x %*% target))
+  nonZero <- which(x != 0, arr.ind = TRUE)
+  ids <- as.numeric(seq_len(p) * 1000 + 102)
+  covariateData <- makeCovariateData(
+    covariates = data.frame(rowId = nonZero[, 1], covariateId = ids[nonZero[, 2]], covariateValue = 1),
+    covariateRef = data.frame(
+      covariateId = ids, covariateName = paste0("c", ids), analysisId = 102L, conceptId = ids
+    ),
+    analysisRef = data.frame(
+      analysisId = 102L, analysisName = "test", domainId = "Condition", isBinary = "Y"
+    ),
+    metaData = list(populationSize = n)
+  )
+  labels <- data.frame(
+    rowId = seq_len(n), subjectId = seq_len(n), outcomeCount = y,
+    survivalTime = 365, cohortStartDate = as.Date("2000-01-01"),
+    daysToCohortEnd = 365, daysToObsEnd = 365, ageYear = 40, gender = 1
+  )
+  train <- makePlpData(
+    covariateData = covariateData, labels = labels,
+    folds = data.frame(rowId = seq_len(n), index = rep(1:3, length.out = n)),
+    metaData = syntheticTrainMetaData()
+  )
+  on.exit(Andromeda::close(train$covariateData))
+  priorCoefs <- data.frame(covariateIds = as.character(ids), betas = source)
+  fits <- lapply(c(1, 3), function(threads) {
+    settings <- setLassoLogisticRegression(priorCoefs = priorCoefs, threads = threads, seed = 42)
+    suppressWarnings(fitCyclopsModel(train, settings, analysisId = "test"))
+  })
+  # Cyclops 3.7.1 differs slightly between thread counts also without transfer
+  # (here 7e-5 relative); 4.0 gives the same result
+  expect_equal(fits[[2]]$model$priorVariance, fits[[1]]$model$priorVariance, tolerance = 1e-3)
+  expect_equal(fits[[2]]$model$coefficients, fits[[1]]$model$coefficients, tolerance = 1e-3)
+  expect_equal(fits[[2]]$prediction$value, fits[[1]]$prediction$value, tolerance = 1e-3)
 })
 
 test_that("CV predictions are invariant to label and fold row order", {
@@ -413,4 +477,92 @@ test_that("large transfer covariate IDs survive Cyclops coefficient formatting",
     scientific$model$coefficients$betas, reference$model$coefficients$betas,
     tolerance = 1e-8
   )
+})
+
+test_that("transfer matches the penalized likelihood with the source as offset on continuous data", {
+  # continuous values, patients without any covariates (so without an offset
+  # row), large IDs, a source covariate absent from the target and a target
+  # covariate absent from the source; checked against optim()
+  withr::local_seed(1)
+  n <- 600L
+  p <- 6L
+  ids <- c(2^40 + 1002, 2^40 + 2002, 3002, 4002, 5002, 6002)
+  x <- matrix(0, n, p)
+  for (j in seq_len(p)) {
+    on <- runif(n) < 0.4
+    x[on, j] <- if (j %% 2 == 0) round(runif(sum(on), 0.1, 3), 3) else 1
+  }
+  x[1:80, ] <- 0
+  sourceBetas <- c(0.9, -0.6, 0.4, 0, 0, 0.3)
+  y <- rbinom(n, 1, plogis(-1 + x %*% c(1.1, -0.4, 0.2, 0.5, 0, 0.1)))
+  nonZero <- which(x != 0, arr.ind = TRUE)
+  covariateData <- makeCovariateData(
+    covariates = data.frame(rowId = nonZero[, 1], covariateId = ids[nonZero[, 2]], covariateValue = x[nonZero]),
+    covariateRef = data.frame(covariateId = ids, covariateName = paste0("c", 1:p), analysisId = 1L, conceptId = 1:p),
+    analysisRef = data.frame(analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "N"),
+    metaData = list(populationSize = n)
+  )
+  labels <- data.frame(
+    rowId = seq_len(n), subjectId = seq_len(n), outcomeCount = y, survivalTime = 365,
+    cohortStartDate = as.Date("2000-01-01"), daysToCohortEnd = 365, daysToObsEnd = 365,
+    ageYear = 40, gender = 1
+  )
+  train <- makePlpData(
+    covariateData = covariateData, labels = labels,
+    folds = data.frame(rowId = seq_len(n), index = 1L), metaData = syntheticTrainMetaData()
+  )
+  on.exit(Andromeda::close(train$covariateData))
+  tablesBefore <- names(train$covariateData)
+  covariatesBefore <- dplyr::collect(train$covariateData$covariates)
+  # "999" is not in the target; the source intercept is not transferred
+  source <- data.frame(
+    covariateIds = c(format(ids[c(1, 2, 3, 6)], scientific = FALSE, trim = TRUE), "999", "(Intercept)"),
+    betas = c(sourceBetas[c(1, 2, 3, 6)], 2, -3)
+  )
+  variance <- 0.3
+  settings <- setRidgeRegression(priorCoefs = source, variance = variance, threads = 1, seed = 1, tolerance = 1e-12)
+  fit <- fitCyclopsModel(train, settings, analysisId = "test")
+  expect_identical(names(train$covariateData), tablesBefore)
+  expect_equal(dplyr::collect(train$covariateData$covariates), covariatesBefore)
+
+  offset <- x %*% sourceBetas
+  penalizedNll <- function(par) {
+    eta <- par[1] + offset + x %*% par[-1]
+    -sum(y * eta - log1p(exp(eta))) + sum(par[-1]^2) / (2 * variance)
+  }
+  gradient <- function(par) {
+    residual <- y - plogis(par[1] + offset + x %*% par[-1])
+    -c(sum(residual), t(x) %*% residual - par[-1] / variance)
+  }
+  optimum <- stats::optim(
+    rep(0, p + 1), penalizedNll, gradient,
+    method = "BFGS", control = list(reltol = 1e-14, maxit = 1000)
+  )$par
+  expected <- c(optimum[1], optimum[-1] + sourceBetas)
+  coefs <- fit$model$coefficients
+  actual <- c(
+    coefs$betas[coefs$covariateIds == "(Intercept)"],
+    coefs$betas[match(format(ids, scientific = FALSE, trim = TRUE), coefs$covariateIds)]
+  )
+  expect_equal(actual, expected, tolerance = 1e-6)
+  expect_false("999" %in% coefs$covariateIds)
+  expect_equal(
+    fit$prediction$value[match(seq_len(n), fit$prediction$rowId)],
+    as.vector(plogis(expected[1] + x %*% expected[-1])),
+    tolerance = 1e-6
+  )
+})
+
+test_that("a transfer fit that fails does not take the source coefficients", {
+  train <- makeTransferFixture(nfold = 1)
+  on.exit(Andromeda::close(train$covariateData))
+  settings <- setLassoLogisticRegression(
+    priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
+    variance = 1, threads = 1, seed = 42, maxIterations = 1
+  )
+  fit <- suppressWarnings(fitCyclopsModel(train, settings, analysisId = "test"))
+  expect_match(fit$model$modelStatus, "MAXIMUM NUMBER OF ITERATIONS")
+  expect_false(any(c("10", "20") %in% fit$model$coefficients$covariateIds))
+  # as a failed fit without transfer: the same risk for everyone
+  expect_length(unique(round(fit$prediction$value, 12)), 1)
 })
