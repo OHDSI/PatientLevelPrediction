@@ -406,3 +406,137 @@ test_that("auprcMetric treats outcome counts above one as positive", {
 
   expect_equal(auprcMetric$fun(prediction), auprcMetric$fun(binaryPrediction))
 })
+
+tuningData <- function() {
+  list(
+    data = matrix(1:24, nrow = 12),
+    labels = data.frame(
+      rowId = 1:12,
+      outcomeCount = rep(c(0, 1), 6),
+      index = rep(1:3, each = 4)
+    )
+  )
+}
+
+countingHooks <- function() {
+  calls <- new.env()
+  calls$train <- list()
+  list(
+    calls = calls,
+    settings = list(
+      modelName = "counting",
+      train = function(dataMatrix, labels, hyperParameters, settings) {
+        calls$train[[length(calls$train) + 1]] <- sort(unique(labels$index))
+        list(value = hyperParameters$value)
+      },
+      predict = function(plpModel, data, cohort) {
+        data.frame(
+          rowId = cohort$rowId,
+          outcomeCount = cohort$outcomeCount,
+          index = cohort$index,
+          value = rep(plpModel$value, nrow(cohort))
+        )
+      }
+    )
+  )
+}
+
+meanValueSettings <- function(validation = "cv") {
+  createHyperparameterSettings(
+    tuningMetric = createTuningMetric(fun = function(prediction) mean(prediction$value), name = "meanValue"),
+    validation = validation
+  )
+}
+
+test_that("createHyperparameterSettings checks validation and defaults to cv", {
+  expect_equal(createHyperparameterSettings()$validation, "cv")
+  expect_equal(createHyperparameterSettings(validation = "trainValidation")$validation, "trainValidation")
+  expect_error(createHyperparameterSettings(validation = "holdout"), "must be \"cv\" or \"trainValidation\"")
+  expect_error(createHyperparameterSettings(validation = c("cv", "trainValidation")), "must be")
+})
+
+test_that("trainValidation fits each candidate once and keeps the last fold's predictions", {
+  d <- tuningData()
+  hooks <- countingHooks()
+  res <- tuneHyperparameters(
+    data = d$data, labels = d$labels,
+    param = list(value = list(0.2, 0.4)),
+    settings = hooks$settings,
+    hyperparamSettings = meanValueSettings("trainValidation")
+  )
+  # one fit per candidate on folds 1 and 2, then the final fit on all folds
+  expect_equal(hooks$calls$train, list(c(1, 2), c(1, 2), c(1, 2, 3)))
+  expect_equal(res$finalParam$value, 0.4)
+  cv <- res$prediction[res$prediction$evaluationType == "TrainValidation", ]
+  expect_equal(sort(cv$rowId), 9:12)
+  expect_false("CV" %in% res$prediction$evaluationType)
+  expect_equal(res$paramSearch[[1]]$hyperSummary$fold, c("TrainValidation", "Fold3"))
+})
+
+test_that("cv fits each candidate once per fold, as before", {
+  d <- tuningData()
+  hooks <- countingHooks()
+  res <- tuneHyperparameters(
+    data = d$data, labels = d$labels,
+    param = list(value = list(0.2, 0.4)),
+    settings = hooks$settings,
+    hyperparamSettings = meanValueSettings()
+  )
+  expect_length(hooks$calls$train, 2 * 3 + 1)
+  expect_equal(sort(res$prediction$rowId[res$prediction$evaluationType == "CV"]), 1:12)
+  expect_equal(res$paramSearch[[1]]$hyperSummary$fold, c("CV", "Fold1", "Fold2", "Fold3"))
+
+  # settings saved by earlier versions have no validation and use cv
+  oldSettings <- meanValueSettings()
+  oldSettings$validation <- NULL
+  hooks <- countingHooks()
+  tuneHyperparameters(
+    data = d$data, labels = d$labels, param = list(value = list(0.2)),
+    settings = hooks$settings, hyperparamSettings = oldSettings
+  )
+  expect_length(hooks$calls$train, 3 + 1)
+})
+
+test_that("trainValidation needs at least two folds", {
+  d <- tuningData()
+  d$labels$index <- 1
+  expect_error(
+    tuneHyperparameters(
+      data = d$data, labels = d$labels, param = list(value = list(0.2)),
+      settings = countingHooks()$settings,
+      hyperparamSettings = meanValueSettings("trainValidation")
+    ),
+    "needs at least 2 folds"
+  )
+})
+
+test_that("the database form of hyperparameter settings writes validation only when not the default", {
+  expect_null(sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings())$validation)
+  expect_equal(
+    sanitizeHyperparameterSettingsForDatabase(
+      createHyperparameterSettings(validation = "trainValidation")
+    )$validation,
+    "trainValidation"
+  )
+})
+
+test_that("Cyclops models say which hyperparameter settings they ignore", {
+  # the warning is given before any data is touched
+  expect_warning(
+    try(fitCyclopsModel(trainData = NULL, modelSettings = list(),
+      hyperparameterSettings = createHyperparameterSettings(validation = "trainValidation")
+    ), silent = TRUE),
+    "ignore these hyperparameterSettings: validation"
+  )
+  expect_warning(
+    try(fitCyclopsModel(trainData = NULL, modelSettings = list(),
+      hyperparameterSettings = createHyperparameterSettings(search = "random", sampleSize = 1)
+    ), silent = TRUE),
+    "ignore these hyperparameterSettings: search"
+  )
+  expect_no_warning(
+    try(fitCyclopsModel(trainData = NULL, modelSettings = list(),
+      hyperparameterSettings = createHyperparameterSettings()
+    ), silent = TRUE)
+  )
+})

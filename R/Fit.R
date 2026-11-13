@@ -399,6 +399,17 @@ tuneHyperparameters <- function(
   metric <- hyperparamSettings$tuningMetric
   bestCvPrediction <- c()
   foldIds <- unique(labels$index)
+  # settings saved by earlier versions have no validation
+  validation <- hyperparamSettings$validation %||% "cv"
+  evaluationType <- "CV"
+  if (identical(validation, "trainValidation")) {
+    # one fit per candidate: train on all folds but the last, score on the last
+    if (length(foldIds) < 2) {
+      stop("validation = \"trainValidation\" needs at least 2 folds in the split settings", call. = FALSE)
+    }
+    foldIds <- max(foldIds)
+    evaluationType <- trainValidationEvaluationType
+  }
 
   repeat {
     candidate <- iterator$getNext(history)
@@ -469,7 +480,8 @@ tuneHyperparameters <- function(
         meanCvPerformance,
         cvPerformance,
         candidate,
-        foldIds
+        foldIds,
+        evaluationType
       )
     )
     if (!is.null(candidateError)) {
@@ -507,7 +519,7 @@ tuneHyperparameters <- function(
   finalParam <- history[[best]]$param
 
   cvPrediction <- bestCvPrediction
-  cvPrediction$evaluationType <- "CV"
+  cvPrediction$evaluationType <- evaluationType
 
   # fit final model
   ParallelLogger::logInfo("Fit best model on whole training set")
@@ -589,10 +601,10 @@ selectBest <- function(history, metric) {
   best
 }
 
-makeHyperSummary <- function(metric, meanScore, foldScores, param, foldIds) {
+makeHyperSummary <- function(metric, meanScore, foldScores, param, foldIds, evaluationType = "CV") {
   perfRows <- data.frame(
     metric = metric$name,
-    fold = c("CV", paste0("Fold", foldIds)),
+    fold = c(evaluationType, paste0("Fold", foldIds)),
     value = c(meanScore, foldScores),
     stringsAsFactors = FALSE
   )

@@ -12,15 +12,28 @@
 #' `finalize(history)` method. A candidate the model skipped with
 #' [stopCandidate()] is in the history with `cvPerformance = NA` and its
 #' message in `error`.
+#' @param validation How each candidate is scored: `"cv"` (the default) fits it
+#'   once per fold and scores it on the left-out fold, `"trainValidation"` fits
+#'   it once on all folds but the last and scores it on the last fold, for
+#'   models where one fit takes long. The size of the validation part is set by
+#'   the number of folds in the split settings (with `nfold = 5` it is a fifth of
+#'   the training data). The retained predictions of the selected candidate
+#'   have evaluationType `"CV"` or `"TrainValidation"`. Cyclops models select
+#'   their penalty with their own cross-validation and ignore this setting.
 #' @export
 createHyperparameterSettings <- function(
   search = "grid",
   tuningMetric = aucMetric,
   sampleSize = NULL,
   randomSeed = NULL,
-  generator = NULL
+  generator = NULL,
+  validation = "cv"
 ) {
   stopifnot(search %in% c("grid", "random", "custom"))
+  if (!is.character(validation) || length(validation) != 1L ||
+    !validation %in% c("cv", "trainValidation")) {
+    stop("`validation` must be \"cv\" or \"trainValidation\"", call. = FALSE)
+  }
   if (identical(search, "random")) {
     stopifnot(length(sampleSize) == 1, is.numeric(sampleSize))
   }
@@ -40,11 +53,15 @@ createHyperparameterSettings <- function(
       tuningMetric = tuningMetric,
       sampleSize = sampleSize,
       randomSeed = randomSeed,
-      generator = generator
+      generator = generator,
+      validation = validation
     ),
     class = "hyperparameterSettings"
   )
 }
+
+# evaluationType of the retained predictions with validation = "trainValidation"
+trainValidationEvaluationType <- "TrainValidation"
 
 isHyperparameterGenerator <- function(generator) {
   if (is.function(generator)) {

@@ -24,10 +24,20 @@ fitCyclopsModel <- function(
     analysisId,
     ...) {
   
-  # if hyperparameterSettings not NULL warn it is ignored
+  # Cyclops selects the penalty with its own cross-validation, so non-default
+  # hyperparameter settings have no effect; say which are ignored
   if (!is.null(hyperparameterSettings)) {
-    if (hyperparameterSettings$search != "grid" && hyperparameterSettings$tuningMetric$name != "AUC") {
-      warning("Non-default hyperparameterSettings are not supported for Cyclops models.")
+    ignored <- c(
+      search = !identical(hyperparameterSettings$search %||% "grid", "grid"),
+      tuningMetric = !identical(hyperparameterSettings$tuningMetric$name %||% "AUC", "AUC"),
+      validation = !identical(hyperparameterSettings$validation %||% "cv", "cv")
+    )
+    if (any(ignored)) {
+      warning(
+        "Cyclops models ignore these hyperparameterSettings: ",
+        paste(names(ignored)[ignored], collapse = ", "),
+        call. = FALSE
+      )
     }
   }
   
