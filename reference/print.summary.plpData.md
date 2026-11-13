@@ -46,5 +46,5 @@ print(summary)
 #> 
 #> Covariates:
 #> Number of covariates: 98
-#> Number of non-zero covariate values: 44
+#> Number of non-zero covariate values: 43
 ```

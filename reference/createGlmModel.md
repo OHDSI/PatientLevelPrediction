@@ -99,46 +99,30 @@ model <- createGlmModel(coefficients, intercept = -2.5)
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 #> Generating covariates
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpZhLLjC/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpZhLLjC/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpZhLLjC/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating cohorts
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating outcomes
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> did FE
 #> did tidy
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.0716 secs
-#> Prediction done in: 0.075 secs
+#> Prediction took 0.153 secs
+#> Prediction done in: 0.16 secs
 # see the predicted risk values
 prediction$value
-#>  [1] 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644 0.3543437 0.3318122
-#>  [8] 0.3429895 0.2994329 0.3318122 0.4013123 0.4133824 0.3208213 0.3318122
-#> [15] 0.3893608 0.3429895 0.3429895 0.3429895 0.3658644 0.4255575 0.3208213
-#> [22] 0.3775407 0.4133824 0.3429895 0.3318122 0.3775407 0.3100255 0.3658644
-#> [29] 0.3318122 0.4378235 0.3318122 0.3893608 0.3318122 0.3429895 0.3318122
-#> [36] 0.3208213 0.3100255 0.3429895 0.3893608 0.3318122 0.2994329 0.3429895
-#> [43] 0.3318122 0.3893608 0.3318122 0.2788848 0.3775407 0.2890505 0.3658644
-#> [50] 0.4133824
+#>  [1] 0.3543437 0.3775407 0.3429895 0.3775407 0.4013123 0.3100255 0.3100255
+#>  [8] 0.3775407 0.3318122 0.4013123 0.2788848 0.4255575 0.3543437 0.4133824
+#> [15] 0.3893608 0.3658644 0.3208213 0.3543437 0.3318122 0.2994329 0.3658644
+#> [22] 0.3543437 0.3318122 0.3429895 0.2994329 0.3318122 0.4013123 0.4133824
+#> [29] 0.3208213 0.3318122 0.3893608 0.3429895 0.3429895 0.3429895 0.3658644
+#> [36] 0.4255575 0.3208213 0.3775407 0.4133824 0.3429895 0.3318122 0.3775407
+#> [43] 0.3100255 0.3658644 0.3318122 0.4378235 0.3318122 0.3893608 0.3318122
+#> [50] 0.3429895
 ```

@@ -121,6 +121,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/print.summary.plpData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/recalibratePlp.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/recalibratePlpRefit.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/recordFeatureEngineeringStep.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/removeRareFeatures.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/robustNormalize.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/runMultiplePlp.html</loc></url>
@@ -150,6 +151,7 @@
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simulatePlpData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/simulationProfile.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/sklearnFromJson.html</loc></url>
+<url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/sklearnIterativeImpute.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/sklearnToJson.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/splitData.html</loc></url>
 <url><loc>https://ohdsi.github.io/PatientLevelPrediction/reference/summary.plpData.html</loc></url>

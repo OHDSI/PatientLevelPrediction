@@ -12,7 +12,8 @@ simpleImpute(trainData, featureEngineeringSettings, done = FALSE)
 
 - trainData:
 
-  The data to be imputed
+  The data to impute: the training data, or new data when `done = TRUE`.
+  It is changed in place.
 
 - featureEngineeringSettings:
 
@@ -20,8 +21,8 @@ simpleImpute(trainData, featureEngineeringSettings, done = FALSE)
 
 - done:
 
-  Whether the imputation has already been done (bool)
+  Whether the imputer has already been fitted (bool)
 
 ## Value
 
-The imputed data
+`trainData`, imputed, with the step recorded for prediction

@@ -11,7 +11,8 @@ insertResultsToSqlite(
   cohortDefinitions = NULL,
   databaseList = NULL,
   sqliteLocation = file.path(resultLocation, "sqlite"),
-  skipDiagnostics = FALSE
+  skipDiagnostics = FALSE,
+  deleteTables = TRUE
 )
 ```
 
@@ -38,6 +39,11 @@ insertResultsToSqlite(
 - skipDiagnostics:
 
   Whether to skip uploading the diagnostics
+
+- deleteTables:
+
+  If TRUE any results already in the sqlite database are removed first.
+  Use FALSE to add results to an existing database.
 
 ## Value
 

@@ -27,7 +27,14 @@ predictPlp(plpModel, plpData, population, timepoint)
 
 - timepoint:
 
-  The timepoint to predict risk (survival models only)
+  Survival models only: the number of days since the start of the
+  time-at-risk window at which to predict risk, counted like
+  survivalTime (the first day of the window is day 1). The default is
+  the length of the window, riskWindowEnd - riskWindowStart + 1, which
+  needs both ends of the window anchored to the same date (both cohort
+  start or both cohort end). With other anchors the window length
+  differs between patients, so a timepoint must be given. A timepoint
+  after the end of the window is an error.
 
 ## Value
 
@@ -53,22 +60,22 @@ plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 #> Generating outcomes
 prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.086 secs
-#> Prediction done in: 0.0894 secs
+#> Prediction took 0.161 secs
+#> Prediction done in: 0.168 secs
 # see the predicted risk values
 head(prediction)
 #>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd
-#> 1     1     2e+10        1      2010-09-05              398             864
-#> 2     2     2e+10        1      2010-06-22              130             899
-#> 3     3     2e+10        1      2009-04-18              998             105
-#> 4     4     2e+10        1      2007-10-18              301             176
-#> 5     5     2e+10        1      2011-06-30              256             587
-#> 6     6     2e+10        1      2008-03-12              126             141
+#> 1     1     2e+10        1      2009-05-12              100             826
+#> 2     2     2e+10        1      2011-09-12              710             791
+#> 3     3     2e+10        1      2009-07-05              458             938
+#> 4     4     2e+10        1      2009-08-22              603             425
+#> 5     5     2e+10        1      2012-09-16              212             252
+#> 6     6     2e+10        1      2009-02-03              504             444
 #>   daysToObsEnd ageYear gender     value rawValue
-#> 1         1553      35   8507 0.3208213    -0.75
-#> 2         1311      38   8532 0.3543437    -0.60
-#> 3          827      36   8532 0.3318122    -0.70
-#> 4         1003      33   8507 0.2994329    -0.85
-#> 5         1217      39   8532 0.3658644    -0.55
-#> 6          414      38   8532 0.3543437    -0.60
+#> 1         1654      38   8532 0.3543437    -0.60
+#> 2         1406      40   8532 0.3775407    -0.50
+#> 3         1429      37   8507 0.3429895    -0.65
+#> 4          563      40   8532 0.3775407    -0.50
+#> 5          964      42   8532 0.4013123    -0.40
+#> 6          667      34   8532 0.3100255    -0.80
 ```

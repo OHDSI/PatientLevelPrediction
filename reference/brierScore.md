@@ -33,6 +33,6 @@ brierScore(prediction)
 #> [1] 0.27
 #> 
 #> $brierScaled
-#> [1] -0.2857143
+#> [1] -0.125
 #> 
 ```

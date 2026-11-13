@@ -43,7 +43,13 @@ to save to file in a different format.
 ## Details
 
 Create a plot showing the Observed vs. expected incidence, by age and
-gender \#'
+gender
+
+The shaded band around the expected line is the mean predicted risk plus
+or minus 1.96 standard deviations of the individual predicted risks in
+each group. It shows how much predicted risks vary within the group, and
+is not a confidence interval for the mean or for the observed incidence.
+\#'
 
 ## Examples
 
@@ -53,15 +59,23 @@ data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #> Generating covariates
 #> Generating cohorts
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating outcomes
 saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Use timeStamp: TRUE
-#> Creating save directory at: /tmp/RtmpZhLLjC/plotDemographicSummary/2026-09-29-3
+#> Creating save directory at: /tmp/Rtmp9ANmSu/plotDemographicSummary/2026-11-13-3
 #> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)
 #> Patient-Level Prediction Package version 6.7.0
-#> Study started at: 2026-09-29 13:41:02.829687
-#> AnalysisID:         2026-09-29-3
+#> Study started at: 2026-11-13 11:34:57.829647
+#> AnalysisID:         2026-11-13-3
 #> AnalysisName:       Study details
 #> TargetID:           1
 #> OutcomeID:          3
@@ -69,78 +83,111 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Covariates:         98
 #> Creating population
 #> Outcome is 0 or 1
-#> Population created with: 961 observations, 961 unique subjects and 499 outcomes
-#> Population created in 0.0304 secs
+#> Population created with: 965 observations, 965 unique subjects and 493 outcomes
+#> Population created in 0.0558 secs
 #> seed: 123
 #> Creating a 25% test and 75% train (into 3 folds) random stratified split by class
-#> Data split into 239 test cases and 722 train cases (241, 241, 240)
-#> Data split in 1.13 secs
+#> Data split into 241 test cases and 724 train cases (242, 241, 241)
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp9ANmSu/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> ℹ This message has been shown 60 times and will not be shown again this session.
+#> Data split in 1.41 secs
 #> Train Set:
-#> Fold 1 241 patients with 125 outcomes - Fold 2 241 patients with 125 outcomes - Fold 3 240 patients with 125 outcomes
-#> 67 covariates in train data
+#> Fold 1 242 patients with 124 outcomes - Fold 2 241 patients with 123 outcomes - Fold 3 241 patients with 123 outcomes
+#> 62 covariates in train data
 #> Test Set:
-#> 239 patients with 124 outcomes
-#> Removing 2 redundant covariates
+#> 241 patients with 123 outcomes
+#> Removing 3 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.02 secs
+#> Tidying covariates took 1.46 secs
 #> Train Set:
-#> Fold 1 241 patients with 125 outcomes - Fold 2 241 patients with 125 outcomes - Fold 3 240 patients with 125 outcomes
-#> 65 covariates in train data
+#> Fold 1 242 patients with 124 outcomes - Fold 2 241 patients with 123 outcomes - Fold 3 241 patients with 123 outcomes
+#> 59 covariates in train data
 #> Test Set:
-#> 239 patients with 124 outcomes
+#> 241 patients with 123 outcomes
 #> 
 #> Running Cyclops
 #> Done.
 #> GLM fit status:  OK
 #> Creating variable importance data frame
-#> Prediction took 0.0925 secs
-#> Time to fit model: 0.469 secs
+#> Prediction took 0.172 secs
+#> Time to fit model: 0.944 secs
 #> Removing infrequent and redundant covariates and normalizing
-#> Removing infrequent and redundant covariates covariates and normalizing took 0.309 secs
-#> Prediction took 0.127 secs
-#> Prediction done in: 0.754 secs
+#> Removing infrequent and redundant covariates covariates and normalizing took 0.25 secs
+#> Prediction took 0.168 secs
+#> Prediction done in: 0.478 secs
 #> Calculating Performance for Test
 #> =============
-#> AUC                 61.69
-#> 95% lower AUC:      54.93
-#> 95% upper AUC:      68.46
-#> AUPRC:              61.18
+#> AUC                 60.86
+#> 95% lower AUC:      53.76
+#> 95% upper AUC:      67.97
+#> AUPRC:              64.84
 #> Brier:              0.24
 #> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.5272 : observed risk 0.5188
-#> Calibration in large- Intercept -0.028
-#> Weak calibration intercept: -0.028 - gradient:0.9273
-#> Hosmer-Lemeshow calibration gradient: 1.17 intercept:         -0.13
-#> Average Precision:  0.64
+#> Calibration in large- Mean predicted risk 0.5112 : observed risk 0.5104
+#> Calibration in large- Intercept -0.0125
+#> Weak calibration intercept: -0.0125 - gradient:1.2592
+#> Hosmer-Lemeshow calibration gradient: 1.24 intercept:         -0.12
+#> Average Precision:  0.65
 #> Calculating Performance for Train
 #> =============
-#> AUC                 63.34
-#> 95% lower AUC:      59.54
-#> 95% upper AUC:      67.14
-#> AUPRC:              65.93
-#> Brier:              0.23
-#> Eavg:               0.01
-#> Calibration in large- Mean predicted risk 0.5194 : observed risk 0.5194
-#> Calibration in large- Intercept -0.0099
-#> Weak calibration intercept: -0.0099 - gradient:1.1658
-#> Hosmer-Lemeshow calibration gradient: 1.17 intercept:         -0.08
-#> Average Precision:  0.67
-#> Calculating Performance for CV
-#> =============
-#> AUC                 61.94
-#> 95% lower AUC:      57.89
-#> 95% upper AUC:      65.99
-#> AUPRC:              64.20
+#> AUC                 63.52
+#> 95% lower AUC:      59.49
+#> 95% upper AUC:      67.55
+#> AUPRC:              65.12
 #> Brier:              0.24
 #> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.519 : observed risk 0.5194
-#> Calibration in large- Intercept -0.0092
-#> Weak calibration intercept: -0.0092 - gradient:1.1791
-#> Hosmer-Lemeshow calibration gradient: 1.20 intercept:         -0.11
-#> Average Precision:  0.64
-#> Time to calculate evaluation metrics: 0.202 secs
-#> Calculating covariate summary @ 2026-09-29 13:41:06.629543
+#> Calibration in large- Mean predicted risk 0.5111 : observed risk 0.511
+#> Calibration in large- Intercept -0.0125
+#> Weak calibration intercept: -0.0125 - gradient:1.3689
+#> Hosmer-Lemeshow calibration gradient: 1.35 intercept:         -0.18
+#> Average Precision:  0.65
+#> Calculating Performance for CV
+#> =============
+#> AUC                 57.47
+#> 95% lower AUC:      53.32
+#> 95% upper AUC:      61.62
+#> AUPRC:              59.36
+#> Brier:              0.24
+#> Eavg:               0.01
+#> Calibration in large- Mean predicted risk 0.5107 : observed risk 0.511
+#> Calibration in large- Intercept 0.0033
+#> Weak calibration intercept: 0.0033 - gradient:0.9434
+#> Hosmer-Lemeshow calibration gradient: 0.96 intercept:         0.02
+#> Average Precision:  0.59
+#> Time to calculate evaluation metrics: 0.261 secs
+#> Calculating covariate summary @ 2026-11-13 11:35:02.749991
 #> This can take a while...
 #> Creating binary labels
 #> Joining with strata
@@ -157,13 +204,13 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Restricting to subgroup
 #> Calculating summary for subgroup TestWithNoOutcome
 #> Aggregating with labels and strata
-#> Finished covariate summary @ 2026-09-29 13:41:08.565864
-#> Time to calculate covariate summary: 1.94 secs
+#> Finished covariate summary @ 2026-11-13 11:35:03.482424
+#> Time to calculate covariate summary: 0.733 secs
 #> Run finished successfully.
 #> Saving PlpResult
 #> Creating directory to save model
-#> plpResult saved to ..\/tmp/RtmpZhLLjC/plotDemographicSummary/2026-09-29-3\plpResult
-#> runPlp time taken: 5.76 secs
+#> plpResult saved to ..\/tmp/Rtmp9ANmSu/plotDemographicSummary/2026-11-13-3\plpResult
+#> runPlp time taken: 5.7 secs
 plotDemographicSummary(plpResult)
 
 # clean up 

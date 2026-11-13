@@ -25,6 +25,6 @@ An object of class `featureEngineeringSettings`
 ## Details
 
 Returns an object of class `featureEngineeringSettings` that specifies
-the sampling function that will be called and the settings
+the feature engineering function that will be called and its settings
 
 ## Examples

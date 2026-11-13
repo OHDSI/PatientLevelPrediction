@@ -5,7 +5,7 @@ Predictive mean matching using lasso
 ## Usage
 
 ``` r
-pmmFit(data, k = 5, alpha = 1)
+pmmFit(data, k = 5, alpha = 1, seed = NULL)
 ```
 
 ## Arguments
@@ -23,3 +23,8 @@ pmmFit(data, k = 5, alpha = 1)
 - alpha:
 
   Elastic-net mixing parameter (`1` = lasso, `0` = ridge)
+
+- seed:
+
+  The seed of the model's random draws (cross-validation folds and donor
+  sampling), or NULL to use the global random stream

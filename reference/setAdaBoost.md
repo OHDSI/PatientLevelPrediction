@@ -36,4 +36,11 @@ setAdaBoost(
 
 a modelSettings object
 
+## Details
+
+Models are fitted with the SAMME algorithm on every scikit-learn
+version, so a saved model gives the same predictions on any version it
+is loaded with. scikit-learn 1.5 and older would otherwise default to
+SAMME.R, which later versions removed.
+
 ## Examples
