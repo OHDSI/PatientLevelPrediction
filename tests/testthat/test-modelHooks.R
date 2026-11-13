@@ -205,3 +205,35 @@ test_that("a save handler writes only inside the model folder", {
   }
   expect_equal(saveHandler(handler("model.pt"))$fileName, "model.pt")
 })
+
+test_that("prepareData gets the model settings when it takes them", {
+  skip_if_no_eunomia()
+  local_hook_package()
+  received <- new.env()
+  prepareWithSettings <- function(plpData, map = NULL, settings) {
+    received$settings <- settings
+    toSparseM(plpData, map = map)
+  }
+  plpModel <- fitPlp(
+    trainData = copyTrainData(tinyTrainData),
+    modelSettings = hookModelSettings(list(
+      prepareData = prepareWithSettings, sequenceLength = 7
+    )),
+    hyperparameterSettings = constantMetric,
+    analysisId = "prepareSettings",
+    analysisPath = tempdir()
+  )
+  expect_equal(received$settings$sequenceLength, 7)
+  expect_equal(received$settings$modelName, "hookModel")
+
+  # a prepareData without a settings argument is called as before, also one
+  # with ... that forwards its arguments
+  prepareWithoutSettings <- function(plpData, map = NULL, ...) toSparseM(plpData, map = map, ...)
+  expect_no_error(fitPlp(
+    trainData = copyTrainData(tinyTrainData),
+    modelSettings = hookModelSettings(list(prepareData = prepareWithoutSettings)),
+    hyperparameterSettings = constantMetric,
+    analysisId = "prepareNoSettings",
+    analysisPath = tempdir()
+  ))
+})

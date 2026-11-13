@@ -239,13 +239,13 @@ fitClassifier <- function(
 
   # prepare data for training (if needed)
   if (!is.null(prepareData)) {
-    preparedData <- do.call(
-      prepareData,
-      args = list(
-        trainData,
-        map = NULL
-      )
-    )
+    prepareArgs <- list(trainData, map = NULL)
+    # the model's settings, such as dataset options, for a prepareData with a
+    # settings argument; others, such as toSparseM(), are called as before
+    if ("settings" %in% names(formals(prepareData))) {
+      prepareArgs$settings <- settings
+    }
+    preparedData <- do.call(prepareData, args = prepareArgs)
     covariates <- preparedData$dataMatrix
   } else {
     preparedData <- trainData
