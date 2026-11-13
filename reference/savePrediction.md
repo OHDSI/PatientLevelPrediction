@@ -41,23 +41,25 @@ prediction <- data.frame(
 )
 saveLoc <- file.path(tempdir())
 savePrediction(prediction, saveLoc)
-#> [1] "/tmp/RtmpDU7niT/prediction.json"
+#> [1] "/tmp/RtmpGx3hts/prediction.json"
 dir(saveLoc)
 #>  [1] "bslib-3c9f20102fef19cec6d808200c837da2"
 #>  [2] "downlit"                               
 #>  [3] "duckdb"                                
-#>  [4] "file2c6e117c609b.duckdb"               
-#>  [5] "file2c6e117c609b.duckdb.wal"           
-#>  [6] "file2c6e143061a9.duckdb"               
-#>  [7] "file2c6e143061a9.duckdb.wal"           
-#>  [8] "file2c6e2888d910"                      
-#>  [9] "file2c6e46661f81.duckdb"               
-#> [10] "file2c6e46661f81.duckdb.wal"           
-#> [11] "file2c6e5cdd8da4"                      
-#> [12] "file2c6e640cbeb9"                      
-#> [13] "file2c6e77d37133"                      
-#> [14] "prediction.json"                       
-#> [15] "temp_libpath2c6e255d5543"              
+#>  [4] "file2c8113711ca1.duckdb"               
+#>  [5] "file2c8113711ca1.duckdb.wal"           
+#>  [6] "file2c814e55182c.duckdb"               
+#>  [7] "file2c814e55182c.duckdb.wal"           
+#>  [8] "file2c815014dfa0"                      
+#>  [9] "file2c81549d9feb"                      
+#> [10] "file2c815627050f"                      
+#> [11] "file2c816d297b3b.duckdb"               
+#> [12] "file2c816d297b3b.duckdb.wal"           
+#> [13] "file2c816fd2f72c.duckdb"               
+#> [14] "file2c816fd2f72c.duckdb.wal"           
+#> [15] "file2c817db27c6c"                      
+#> [16] "prediction.json"                       
+#> [17] "temp_libpath2c816bb94a84"              
 
 # clean up
 unlink(file.path(saveLoc, "prediction.json"))

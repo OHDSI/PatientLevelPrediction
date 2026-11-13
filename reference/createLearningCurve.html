@@ -85,7 +85,8 @@ plotLearningCurve() function."></head><body>
 <span>  logSettings <span class="op">=</span> <span class="fu"><a href="createLogSettings.html">createLogSettings</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  executeSettings <span class="op">=</span> <span class="fu"><a href="createExecuteSettings.html">createExecuteSettings</a></span><span class="op">(</span>runSplitData <span class="op">=</span> <span class="cn">TRUE</span>, runSampleData <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    runFeatureEngineering <span class="op">=</span> <span class="cn">FALSE</span>, runPreprocessData <span class="op">=</span> <span class="cn">TRUE</span>, runModelDevelopment <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    runCovariateSummary <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>    runCovariateSummary <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  hyperparameterSettings <span class="op">=</span> <span class="fu"><a href="createHyperparameterSettings.html">createHyperparameterSettings</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -169,6 +170,12 @@ The default is none.</p></dd>
 <dd><p>An object of <code>preprocessSettings</code>. This setting specifies the minimum fraction of
 target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training</p></dd>
+
+
+<dt id="arg-hyperparametersettings">hyperparameterSettings<a class="anchor" aria-label="anchor" href="#arg-hyperparametersettings"></a></dt>
+<dd><p>An object of <code>hyperparameterSettings</code> created using
+<code>createHyperparameterSettings</code>, used to tune the model
+at every training fraction (default: the default search and AUC)</p></dd>
 
 
 <dt id="arg-logsettings">logSettings<a class="anchor" aria-label="anchor" href="#arg-logsettings"></a></dt>

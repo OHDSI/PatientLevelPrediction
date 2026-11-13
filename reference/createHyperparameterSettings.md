@@ -42,4 +42,8 @@ createHyperparameterSettings(
   returns a finite list of named parameter lists, or an object with
   lifecycle methods. Lifecycle generator objects must provide
   `initialize(definition, settings)` and `getNext(history)` methods, and
-  may provide an optional `finalize(history)` method.
+  may provide an optional `finalize(history)` method. A candidate the
+  model skipped with
+  [`stopCandidate()`](https://ohdsi.github.io/PatientLevelPrediction/reference/stopCandidate.md)
+  is in the history with `cvPerformance = NA` and its message in
+  `error`.

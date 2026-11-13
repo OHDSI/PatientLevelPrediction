@@ -100,7 +100,9 @@ a function with arguments <code>definition</code>, <code>expanded</code>, and <c
 returns a finite list of named parameter lists, or an object with lifecycle
 methods. Lifecycle generator objects must provide <code>initialize(definition,
 settings)</code> and <code>getNext(history)</code> methods, and may provide an optional
-<code>finalize(history)</code> method.</p></dd>
+<code>finalize(history)</code> method. A candidate the model skipped with
+<code><a href="stopCandidate.html">stopCandidate()</a></code> is in the history with <code>cvPerformance = NA</code> and its
+message in <code>error</code>.</p></dd>
 
 </dl></div>
 

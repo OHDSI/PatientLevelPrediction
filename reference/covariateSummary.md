@@ -66,7 +66,7 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> Generating covariates
 #> Generating cohorts
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpDU7niT/duckdb
+#> ℹ /tmp/RtmpGx3hts/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -75,14 +75,14 @@ plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating outcomes
 covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
-#> Calculating covariate summary @ 2026-11-13 12:55:45.178596
+#> Calculating covariate summary @ 2026-11-13 13:58:08.693786
 #> This can take a while...
 #> calculating subset of strata 1
 #> Restricting to subgroup
 #> Calculating summary for subgroup 
 #> Aggregating with no labels or strata
-#> Finished covariate summary @ 2026-11-13 12:55:45.345558
-#> Time to calculate covariate summary: 0.167 secs
+#> Finished covariate summary @ 2026-11-13 13:58:08.831773
+#> Time to calculate covariate summary: 0.138 secs
 head(covariateSummary)
 #> # A tibble: 6 × 9
 #>   covariateId covariateName     analysisId conceptId valueAsConceptId collisions

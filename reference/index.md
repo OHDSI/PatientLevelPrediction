@@ -67,6 +67,9 @@ Design settings required when developing a model.
 - [`createTuningMetric()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createTuningMetric.md)
   : Create a tuning metric descriptor
 
+- [`stopCandidate()`](https://ohdsi.github.io/PatientLevelPrediction/reference/stopCandidate.md)
+  : Skip a hyperparameter candidate that cannot be fitted
+
 ## Optional design settings
 
 Settings for optional steps that can be used in the PLP pipeline
