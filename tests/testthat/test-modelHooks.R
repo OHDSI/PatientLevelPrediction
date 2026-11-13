@@ -237,3 +237,79 @@ test_that("prepareData gets the model settings when it takes them", {
     analysisPath = tempdir()
   ))
 })
+
+test_that("a candidate the model skips with stopCandidate() is recorded and the search goes on", {
+  skip_if_no_eunomia()
+  local_hook_package()
+  skippingTrain <- function(dataMatrix, labels, hyperParameters, settings) {
+    if (hyperParameters$value == 0.1) {
+      stopCandidate("out of memory")
+    }
+    list(value = hyperParameters$value)
+  }
+  modelSettings <- hookModelSettings(list(train = skippingTrain))
+  modelSettings$param <- list(value = list(0.1, 0.3))
+  meanValue <- createHyperparameterSettings(
+    tuningMetric = createTuningMetric(fun = function(prediction) mean(prediction$value), name = "meanValue")
+  )
+  expect_warning(
+    plpModel <- fitPlp(
+      trainData = copyTrainData(tinyTrainData),
+      modelSettings = modelSettings,
+      hyperparameterSettings = meanValue,
+      analysisId = "skipCandidate",
+      analysisPath = tempdir()
+    ),
+    "Skipping param value=0.1 of hookModel: out of memory",
+    class = "plpCandidateWarning"
+  )
+  search <- plpModel$trainDetails$hyperParamSearch
+  expect_length(search, 2)
+  expect_true(is.na(search[[1]]$cvPerformance))
+  expect_equal(search[[1]]$error, "out of memory")
+  expect_equal(search[[2]]$cvPerformance, 0.3)
+  expect_null(search[[2]]$error)
+  expect_equal(plpModel$model$value, 0.3)
+  cvValues <- plpModel$prediction$value[plpModel$prediction$evaluationType == "CV"]
+  expect_true(length(cvValues) > 0 && all(cvValues == 0.3))
+
+  # when every candidate is skipped the search stops with their messages
+  modelSettings$param <- list(value = list(0.1))
+  expect_error(
+    suppressWarnings(fitPlp(
+      trainData = copyTrainData(tinyTrainData),
+      modelSettings = modelSettings,
+      hyperparameterSettings = meanValue,
+      analysisId = "allSkipped",
+      analysisPath = tempdir()
+    )),
+    "All 1 hyperparameter candidates of hookModel were skipped: out of memory"
+  )
+})
+
+test_that("any other error in a candidate stops the search at once", {
+  skip_if_no_eunomia()
+  local_hook_package()
+  tried <- c()
+  brokenTrain <- function(dataMatrix, labels, hyperParameters, settings) {
+    tried <<- c(tried, hyperParameters$value)
+    if (hyperParameters$value == 0.1) {
+      stop("a bug in train")
+    }
+    list(value = hyperParameters$value)
+  }
+  modelSettings <- hookModelSettings(list(train = brokenTrain))
+  modelSettings$param <- list(value = list(0.1, 0.3))
+  expect_error(
+    fitPlp(
+      trainData = copyTrainData(tinyTrainData),
+      modelSettings = modelSettings,
+      hyperparameterSettings = constantMetric,
+      analysisId = "brokenCandidate",
+      analysisPath = tempdir()
+    ),
+    "a bug in train"
+  )
+  # the first fold of the first candidate failed; nothing else was fitted
+  expect_equal(tried, 0.1)
+})

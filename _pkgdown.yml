@@ -105,6 +105,7 @@ reference:
       - createPreprocessSettings
       - createHyperparameterSettings
       - createTuningMetric
+      - stopCandidate
   - title: "Optional design settings"
     desc: >
       Settings for optional steps that can be used in the PLP pipeline

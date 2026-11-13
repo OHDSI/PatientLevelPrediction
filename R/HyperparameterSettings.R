@@ -9,7 +9,9 @@
 #' returns a finite list of named parameter lists, or an object with lifecycle
 #' methods. Lifecycle generator objects must provide `initialize(definition,
 #' settings)` and `getNext(history)` methods, and may provide an optional
-#' `finalize(history)` method.
+#' `finalize(history)` method. A candidate the model skipped with
+#' [stopCandidate()] is in the history with `cvPerformance = NA` and its
+#' message in `error`.
 #' @export
 createHyperparameterSettings <- function(
   search = "grid",

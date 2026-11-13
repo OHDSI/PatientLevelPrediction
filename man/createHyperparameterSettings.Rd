@@ -27,7 +27,9 @@ a function with arguments \code{definition}, \code{expanded}, and \code{settings
 returns a finite list of named parameter lists, or an object with lifecycle
 methods. Lifecycle generator objects must provide \code{initialize(definition,
 settings)} and \code{getNext(history)} methods, and may provide an optional
-\code{finalize(history)} method.}
+\code{finalize(history)} method. A candidate the model skipped with
+\code{\link[=stopCandidate]{stopCandidate()}} is in the history with \code{cvPerformance = NA} and its
+message in \code{error}.}
 }
 \description{
 Create Hyperparameter Settings

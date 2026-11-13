@@ -405,38 +405,65 @@ tuneHyperparameters <- function(
     if (is.null(candidate)) {
       break
     }
-    cvPrediction <- c()
-    cvPerformance <- c()
-
-    for (i in foldIds) {
-      ind <- labels$index != i
-      model <- do.call(
-        trainFun,
-        list(
-          dataMatrix = data[ind, , drop = FALSE],
-          labels = labels[ind, ],
-          hyperParameters = candidate,
-          settings = settings
-        )
+    # A candidate the model cannot run (it signals this with stopCandidate(),
+    # for example when it runs out of memory) is recorded with a missing
+    # performance and the search goes on with the next one; selectBest() skips
+    # missing performances. Any other error stops the search.
+    folds <- tryCatch(
+      {
+        cvPrediction <- c()
+        cvPerformance <- c()
+        for (i in foldIds) {
+          ind <- labels$index != i
+          model <- do.call(
+            trainFun,
+            list(
+              dataMatrix = data[ind, , drop = FALSE],
+              labels = labels[ind, ],
+              hyperParameters = candidate,
+              settings = settings
+            )
+          )
+          prediction <- do.call(
+            predictFun,
+            list(
+              plpModel = model,
+              data = data[!ind, , drop = FALSE],
+              cohort = labels[!ind, ]
+            )
+          )
+          performance <- metric$fun(prediction)
+          cvPrediction <- rbind(cvPrediction, prediction)
+          cvPerformance <- c(cvPerformance, performance)
+        }
+        list(prediction = cvPrediction, performance = cvPerformance)
+      },
+      plpCandidateError = function(e) e
+    )
+    candidateError <- NULL
+    if (inherits(folds, "plpCandidateError")) {
+      candidateError <- conditionMessage(folds)
+      skipMessage <- paste0(
+        "Skipping param ",
+        paste(names(candidate), candidate, sep = "=", collapse = ", "),
+        " of ", settings$modelName, ": ", candidateError
       )
-      prediction <- do.call(
-        predictFun,
-        list(
-          plpModel = model,
-          data = data[!ind, , drop = FALSE],
-          cohort = labels[!ind, ]
-        )
-      )
-      performance <- metric$fun(prediction)
-      cvPrediction <- rbind(cvPrediction, prediction)
-      cvPerformance <- c(cvPerformance, performance)
+      ParallelLogger::logWarn(skipMessage)
+      warning(warningCondition(skipMessage, class = "plpCandidateWarning"))
+      cvPrediction <- NULL
+      cvPerformance <- rep(NA_real_, length(foldIds))
+      meanCvPerformance <- NA_real_
+    } else {
+      cvPrediction <- folds$prediction
+      cvPerformance <- folds$performance
+      meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     }
-    meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     history[[length(history) + 1]] <- list(
       metric = metric$name,
       param = candidate,
       cvPerformance = meanCvPerformance,
       cvPerformancePerFold = cvPerformance,
+      error = candidateError,
       hyperSummary = makeHyperSummary(
         metric,
         meanCvPerformance,
@@ -445,6 +472,9 @@ tuneHyperparameters <- function(
         foldIds
       )
     )
+    if (!is.null(candidateError)) {
+      next
+    }
     # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
     if (identical(selectBest(history, metric), length(history))) {
       ParallelLogger::logInfo(paste0(
@@ -465,6 +495,14 @@ tuneHyperparameters <- function(
   }
   iterator$finalize(history)
   best <- selectBest(history, metric)
+  if (length(best) == 0) {
+    errors <- unique(unlist(lapply(history, function(x) x$error)))
+    stop(
+      "All ", length(history), " hyperparameter candidates of ", settings$modelName,
+      " were skipped: ", paste(errors, collapse = "; "),
+      call. = FALSE
+    )
+  }
 
   finalParam <- history[[best]]$param
 
@@ -508,6 +546,37 @@ tuneHyperparameters <- function(
     finalParam = finalParam,
     paramSearch = history
   )
+}
+
+#' Skip a hyperparameter candidate that cannot be fitted
+#'
+#' @description
+#' Called from a model's train or predict function to say that the current
+#' hyperparameter candidate cannot be fitted, for example because it runs out
+#' of memory. The hyperparameter search records the candidate with a missing
+#' performance and this message, warns, and goes on with the next candidate.
+#' The search stops if every candidate is skipped.
+#'
+#' Any other error in train or predict stops the search, so a model that never
+#' calls `stopCandidate()` behaves as before.
+#'
+#' @param message Why the candidate cannot be fitted.
+#' @param ... Further fields for the condition, passed to [errorCondition()].
+#' @return Does not return; signals an error of class `plpCandidateError`.
+#' @examples
+#' train <- function(dataMatrix, labels, hyperParameters, settings) {
+#'   if (hyperParameters$size > 1000) {
+#'     stopCandidate("size larger than the memory allows")
+#'   }
+#'   list(size = hyperParameters$size)
+#' }
+#' tryCatch(
+#'   train(NULL, NULL, list(size = 5000), NULL),
+#'   plpCandidateError = function(e) conditionMessage(e)
+#' )
+#' @export
+stopCandidate <- function(message, ...) {
+  stop(errorCondition(message, ..., class = "plpCandidateError", call = sys.call(-1)))
 }
 
 selectBest <- function(history, metric) {
