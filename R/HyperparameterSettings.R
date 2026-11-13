@@ -95,15 +95,28 @@ prepareHyperparameterGrid <- function(paramDefinition,
           length(paramDefinition) > 0 &&
           is.list(paramDefinition[[1]]) &&
           !is.null(names(paramDefinition[[1]]))) {
-        return(makeSequentialIterator(paramDefinition))
+        expanded <- unname(paramDefinition)
+      } else {
+        expanded <- listCartesian(paramDefinition)
       }
-      expanded <- listCartesian(paramDefinition)
 
       if (identical(settings$search, "grid")) {
         return(makeSequentialIterator(expanded))
       }
 
       if (identical(settings$search, "random")) {
+        if (!is.null(settings$randomSeed)) {
+          oldSeedExists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+          if (oldSeedExists) oldSeed <- get(".Random.seed", envir = .GlobalEnv)
+          set.seed(settings$randomSeed)
+          on.exit({
+            if (oldSeedExists) {
+              assign(".Random.seed", oldSeed, envir = .GlobalEnv)
+            } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+              rm(".Random.seed", envir = .GlobalEnv)
+            }
+          }, add = TRUE)
+        }
         idx <- sample.int(
           length(expanded),
           size = min(settings$sampleSize, length(expanded))
@@ -189,7 +202,7 @@ aucMetric <- createTuningMetric(
 
 auprcMetric <- createTuningMetric(
   fun = function(prediction) {
-    positive <- prediction$value[prediction$outcomeCount == 1]
+    positive <- prediction$value[prediction$outcomeCount > 0]
     negative <- prediction$value[prediction$outcomeCount == 0]
     pr <- PRROC::pr.curve(scores.class0 = positive, scores.class1 = negative)
     auprc <- pr$auc.integral
@@ -286,7 +299,7 @@ computeGridPerformance <- function(
   hyperSummary <- as.data.frame(c(
     data.frame(
       metric = metricName,
-      fold = c("CV", as.character(seq_along(performanceFold))),
+      fold = c("CV", as.character(unique(prediction$index))),
       value = c(performance, performanceFold)
     ),
     paramValues

@@ -217,7 +217,7 @@ getThresholdSummary_survival <- function(prediction, evalColumn, timepoint, ...)
 
     # add netbenefit
     preddat <- data.frame(
-      p = p / max(p),
+      p = p,
       t = t,
       y = y
     )
@@ -570,7 +570,7 @@ f1Score <- function(TP, TN, FN, FP) {
     TN = TN
   )
 
-  return(2 * (TP / (TP + FP)) * (TP / (TP + FN)) / ((TP / (TP + FP)) + (TP / (TP + FN))))
+  return(2 * TP / (2 * TP + FP + FN))
 }
 #' Calculate the accuracy
 #'

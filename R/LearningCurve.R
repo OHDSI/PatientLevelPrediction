@@ -229,6 +229,7 @@ createLearningCurve <- function(
 
 lcWrapper <- function(settings) {
   plpData <- PatientLevelPrediction::loadPlpData(settings$plpData)
+  on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
   settings$plpData <- quote(plpData)
   result <- tryCatch(
     {

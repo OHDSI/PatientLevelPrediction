@@ -22,6 +22,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Egill Fridgeirsson \email{e.fridgeirsson@erasmusmc.nl}
   \item Jenna Reps \email{jreps@its.jnj.com}
   \item Martijn Schuemie
   \item Marc Suchard

@@ -8,7 +8,7 @@ createPlpResultTables(
   connectionDetails,
   targetDialect = "postgresql",
   resultSchema,
-  deleteTables = TRUE,
+  deleteTables = FALSE,
   createTables = TRUE,
   tablePrefix = "",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
@@ -22,7 +22,10 @@ createPlpResultTables(
 
 \item{resultSchema}{The name of the database schema that the result tables will be created.}
 
-\item{deleteTables}{If true any existing tables matching the PatientLevelPrediction result tables names will be deleted}
+\item{deleteTables}{If TRUE, existing PatientLevelPrediction result tables (and the
+migration tables) in the schema are deleted first, with all
+their results. FALSE by default, so results are never removed
+unless asked for.}
 
 \item{createTables}{If true the PatientLevelPrediction result tables will be created}
 

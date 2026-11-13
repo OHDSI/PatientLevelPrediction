@@ -76,7 +76,8 @@ createTempModelLoc <- function() {
 #' join two lists
 #'
 #' @details
-#' This function joins two lists
+#' This function joins two lists. Names stay with their elements; an unnamed
+#' list contributes empty names.
 #' @param a   A list
 #' @param b   Another list
 #' @return the joined list
@@ -90,14 +91,17 @@ listAppend <- function(a, b) {
   size <- length(a) + length(b)
   x <- list()
   length(x) <- size
-  for (i in 1:size) {
+  for (i in seq_len(size)) {
     if (i <= length(a)) {
       x[[i]] <- a[[i]]
     } else {
       x[[i]] <- b[[i - length(a)]]
     }
   }
-  names(x) <- c(names(a), names(b))
+  # an unnamed list contributes empty names, so the names stay with their elements
+  if (!is.null(names(a)) || !is.null(names(b))) {
+    names(x) <- c(names(a) %||% rep("", length(a)), names(b) %||% rep("", length(b)))
+  }
   return(x)
 }
 
@@ -198,8 +202,9 @@ setPythonEnvironment <- function(envname = "PLP", envtype = NULL) {
     reticulate::use_condaenv(envname)
     return(paste0("Using conda environment ", envname))
   } else {
+    # virtualenv_list() gives the names; conda_list() a table with a name column
     pEnvironments <- reticulate::virtualenv_list()
-    if (!envname %in% pEnvironments$name) {
+    if (!envname %in% pEnvironments) {
       return(paste0("Python environment ", envname, " not found.  Please set up using configurePython()"))
     }
     reticulate::use_virtualenv(envname)
@@ -376,7 +381,53 @@ cut2 <- function(x, g, m = 150, digits = 3) {
 }
 
 
+# Kaplan-Meier cumulative incidence and its confidence limits at a timepoint.
+# NA when follow-up ends before the timepoint and survival has not reached zero.
+kmIncidenceAtTimepoint <- function(time, event, timepoint) {
+  km <- tryCatch(
+    {
+      summary(
+        survival::survfit(survival::Surv(time, event) ~ 1),
+        times = timepoint,
+        extend = TRUE
+      )
+    },
+    error = function(e) {
+      ParallelLogger::logError(e)
+      return(NULL)
+    }
+  )
+  if (is.null(km) || length(km$surv) != 1 ||
+    (max(time, na.rm = TRUE) < timepoint && km$surv > 0)) {
+    return(list(incidence = NA_real_, lower = NA_real_, upper = NA_real_))
+  }
+  return(list(incidence = 1 - km$surv, lower = 1 - km$upper, upper = 1 - km$lower))
+}
+
 functionExists <- function(name, envir = parent.frame()) {
   is.character(name) && length(name) == 1L && name != "file" &&
     exists(name, envir = envir, mode = "function", inherits = TRUE)
+}
+
+# Evaluates expr with the random stream set to seed, and gives the caller's
+# stream back as it was, so that draws made under a seed do not depend on what
+# else used the stream (such as Andromeda's names for temporary tables). Without
+# a seed, expr uses the global stream.
+withLocalSeed <- function(seed, expr) {
+  if (is.null(seed)) {
+    return(expr)
+  }
+  hadSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  if (hadSeed) {
+    savedSeed <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  }
+  on.exit({
+    if (hadSeed) {
+      assign(".Random.seed", savedSeed, envir = globalenv())
+    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+      rm(".Random.seed", envir = globalenv())
+    }
+  }, add = TRUE)
+  set.seed(seed)
+  expr
 }

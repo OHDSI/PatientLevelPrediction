@@ -16,7 +16,7 @@
 test_that("Create existing sklearn works", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  expect_error(createSklearnModel("existing"))
+  expect_error(createSklearnModel("existing"), "modelLocation does not exist")
   # create a file model.pkl for testing
   file.create("model.pkl")
   covariateSettings <-
@@ -31,17 +31,17 @@ test_that("Create existing sklearn works", {
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
-  ))
+  ), "covariateMap is wrong class")
   # dataframe wrong column names
   expect_error(createSklearnModel(
     modelLocation = "model.pkl",
     covariateMap = data.frame(
       columnId = c(1),
-      notCovariateId = c(1002),
+      notCovariateId = c(1002)
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
-  ))
+  ), "Column names of covariateMap are not correct")
   # dataframe wrong column types
   expect_error(createSklearnModel(
     modelLocation = "model.pkl",
@@ -51,7 +51,7 @@ test_that("Create existing sklearn works", {
     ),
     covariateSettings = covariateSettings,
     populationSettings = populationSettings
-  ))
+  ), "Column types of covariateMap are not correct\\.")
 
   model <- createSklearnModel(
     modelLocation = "model.pkl",
@@ -72,7 +72,7 @@ test_that("Create existing sklearn works", {
 test_that("existing sklearn model works", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # fit a simple sklearn model with plp
   modelSettings <- setDecisionTree(
     criterion = list("gini"),
@@ -122,7 +122,7 @@ test_that("existing sklearn model works", {
 test_that("Externally trained sklearn model works", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
   # change map to be some random order
   covariateIds <- tinyTrainData$covariateData$covariates %>%
     dplyr::pull(.data$covariateId) %>%
@@ -171,49 +171,49 @@ test_that("Create existing GLM model works", {
   expect_error(createGlmModel(coefficients = data.frame(
     weights = c(1, 2),
     covariateId = c(1, 2)
-  )))
+  )), "Column names of coefficients are not correct")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c("1", "2"),
     covariateId = c(1, 2)
-  )))
+  )), "Column types of coefficients are not correct\\.")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c("1", "2")
-  )))
+  )), "Column types of coefficients are not correct\\.")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), intercept = "2"))
+  ), intercept = "2"), "intercept is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = 1))
+  ), mapping = 1), "mapping is wrong class")
   
   
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", targetId = "char"))
+  ), mapping = "logistic", targetId = "char"), "targetId is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", outcomeId = "char"))
+  ), mapping = "logistic", outcomeId = "char"), "outcomeId is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", populationSettings = "char"))
+  ), mapping = "logistic", populationSettings = "char"), "populationSettings is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", restrictPlpDataSettings = "char"))
+  ), mapping = "logistic", restrictPlpDataSettings = "char"), "restrictPlpDataSettings is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", covariateSettings = "char"))
+  ), mapping = "logistic", covariateSettings = "char"), "covariateSettings is wrong class")
   expect_error(createGlmModel(coefficients = data.frame(
     coefficient = c(1, 2),
     covariateId = c(1, 2)
-  ), mapping = "logistic", requiresDenseMatrix = 4))
+  ), mapping = "logistic", requireDenseMatrix = 4), "requireDenseMatrix is wrong class")
   
   model <- createGlmModel(
     coefficients = data.frame(
@@ -279,10 +279,18 @@ test_that("Create existing GLM model works", {
 })
 
 test_that("Existing glm model works", {
+  skip_if_no_eunomia()
   model <- createGlmModel(coefficients = data.frame(
     coefficient = c(0.05),
     covariateId = c(1002)
   ), intercept = -2.5)
   prediction <- predictPlp(model, testData, testData$labels)
   expect_correct_predictions(prediction, testData)
+})
+
+test_that("createSklearnModel has a usable default covariate map", {
+  expect_equal(
+    eval(formals(createSklearnModel)$covariateMap),
+    data.frame(columnId = 1:2, covariateId = c(1, 2))
+  )
 })

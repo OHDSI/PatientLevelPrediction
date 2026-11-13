@@ -408,6 +408,7 @@ getPlpData <- function(
     rowIdField = "row_id",
     covariateSettings = covariateSettings
   )
+  mergeDuplicateAnalysisRef(covariateData)
   if (max(databaseDetails$outcomeIds) != -999) {
     ParallelLogger::logTrace("Fetching outcomes from server")
     start <- Sys.time()
@@ -511,6 +512,39 @@ getPlpData <- function(
   return(result)
 }
 
+# Each covariate builder adds its own analysisRef rows, so cohort covariate settings
+# sharing an analysisId leave duplicate rows, and joins on analysisId (such as
+# FeatureExtraction::aggregateCovariates) then count their covariates once per row.
+# Keeps one row per analysisId; window columns that differ become NA (the window is
+# in each covariateName). Rows that disagree on the covariate type are an error.
+mergeDuplicateAnalysisRef <- function(covariateData) {
+  analysisRef <- covariateData$analysisRef %>% dplyr::collect() %>% as.data.frame()
+  if (nrow(analysisRef) == 0 || !anyDuplicated(analysisRef$analysisId)) {
+    return(invisible(covariateData))
+  }
+  merged <- lapply(split(analysisRef, analysisRef$analysisId), function(rows) {
+    for (column in intersect(c("isBinary", "missingMeansZero"), colnames(rows))) {
+      if (length(unique(rows[[column]])) > 1) {
+        errorMessage <- paste0(
+          "analysisId ", rows$analysisId[1], " is used by covariates with different ",
+          column, " values. Give them different analysisIds."
+        )
+        ParallelLogger::logError(errorMessage)
+        stop(errorMessage)
+      }
+    }
+    row <- rows[1, , drop = FALSE]
+    for (column in setdiff(colnames(rows), "analysisId")) {
+      if (length(unique(rows[[column]])) > 1) {
+        row[[column]] <- rows[[column]][NA_integer_]
+      }
+    }
+    row
+  })
+  covariateData$analysisRef <- do.call(rbind, unname(merged))
+  invisible(covariateData)
+}
+
 #' Print a plpData object
 #' @method print plpData
 #' @param x The plpData object to print
@@ -547,7 +581,8 @@ summary.plpData <- function(object, ...) {
   )
   for (i in seq_len(nrow(outcomeCounts))) {
     outcomeCounts$eventCount[i] <- sum(object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i])
-    outcomeCounts$personCount[i] <- length(unique(object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]))
+    outcomeRowIds <- object$outcomes$rowId[object$outcomes$outcomeId == attr(object$outcomes, "metaData")$outcomeIds[i]]
+    outcomeCounts$personCount[i] <- length(unique(object$cohorts$subjectId[object$cohorts$rowId %in% outcomeRowIds]))
   }
 
   covDetails <- FeatureExtraction::summary(object$covariateData)

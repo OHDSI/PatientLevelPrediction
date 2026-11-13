@@ -7,14 +7,15 @@
 minMaxNormalize(trainData, featureEngineeringSettings, done = FALSE)
 }
 \arguments{
-\item{trainData}{The training data to be normalized}
+\item{trainData}{The data to normalize: the training data, or new data when
+\code{done = TRUE}. It is changed in place.}
 
 \item{featureEngineeringSettings}{The settings for the normalization}
 
-\item{done}{Whether the data has already been normalized (bool)}
+\item{done}{Whether the normalization has already been fitted (bool)}
 }
 \value{
-The normalized data
+\code{trainData}, normalized, with the step recorded for prediction
 }
 \description{
 A function that normalizes continous features to have values between 0 and 1

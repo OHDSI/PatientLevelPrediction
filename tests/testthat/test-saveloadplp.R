@@ -15,12 +15,12 @@
 # limitations under the License.
 
 test_that("savePlpDataError", {
-  expect_error(savePlpData())
-  expect_error(savePlpData(plpData = 1))
-  expect_error(savePlpData(plpData = 1, file = "testing"))
+  expect_error(savePlpData(), "Must specify plpData")
+  expect_error(savePlpData(plpData = 1), "Must specify file")
+  expect_error(savePlpData(plpData = 1, file = "testing"), "Data not of class plpData")
 })
 
-if (internet && rlang::is_installed("Eunomia")) {
+if (isTRUE(eunomiaAvailable)) {
   oldCohorts <- plpData$cohorts
   oldOutcomes <- plpData$outcomes
   oldCovariates <- as.data.frame(plpData$covariateData$covariates)
@@ -28,7 +28,7 @@ if (internet && rlang::is_installed("Eunomia")) {
 }
 test_that("savePlpData", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   savePlpData(
     plpData = plpData,
     file = file.path(saveLoc, "saveDataTest"), overwrite = TRUE
@@ -38,13 +38,14 @@ test_that("savePlpData", {
 })
 
 test_that("loadPlpDataError", {
-  expect_error(loadPlpData(file = "madeup/dffdf/testing"))
+  expect_error(loadPlpData(file = "madeup/dffdf/testing"), "Cannot find folder madeup/dffdf/testing")
 })
 
 test_that("loadPlpData", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   loadedData <- loadPlpData(file = file.path(saveLoc, "saveDataTest"))
+  withr::defer(Andromeda::close(loadedData$covariateData))
   expect_identical(loadedData$cohorts, oldCohorts)
   expect_identical(loadedData$outcomes, oldOutcomes)
   expect_equal(
@@ -62,29 +63,29 @@ test_that("print.plpData", {
   expect_equal(print.plpData(NULL), NULL)
 })
 
-test_that("summary.plpData", {
-  expect_error(summary.plpData(NULL))
+test_that("summary.plpData errors without data", {
+  expect_error(summary.plpData(NULL), "arguments imply differing number of rows: 0, 1")
 })
 
 test_that("print.summary.plpData", {
-  expect_error(print.summary.plpData(NULL))
+  expect_error(print.summary.plpData(NULL), "attempt to set 'colnames' on an object with less than two dimensions")
 })
 
 
 test_that("savePlpModelError", {
-  expect_error(savePlpModel(dirPath = NULL))
-  expect_error(savePlpModel(plpModel = NULL))
-  expect_error(savePlpModel(plpModel = NULL, dirPath = NULL))
+  expect_error(savePlpModel(dirPath = NULL), "Must specify plpModel")
+  expect_error(savePlpModel(plpModel = NULL), "Must specify directory path")
+  expect_error(savePlpModel(plpModel = NULL, dirPath = NULL), "Not a plpModel")
 })
 
 test_that("loadPlpModelError", {
-  expect_error(loadPlpModel(dirPath = NULL))
-  expect_error(loadPlpModel(dirPath = "madeup.txt"))
+  expect_error(loadPlpModel(dirPath = NULL), "invalid 'file' argument")
+  expect_error(loadPlpModel(dirPath = "madeup.txt"), "Cannot find folder madeup\\.txt")
 })
 
 test_that("move model files when saveType is file", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
 # make an sklearn model to test file transport
   dir.create(file.path(saveLoc, "testMoveStart"))
   write.csv(data.frame(a = 1, b = 2), file = file.path(saveLoc, "testMoveStart", "file.csv"), row.names = FALSE)
@@ -112,8 +113,8 @@ test_that("loadPrediction", {
 
 
 test_that("savePlpResultError", {
-  expect_error(savePlpResult(dirPath = NULL))
-  expect_error(savePlpResult(result = NULL))
+  expect_error(savePlpResult(dirPath = NULL), "Must specify runPlp output")
+  expect_error(savePlpResult(result = NULL), "Must specify directory location")
 })
 
 test_that("savePlpResult", {
@@ -137,10 +138,10 @@ test_that("savePlpResult", {
 
 
 test_that("loadPlpResultError", {
-  expect_error(loadPlpResult(dirPath = NULL))
-  expect_error(loadPlpResult(dirPath = "madeup/dfdfd/j"))
+  expect_error(loadPlpResult(dirPath = NULL), "invalid 'file' argument")
+  expect_error(loadPlpResult(dirPath = "madeup/dfdfd/j"), "Cannot find folder madeup/dfdfd/j")
   write.csv(c(0), file.path(saveLoc, "file2.csv"))
-  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file1.csv")))
+  expect_error(loadPlpResult(dirPath = file.path(saveLoc, "file1.csv")), "Cannot find folder")
 })
 
 test_that("loadPlpResult", {
@@ -168,7 +169,7 @@ test_that("loadPlpResult", {
 
 test_that("savePlpShareable works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   # check it works
   savePlpShareable(plpResult, file.path(saveLoc, "plpFriendly"), minCellCount = 0)
   shareableLoad <- loadPlpShareable(file.path(saveLoc, "plpFriendly"))
@@ -244,4 +245,284 @@ test_that("applyMinCellCount works", {
   expect_equal(minCellResult$with_no_outcome_covariate_count[2], -1)
   expect_equal(1, sum(minCellResult$with_no_outcome_covariate_count == -1))
   expect_equal(1, sum(minCellResult$with_outcome_covariate_count == -1))
+})
+
+test_that("applyMinCellCount leaves missing counts missing", {
+  result <- data.frame(
+    performance_id = 1,
+    person_count_at_risk = c(20, 2, 30, 3),
+    person_count_with_outcome = c(12, NA, NA, 1)
+  )
+  minCellResult <- applyMinCellCount(
+    tableName = "demographic_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = result,
+    minCellCount = 5
+  )
+  expect_equal(minCellResult$person_count_at_risk, c(20, -1, 30, -1))
+  expect_equal(minCellResult$person_count_with_outcome, c(12, NA, NA, -1))
+
+  # columns censored together: a small count hides its NA partner too
+  calibration <- result
+  minCellResult <- applyMinCellCount(
+    tableName = "calibration_summary",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = calibration,
+    minCellCount = 5
+  )
+  expect_equal(minCellResult$person_count_at_risk, c(20, -1, 30, -1))
+  expect_equal(minCellResult$person_count_with_outcome, c(12, -1, NA, -1))
+})
+
+test_that("savePlpData round-trips a custom population with its attributes", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(simulated$covariateData))
+  population <- simulated$cohorts[1:20, ]
+  population$outcomeCount <- rep(c(0, 1), 10)
+  attr(population, "metaData") <- list(outcomeId = 3, marker = "custom")
+  simulated$population <- population
+
+  path <- tempfile("savePopulation")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(simulated, path)
+  expect_true(file.exists(file.path(path, "population.rds")))
+
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_equal(loaded$population, population)
+  expect_equal(attr(loaded$population, "metaData"), attr(population, "metaData"))
+})
+
+test_that("savePlpData leaves plpData without a population unchanged", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(simulated$covariateData))
+  path <- tempfile("saveNoPopulation")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(simulated, path)
+  expect_false(file.exists(file.path(path, "population.rds")))
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_null(loaded$population)
+})
+
+test_that("savePlpData removes optional files left by an earlier save into the same folder", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  withPopulation <- simulatePlpData(simulationProfile, n = 200, seed = 17)
+  withr::defer(Andromeda::close(withPopulation$covariateData))
+  population <- withPopulation$cohorts[1:20, ]
+  population$outcomeCount <- 0
+  withPopulation$population <- population
+  withPopulation$simulationTruth <- data.frame(rowId = 1:2, trueRisk = 0.1)
+  path <- tempfile("saveTwice")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpData(withPopulation, path)
+  expect_true(file.exists(file.path(path, "population.rds")))
+  expect_true(file.exists(file.path(path, "simulationTruth.rds")))
+
+  withoutPopulation <- simulatePlpData(simulationProfile, n = 100, seed = 18)
+  withr::defer(Andromeda::close(withoutPopulation$covariateData))
+  withoutPopulation$simulationTruth <- NULL
+  savePlpData(withoutPopulation, path)
+  expect_false(file.exists(file.path(path, "population.rds")))
+  expect_false(file.exists(file.path(path, "simulationTruth.rds")))
+
+  loaded <- loadPlpData(path)
+  on.exit(Andromeda::close(loaded$covariateData), add = TRUE, after = FALSE)
+  expect_null(loaded$population)
+  expect_null(loaded$simulationTruth)
+  expect_equal(nrow(loaded$cohorts), 100)
+})
+
+test_that("Saved GLM models keep coefficient precision", {
+  model <- createGlmModel(
+    coefficients = data.frame(
+      covariateId = c(1002, 2002),
+      coefficient = c(4e-05, 0.1)
+    ),
+    intercept = -2,
+    mapping = "logistic"
+  )
+  path <- tempfile("saveGlmPrecision")
+  on.exit(unlink(path, recursive = TRUE), add = TRUE)
+  savePlpModel(model, path)
+  loaded <- loadPlpModel(path)
+  expect_identical(loaded$model$coefficients$coefficient, c(4e-05, 0.1))
+  expect_equal(loaded$model$intercept, -2)
+
+  # the file stays plain numeric JSON readable by the standard loader
+  raw <- ParallelLogger::loadSettingsFromJson(file.path(path, "model.json"))
+  expect_true(is.numeric(raw$coefficients$coefficient))
+})
+
+test_that("Full precision JSON writer keeps data frames held in attributes", {
+  # feature engineering steps keep the values they learned in training as attributes
+  settings <- structure(
+    list(type = "minmax"),
+    class = "featureEngineeringSettings",
+    fun = "minMaxNormalize",
+    minMaxs = dplyr::tibble(covariateId = c(1002, 1003), max = c(80.123456789, 1 / 3), min = c(20, NA)),
+    nested = list(map = data.frame(sourceCovariateId = 1, indicatorCovariateId = 2))
+  )
+  object <- list(step = list(funct = "minMaxNormalize", settings = list(featureEngineeringSettings = settings)))
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  PatientLevelPrediction:::saveSettingsToJsonFullPrecision(object, path)
+  loaded <- ParallelLogger::loadSettingsFromJson(path)$step$settings$featureEngineeringSettings
+
+  expect_s3_class(loaded, "featureEngineeringSettings")
+  expect_equal(attr(loaded, "fun"), "minMaxNormalize")
+  minMaxs <- attr(loaded, "minMaxs")
+  expect_s3_class(minMaxs, "data.frame")
+  expect_identical(minMaxs$max, c(80.123456789, 1 / 3))
+  expect_equal(minMaxs$min, c(20, NA))
+  expect_s3_class(attr(loaded, "nested")$map, "data.frame")
+  expect_equal(attr(loaded, "nested")$map$indicatorCovariateId, 2)
+})
+
+test_that("Full precision JSON writer keeps missing values in tables with one row", {
+  # an imputer saves the missing indicator analysis it adds; for a single
+  # measurement analysis without a time window that table has one row, and
+  # prediction appends it to the analysisRef of the new data
+  analysisRef <- data.frame(
+    analysisId = 1010, analysisName = "measurement missing indicator",
+    domainId = "measurement", startDay = NA_real_, endDay = NA_real_,
+    isBinary = "Y", missingMeansZero = "Y"
+  )
+  settings <- structure(list(method = "mean"), analysisRef = analysisRef)
+  jsonFile <- tempfile(fileext = ".json")
+  on.exit(unlink(jsonFile), add = TRUE)
+  saveSettingsToJsonFullPrecision(list(settings = settings), jsonFile)
+  reloaded <- attr(ParallelLogger::loadSettingsFromJson(jsonFile)$settings, "analysisRef")
+  expect_true(is.na(reloaded$startDay))
+  expect_false(is.character(reloaded$startDay))
+
+  covariateData <- Andromeda::andromeda(analysisRef = data.frame(
+    analysisId = 10, analysisName = "measurement", domainId = "measurement",
+    startDay = -365, endDay = 0, isBinary = "N", missingMeansZero = "N"
+  ))
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+  Andromeda::appendToTable(covariateData$analysisRef, reloaded)
+  expect_setequal(dplyr::pull(covariateData$analysisRef, "analysisId"), c(10, 1010))
+})
+
+test_that("only the package's own feature engineering steps get saved tables repaired", {
+  # a list of records, as a custom step might save it
+  records <- list(list(id = 1, name = "a"), list(id = 2, name = "b"))
+  steps <- featureEngineeringSteps(list(
+    list(funct = "implementCustomStep", settings = list(records = records)),
+    list(funct = "minMaxNormalize", settings = list(records = records))
+  ))
+
+  expect_identical(steps[[1]]$settings$records, records)
+  expect_s3_class(steps[[2]]$settings$records, "data.frame")
+  expect_equal(steps[[2]]$settings$records$id, c(1, 2))
+})
+
+test_that("Full precision JSON writer handles the settings shapes saved with models", {
+  object <- list(
+    tiny = 1.5e-12,
+    third = 1 / 3,
+    large = 123456789.123456,
+    negative = -7.25e-05,
+    vector = c(0.1, 2e-300),
+    missing = c(1.5, NA),
+    infinite = c(-Inf, Inf),
+    integers = 1:3,
+    flag = TRUE,
+    text = "__not a marker",
+    nothing = NULL,
+    frame = data.frame(covariateId = c(1, 2), maxValue = c(0.000012345, 987654.321)),
+    date = as.Date("2026-01-02"),
+    nested = list(inner = 5e-06)
+  )
+  path <- tempfile(fileext = ".json")
+  on.exit(unlink(path), add = TRUE)
+  PatientLevelPrediction:::saveSettingsToJsonFullPrecision(object, path)
+  loaded <- ParallelLogger::loadSettingsFromJson(path)
+
+  expect_identical(loaded$tiny, 1.5e-12)
+  expect_identical(loaded$third, 1 / 3)
+  expect_identical(loaded$large, 123456789.123456)
+  expect_identical(loaded$negative, -7.25e-05)
+  expect_identical(loaded$vector[1], 0.1)
+  # tiny values must survive instead of being rounded to zero; reading a number
+  # with an exponent this large back is not exact on every platform (R's
+  # conversion from text on macOS arm64), so this one is checked to tolerance
+  expect_equal(loaded$vector[2], 2e-300, tolerance = 1e-12)
+  expect_equal(loaded$missing, c(1.5, NA))
+  expect_true(is.nan(loaded$missing[2]) || is.na(loaded$missing[2]))
+  expect_equal(loaded$infinite, c(-Inf, Inf))
+  expect_equal(loaded$integers, 1:3)
+  expect_true(loaded$flag)
+  expect_equal(loaded$text, "__not a marker")
+  expect_true("nothing" %in% names(loaded))
+  expect_null(loaded$nothing)
+  expect_identical(loaded$frame$maxValue, c(0.000012345, 987654.321))
+  expect_equal(loaded$date, "2026-01-02")
+  expect_identical(loaded$nested$inner, 5e-06)
+})
+
+test_that("a reloaded model with feature engineering predicts exactly as the fitted model", {
+  skip_on_cran()
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+  # a continuous measurement that is missing for 30% of patients
+  measured <- withr::with_seed(7, sample(simulated$cohorts$rowId, 700))
+  Andromeda::appendToTable(
+    simulated$covariateData$covariates,
+    data.frame(rowId = measured, covariateId = 9101, covariateValue = withr::with_seed(7, stats::rnorm(700, 5, 2)))
+  )
+  Andromeda::appendToTable(
+    simulated$covariateData$covariateRef,
+    data.frame(
+      covariateId = 9101, covariateName = "measurement", analysisId = 101, conceptId = 0,
+      valueAsConceptId = NA_real_, collisions = NA_real_
+    )
+  )
+  # the simulated analysisRef only has analysisId; age (analysis 2) and the
+  # measurement are continuous
+  analysisIds <- c(dplyr::pull(simulated$covariateData$analysisRef, .data$analysisId), 101)
+  simulated$covariateData$analysisRef <- data.frame(
+    analysisId = analysisIds, analysisName = paste("analysis", analysisIds), domainId = "x",
+    startDay = 0, endDay = 0,
+    isBinary = ifelse(analysisIds %in% c(2, 101), "N", "Y"),
+    missingMeansZero = ifelse(analysisIds %in% c(2, 101), "N", "Y")
+  )
+  populationSettings <- createStudyPopulationSettings(requireTimeAtRisk = FALSE)
+  saveDirectory <- file.path(saveLoc, "reloadedFeatureEngineering")
+
+  result <- runPlp(
+    plpData = simulated,
+    outcomeId = 3,
+    analysisId = "fe",
+    populationSettings = populationSettings,
+    featureEngineeringSettings = list(
+      createSimpleImputer(method = "mean", missingThreshold = 0.5, addMissingIndicator = TRUE),
+      createNormalizer("minmax"),
+      createRareFeatureRemover(threshold = 0.01)
+    ),
+    modelSettings = setLassoLogisticRegression(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE, runFeatureEngineering = TRUE, runPreprocessData = TRUE,
+      runModelDevelopment = TRUE
+    ),
+    saveDirectory = saveDirectory
+  )
+  loaded <- loadPlpModel(file.path(saveDirectory, "fe", "plpResult", "model"))
+  population <- createStudyPopulation(simulated, outcomeId = 3, populationSettings = populationSettings)
+
+  fitted <- predictPlp(result$model, simulated, population)
+  reloaded <- predictPlp(loaded, simulated, population)
+
+  expect_equal(reloaded$rowId, fitted$rowId)
+  expect_equal(reloaded$value, fitted$value, tolerance = 0)
+  # runPlp() predicted its test split on its own copy of the data; predicting
+  # on a copy of the full data gives the same values
+  testRows <- result$prediction[result$prediction$evaluationType == "Test", ]
+  expect_gt(nrow(testRows), 0)
+  expect_equal(fitted$value[match(testRows$rowId, fitted$rowId)], testRows$value, tolerance = 1e-10)
 })

@@ -20,7 +20,7 @@ An object of class \code{featureEngineeringSettings}
 Create the settings for adding a spline for continuous variables
 }
 \details{
-Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 }
 \examples{
 # create splines for age (1002) with 5 knots

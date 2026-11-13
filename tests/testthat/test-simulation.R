@@ -294,8 +294,7 @@ test_that("simulation outcome scoring applies PLP model preprocessing", {
     ),
     analysisRef = data.frame(analysisId = 1)
   )
-  class(covariateData) <- "CovariateData"
-  attr(class(covariateData), "package") <- "FeatureExtraction"
+  covariateData <- asCovariateData(covariateData)
 
   plpModel <- list(
     model = list(
@@ -1006,4 +1005,128 @@ test_that("simulatePlpBenchmarkData targets outcome rate with shifted linear pre
   )
   truth <- benchmarkData$simulationTruth
   expect_equal(mean(truth$trueRisk), 0.2, tolerance = 1e-5)
+})
+
+test_that("simulatePlpData keeps cohort gender consistent with the gender covariates", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 400, seed = 123)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+  genderCovariates <- as.data.frame(
+    simulated$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId %in% c(8532001, 8507001)) %>%
+      dplyr::collect()
+  )
+  cohorts <- simulated$cohorts
+
+  # Each person has exactly one gender covariate and it matches the cohort gender.
+  expect_equal(sort(as.numeric(genderCovariates$rowId)), sort(as.numeric(cohorts$rowId)))
+  genderCovariates <- genderCovariates[order(genderCovariates$rowId), ]
+  expect_equal(
+    as.numeric(genderCovariates$covariateId),
+    ifelse(cohorts$gender[order(cohorts$rowId)] == 8532, 8532001, 8507001)
+  )
+  prevalence <- simulationProfile$covariateInfo$covariatePrevalence
+  femaleShare <- prevalence[["8532001"]] / (prevalence[["8532001"]] + prevalence[["8507001"]])
+  expect_equal(mean(cohorts$gender == 8532), femaleShare, tolerance = 0.05)
+})
+
+test_that("simulateGenderCovariates handles profiles missing gender covariates", {
+  withr::local_seed(1)
+  noGender <- simulateGenderCovariates(c("1002" = 1), n = 100)
+  expect_null(noGender$covariates)
+  expect_equal(sum(noGender$gender == 8507), 50)
+  expect_setequal(noGender$gender, c(8532, 8507))
+
+  onlyFemale <- simulateGenderCovariates(c("1002" = 1, "8532001" = 0.3), n = 100)
+  expect_equal(sum(onlyFemale$gender == 8532), 30, tolerance = 2)
+  expect_equal(onlyFemale$covariateIds, 8532001)
+  expect_equal(unique(onlyFemale$covariates$covariateId), 8532001)
+  expect_equal(sort(onlyFemale$covariates$rowId), which(onlyFemale$gender == 8532))
+
+  onlyMale <- simulateGenderCovariates(c("8507001" = 0.25), n = 100)
+  expect_equal(sum(onlyMale$gender == 8507), 25, tolerance = 2)
+  expect_equal(unique(onlyMale$covariates$covariateId), 8507001)
+
+  zeroPrevalence <- simulateGenderCovariates(c("8532001" = 0, "8507001" = 0), n = 10)
+  expect_equal(sum(zeroPrevalence$gender == 8507), 5)
+})
+
+test_that("simulatePlpData preserves configured outcome ids in metadata and attrition", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulateWithOutcomeIds <- function(outcomeIds) {
+    profile <- simulationProfile
+    profile$metaData$databaseDetails$outcomeIds <- outcomeIds
+    profile$outcomeModels <- list(
+      c("(Intercept)" = -1.5, "1002" = 0.01),
+      c("(Intercept)" = -3, "1002" = 0.01)
+    )
+    profile$outcomeModelPlpModels <- list(NULL, NULL)
+    simulatePlpData(profile, n = 1000, seed = 42)
+  }
+
+  for (outcomeIds in list(c(99, 3), c(3, 99))) {
+    simulated <- simulateWithOutcomeIds(outcomeIds)
+    expect_equal(simulated$metaData$databaseDetails$outcomeIds, outcomeIds)
+    expect_equal(attr(simulated$outcomes, "metaData")$outcomeIds, outcomeIds)
+
+    attrition <- attr(simulated$cohorts, "metaData")$attrition
+    expect_equal(attrition$outcomeId, outcomeIds)
+    expect_equal(attrition$targetCount, rep(nrow(simulated$cohorts), 2))
+    expect_equal(
+      attrition$outcomes,
+      vapply(outcomeIds, function(id) sum(simulated$outcomes$outcomeId == id), numeric(1))
+    )
+    Andromeda::close(simulated$covariateData)
+  }
+})
+
+test_that("simulatePlpData outcome metadata drives the default study population", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  profile <- simulationProfile
+  profile$metaData$databaseDetails$outcomeIds <- c(99, 3)
+  profile$outcomeModels <- list(
+    c("(Intercept)" = -1.5, "1002" = 0.01),
+    c("(Intercept)" = -3, "1002" = 0.01)
+  )
+  profile$outcomeModelPlpModels <- list(NULL, NULL)
+  simulated <- simulatePlpData(profile, n = 1000, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData), add = TRUE)
+
+  settings <- createStudyPopulationSettings(
+    includeAllOutcomes = TRUE, removeSubjectsWithPriorOutcome = FALSE,
+    requireTimeAtRisk = FALSE, riskWindowStart = 0, riskWindowEnd = 365
+  )
+  population <- createStudyPopulation(simulated, populationSettings = settings)
+  expect_equal(attr(population, "metaData")$outcomeId, 99)
+  attrition <- attr(population, "metaData")$attrition
+  expect_equal(unique(attrition$outcomeId), 99)
+  expect_equal(attrition$outcomes[1], sum(simulated$outcomes$outcomeId == 99))
+})
+
+test_that("simulated data for a seed does not depend on Andromeda's random draws", {
+  data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulate <- function() {
+    plpData <- simulatePlpData(simulationProfile, n = 200, seed = 42)
+    withr::defer(Andromeda::close(plpData$covariateData))
+    covariates <- as.data.frame(plpData$covariateData$covariates)
+    list(
+      cohorts = plpData$cohorts,
+      outcomes = plpData$outcomes,
+      covariates = covariates[order(covariates$rowId, covariates$covariateId), ]
+    )
+  }
+  reference <- simulate()
+
+  # Andromeda takes random draws for its temporary tables; here it takes more
+  andromeda <- Andromeda::andromeda
+  local_mocked_bindings(
+    andromeda = function(...) {
+      stats::runif(7)
+      andromeda(...)
+    },
+    .package = "Andromeda"
+  )
+  withMoreDraws <- simulate()
+
+  expect_equal(withMoreDraws, reference, ignore_attr = TRUE)
 })

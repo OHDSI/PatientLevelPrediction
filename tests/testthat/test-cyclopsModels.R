@@ -76,14 +76,14 @@ test_that("set LR inputs", {
 
 
 test_that("set LR incorrect inputs", {
-  expect_error(setLassoLogisticRegression(variance = -0.01))
-  expect_error(setLassoLogisticRegression(variance = "variance"))
-  expect_error(setLassoLogisticRegression(seed = "seed"))
-  expect_error(setLassoLogisticRegression(threads = "threads"))
+  expect_error(setLassoLogisticRegression(variance = -0.01), "variance needs to be >= 0")
+  expect_error(setLassoLogisticRegression(variance = "variance"), "variance is wrong class")
+  expect_error(setLassoLogisticRegression(seed = "seed"), "seed is wrong class")
+  expect_error(setLassoLogisticRegression(threads = "threads"), "threads is wrong class")
 
-  expect_error(setLassoLogisticRegression(lowerLimit = "lowerLimit"))
-  expect_error(setLassoLogisticRegression(upperLimit = "upperLimit"))
-  expect_error(setLassoLogisticRegression(lowerLimit = 3, upperLimit = 1))
+  expect_error(setLassoLogisticRegression(lowerLimit = "lowerLimit"), "lowerLimit is wrong class")
+  expect_error(setLassoLogisticRegression(upperLimit = "upperLimit"), "upperLimit is wrong class")
+  expect_error(setLassoLogisticRegression(lowerLimit = 3, upperLimit = 1), "upperLimit needs to be >= 3")
 })
 
 
@@ -141,14 +141,14 @@ test_that("set ridge regression inputs", {
 
 
 test_that("set ridge regression incorrect inputs", {
-  expect_error(setRidgeRegression(variance = -0.01))
-  expect_error(setRidgeRegression(variance = "variance"))
-  expect_error(setRidgeRegression(seed = "seed"))
-  expect_error(setRidgeRegression(threads = "threads"))
+  expect_error(setRidgeRegression(variance = -0.01), "variance needs to be >= 0")
+  expect_error(setRidgeRegression(variance = "variance"), "variance is wrong class")
+  expect_error(setRidgeRegression(seed = "seed"), "seed is wrong class")
+  expect_error(setRidgeRegression(threads = "threads"), "threads is wrong class")
 
-  expect_error(setRidgeRegression(lowerLimit = "lowerLimit"))
-  expect_error(setRidgeRegression(upperLimit = "upperLimit"))
-  expect_error(setRidgeRegression(lowerLimit = 3, upperLimit = 1))
+  expect_error(setRidgeRegression(lowerLimit = "lowerLimit"), "lowerLimit is wrong class")
+  expect_error(setRidgeRegression(upperLimit = "upperLimit"), "upperLimit is wrong class")
+  expect_error(setRidgeRegression(lowerLimit = 3, upperLimit = 1), "upperLimit needs to be >= 3")
 })
 
 
@@ -214,14 +214,14 @@ test_that("set cox regression inputs", {
 test_that("set cox regression incorrect inputs", {
   skip_if_not_installed("polspline")
   skip_on_cran()
-  expect_error(setCoxModel(variance = -0.01))
-  expect_error(setCoxModel(variance = "variance"))
-  expect_error(setCoxModel(seed = "seed"))
-  expect_error(setCoxModel(threads = "threads"))
+  expect_error(setCoxModel(variance = -0.01), "variance needs to be >= 0")
+  expect_error(setCoxModel(variance = "variance"), "variance is wrong class")
+  expect_error(setCoxModel(seed = "seed"), "seed is wrong class")
+  expect_error(setCoxModel(threads = "threads"), "threads is wrong class")
 
-  expect_error(setCoxModel(lowerLimit = "lowerLimit"))
-  expect_error(setCoxModel(upperLimit = "upperLimit"))
-  expect_error(setCoxModel(lowerLimit = 3, upperLimit = 1))
+  expect_error(setCoxModel(lowerLimit = "lowerLimit"), "lowerLimit is wrong class")
+  expect_error(setCoxModel(upperLimit = "upperLimit"), "upperLimit is wrong class")
+  expect_error(setCoxModel(lowerLimit = 3, upperLimit = 1), "upperLimit needs to be >= 3")
 })
 
 
@@ -291,10 +291,10 @@ test_that("set IHT inputs", {
 test_that("test IHT incorrect inputs", {
   skip_if_not_installed("IterativeHardThresholding")
   skip_on_cran()
-  expect_error(setIterativeHardThresholding(K = 0))
-  expect_error(setIterativeHardThresholding(penalty = "L1"))
-  expect_error(setIterativeHardThresholding(fitBestSubset = "true"))
-  expect_error(setIterativeHardThresholding(seed = "F"))
+  expect_error(setIterativeHardThresholding(K = 0), "Invalid maximum number of predictors")
+  expect_error(setIterativeHardThresholding(penalty = "L1"), "Penalty must be \"aic\", \"bic\" or numeric")
+  expect_error(setIterativeHardThresholding(fitBestSubset = "true"), "fitBestSubset must be of type: logical")
+  expect_error(setIterativeHardThresholding(seed = "F"), "Invalid seed")
 })
 
 test_that("Cyclops CV refit controls preserve model settings", {
@@ -381,43 +381,43 @@ test_that("test BAR incorrect inputs", {
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
-  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = "bad"))
-  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = c(0.1, 0.2)))
-  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = Inf))
-  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = 0))
-  expect_error(setBrokenAdaptiveRidge(penalty = "bad"))
-  expect_error(setBrokenAdaptiveRidge(penalty = NA_character_))
-  expect_error(setBrokenAdaptiveRidge(penalty = c(0.1, 0.2)))
-  expect_error(setBrokenAdaptiveRidge(penalty = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(penalty = Inf))
-  expect_error(setBrokenAdaptiveRidge(penalty = 0))
-  expect_error(setBrokenAdaptiveRidge(penaltyRatio = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(penaltyRatio = Inf))
-  expect_error(setBrokenAdaptiveRidge(penaltyRatio = 1))
-  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = Inf))
-  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5))
-  expect_error(setBrokenAdaptiveRidge(seed = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(seed = Inf))
-  expect_error(setBrokenAdaptiveRidge(seed = 1.5))
-  expect_error(setBrokenAdaptiveRidge(seed = c(1, 2)))
-  expect_error(setBrokenAdaptiveRidge(threads = 0))
-  expect_error(setBrokenAdaptiveRidge(threads = -2))
-  expect_error(setBrokenAdaptiveRidge(threads = 1.5))
-  expect_error(setBrokenAdaptiveRidge(forceIntercept = NA))
-  expect_error(setBrokenAdaptiveRidge(forceIntercept = logical(0)))
-  expect_error(setBrokenAdaptiveRidge(forceIntercept = c(TRUE, FALSE)))
-  expect_error(setBrokenAdaptiveRidge(lowerLimit = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(upperLimit = Inf))
-  expect_error(setBrokenAdaptiveRidge(tolerance = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(tolerance = Inf))
-  expect_error(setBrokenAdaptiveRidge(tolerance = 0))
-  expect_error(setBrokenAdaptiveRidge(maxIterations = 1.5))
-  expect_error(setBrokenAdaptiveRidge(maxIterations = 0))
-  expect_error(setBrokenAdaptiveRidge(threshold = NA_real_))
-  expect_error(setBrokenAdaptiveRidge(threshold = Inf))
-  expect_error(setBrokenAdaptiveRidge(threshold = 0))
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = "bad"), "initialRidgeVariance has incorrect value")
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = c(0.1, 0.2)), "initialRidgeVariance must be a single value")
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = NA_real_), "initialRidgeVariance must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = Inf), "initialRidgeVariance must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(initialRidgeVariance = 0), "initialRidgeVariance needs to be > 0")
+  expect_error(setBrokenAdaptiveRidge(penalty = "bad"), "penalty has incorrect value")
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_character_), "penalty has incorrect value")
+  expect_error(setBrokenAdaptiveRidge(penalty = c(0.1, 0.2)), "penalty must be a single value")
+  expect_error(setBrokenAdaptiveRidge(penalty = NA_real_), "penalty must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(penalty = Inf), "penalty must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(penalty = 0), "penalty needs to be > 0")
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = NA_real_), "penaltyRatio must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = Inf), "penaltyRatio must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(penaltyRatio = 1), "penaltyRatio must be a single value greater than 0 and less than 1")
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = NA_real_), "penaltyGridSize must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = Inf), "penaltyGridSize must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(penaltyGridSize = 1.5), "penaltyGridSize must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(seed = NA_real_), "seed must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(seed = Inf), "seed must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(seed = 1.5), "seed must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(seed = c(1, 2)), "seed must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(threads = 0), "threads must be -1 or a positive whole number")
+  expect_error(setBrokenAdaptiveRidge(threads = -2), "threads must be -1 or a positive whole number")
+  expect_error(setBrokenAdaptiveRidge(threads = 1.5), "threads must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = NA), "forceIntercept must be a single non-missing logical value")
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = logical(0)), "forceIntercept must be a single non-missing logical value")
+  expect_error(setBrokenAdaptiveRidge(forceIntercept = c(TRUE, FALSE)), "forceIntercept must be a single non-missing logical value")
+  expect_error(setBrokenAdaptiveRidge(lowerLimit = NA_real_), "lowerLimit must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(upperLimit = Inf), "upperLimit must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(tolerance = NA_real_), "tolerance must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(tolerance = Inf), "tolerance must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(tolerance = 0), "tolerance needs to be > 0")
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 1.5), "maxIterations must be a single whole number")
+  expect_error(setBrokenAdaptiveRidge(maxIterations = 0), "maxIterations needs to be > 0")
+  expect_error(setBrokenAdaptiveRidge(threshold = NA_real_), "threshold must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(threshold = Inf), "threshold must be a single finite numeric value")
+  expect_error(setBrokenAdaptiveRidge(threshold = 0), "threshold needs to be > 0")
 })
 
 test_that("BAR penalty grid starts at log(n) / 2", {
@@ -469,6 +469,7 @@ test_that("BAR prior parameters resolve auto values", {
 })
 
 test_that("BAR automatic penalty validates folds before resolving its prior", {
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -616,7 +617,7 @@ test_that("Cyclops CV prior fails clearly for invalid per-covariate prior inputs
 })
 
 test_that("test IHT returns CV predictions", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("IterativeHardThresholding")
   skip_on_cran()
 
@@ -638,7 +639,7 @@ test_that("test IHT returns CV predictions", {
 })
 
 test_that("test BAR automatic penalty search runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -678,7 +679,7 @@ test_that("test BAR automatic penalty search runs", {
 })
 
 test_that("test BAR fixed BIC penalty runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -710,7 +711,7 @@ test_that("test BAR fixed BIC penalty runs", {
 })
 
 test_that("test BAR fixed numeric penalty runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
 
@@ -737,7 +738,7 @@ test_that("test BAR fixed numeric penalty runs", {
 })
 
 test_that("test logistic regression runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setLassoLogisticRegression()
 
   fitModel <- fitPlp(
@@ -774,7 +775,7 @@ test_that("test logistic regression runs", {
 
 
 test_that("test ridge regression runs", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   modelSettings <- setRidgeRegression()
 
   fitModel <- fitPlp(
@@ -790,4 +791,161 @@ test_that("test ridge regression runs", {
   expect_equal(fitModel$trainDetails$trainingDate, Sys.Date())
   expect_equal(fitModel$modelDesign$outcomeId, attr(trainData, "metaData")$outcomeId)
   expect_equal(fitModel$modelDesign$targetId, attr(trainData, "metaData")$targetId)
+})
+
+createSyntheticTrain <- function(covariates, labels, folds, covariateIds) {
+  makePlpData(
+    labels = labels,
+    folds = folds,
+    covariateData = makeCovariateData(
+      covariates,
+      covariateRef = data.frame(
+        covariateId = covariateIds, covariateName = paste0("x", covariateIds),
+        analysisId = 1L, conceptId = covariateIds
+      ),
+      analysisRef = data.frame(
+        analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
+      ),
+      metaData = list(populationSize = nrow(labels))
+    ),
+    metaData = syntheticTrainMetaData()
+  )
+}
+
+createCoxTrain <- function(timepoint = 100) {
+  withr::local_seed(7)
+  n <- 300L
+  x <- cbind(rbinom(n, 1, 0.5), rbinom(n, 1, 0.3))
+  covariates <- rbind(
+    data.frame(rowId = which(x[, 1] == 1), covariateId = 11, covariateValue = 1),
+    data.frame(rowId = which(x[, 2] == 1), covariateId = 12, covariateValue = 1)
+  )
+  labels <- data.frame(
+    rowId = seq_len(n), subjectId = seq_len(n),
+    outcomeCount = rbinom(n, 1, 0.8),
+    survivalTime = rank(rexp(n, exp(-3 + 1.5 * x[, 1] + x[, 2])), ties.method = "first"),
+    cohortStartDate = as.Date("2000-01-01"), daysToCohortEnd = 365, daysToObsEnd = 365,
+    ageYear = 40, gender = 1
+  )
+  attr(labels, "timepoint") <- timepoint
+  train <- createSyntheticTrain(
+    covariates = covariates, labels = labels,
+    folds = data.frame(rowId = seq_len(n), index = 1L), covariateIds = c(11, 12)
+  )
+  train$x <- x
+  train
+}
+
+breslowRisk <- function(train, beta, timepoint) {
+  lp <- as.numeric(train$x %*% beta)
+  time <- train$labels$survivalTime
+  eventTimes <- sort(time[train$labels$outcomeCount == 1 & time <= timepoint])
+  increments <- vapply(eventTimes, function(u) 1 / sum(exp(lp[time >= u])), numeric(1))
+  -expm1(-sum(increments) * exp(lp))
+}
+
+test_that("fitted Cox risks use the zero-covariate baseline, not the mean linear predictor", {
+  skip_if_not_installed("polspline")
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- createCoxTrain()
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  settings <- setCoxModel(variance = 10, seed = 42, threads = 1)
+  fit <- fitCyclopsModel(train, settings, analysisId = "cox")
+
+  coefs <- fit$model$coefficients
+  beta <- coefs$betas[match(c("11", "12"), coefs$covariateIds)]
+  expected <- breslowRisk(train, beta, timepoint = 100)
+  predicted <- fit$prediction[fit$prediction$evaluationType == "Train", ]
+  predicted <- predicted[order(predicted$rowId), ]
+
+  offset <- fit$model$baselineSurvival$offset
+  expect_gt(abs(offset), 0.1)
+  expect_equal(offset, mean(train$x %*% beta), tolerance = 1e-8)
+  expect_equal(predicted$value, expected, tolerance = 1e-6)
+  expect_equal(attr(predictCyclops(fit, train, train$labels), "metaData")$offset, offset)
+})
+
+test_that("Cox risks agree with survival::coxph for an unpenalized Cyclops fit", {
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- data.frame(
+    rowId = 1:10, time = 1:10,
+    y = c(1, 1, 1, 1, 0, 1, 1, 0, 1, 0),
+    x = c(1, 1, 0, 1, 0, 1, 0, 0, 1, 0)
+  )
+  covariates <- data.frame(
+    rowId = train$rowId[train$x != 0], covariateId = 1, covariateValue = 1
+  )
+  cyclopsData <- Cyclops::convertToCyclopsData(
+    outcomes = train[c("rowId", "y", "time")], covariates = covariates,
+    addIntercept = FALSE, modelType = "cox", normalize = NULL, quiet = TRUE
+  )
+  fit <- Cyclops::fitCyclopsModel(
+    cyclopsData, prior = Cyclops::createPrior("none"),
+    control = Cyclops::createControl(tolerance = 1e-12, maxIterations = 3000, noiseLevel = "silent")
+  )
+  model <- createCyclopsModel(
+    fit = fit, modelType = "cox", useCrossValidation = FALSE,
+    cyclopsData = cyclopsData, labels = train, folds = NULL, modelSettings = NULL
+  )
+  plpModel <- structure(list(model = model), class = "plpModel", modelType = "survival")
+  newData <- FeatureExtraction::createEmptyCovariateData(1, FALSE, FALSE)
+  on.exit(Andromeda::close(newData), add = TRUE)
+  newData$covariates <- data.frame(rowId = 1:2, covariateId = 1, covariateValue = c(0, 1))
+  cohort <- data.frame(rowId = 1:2)
+  attr(cohort, "timepoint") <- 3
+  predicted <- predictCyclops(plpModel, list(covariateData = newData), cohort)
+
+  reference <- survival::coxph(
+    survival::Surv(time, y) ~ x, data = train, ties = "breslow",
+    control = survival::coxph.control(eps = 1e-12, toler.chol = 1e-14)
+  )
+  expected <- 1 - summary(
+    survival::survfit(reference, newdata = data.frame(x = c(0, 1))), times = 3
+  )$surv
+  expect_equal(predicted$value, as.numeric(expected), tolerance = 1e-6)
+})
+
+test_that("Cox offset survives saving and loading the model", {
+  skip_if_not_installed("polspline")
+  skip_if_not_installed("survival")
+  skip_on_cran()
+  train <- createCoxTrain()
+  on.exit(Andromeda::close(train$covariateData), add = TRUE)
+  fit <- fitCyclopsModel(
+    train, setCoxModel(variance = 10, seed = 42, threads = 1), analysisId = "cox"
+  )
+  savePath <- tempfile("coxModel")
+  on.exit(unlink(savePath, recursive = TRUE), add = TRUE)
+  savePlpModel(fit, savePath)
+  loaded <- loadPlpModel(savePath)
+
+  expect_true(is.numeric(fit$model$baselineSurvival$offset))
+  expect_equal(loaded$model$baselineSurvival$offset, fit$model$baselineSurvival$offset, tolerance = 1e-3)
+  expect_equal(
+    predictCyclops(loaded, train, train$labels)$value,
+    predictCyclops(fit, train, train$labels)$value,
+    tolerance = 1e-3
+  )
+})
+
+test_that("Cox models saved without an offset keep their stored survival curve", {
+  covariateData <- FeatureExtraction::createEmptyCovariateData(1, FALSE, FALSE)
+  on.exit(Andromeda::close(covariateData), add = TRUE)
+  covariateData$covariates <- data.frame(rowId = 1:2, covariateId = 1, covariateValue = c(0, 1))
+  plpModel <- structure(
+    list(model = list(
+      modelType = "cox",
+      coefficients = data.frame(betas = 0.5, covariateIds = "1"),
+      baselineSurvival = list(time = 1:3, surv = c(0.9, 0.8, 0.7))
+    )),
+    class = "plpModel", modelType = "survival"
+  )
+  cohort <- data.frame(rowId = 1:2)
+  attr(cohort, "timepoint") <- 2
+  predicted <- predictCyclops(plpModel, list(covariateData = covariateData), cohort)
+
+  expect_equal(predicted$value, 1 - 0.8^exp(c(0, 0.5)))
+  expect_equal(attr(predicted, "metaData")$offset, 0)
 })

@@ -28,28 +28,31 @@ test_that("DecisionTree settings work checks", {
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(10^-7),
     classWeight = list(NULL),
-    seed = sample(1000000, 1)
+    seed = 42
   )
   expect_false(dtset$settings$requiresDenseMatrix)
   expect_equal(dtset$settings$modelName, "decisionTree")
   expect_equal(dtset$settings$modelType, "binary")
   expect_equal(dtset$settings$pythonModule, "sklearn.tree")
   expect_equal(dtset$settings$pythonClass, "DecisionTreeClassifier")
+  # scikit-learn's random_state only accepts integers
+  expect_identical(dtset$param$seed, list(42L))
 })
 
 
 test_that("DecisionTree errors as expected", {
   skip_if_not_installed("reticulate")
   skip_on_cran()
-  expect_error(setDecisionTree(criterion = list("madeup")))
+  expect_error(setDecisionTree(criterion = list("madeup")), "Incorrect criterion")
 
-  expect_error(setDecisionTree(maxDepth = list(-1)))
-  expect_error(setDecisionTree(minSamplesSplit = list(-1)))
-  expect_error(setDecisionTree(minSamplesLeaf = list(-1)))
+  expect_error(setDecisionTree(maxDepth = list(-1)), "ifelse\\(is\\.null\\(maxDepth\\[\\[i\\]\\]\\), 1, maxDepth\\[\\[i\\]\\]\\) needs to be > 0")
+  expect_error(setDecisionTree(minSamplesSplit = list(-1)), "ifelse\\(is\\.null\\(minSamplesSplit\\[\\[i\\]\\]\\), 1, minSamplesSplit\\[\\[i\\]\\]\\) needs")
+  expect_error(setDecisionTree(minSamplesLeaf = list(-1)), "minSamplesLeaf\\[\\[i\\]\\] needs to be > 0")
 })
 
 
 test_that("check fit of DecisionTree", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setDecisionTree(
@@ -63,7 +66,7 @@ test_that("check fit of DecisionTree", {
     maxLeafNodes = list(NULL),
     minImpurityDecrease = list(10^-7),
     classWeight = list(NULL),
-    seed = sample(1000000, 1)
+    seed = 42
   )
 
   plpModel <- fitPlp(
@@ -96,7 +99,8 @@ test_that("check fit of DecisionTree", {
   expect_true(all(predLoad$value >= 0))
   expect_true(all(predLoad$value <= 1))
 
-  # test with one feature
+  # test with one feature: a single column crosses to Python as a sparse matrix
+  # here and as a dense one in the naive Bayes test, the two paths that differ
   oneModel <- fitPlp(
     trainData = oneTrainData,
     modelSettings = modelSettings,
@@ -113,6 +117,7 @@ test_that("check fit of DecisionTree", {
 })
 
 test_that("fitClassifier errors with wrong covariateData", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   newTrainData <- copyTrainData(trainData)
@@ -123,11 +128,12 @@ test_that("fitClassifier errors with wrong covariateData", {
   expect_error(fitClassifier(newTrainData,
     modelSettings,
     analysisId = analysisId
-  ))
+  ), "Needs correct covariateData")
 })
 
 
 test_that("AdaBoost fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setAdaBoost(
@@ -144,22 +150,13 @@ test_that("AdaBoost fit works", {
 
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
 
-  oneModel <- fitPlp(
-    trainData = oneTrainData,
-    modelSettings = modelSettings,
-    analysisId = "AdaBoostOne",
-    analysisPath = tempdir()
-  )
-  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
-  oneTrainPredictions <- oneModel$prediction %>% 
-    dplyr::filter(.data$evaluationType == "Train") %>%
-    dplyr::pull(.data$value)
-  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
+  predictions <- predictSklearn(plpModel, testData, testData$labels)
+  expect_correct_predictions(predictions, testData)
 })
 
 
 test_that("RandomForest fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setRandomForest(
@@ -180,23 +177,11 @@ test_that("RandomForest fit works", {
   )
 
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
-
-  oneModel <- fitPlp(
-    trainData = oneTrainData,
-    modelSettings = modelSettings,
-    analysisId = "RFOne",
-    analysisPath = tempdir()
-  )
-  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
-  oneTrainPredictions <- oneModel$prediction %>% 
-    dplyr::filter(.data$evaluationType == "Train") %>%
-    dplyr::pull(.data$value)
-  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
 test_that("MLP fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setMLP(
@@ -216,23 +201,11 @@ test_that("MLP fit works", {
   )
 
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
-  
-  oneModel <- fitPlp(
-    trainData = oneTrainData,
-    modelSettings = modelSettings,
-    analysisId = "MLPOne",
-    analysisPath = tempdir()
-  )
-  onePredictions <- predictPlp(oneModel, oneTrainData, oneTrainData$labels)
-  oneTrainPredictions <- oneModel$prediction %>% 
-    dplyr::filter(.data$evaluationType == "Train") %>%
-    dplyr::pull(.data$value)
-  expect_equal(mean(onePredictions$value), mean(oneTrainPredictions))
-  expect_correct_fitPlp(oneModel, oneTrainData, testLocation = FALSE)
 })
 
 
 test_that("Naive bayes fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setNaiveBayes()
@@ -277,6 +250,7 @@ test_that("Naive bayes fit works", {
 
 
 test_that("Support vector machine fit works", {
+  skip_if_no_eunomia()
   skip_if_not_installed("reticulate")
   skip_on_cran()
   modelSettings <- setSVM(
@@ -294,27 +268,4 @@ test_that("Support vector machine fit works", {
   )
 
   expect_correct_fitPlp(plpModel, trainData, testLocation = FALSE)
-})
-
-test_that("Sklearn predict works", {
-  skip_if_not_installed("reticulate")
-  skip_on_cran()
-  modelSettings <- setAdaBoost(
-    nEstimators = list(10),
-    learningRate = list(0.1),
-  )
-
-  plpModel <- fitPlp(
-    trainData = tinyTrainData,
-    modelSettings = modelSettings,
-    analysisId = "Adaboost",
-    analysisPath = tempdir()
-  )
-
-  predictions <- predictSklearn(
-    plpModel,
-    testData,
-    population
-  )
-  expect_correct_predictions(predictions, testData)
 })

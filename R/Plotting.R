@@ -82,10 +82,8 @@ outcomeSurvivalPlot <- function(
     )
   )
 
-  population$daysToEvent[is.na(population$daysToEvent)] <-
-    population$survivalTime[is.na(population$daysToEvent)]
   survivalFit <- survival::survfit(
-    survival::Surv(daysToEvent, outcomeCount) ~ targetId,
+    survival::Surv(survivalTime, outcomeCount) ~ targetId,
     # riskDecile,
     population,
     conf.int = TRUE
@@ -97,17 +95,21 @@ outcomeSurvivalPlot <- function(
     yliml <- 0.5
   }
 
+  # the window length when it is the same for everyone, otherwise the longest follow-up
+  xMax <- getSurvivalHorizon(populationSettings) %||% max(population$survivalTime)
+
   result <- survminer::ggsurvplot(
     fit = survivalFit,
     data = population,
     risk.table = riskTable,
     pval = FALSE,
-    xlim = c(0, populationSettings$riskWindowEnd),
+    xlim = c(0, xMax),
     ylim = c(yliml * 0.95, 1),
     conf.int = confInt,
     ggtheme = ggplot2::theme_minimal(),
     risk.table.y.text.col = TRUE,
     risk.table.y.text = FALSE,
+    xlab = "Days since start of the time-at-risk window",
     ylab = yLabel
   )
   return(result)
@@ -784,6 +786,10 @@ plotF1Measure <- function(
 #'
 #' @details
 #' Create a plot showing the Observed vs. expected incidence, by age and gender
+#'
+#' The shaded band around the expected line is the mean predicted risk plus or minus 1.96 standard
+#' deviations of the individual predicted risks in each group. It shows how much predicted risks vary
+#' within the group, and is not a confidence interval for the mean or for the observed incidence.
 #' #'
 #' @param plpResult            A plp result object as generated using the \code{\link{runPlp}} function.
 #' @param typeColumn            The name of the column specifying the evaluation type
@@ -830,7 +836,7 @@ plotDemographicSummary <- function(
 
     # remove -1 values:
     x$averagePredictedProbability[is.na(x$averagePredictedProbability)] <- 0
-    x <- x[x$PersonCountWithOutcome != -1, ]
+    x <- x[is.na(x$PersonCountWithOutcome) | x$PersonCountWithOutcome != -1, ]
     if (nrow(x) == 0) {
       return(NULL)
     }
@@ -968,19 +974,23 @@ plotSparseCalibration <- function(
       dplyr::filter(.data[[typeColumn]] == evalType) %>%
       dplyr::select("averagePredictedProbability", "observedIncidence")
 
-    maxVal <- max(x$averagePredictedProbability, x$observedIncidence)
+    maxVal <- max(x$averagePredictedProbability, x$observedIncidence, na.rm = TRUE)
     model <- stats::lm(observedIncidence ~ averagePredictedProbability, data = x)
     res <- model$coefficients
     names(res) <- c("Intercept", "Gradient")
 
-    # confidence int
-    interceptConf <- stats::confint(model)[1, ]
-    gradientConf <- stats::confint(model)[2, ]
+    # pointwise 95% confidence interval of the fitted line
+    grid <- seq(0, 1, length.out = nrow(x))
+    fitted <- stats::predict(
+      model,
+      newdata = data.frame(averagePredictedProbability = grid),
+      interval = "confidence"
+    )
 
     cis <- data.frame(
-      lci = interceptConf[1] + seq(0, 1, length.out = nrow(x)) * gradientConf[1],
-      uci = interceptConf[2] + seq(0, 1, length.out = nrow(x)) * gradientConf[2],
-      x = seq(0, 1, length.out = nrow(x))
+      lci = fitted[, "lwr"],
+      uci = fitted[, "upr"],
+      x = grid
     )
 
     x <- cbind(x, cis)
@@ -1062,11 +1072,22 @@ plotSparseCalibration2 <- function(
     evalType <- evalTypes[i]
     x <- plpResult$performanceEvaluation$calibrationSummary %>%
       dplyr::filter(.data[[typeColumn]] == evalType) %>%
-      dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
+      dplyr::filter(!is.na(.data$observedIncidence))
 
-    cis <- apply(x, 1, function(x) stats::binom.test(round(x[2] * x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
-    x$lci <- cis[1, ]
-    x$uci <- cis[2, ]
+    # survival summaries store censoring-aware Kaplan-Meier bounds; binary summaries do not
+    if (all(c("observedIncidenceLB", "observedIncidenceUB") %in% colnames(x))) {
+      x <- x %>%
+        dplyr::select(
+          "averagePredictedProbability", "observedIncidence",
+          lci = "observedIncidenceLB", uci = "observedIncidenceUB"
+        )
+    } else {
+      x <- x %>%
+        dplyr::select("averagePredictedProbability", "observedIncidence", "PersonCountAtRisk")
+      cis <- apply(x, 1, function(x) stats::binom.test(round(x[2] * x[3]), x[3], alternative = c("two.sided"), conf.level = 0.95)$conf.int)
+      x$lci <- cis[1, ]
+      x$uci <- cis[2, ]
+    }
 
     maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence)) * 1.1
 
@@ -1104,6 +1125,8 @@ plotSparseCalibration2 <- function(
 #' was defined: from utopia to empirical data" (2016)
 #'
 #' @details
+#' Only binary models are supported. For survival models use \code{\link{plotSparseCalibration2}}.
+#'
 #' Create a plot showing the smoothed calibration
 #' @param plpResult       The result of running \code{\link{runPlp}} function. An object containing the
 #'                        model or location where the model is save, the data selection settings, the
@@ -1160,6 +1183,13 @@ plotSmoothCalibration <- function(plpResult,
   if (nKnots < 3) {
     stop(ParallelLogger::logError("Number of knots must be larger than 3"))
   }
+  # The fit uses outcomeCount, which counts people censored before the horizon as non-cases (#270).
+  if (identical(attr(plpResult$prediction, "metaData")$modelType, "survival") ||
+    identical(attr(plpResult$model, "modelType"), "survival")) {
+    errorMessage <- "plotSmoothCalibration does not support survival models. Use plotSparseCalibration2 instead."
+    ParallelLogger::logError(errorMessage)
+    stop(errorMessage)
+  }
   if (smooth == "rcs") {
     rlang::check_installed("mgcv",
       reason = "mgcv is required for restricted cubic spline smoothing"
@@ -1184,7 +1214,7 @@ plotSmoothCalibration <- function(plpResult,
 
       prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
 
-      maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence))
+      maxes <- max(max(x$averagePredictedProbability), max(x$observedIncidence, na.rm = TRUE))
 
       if (smooth == "rcs") {
         if (missing(nKnots)) {
@@ -1558,6 +1588,9 @@ getNetBenefit <- function(plpResult, evalType) {
   if (is.null(plpResult$prediction)) {
     # get net benefit from thresholdSummary
     nbData <- getNetBenefitThresholdSummary(plpResult, evalType)
+  } else if (identical(attr(plpResult$prediction, "metaData")$modelType, "survival") ||
+    identical(attr(plpResult$model, "modelType"), "survival")) {
+    nbData <- getNetBenefitSurvival(plpResult, evalType)
   } else {
     nbData <- getNetBenefitPredictions(plpResult, evalType)
 
@@ -1590,6 +1623,68 @@ getNetBenefitThresholdSummary <- function(plpResult, evalType) {
       netBenefit = .data$truePositiveCount / n - (.data$falsePositiveCount / n) * (.data$predictionThreshold / (1 - .data$predictionThreshold)),
       treatAll = outcomeRate - (1 - outcomeRate) * .data$predictionThreshold / (1 - .data$predictionThreshold),
       treatNone = 0
+    )
+  return(nbData)
+}
+
+# censoring-aware net benefit for survival predictions at the prediction horizon
+getNetBenefitSurvival <- function(plpResult, evalType) {
+  rlang::check_installed("survival", reason = "for net benefit of survival models")
+  prediction <- plpResult$prediction %>% dplyr::filter(.data$evaluationType == evalType)
+
+  if (nrow(prediction) == 0) {
+    stop("No prediction data found for evaluation type ", evalType)
+  }
+
+  timepoint <- attr(plpResult$prediction, "metaData")$timepoint
+  if (is.null(timepoint)) {
+    timepoint <- max(prediction$survivalTime)
+  }
+  timepoint <- min(timepoint, max(prediction$survivalTime))
+
+  values <- prediction$value
+  if (anyNA(values) || any(values < 0 | values > 1)) {
+    stop(
+      "Net benefit for a survival model needs predicted risks between 0 and 1, ",
+      "but the predictions range from ", signif(min(values, na.rm = TRUE), 3),
+      " to ", signif(max(values, na.rm = TRUE), 3), ". A Cox model without a ",
+      "baseline survival predicts relative risks, not risks."
+    )
+  }
+  xstart <- max(min(values), 0.001)
+  xstop <- min(max(values), 0.99)
+  if (xstop <= xstart) {
+    stop(
+      "Net benefit for a survival model needs predicted risks that differ ",
+      "between patients within 0.001 to 0.99, but they range from ",
+      signif(min(values), 3), " to ", signif(max(values), 3), "."
+    )
+  }
+  xby <- (xstop - xstart) / 100
+  # stop one grid step below the highest risk so the top threshold still has patients above it
+  nb <- stdca(
+    data = data.frame(
+      p = prediction$value,
+      t = prediction$survivalTime,
+      y = ifelse(prediction$outcomeCount > 0, 1, 0)
+    ),
+    outcome = "y",
+    ttoutcome = "t",
+    timepoint = timepoint,
+    predictors = "p",
+    xstart = xstart,
+    xstop = xstop - xby,
+    xby = xby,
+    smooth = FALSE,
+    graph = FALSE
+  )$net.benefit
+
+  nbData <- nb[!is.na(nb$p), ] %>%
+    dplyr::transmute(
+      threshold = .data$threshold,
+      netBenefit = .data$p,
+      treatAll = .data$all,
+      treatNone = .data$none
     )
   return(nbData)
 }

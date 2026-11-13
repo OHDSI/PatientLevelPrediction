@@ -16,7 +16,7 @@
 
 # add limitCovariatesToPopulation(covariateData, rowIds) test
 test_that("limitCovariatesToPopulation preserves metadata", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   metaData <- attr(plpData$covariateData, "metaData")
   covariateData <-
     PatientLevelPrediction:::limitCovariatesToPopulation(
@@ -29,6 +29,19 @@ test_that("limitCovariatesToPopulation preserves metadata", {
     names(metaData),
     names(attr(covariateData, "metaData"))
   )
+})
+
+test_that("asCovariateData gives an Andromeda FeatureExtraction's CovariateData class", {
+  covariateData <- asCovariateData(Andromeda::andromeda(
+    covariates = data.frame(rowId = 1, covariateId = 2, covariateValue = 3)
+  ))
+  withr::defer(Andromeda::close(covariateData))
+
+  expect_s4_class(covariateData, "CovariateData")
+  expect_true(methods::is(covariateData, "Andromeda"))
+  expect_identical(attr(class(covariateData), "package"), "FeatureExtraction")
+  expect_true("FeatureExtraction" %in% loadedNamespaces())
+  expect_equal(dplyr::collect(covariateData$covariates)$covariateValue, 3)
 })
 
 test_that("limitPop with timeRef", {
@@ -55,11 +68,25 @@ test_that("limitPop with timeRef", {
       sequenceEndDay = 1
     )
   )
-  class(covs) <- "CovariateData"
+  covs <- asCovariateData(covs)
   rowIds <- c(2)
   limitedCovs <- limitCovariatesToPopulation(covs, rowIds)
   expect_equal(
     as.data.frame(limitedCovs$timeRef),
     as.data.frame(covs$timeRef)
   )
+})
+
+test_that("closeAndromedas closes each open Andromeda once and skips the rest", {
+  first <- Andromeda::andromeda(x = data.frame(a = 1))
+  second <- Andromeda::andromeda(x = data.frame(a = 2))
+  closedBefore <- Andromeda::andromeda()
+  Andromeda::close(closedBefore)
+
+  # the same object twice, a closed one and something that is not an Andromeda
+  closeAndromedas(list(first, first, second, closedBefore, data.frame(a = 1)))
+
+  expect_false(Andromeda::isValidAndromeda(first))
+  expect_false(Andromeda::isValidAndromeda(second))
+  expect_silent(closeAndromedas(list(first)))
 })

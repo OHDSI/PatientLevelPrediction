@@ -9,7 +9,8 @@ insertResultsToSqlite(
   cohortDefinitions = NULL,
   databaseList = NULL,
   sqliteLocation = file.path(resultLocation, "sqlite"),
-  skipDiagnostics = FALSE
+  skipDiagnostics = FALSE,
+  deleteTables = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ insertResultsToSqlite(
 \item{sqliteLocation}{(string) location of directory where the sqlite database will be saved}
 
 \item{skipDiagnostics}{Whether to skip uploading the diagnostics}
+
+\item{deleteTables}{If TRUE any results already in the sqlite database are removed
+first. Use FALSE to add results to an existing database.}
 }
 \value{
 Returns the location of the sqlite database file

@@ -13,21 +13,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-analysis1 <- createModelDesign(
-  targetId = 1,
-  outcomeId = outcomeId,
-  restrictPlpDataSettings =
-  createRestrictPlpDataSettings(firstExposureOnly = FALSE, washoutPeriod = 0),
-  populationSettings = createStudyPopulationSettings(),
-  covariateSettings = covariateSettings,
-  featureEngineeringSettings = NULL,
-  sampleSettings = NULL,
-  splitSettings = createDefaultSplitSetting(splitSeed = 1),
-  preprocessSettings = createPreprocessSettings(),
-  modelSettings = setLassoLogisticRegression(seed = 12)
-)
+# uses outcomeId and covariateSettings from the Eunomia fixtures
+if (isTRUE(eunomiaAvailable)) {
+  analysis1 <- createModelDesign(
+    targetId = 1,
+    outcomeId = outcomeId,
+    restrictPlpDataSettings =
+    createRestrictPlpDataSettings(firstExposureOnly = FALSE, washoutPeriod = 0),
+    populationSettings = createStudyPopulationSettings(),
+    covariateSettings = covariateSettings,
+    featureEngineeringSettings = NULL,
+    sampleSettings = NULL,
+    splitSettings = createDefaultSplitSetting(splitSeed = 1),
+    preprocessSettings = createPreprocessSettings(),
+    modelSettings = setLassoLogisticRegression(seed = 12)
+  )
+}
 
 test_that("createModelDesign - test working", {
+  skip_if_no_eunomia()
   expect_equal(analysis1$targetId, 1)
   expect_equal(analysis1$outcomeId, outcomeId)
   expect_equal(analysis1$restrictPlpDataSettings,
@@ -54,6 +58,7 @@ test_that("createModelDesign - test working", {
 })
 
 test_that("saving analyses settings", {
+  skip_if_no_eunomia()
   fileLocation <- savePlpAnalysesJson(
     modelDesignList = list(analysis1),
     saveDirectory = file.path(saveLoc, "settings")
@@ -63,6 +68,7 @@ test_that("saving analyses settings", {
 })
 
 test_that("loading analyses settings", {
+  skip_if_no_eunomia()
   analysisSetting <- loadPlpAnalysesJson(file.path(saveLoc, "settings", "predictionAnalysisList.json"))
 
   expect_equal(analysis1$targetId, analysisSetting$analyses[[1]]$targetId)
@@ -84,7 +90,7 @@ test_that("loading analyses settings", {
 test_that("test run multiple", {
   skip_if_not_installed("ResultModelManager")
   skip_on_cran()
-  skip_if_offline()
+  skip_if_no_eunomia()
 
   analysis3 <- createModelDesign(
     targetId = 1,
@@ -125,12 +131,8 @@ test_that("test run multiple", {
   expect_true(file.exists(file.path(saveLoc, "multiple", "settings.csv")))
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Analysis_1")))
   expect_true(file.exists(file.path(saveLoc, "multiple", "Analysis_1", "plpResult", "runPlp.rds")))
-})
 
-test_that("validateMultiplePlp errors", {
-  skip_if_not_installed("ResultModelManager")
-  skip_on_cran()
-  skip_if_offline()
+  # validate the analyses just made
   PatientLevelPrediction::validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "multiple"),
     validationDatabaseDetails = databaseDetails,
@@ -141,12 +143,16 @@ test_that("validateMultiplePlp errors", {
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Validation", "main")))
   expect_true(dir.exists(file.path(saveLoc, "multiple", "Validation", "main", "Analysis_1", "validationResult")))
   expect_true(file.exists(file.path(saveLoc, "multiple", "Validation", "main", "Analysis_1", "validationResult", "runPlp.rds")))
+})
 
-  # no results error
-  expect_error(evaluateMultiplePlp(
+test_that("validateMultiplePlp errors without results", {
+  skip_if_not_installed("ResultModelManager")
+  skip_on_cran()
+  skip_if_no_eunomia()
+  expect_error(validateMultiplePlp(
     analysesLocation = file.path(saveLoc, "madeup123"),
     validationDatabaseDetails = databaseDetails,
     validationRestrictPlpDataSettings = createRestrictPlpDataSettings(),
     recalibrate = NULL
-  ))
+  ), "No analyses \\(Analysis_ folders\\) found in")
 })

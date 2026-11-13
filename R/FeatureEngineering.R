@@ -16,6 +16,8 @@
 # limitations under the License.
 
 
+# Training: `data` is the training set made by splitData() (and sampleData()),
+# which already has its own Andromeda, so the steps change it in place.
 featureEngineer <- function(data, featureEngineeringSettings) {
   start <- Sys.time()
   ParallelLogger::logInfo("Starting Feature Engineering")
@@ -42,10 +44,273 @@ featureEngineer <- function(data, featureEngineeringSettings) {
   return(data)
 }
 
+# Andromeda tables are modified in place, so copying the data list alone does
+# not isolate them from the caller. Feature engineering steps change the data
+# they are given; applyFeatureEngineering() uses this to give them a copy.
+isolateCovariateData <- function(data) {
+  metaData <- attr(data$covariateData, "metaData")
+  data$covariateData <- Andromeda::copyAndromeda(data$covariateData)
+  data$covariateData <- asCovariateData(data$covariateData)
+  attr(data$covariateData, "metaData") <- metaData
+  return(data)
+}
+
+# Models saved before saveSettingsToJsonFullPrecision() converted attribute
+# values hold data frames from attributes as a list of rows, without the fields
+# of NA values. Steps that read a saved table call this.
+restoreSavedTable <- function(savedTable) {
+  if (is.data.frame(savedTable)) {
+    return(savedTable)
+  }
+  if (length(savedTable) == 0) {
+    return(NULL)
+  }
+  return(as.data.frame(dplyr::bind_rows(savedTable)))
+}
+
+isSavedRows <- function(x) {
+  is.list(x) && !is.data.frame(x) && length(x) > 0 && is.null(names(x)) &&
+    all(vapply(x, function(row) {
+      is.list(row) && !is.null(names(row)) &&
+        all(vapply(row, function(value) is.atomic(value) && length(value) <= 1, logical(1)))
+    }, logical(1)))
+}
+
+# The feature engineering steps of this package, whose saved settings
+# restoreSavedTables() may repair.
+builtInFeatureEngineeringSteps <- function() {
+  c(
+    "splineCovariates", "univariateFeatureSelection", "randomForestFeatureSelection",
+    "minMaxNormalize", "robustNormalize", "removeRareFeatures", "simpleImpute",
+    "iterativeImpute", "sklearnIterativeImpute", "stratifiedImputeCovariates", "sameData"
+  )
+}
+
+# Columns of the tables that built-in steps keep in the attributes of their
+# fitted settings. The four-decimal format of earlier versions writes an empty
+# table as an empty list, which loads back as an empty or missing attribute and
+# carries no columns, so such tables are rebuilt from these.
+builtInFeatureEngineeringTables <- function() {
+  list(
+    minMaxNormalize = list(minMaxs = c("covariateId", "max", "min")),
+    robustNormalize = list(quantiles = c("covariateId", "median", "iqr")),
+    simpleImpute = list(
+      missingInfo = c("covariateId", "missing"),
+      imputer = c("covariateId", "imputedValues")
+    ),
+    iterativeImpute = list(
+      missingInfo = c("covariateId", "missing"),
+      initialValues = c("covariateId", "initialValue")
+    )
+  )
+}
+
+restoreEmptyTables <- function(funct, settings) {
+  tables <- builtInFeatureEngineeringTables()[[funct]]
+  fitted <- settings$featureEngineeringSettings
+  if (is.null(tables) || is.null(fitted) || !isTRUE(settings$done)) {
+    return(settings)
+  }
+  for (name in names(tables)) {
+    value <- attr(fitted, name)
+    if (!is.data.frame(value) && length(value) == 0) {
+      emptyColumns <- stats::setNames(rep(list(numeric(0)), length(tables[[name]])), tables[[name]])
+      attr(fitted, name) <- as.data.frame(emptyColumns)
+    }
+  }
+  settings$featureEngineeringSettings <- fitted
+  settings
+}
+
+# Turns every saved list of rows in a step's settings, including in attributes
+# and nested lists, back into a data frame.
+restoreSavedTables <- function(x) {
+  if (isSavedRows(x)) {
+    return(restoreSavedTable(x))
+  }
+  if (is.data.frame(x)) {
+    # the columns of a table without rows come back from the JSON as empty lists
+    for (column in names(x)) {
+      if (is.list(x[[column]]) && length(x[[column]]) == 0) {
+        x[[column]] <- numeric(0)
+      }
+    }
+    return(x)
+  }
+  if (is.list(x)) {
+    for (i in seq_along(x)) {
+      if (!is.null(x[[i]])) {
+        x[[i]] <- restoreSavedTables(x[[i]])
+      }
+    }
+  }
+  for (name in setdiff(names(attributes(x)), c("names", "class", "row.names"))) {
+    attr(x, name) <- restoreSavedTables(attr(x, name))
+  }
+  return(x)
+}
+
+populationRowIds <- function(data) {
+  if (!is.null(data$labels)) {
+    return(unique(data$labels$rowId))
+  }
+  if (!is.null(data$cohorts)) {
+    return(unique(data$cohorts$rowId))
+  }
+  return(NULL)
+}
+
+# Continuous features where a patient without a row has the value zero. Temporal
+# data is excluded because which time points are implicit is not defined.
+implicitZeroCovariateIds <- function(data) {
+  covariateData <- data$covariateData
+  if (is.null(populationRowIds(data)) ||
+    !"missingMeansZero" %in% colnames(covariateData$analysisRef) ||
+    "timeId" %in% colnames(covariateData$covariates)) {
+    return(numeric(0))
+  }
+  covariateData$analysisRef %>%
+    dplyr::filter(.data$isBinary == "N", .data$missingMeansZero == "Y") %>%
+    dplyr::select("analysisId") %>%
+    dplyr::inner_join(covariateData$covariateRef, by = "analysisId") %>%
+    dplyr::pull(.data$covariateId)
+}
+
+# Stores the implicit zeros so that normalization statistics see the whole
+# population and values that do not stay zero after normalization are kept: one
+# append of every population row and covariate pair that has no stored value.
+addImplicitZeros <- function(data, covariateIds) {
+  rowIds <- populationRowIds(data)
+  if (length(covariateIds) == 0 || is.null(rowIds)) {
+    return(invisible(NULL))
+  }
+  covariateData <- data$covariateData
+  # not named rowId: in a join of two tables DuckDB's implicit rowid column
+  # would make it ambiguous
+  covariateData$populationRows <- data.frame(personRowId = rowIds, joinKey = 1L)
+  on.exit(covariateData$populationRows <- NULL, add = TRUE)
+  covariateData$implicitZeroIds <- data.frame(covariateId = covariateIds, joinKey = 1L)
+  on.exit(covariateData$implicitZeroIds <- NULL, add = TRUE)
+  zeros <- covariateData$populationRows %>%
+    dplyr::inner_join(covariateData$implicitZeroIds, by = "joinKey") %>%
+    dplyr::anti_join(
+      covariateData$covariates %>% dplyr::select(personRowId = "rowId", "covariateId"),
+      by = c("personRowId", "covariateId")
+    ) %>%
+    dplyr::transmute(rowId = .data$personRowId, covariateId = .data$covariateId, covariateValue = 0)
+  Andromeda::appendToTable(covariateData$covariates, zeros)
+  return(invisible(NULL))
+}
+
+# Removes covariateIds from the covariates and covariateRef; leaves both
+# tables as they are when there is nothing to remove.
+removeCovariates <- function(covariateData, covariateIds) {
+  if (length(covariateIds) == 0) {
+    return(invisible(NULL))
+  }
+  covariateData$covariates <- covariateData$covariates %>%
+    dplyr::filter(!.data$covariateId %in% !!covariateIds)
+  covariateData$covariateRef <- covariateData$covariateRef %>%
+    dplyr::filter(!.data$covariateId %in% !!covariateIds)
+  invisible(NULL)
+}
+
+# Leaves out the stored values of covariateIds that are zero (after
+# normalization), as a step in the same query.
+dropStoredZeros <- function(covariates, covariateIds) {
+  if (length(covariateIds) == 0) {
+    return(covariates)
+  }
+  covariates %>%
+    dplyr::filter(!(.data$covariateId %in% !!covariateIds & .data$covariateValue == 0))
+}
+
+# Fitted steps are stored as a list of list(funct, settings) entries, one per
+# step in the order they ran. Models saved by earlier versions, and custom steps
+# that record themselves with listAppend(), may also hold a step as a function
+# name followed by its settings list directly in the list, under any names
+# (funct and settings, funct.1 and settings.1 after the JSON round trip, or
+# misaligned names), so steps are recognised by their structure.
+featureEngineeringSteps <- function(featureEngineering) {
+  isStep <- function(entry) is.list(entry) && !is.null(entry[["funct"]])
+  savedStep <- function(funct, settings) {
+    # only the package's own steps are known to have saved tables as lists of
+    # rows; custom steps get their settings as they were loaded
+    if (funct %in% builtInFeatureEngineeringSteps()) {
+      settings <- restoreSavedTables(settings)
+      settings <- restoreEmptyTables(funct, settings)
+    }
+    list(funct = funct, settings = settings)
+  }
+  steps <- list()
+  i <- 1
+  while (i <= length(featureEngineering)) {
+    entry <- featureEngineering[[i]]
+    nextEntry <- if (i < length(featureEngineering)) featureEngineering[[i + 1]]
+    if (isStep(entry)) {
+      steps[[length(steps) + 1]] <- savedStep(entry[["funct"]], entry[["settings"]])
+      i <- i + 1
+    } else if (is.character(entry) && length(entry) == 1 && is.list(nextEntry) && !isStep(nextEntry)) {
+      steps[[length(steps) + 1]] <- savedStep(entry, nextEntry)
+      i <- i + 2
+    } else {
+      warning("Saved feature engineering entry ", i, " is not a step and is not applied.")
+      i <- i + 1
+    }
+  }
+  return(steps)
+}
+
+#' Record a fitted feature engineering step so it is applied at prediction
+#'
+#' @description
+#' Call this at the end of a feature engineering 'implement' function, before
+#' returning `trainData`. When the model is applied to new data,
+#' PatientLevelPrediction calls the recorded steps again, in the order they were
+#' recorded.
+#'
+#' @details
+#' At prediction the function named `funct` is called with `trainData` (a copy
+#' of the data to transform) and the elements of `settings` as arguments. Put
+#' everything the function needs to repeat the step in `settings`, such as the
+#' `featureEngineeringSettings` and the values learned from the training data.
+#' The model is saved as JSON, so `settings` should hold only numbers, strings,
+#' logicals, data frames and lists of these.
+#'
+#' @param trainData The data the implement function received and changed.
+#' @param funct The name of the implement function to call at prediction.
+#' @param settings A named list of the other arguments for that call.
+#' @return `trainData`, with the step added to
+#'   `attr(trainData$covariateData, "metaData")$featureEngineering`.
+#' @examples
+#' covariateData <- Andromeda::andromeda(
+#'   covariates = data.frame(rowId = 1:3, covariateId = 1, covariateValue = c(1, 5, 9))
+#' )
+#' trainData <- list(covariateData = covariateData)
+#' trainData <- recordFeatureEngineeringStep(
+#'   trainData,
+#'   funct = "capCovariateValues",
+#'   settings = list(featureEngineeringSettings = list(), cap = 5)
+#' )
+#' attr(trainData$covariateData, "metaData")$featureEngineering
+#' Andromeda::close(covariateData)
+#' @export
+recordFeatureEngineeringStep <- function(trainData, funct, settings) {
+  checkIsClass(funct, "character")
+  if (length(funct) != 1) {
+    stop("funct must be the name of one function")
+  }
+  checkIsClass(settings, "list")
+  steps <- featureEngineeringSteps(attr(trainData$covariateData, "metaData")$featureEngineering)
+  steps[[length(steps) + 1]] <- list(funct = funct, settings = settings)
+  attr(trainData$covariateData, "metaData")$featureEngineering <- steps
+  return(trainData)
+}
+
 #' Create the settings for defining any feature engineering that will be done
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 #'
 #' @param type              (character) Choice of:  \itemize{
 #'                                         \item'none' No feature engineering - this is the default
@@ -116,7 +381,7 @@ createUnivariateFeatureSelection <- function(k = 100) {
 #' Create the settings for random foreat based feature selection
 #'
 #' @details
-#' Returns an object of class `featureEngineeringSettings` that specifies the sampling function that will be called and the settings
+#' Returns an object of class `featureEngineeringSettings` that specifies the feature engineering function that will be called and its settings
 #'
 #' @param ntrees              number of tree in forest
 #' @param maxDepth            MAx depth of each tree
@@ -160,7 +425,7 @@ createRandomForestFeatureSelection <- function(ntrees = 2000, maxDepth = 17) {
 #' Create the settings for adding a spline for continuous variables
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies the sampling function that will be called and the settings
+#' Returns an object of class \code{featureEngineeringSettings} that specifies the feature engineering function that will be called and its settings
 #'
 #' @param continousCovariateId     The covariateId to apply splines to
 #' @param knots            Either number of knots of vector of split values
@@ -194,9 +459,11 @@ createSplineSettings <- function(
 splineCovariates <- function(
     trainData,
     featureEngineeringSettings,
-    knots = NULL) {
+    knots = NULL,
+    componentIds = NULL) {
   ParallelLogger::logInfo("Starting splineCovariates")
 
+  fitting <- is.null(knots)
   if (is.null(knots)) {
     if (length(featureEngineeringSettings$knots) == 1) {
       measurements <- trainData$covariateData$covariates %>%
@@ -210,29 +477,44 @@ splineCovariates <- function(
   }
 
   # apply the spline mapping
-  trainData <- splineMap(
+  splineResult <- splineMap(
     data = trainData,
     covariateId = featureEngineeringSettings$continousCovariateId,
     analysisId = featureEngineeringSettings$analysisId,
-    knots = knots
+    knots = knots,
+    componentIds = componentIds,
+    checkCollisions = fitting
   )
+  trainData <- splineResult$data
 
-  featureEngineering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "splineCovariates",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      knots = knots
+      knots = knots,
+      componentIds = splineResult$componentIds
     )
-  )
-
-  # add the feature engineering in
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngineering
   )
   ParallelLogger::logInfo("Finished splineCovariates")
 
   return(trainData)
+}
+
+# Keeps the established IDs unless another spline already uses them. Saved
+# models without a persisted mapping replay without the check, to reproduce the
+# IDs they were trained on.
+allocateSplineIds <- function(covariateId, analysisId, nComponents, existingIds) {
+  for (prefix in c(floor(covariateId / 1000), covariateId)) {
+    ids <- prefix * 10000 + seq_len(nComponents) * 1000 + analysisId
+    if (max(ids) < 1e15 && !any(ids %in% existingIds)) {
+      return(ids)
+    }
+  }
+  stop(
+    "Cannot create unique spline covariate IDs for covariateId ", covariateId,
+    ". Use a different analysisId in createSplineSettings()."
+  )
 }
 
 # create the spline map to add spline columns
@@ -240,7 +522,9 @@ splineMap <- function(
     data,
     covariateId,
     analysisId,
-    knots) {
+    knots,
+    componentIds = NULL,
+    checkCollisions = FALSE) {
   ParallelLogger::logInfo("Starting splineMap")
   measurements <- data$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!covariateId) %>%
@@ -264,8 +548,17 @@ splineMap <- function(
   data$covariateData$covariateRef <- data$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId != !!covariateId)
 
-  # remove last 3 numbers as this was old analysis id
-  covariateId <- floor(covariateId / 1000)
+  if (is.null(componentIds)) {
+    existingIds <- if (checkCollisions) {
+      data$covariateData$covariateRef %>% dplyr::pull(.data$covariateId)
+    }
+    componentIds <- allocateSplineIds(
+      covariateId = covariateId,
+      analysisId = analysisId,
+      nComponents = ncol(designMatrix),
+      existingIds = existingIds
+    )
+  }
 
   # add the spline columns
   for (i in 1:ncol(designMatrix)) {
@@ -273,7 +566,7 @@ splineMap <- function(
       tbl = data$covariateData$covariates,
       data = data.frame(
         rowId = measurements$rowId,
-        covariateId = covariateId * 10000 + i * 1000 + analysisId,
+        covariateId = componentIds[i],
         covariateValue = designMatrix[, i]
       )
     )
@@ -283,8 +576,7 @@ splineMap <- function(
   Andromeda::appendToTable(
     tbl = data$covariateData$covariateRef,
     data = data.frame(
-      covariateId =
-        covariateId * 10000 + (1:(ncol(designMatrix))) * 1000 + analysisId,
+      covariateId = componentIds,
       covariateName = paste(
         paste0(covariateName, " spline component "),
         1:ncol(designMatrix)
@@ -311,21 +603,25 @@ splineMap <- function(
     )
   }
   ParallelLogger::logInfo("Finished splineMap")
-  return(data)
+  return(list(data = data, componentIds = componentIds))
 }
 
 
 
-#' Create the settings for using stratified imputation.
+#' Create the settings for using stratified imputation
 #'
 #' @details
-#' Returns an object of class \code{featureEngineeringSettings} that specifies 
-#' how to do stratified imputation. This function splits the covariate into
-#' age groups and fits splines to the covariate within each age group. The spline
-#' values are then used to impute missing values.
+#' Returns an object of class \code{featureEngineeringSettings} that specifies
+#' how to do stratified imputation. Patients without a value for the covariate
+#' get the mean value of the training patients with the same age group and
+#' gender. Patients in an age group and gender without training values, and
+#' patients without an age or gender, get the mean over all training patients.
+#' Stored missing (NA) values are imputed too. The means learned in training are
+#' reused when the model is applied to new data.
 #'
 #' @param covariateId     The covariateId that needs imputed values
-#' @param ageSplits       A vector of age splits in years to create age groups
+#' @param ageSplits       A vector of ages in years at which to split the age
+#'   groups. If \code{NULL}, the default, age groups are 5 years wide.
 #'
 #' @return
 #' An object of class \code{featureEngineeringSettings}
@@ -339,7 +635,7 @@ createStratifiedImputationSettings <- function(
     covariateId,
     ageSplits = NULL) {
   checkIsClass(covariateId, c("numeric", "integer"))
-  checkIsClass(ageSplits, c("numeric", "integer"))
+  checkIsClass(ageSplits, c("numeric", "integer", "NULL"))
 
   featureEngineeringSettings <- list(
     covariateId = covariateId,
@@ -355,46 +651,112 @@ createStratifiedImputationSettings <- function(
 stratifiedImputeCovariates <- function(
     trainData,
     featureEngineeringSettings,
-    stratifiedMeans = NULL) {
-  if (is.null(stratifiedMeans)) {
+    stratifiedMeans = NULL,
+    overallMean = NULL,
+    done = FALSE) {
+  covariateId <- featureEngineeringSettings$covariateId
+  # a stored NA counts as a missing value
+  # stored missing values are rare, so count them before rewriting the table
+  storedMissing <- trainData$covariateData$covariates %>%
+    dplyr::filter(.data$covariateId == !!covariateId, is.na(.data$covariateValue)) %>%
+    dplyr::count() %>%
+    dplyr::pull()
+  if (storedMissing > 0) {
+    trainData$covariateData$covariates <- trainData$covariateData$covariates %>%
+      dplyr::filter(!(.data$covariateId == !!covariateId & is.na(.data$covariateValue)))
+  }
+  if (!done) {
     stratifiedMeans <- calculateStratifiedMeans(
       trainData = trainData,
       featureEngineeringSettings = featureEngineeringSettings
     )
+    overallMean <- trainData$covariateData$covariates %>%
+      dplyr::filter(.data$covariateId == !!covariateId) %>%
+      dplyr::summarise(overallMean = mean(.data$covariateValue, na.rm = TRUE)) %>%
+      dplyr::pull()
+    if (nrow(stratifiedMeans) == 0) {
+      warning(
+        "Stratified imputation found no values of covariate ", covariateId,
+        " in the training data, so no values are imputed."
+      )
+    }
+  }
+  stratifiedMeans <- savedStratifiedMeans(stratifiedMeans)
+  # NaN, NULL or "NA" (after a JSON round trip) when there were no training values
+  overallMean <- suppressWarnings(as.numeric(unlist(overallMean)))
+  if (length(overallMean) != 1 || !is.finite(overallMean)) {
+    overallMean <- NA_real_
   }
 
   trainData <- imputeMissingMeans(
     trainData = trainData,
-    covariateId = featureEngineeringSettings$covariateId,
+    covariateId = covariateId,
     ageSplits = featureEngineeringSettings$ageSplits,
-    stratifiedMeans = stratifiedMeans
+    stratifiedMeans = stratifiedMeans,
+    overallMean = overallMean
   )
 
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
+    funct = "stratifiedImputeCovariates",
+    settings = list(
+      featureEngineeringSettings = featureEngineeringSettings,
+      stratifiedMeans = stratifiedMeans,
+      overallMean = overallMean,
+      done = TRUE
+    )
+  )
   return(trainData)
+}
+
+# The saved group means with numeric columns, also when there are none.
+savedStratifiedMeans <- function(stratifiedMeans) {
+  means <- restoreSavedTable(stratifiedMeans)
+  if (is.null(means) || nrow(means) == 0) {
+    return(data.frame(ageGroup = numeric(0), gender = numeric(0), covariateValue = numeric(0)))
+  }
+  return(data.frame(
+    ageGroup = as.numeric(means$ageGroup),
+    gender = as.numeric(means$gender),
+    covariateValue = as.numeric(means$covariateValue)
+  ))
+}
+
+# Age and gender of the patients being processed: the labels during training,
+# or the cohorts when a full plpData is processed.
+stratificationPopulation <- function(trainData, ageSplits) {
+  population <- trainData$labels %||% trainData$cohorts
+  if (is.null(population) || !all(c("rowId", "ageYear", "gender") %in% colnames(population))) {
+    stop("Stratified imputation needs rowId, ageYear and gender in the labels or cohorts.")
+  }
+  population <- as.data.frame(population)[, c("rowId", "ageYear", "gender")]
+  if (is.null(ageSplits)) {
+    population$ageGroup <- floor(population$ageYear / 5)
+  } else {
+    population$ageGroup <- 0
+    for (i in seq_along(ageSplits)) {
+      population$ageGroup[population$ageYear > ageSplits[i]] <- i
+    }
+    population$ageGroup[is.na(population$ageYear)] <- NA
+  }
+  population$ageGroup <- as.numeric(population$ageGroup)
+  population$gender <- as.numeric(population$gender)
+  return(population[, c("rowId", "ageGroup", "gender")])
 }
 
 calculateStratifiedMeans <- function(
     trainData,
     featureEngineeringSettings) {
-  if (is.null(featureEngineeringSettings$ageSplits)) {
-    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear / 5)
-  } else {
-    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
-    for (i in seq_along(featureEngineeringSettings$ageSplits)) {
-      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > featureEngineeringSettings$ageSplits[i]] <- i
-    }
-  }
-
-  trainData$covariateData$cohorts <- trainData$cohorts[, c("rowId", "ageGroup", "gender")]
-
+  population <- stratificationPopulation(trainData, featureEngineeringSettings$ageSplits)
+  # patients without an age or gender get the overall mean instead
+  population <- population[!is.na(population$ageGroup) & !is.na(population$gender), ]
   stratifiedMeans <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!featureEngineeringSettings$covariateId) %>%
-    dplyr::inner_join(
-      y = trainData$covariateData$cohorts,
-      by = c("rowId")
-    ) %>%
+    dplyr::select("rowId", "covariateValue") %>%
+    dplyr::collect() %>%
+    dplyr::inner_join(population, by = "rowId") %>%
     dplyr::group_by(.data$ageGroup, .data$gender) %>%
-    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE)) %>%
+    dplyr::summarise(covariateValue = mean(.data$covariateValue, na.rm = TRUE), .groups = "drop") %>%
     as.data.frame()
 
   return(stratifiedMeans)
@@ -404,34 +766,24 @@ imputeMissingMeans <- function(
     trainData,
     covariateId,
     ageSplits,
-    stratifiedMeans) {
-  if (is.null(ageSplits)) {
-    trainData$cohorts$ageGroup <- floor(trainData$cohorts$ageYear / 5)
-  } else {
-    trainData$cohorts$ageGroup <- rep(0, length(trainData$cohorts$ageYear))
-    for (i in seq_along(ageSplits)) {
-      trainData$cohorts$ageGroup[trainData$cohorts$ageYear > ageSplits[i]] <- i
-    }
-  }
-
+    stratifiedMeans,
+    overallMean = NULL) {
+  population <- stratificationPopulation(trainData, ageSplits)
   rowIdsWithValues <- trainData$covariateData$covariates %>%
     dplyr::filter(.data$covariateId == !!covariateId) %>%
-    dplyr::select("rowId") %>%
+    dplyr::distinct(.data$rowId) %>%
     dplyr::pull()
-  rowIdsWithMissingValues <- trainData$cohorts$rowId[!trainData$cohorts$rowId %in% rowIdsWithValues]
 
-
-  imputedData <- trainData$cohorts %>%
-    dplyr::filter(.data$rowId %in% rowIdsWithMissingValues) %>%
-    dplyr::select("rowId", "ageGroup", "gender") %>%
-    dplyr::left_join(
-      y = stratifiedMeans,
-      by = c("ageGroup", "gender")
-    ) %>%
+  fallback <- overallMean %||% NA_real_
+  imputedData <- population %>%
+    dplyr::filter(!.data$rowId %in% rowIdsWithValues) %>%
+    dplyr::left_join(stratifiedMeans, by = c("ageGroup", "gender")) %>%
     dplyr::mutate(
       covariateId = !!covariateId,
-      covariateValue = .data$covariateValue
+      covariateValue = dplyr::coalesce(.data$covariateValue, !!fallback)
     ) %>%
+    # without a training mean there is nothing to impute
+    dplyr::filter(!is.na(.data$covariateValue)) %>%
     dplyr::select("rowId", "covariateId", "covariateValue")
 
   Andromeda::appendToTable(
@@ -480,17 +832,13 @@ univariateFeatureSelection <- function(
   trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariateIdsInclude)
 
-  featureEngineering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "univariateFeatureSelection",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       covariateIdsInclude = covariateIdsInclude
     )
-  )
-
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngineering
   )
 
   return(trainData)
@@ -540,18 +888,13 @@ randomForestFeatureSelection <- function(
   trainData$covariateData$covariateRef <- trainData$covariateData$covariateRef %>%
     dplyr::filter(.data$covariateId %in% covariateIdsInclude)
 
-
-  featureEngeering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = "randomForestFeatureSelection",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       covariateIdsInclude = covariateIdsInclude
     )
-  )
-
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngeering
   )
 
   return(trainData)
@@ -591,27 +934,106 @@ createNormalizer <- function(type = "minmax",
   return(featureEngineeringSettings)
 }
 
+# Normalization statistics and transformations. They take the covariates as a
+# data frame or as an Andromeda table, so the steps compute on the database and
+# the arithmetic can be tested on data frames.
+
+# Minimum and maximum of each covariate in covariateIds; a constant covariate
+# gets max = min + 1, so it normalizes to 0 instead of dividing by zero.
+minMaxStatistics <- function(covariates, covariateIds) {
+  covariates %>%
+    dplyr::filter(.data$covariateId %in% covariateIds) %>%
+    dplyr::group_by(.data$covariateId) %>%
+    dplyr::summarise(
+      max = max(.data$covariateValue, na.rm = TRUE),
+      min = min(.data$covariateValue, na.rm = TRUE)
+    ) %>%
+    dplyr::mutate(
+      range = .data$max - .data$min,
+      max = dplyr::if_else(.data$range == 0, .data$min + 1, .data$max)
+    ) %>%
+    dplyr::select(-"range") %>%
+    dplyr::collect()
+}
+
+# Scales covariates with a minMaxs row to (value - min) / (max - min); others
+# are left as they are. minMaxs must come from the same source as covariates.
+applyMinMax <- function(covariates, minMaxs) {
+  covariates %>%
+    dplyr::left_join(minMaxs, by = "covariateId") %>%
+    dplyr::mutate(covariateValue = dplyr::coalesce(
+      (.data$covariateValue - .data$min) / (.data$max - .data$min),
+      .data$covariateValue
+    )) %>%
+    dplyr::select(-c("max", "min"))
+}
+
+# Median and interquartile range of each covariate in covariateIds; a zero IQR
+# becomes 1 to avoid dividing by zero. The quartiles interpolate linearly, as
+# DuckDB's quantile_cont and R's default quantile type do.
+robustStatistics <- function(covariates, covariateIds) {
+  selected <- covariates %>%
+    dplyr::filter(.data$covariateId %in% covariateIds) %>%
+    dplyr::group_by(.data$covariateId)
+  if (inherits(covariates, "tbl_sql")) {
+    selected <- selected %>%
+      dplyr::summarise(
+        q25 = dbplyr::sql("quantile_cont(covariateValue, 0.25)"),
+        q75 = dbplyr::sql("quantile_cont(covariateValue, 0.75)"),
+        median = dbplyr::sql("median(covariateValue)")
+      )
+  } else {
+    selected <- selected %>%
+      dplyr::summarise(
+        q25 = unname(stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE)),
+        q75 = unname(stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE)),
+        median = stats::median(.data$covariateValue, na.rm = TRUE)
+      )
+  }
+  selected %>%
+    dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
+    dplyr::mutate(iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr)) %>%
+    dplyr::select(-c("q75", "q25")) %>%
+    dplyr::collect()
+}
+
+# Scales covariates with a quantiles row to (value - median) / iqr and, when
+# clip is TRUE, smoothly into (-3, 3) with x / sqrt(1 + (x / 3)^2)
+# (https://arxiv.org/abs/2407.04491); others are left as they are.
+applyRobust <- function(covariates, quantiles, clip) {
+  covariates %>%
+    dplyr::left_join(quantiles, by = "covariateId", copy = TRUE) %>%
+    dplyr::mutate(normalizeCovariate = dplyr::coalesce(
+      (.data$iqr == .data$iqr) & (.data$median == .data$median),
+      FALSE
+    )) %>%
+    dplyr::mutate(covariateValue = dplyr::coalesce(
+      (.data$covariateValue - .data$median) / .data$iqr,
+      .data$covariateValue
+    )) %>%
+    dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
+      .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
+      .data$covariateValue
+    )) %>%
+    dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+}
+
 #' A function that normalizes continous features to have values between 0 and 1
 #' @details uses value - min / (max - min) to normalize the data
-#' @param trainData The training data to be normalized
+#' @param trainData The data to normalize: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param done Whether the data has already been normalized (bool)
-#' @return The normalized data
+#' @param done Whether the normalization has already been fitted (bool)
+#' @return `trainData`, normalized, with the step recorded for prediction
 #' @keywords internal
 minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
     ParallelLogger::logInfo("Starting min-max normalization of continuous features")
+    implicitZeroIds <- implicitZeroCovariateIds(outData)
+    addImplicitZeros(outData, implicitZeroIds)
+    attr(featureEngineeringSettings, "implicitZeroCovariateIds") <- implicitZeroIds
     # fit the normalization
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
@@ -620,70 +1042,42 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
-    # get max of each feature
-    outData$covariateData$minMaxs <- outData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-      dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(
-        max = max(.data$covariateValue, na.rm = TRUE),
-        min = min(.data$covariateValue, na.rm = TRUE),
-      ) %>%
-      dplyr::mutate(
-        range = .data$max - .data$min,
-        max = dplyr::if_else(.data$range == 0, .data$min + 1, .data$max),
-      ) %>%
-      dplyr::select(-"range") %>% 
-      dplyr::collect()
+    minMaxs <- minMaxStatistics(outData$covariateData$covariates, continousFeatures)
+    attr(featureEngineeringSettings, "minMaxs") <- minMaxs
+    outData$covariateData$minMaxs <- minMaxs
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-
-    # save the normalization
-    attr(featureEngineeringSettings, "minMaxs") <-
-      outData$covariateData$minMaxs %>% dplyr::collect()
-
-    # apply the normalization to trainData
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$minMaxs, by = "covariateId") %>%
-      # Only continuous features have min/max rows after the join.
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$min) / (.data$max - .data$min),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("max", "min"))
+    if (NROW(minMaxs) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyMinMax(outData$covariateData$covariates, outData$covariateData$minMaxs),
+        implicitZeroIds
+      )
+    }
     outData$covariateData$minMaxs <- NULL
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying min-max normalization of continuous features to test data")
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    # NULL for models saved before implicit zeros were handled
+    implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
+    addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$minMaxs <- attr(featureEngineeringSettings, "minMaxs")
+    minMaxs <- restoreSavedTable(attr(featureEngineeringSettings, "minMaxs"))
+    outData$covariateData$minMaxs <- minMaxs
     on.exit(outData$covariateData$minMaxs <- NULL, add = TRUE)
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$minMaxs,
-        by = "covariateId") %>%
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$min) / (.data$max - .data$min),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("max", "min"))
+    if (NROW(minMaxs) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyMinMax(outData$covariateData$covariates, outData$covariateData$minMaxs),
+        implicitZeroIds
+      )
+    }
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "minMaxNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-
-  attr(outData$covariateData, "metaData")$featureEngineering[["minMaxNormalize"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished min-max normalization of continuous features in ",
@@ -700,25 +1094,20 @@ minMaxNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
 #' This forces the values to be between -3 and 3 while preserving the relative
 #' ordering of the values.
 #' based on https://arxiv.org/abs/2407.04491 for more details
-#' @param trainData The training data to be normalized
+#' @param trainData The data to normalize: the training data, or new data when
+#'   `done = TRUE`. It is changed in place.
 #' @param featureEngineeringSettings The settings for the normalization
-#' @param done Whether the data has already been normalized (bool)
-#' @return The `trainData` object with normalized data
+#' @param done Whether the normalization has already been fitted (bool)
+#' @return `trainData`, normalized, with the step recorded for prediction
 #' @keywords internal
 robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
     ParallelLogger::logInfo("Starting robust normalization of continuous features")
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    implicitZeroIds <- implicitZeroCovariateIds(outData)
+    addImplicitZeros(outData, implicitZeroIds)
+    attr(featureEngineeringSettings, "implicitZeroCovariateIds") <- implicitZeroIds
     # find continuous features from trainData$covariateData$analysisRef
     continousFeatures <- outData$covariateData$analysisRef %>%
       dplyr::filter(.data$isBinary == "N") %>%
@@ -726,109 +1115,47 @@ robustNormalize <- function(trainData, featureEngineeringSettings, done = FALSE)
       dplyr::inner_join(outData$covariateData$covariateRef, by = "analysisId") %>%
       dplyr::pull(.data$covariateId)
 
-    # get (25, 75)% quantiles of each feature
-    if (inherits(outData$covariateData$covariates, "tbl_sql")) {
-      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::summarise(
-          q25 = dbplyr::sql("quantile_cont(covariateValue, 0.25)"),
-          q75 = dbplyr::sql("quantile_cont(covariateValue, 0.75)"),
-          median = dbplyr::sql("median(covariateValue)")
-        ) %>%
-        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-        dplyr::mutate(
-          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr) # if iqr is 0, set it to 1 to avoid division by 0
-        ) %>%
-        dplyr::select(-c("q75", "q25")) %>%
-        dplyr::collect()
-    } else {
-      outData$covariateData$quantiles <- outData$covariateData$covariates %>%
-        dplyr::filter(.data$covariateId %in% continousFeatures) %>%
-        dplyr::group_by(.data$covariateId) %>%
-        dplyr::summarise(
-          q25 = stats::quantile(.data$covariateValue, 0.25, na.rm = TRUE), 
-          q75 = stats::quantile(.data$covariateValue, 0.75, na.rm = TRUE),
-          median = stats::median(.data$covariateValue, na.rm = TRUE)
-        ) %>%
-        dplyr::mutate(iqr = .data$q75 - .data$q25) %>%
-        dplyr::mutate(
-          iqr = dplyr::if_else(.data$iqr == 0, 1.0, .data$iqr), # if iqr is 0, set it to 1 to avoid division by 0
-        ) %>%
-        dplyr::select(-c("q75", "q25")) %>%
-        dplyr::collect()
-    }
+    quantiles <- robustStatistics(outData$covariateData$covariates, continousFeatures)
+    attr(featureEngineeringSettings, "quantiles") <- quantiles
+    outData$covariateData$quantiles <- quantiles
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-
-    # save the normalization
-    attr(featureEngineeringSettings, "quantiles") <-
-      outData$covariateData$quantiles %>% dplyr::collect()
-    clip <- featureEngineeringSettings$settings$clip
-
-    # apply the normalization to trainData
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$quantiles, by = "covariateId") %>%
-      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
-        (.data$iqr == .data$iqr) & (.data$median == .data$median),
-        FALSE
-      )) %>%
-      # Only continuous features have median/iqr rows after the join.
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$median) / .data$iqr,
-        .data$covariateValue
-      )) %>%
-      # optionally if settings$clip is TRUE.
-      # smoothly clip the range to [-3, 3] with  x / sqrt(1 + (x/3)^2)
-      # ref: https://arxiv.org/abs/2407.04491
-      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
-        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    if (NROW(quantiles) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyRobust(
+          outData$covariateData$covariates, outData$covariateData$quantiles,
+          clip = featureEngineeringSettings$settings$clip
+        ),
+        implicitZeroIds
+      )
+    }
     done <- TRUE
   } else {
     ParallelLogger::logInfo("Applying robust normalization of continuous features to test data")
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    # NULL for models saved before implicit zeros were handled
+    implicitZeroIds <- attr(featureEngineeringSettings, "implicitZeroCovariateIds")
+    addImplicitZeros(outData, implicitZeroIds)
     # apply the normalization to test data by using saved normalization values
-    outData$covariateData$quantiles <- attr(featureEngineeringSettings, "quantiles")
+    quantiles <- restoreSavedTable(attr(featureEngineeringSettings, "quantiles"))
+    outData$covariateData$quantiles <- quantiles
     on.exit(outData$covariateData$quantiles <- NULL, add = TRUE)
-    clip <- featureEngineeringSettings$settings$clip
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::left_join(outData$covariateData$quantiles,
-        by = "covariateId", copy = TRUE
-      ) %>%
-      dplyr::mutate(normalizeCovariate = dplyr::coalesce(
-        (.data$iqr == .data$iqr) & (.data$median == .data$median),
-        FALSE
-      )) %>%
-      dplyr::mutate(covariateValue = dplyr::coalesce(
-        (.data$covariateValue - .data$median) / .data$iqr,
-        .data$covariateValue
-      )) %>%
-      dplyr::mutate(covariateValue = ifelse(.data$normalizeCovariate & !!clip,
-        .data$covariateValue / sqrt(1 + (.data$covariateValue / 3)^2),
-        .data$covariateValue
-      )) %>%
-      dplyr::select(-c("median", "iqr", "normalizeCovariate"))
+    if (NROW(quantiles) > 0 || length(implicitZeroIds) > 0) {
+      outData$covariateData$covariates <- dropStoredZeros(
+        applyRobust(
+          outData$covariateData$covariates, outData$covariateData$quantiles,
+          clip = featureEngineeringSettings$settings$clip
+        ),
+        implicitZeroIds
+      )
+    }
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "robustNormalize",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-
-  attr(outData$covariateData, "metaData")$featureEngineering[["robustNormalize"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished robust normalization in ",
@@ -878,45 +1205,39 @@ createRareFeatureRemover <- function(threshold = 0.001) {
 
 #' A function that removes rare features from the data
 #' @details removes features that are present in less than a certain fraction of the population
-#' @param trainData The data to be normalized
-#' @param featureEngineeringSettings The settings for the normalization
+#' @param trainData The data to remove rare features from: the training data, or
+#'   new data when `done = TRUE`. It is changed in place.
+#' @param featureEngineeringSettings The settings for the rare feature removal
 #' @param done Whether to find and remove rare features or remove them only (bool)
-#' @return The data with rare features removed
+#' @return `trainData`, with rare features removed and the step recorded for
+#'   prediction
 #' @keywords internal
 removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FALSE) {
   start <- Sys.time()
+  outData <- trainData
   if (!done) {
     ParallelLogger::logInfo(
       "Removing features rarer than threshold: ", featureEngineeringSettings$threshold,
       " from the data"
     )
-    outData <- list(
-      labels = trainData$labels,
-      folds = trainData$folds,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
+    rowIds <- populationRowIds(outData)
+    populationSize <- if (is.null(rowIds)) {
+      outData$covariateData$covariates %>%
+        dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
+        dplyr::pull()
+    } else {
+      length(rowIds)
+    }
     rareFeatures <- outData$covariateData$covariates %>%
       dplyr::group_by(.data$covariateId) %>%
-      dplyr::summarise(count = dplyr::n()) %>%
+      dplyr::summarise(count = dplyr::n_distinct(.data$rowId)) %>%
       dplyr::collect()
     rareFeatures <- rareFeatures %>%
-      dplyr::mutate(ratio = .data$count / (
-        outData$covariateData$covariates %>%
-          dplyr::summarise(popSize = dplyr::n_distinct(.data$rowId)) %>%
-          dplyr::pull()
-      )) %>%
+      dplyr::mutate(ratio = .data$count / populationSize) %>%
       dplyr::filter(.data$ratio <= featureEngineeringSettings$threshold) %>%
       dplyr::pull(c("covariateId"))
 
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::filter(!.data$covariateId %in% rareFeatures)
-    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
-      dplyr::filter(!.data$covariateId %in% rareFeatures)
+    removeCovariates(outData$covariateData, rareFeatures)
 
     attr(featureEngineeringSettings, "rareFeatures") <- rareFeatures
 
@@ -926,33 +1247,18 @@ removeRareFeatures <- function(trainData, featureEngineeringSettings, done = FAL
       "Applying rare feature removal with rate below: ",
       featureEngineeringSettings$threshold, " to test data"
     )
-    outData <- list(
-      labels = trainData$labels,
-      covariateData = Andromeda::copyAndromeda(trainData$covariateData)
-    )
-    class(outData) <- "plpData"
-    attributes(outData) <- attributes(trainData)
-    class(outData$covariateData) <- "CovariateData"
-    attr(outData$covariateData, "metaData") <- 
-      attr(trainData$covariateData, "metaData")
-    outData$covariateData$covariates <- outData$covariateData$covariates %>%
-      dplyr::filter(
-        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
-      )
-    outData$covariateData$covariateRef <- outData$covariateData$covariateRef %>%
-      dplyr::filter(
-        !.data$covariateId %in% !!attr(featureEngineeringSettings, "rareFeatures")
-      )
+    # an empty set of rare features comes back from the JSON as an empty list
+    rareFeatures <- as.numeric(unlist(attr(featureEngineeringSettings, "rareFeatures")))
+    removeCovariates(outData$covariateData, rareFeatures)
   }
-  featureEngineering <- list(
+  outData <- recordFeatureEngineeringStep(
+    outData,
     funct = "removeRareFeatures",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       done = done
     )
   )
-  attr(outData$covariateData, "metaData")$featureEngineering[["removeRare"]] <-
-    featureEngineering
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0(
     "Finished rare feature removal in ",

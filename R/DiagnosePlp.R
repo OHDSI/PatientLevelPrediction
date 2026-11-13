@@ -140,6 +140,8 @@ diagnoseMultiplePlp <- function(
       )
       if (!is.null(plpData)) {
         savePlpData(plpData, file.path(saveDirectory, dataSettings$dataLocation[i]))
+        # each design loads the saved data again
+        closeAndromedas(list(plpData$covariateData))
       }
     } else {
       ParallelLogger::logInfo(paste("Data for cohort", dataSettings$targetId[i], "exists at", file.path(saveDirectory, dataSettings$dataLocation[i])))
@@ -154,10 +156,9 @@ diagnoseMultiplePlp <- function(
     dataExists <- length(dir(file.path(saveDirectory, settings$dataLocation))) > 0
 
     if (dataExists) {
-      plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
-
       diagnoseExists <- file.exists(file.path(saveDirectory, settings$analysisId, "diagnosePlp.rds"))
       if (!diagnoseExists) {
+        plpData <- PatientLevelPrediction::loadPlpData(file.path(saveDirectory, settings$dataLocation))
         diagnosePlpSettings <- list(
           plpData = plpData,
           outcomeId = modelDesign$outcomeId,
@@ -181,6 +182,7 @@ diagnoseMultiplePlp <- function(
             return(NULL)
           }
         )
+        closeAndromedas(list(plpData$covariateData))
       } else {
         ParallelLogger::logInfo(paste("Diagnosis ", settings$analysisId, "exists at", file.path(saveDirectory, settings$analysisId)))
       }
@@ -528,19 +530,91 @@ probastParticipants <- function(
 
 
 getMaxEndDaysFromCovariates <- function(covariateSettings) {
+  window <- getCovariateWindowEnd(covariateSettings)
+  if (!window$complete) {
+    return(NA_real_)
+  }
+  return(window$maxEndDay)
+}
+
+# The latest covariate window end over all settings: maxEndDay is the maximum
+# over the windows that could be established (-Inf when no covariate has a
+# window, Inf when one uses time after index) and complete says whether every
+# window could be established.
+getCovariateWindowEnd <- function(covariateSettings) {
   if (inherits(covariateSettings, "covariateSettings")) {
     covariateSettings <- list(covariateSettings)
   }
-
-  vals <- unlist(lapply(covariateSettings, function(x) {
-    x$endDays
-  }))
-
-  if (length(vals) == 0) {
-    return(0)
-  } else {
-    return(max(vals))
+  if (length(covariateSettings) == 0) {
+    return(list(maxEndDay = -Inf, complete = FALSE))
   }
+  vals <- unlist(lapply(covariateSettings, getCovariateSettingEndDays))
+  known <- vals[!is.na(vals)]
+  list(
+    maxEndDay = if (length(known) > 0) max(known) else -Inf,
+    complete = !anyNA(vals)
+  )
+}
+
+# Returns the window end day(s) of one covariateSettings object: NA when they
+# cannot be established, Inf for covariates that use time after index.
+getCovariateSettingEndDays <- function(setting) {
+  # post observation time and time in cohort count days after index; the
+  # settings objects store these flags without the "use" prefix
+  postIndexDemographics <- c("DemographicsPostObservationTime", "DemographicsTimeInCohort")
+  postIndexDemographics <- c(postIndexDemographics, paste0("use", postIndexDemographics))
+  postIndex <- if (any(vapply(postIndexDemographics, function(x) isTRUE(setting[[x]]), logical(1)))) Inf
+  for (field in c("endDays", "temporalEndDays", "endDay", "sequenceEndDay")) {
+    if (is.numeric(setting[[field]])) {
+      return(c(setting[[field]], postIndex))
+    }
+  }
+  analyses <- setting[["analyses"]]
+  if (is.null(analyses)) {
+    return(NA_real_)
+  }
+  unlist(lapply(analyses, function(analysis) {
+    endDay <- analysis$parameters[["endDay"]]
+    if (is.numeric(endDay)) {
+      return(endDay)
+    }
+    if (identical(analysis$sqlFileName, "DemographicsTime.sql") &&
+      isTRUE(analysis$parameters[["subType"]] %in% c("postObservation", "inCohort"))) {
+      return(Inf)
+    }
+    # other demographics are known at index and have no window
+    if (grepl("^Demographics", analysis$sqlFileName)) {
+      return(numeric(0))
+    }
+    NA_real_
+  }))
+}
+
+# PROBAST 2.2 and 3.6: the risk window must start after the last covariate
+# window ends. Known windows that reach into the risk window fail even when
+# other windows cannot be established.
+riskWindowAfterCovariates <- function(populationSettings, window) {
+  if (populationSettings$startAnchor != "cohort start") {
+    return("Unknown")
+  }
+  if (window$maxEndDay >= populationSettings$riskWindowStart) {
+    return("Fail")
+  }
+  if (!window$complete) {
+    return("Unknown")
+  }
+  return("Pass")
+}
+
+# survivalTime counts from the first day of the risk window but daysToEvent from index,
+# so convert each person's window to days from index before counting those at risk.
+getObservedAtStartOfDay <- function(population, populationSettings, days) {
+  tarStart <- populationSettings$riskWindowStart
+  if (populationSettings$startAnchor != "cohort start") {
+    tarStart <- tarStart + population$daysToCohortEnd
+  }
+  lastDay <- tarStart + population$survivalTime - 1
+  vapply(days, function(x) sum(tarStart <= x & lastDay >= x, na.rm = TRUE), integer(1))
 }
 
 
@@ -563,24 +637,11 @@ probastPredictors <- function(
   # cov end date < tar_start
   # covariate + outcome correlation; km of outcome (close to index or not)?
   probastId <- "2.2"
-  if (populationSettings$startAnchor == "cohort start") {
-    if (populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)) {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Pass")
-      )
-    } else {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Fail")
-      )
-    }
-  } else {
-    diagnosticAggregate <- rbind(
-      diagnosticAggregate,
-      c(probastId, "Unknown")
-    )
-  }
+  covariateWindow <- getCovariateWindowEnd(plpData$metaData$covariateSettings)
+  diagnosticAggregate <- rbind(
+    diagnosticAggregate,
+    c(probastId, riskWindowAfterCovariates(populationSettings, covariateWindow))
+  )
 
   # KM of outcome
   populationSettingsFull <- populationSettings
@@ -605,16 +666,10 @@ probastPredictors <- function(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
 
-  kmObservation$observedAtStartOfDay <- unlist(
-    lapply(
-      kmObservation$daysToEvent,
-      function(x) {
-        population %>%
-          dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>%
-          dplyr::select("n")
-      }
-    )
+  kmObservation$observedAtStartOfDay <- getObservedAtStartOfDay(
+    population,
+    populationSettings,
+    kmObservation$daysToEvent
   )
 
   kmObservation$probastId <- probastId
@@ -626,16 +681,10 @@ probastPredictors <- function(
       outcomeAtTime = sum(!is.na(.data$daysToEvent))
     )
 
-  kmObservationFull$observedAtStartOfDay <- unlist(
-    lapply(
-      kmObservationFull$daysToEvent,
-      function(x) {
-        populationFull %>%
-          dplyr::filter(.data$survivalTime >= x) %>%
-          dplyr::tally() %>%
-          dplyr::select("n")
-      }
-    )
+  kmObservationFull$observedAtStartOfDay <- getObservedAtStartOfDay(
+    populationFull,
+    populationSettingsFull,
+    kmObservationFull$daysToEvent
   )
 
   kmObservationFull$probastId <- probastId
@@ -647,24 +696,14 @@ probastPredictors <- function(
   # 2.3.1
   # cov end_date <=0
   probastId <- "2.3"
-  if (getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) <= 0) {
-    if (getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings) < 0) {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Pass")
-      )
-    } else {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Unknown")
-      )
-    }
+  if (covariateWindow$maxEndDay > 0) {
+    result <- "Fail"
+  } else if (!covariateWindow$complete || covariateWindow$maxEndDay == 0) {
+    result <- "Unknown"
   } else {
-    diagnosticAggregate <- rbind(
-      diagnosticAggregate,
-      c(probastId, "Fail")
-    )
+    result <- "Pass"
   }
+  diagnosticAggregate <- rbind(diagnosticAggregate, c(probastId, result))
 
   if (!is.null(dim(diagnosticAggregate))) {
     diagnosticAggregate <- as.data.frame(diagnosticAggregate) %>%
@@ -701,24 +740,11 @@ probastOutcome <- function(
 
   # 3.6 - check tar after covariate end_days
   probastId <- "3.6"
-  if (populationSettings$startAnchor == "cohort start") {
-    if (populationSettings$riskWindowStart > getMaxEndDaysFromCovariates(plpData$metaData$covariateSettings)) {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Pass")
-      )
-    } else {
-      diagnosticAggregate <- rbind(
-        diagnosticAggregate,
-        c(probastId, "Fail")
-      )
-    }
-  } else {
-    diagnosticAggregate <- rbind(
-      diagnosticAggregate,
-      c(probastId, "Unknown")
-    )
-  }
+  covariateWindow <- getCovariateWindowEnd(plpData$metaData$covariateSettings)
+  diagnosticAggregate <- rbind(
+    diagnosticAggregate,
+    c(probastId, riskWindowAfterCovariates(populationSettings, covariateWindow))
+  )
 
   # 3.1.1 - check the outcome rate per gender/age/index year
   probastId <- "3.1.1"

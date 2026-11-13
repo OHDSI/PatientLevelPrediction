@@ -19,7 +19,13 @@ simulatePlpBenchmarkData(
 \arguments{
 \item{plpData}{An object of type \code{plpData}.}
 
-\item{outcomeModel}{A named numeric vector of logistic model coefficients. Use
+\item{outcomeModel}{A PLP model, a \code{runPlp()} result, or a named numeric
+vector of logistic model coefficients. When a PLP model or
+result is supplied, outcomes are generated from
+\code{predictPlp()}, so the model's feature engineering and
+preprocessing are applied before calculating true risks.
+Named numeric vectors are used directly and must already
+match the scale and feature space of \code{plpData}; use
 \code{"(Intercept)"} for the intercept and covariate IDs for
 covariate coefficients.}
 
@@ -37,12 +43,14 @@ is shifted so the generated population has this mean risk.}
 
 \item{seed}{An optional seed for the random number generator.}
 
-\item{returnTruth}{If \code{TRUE}, a truth table with source row IDs, linear predictors,
-true risks, and generated outcome status is attached as the
-\code{simulationTruth} attribute.}
+\item{returnTruth}{If \code{TRUE}, a truth table with source row and subject IDs,
+linear predictors, true risks, and generated outcome status is
+returned as \code{simulationTruth}.}
 }
 \value{
-An object of type \code{plpData}.
+An object of type \code{plpData}. The returned object includes
+\code{simulationSettings}; when \code{returnTruth = TRUE}, it also includes
+\code{simulationTruth}.
 }
 \description{
 \code{simulatePlpBenchmarkData} creates semi-synthetic PLP data by resampling rows
@@ -60,6 +68,14 @@ For benchmark evaluation against this truth, use population settings with
 non-outcome rows and change the estimand. For a strict fixed-horizon benchmark,
 first restrict the source \code{plpData} to rows with complete follow-up through
 \code{riskWindowEnd}.
+
+Rows are sampled with replacement, as in standard plasmode simulation. A source
+row can therefore appear more than once with different simulated \code{rowId} and
+\code{subjectId} values. The truth table records \code{sourceRowId} and
+\code{sourceSubjectId} so duplicate source rows can be identified. This is not a
+problem when using the simulated data to study known risks in realistic covariate
+distributions, but ordinary row-level train/test splitting can put the same source
+covariate pattern in both partitions and can make held-out performance optimistic.
 }
 \examples{
 data("simulationProfile")
@@ -72,5 +88,5 @@ benchmarkData <- simulatePlpBenchmarkData(
   riskWindowEnd = 365,
   seed = 42
 )
-attr(benchmarkData, "simulationTruth")
+benchmarkData$simulationTruth
 }

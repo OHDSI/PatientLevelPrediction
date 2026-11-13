@@ -41,6 +41,13 @@ setCoxModel(
 \description{
 Create setting for lasso Cox model
 }
+\details{
+The model predicts the risk of the outcome by the end of the time-at-risk window,
+that is riskWindowEnd - riskWindowStart + 1 days after the window starts. Both ends
+of the window therefore need the same anchor (both cohort start or both cohort end);
+runPlp() stops otherwise. predictPlp() can predict at an earlier time with its
+timepoint argument.
+}
 \examples{
 coxL1 <- setCoxModel()
 }

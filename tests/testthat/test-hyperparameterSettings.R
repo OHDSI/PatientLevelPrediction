@@ -135,7 +135,7 @@ test_that("prepareHyperparameterGrid respects random sampling size", {
     randomSeed = NULL
   )
 
-  set.seed(100)
+  withr::local_seed(100)
   iterator <- prepareHyperparameterGrid(paramDefinition, settings)
 
   combos <- list()
@@ -282,4 +282,127 @@ test_that("listCartesian works", {
   expect_equal(length(paramLists), 2 * 2 * 1)
   expect_equal(names(paramLists[[1]]), c("a", "b", "c"))
   expect_equal(length(paramLists[[1]]), 3)
+})
+
+drainIterator <- function(iterator) {
+  candidates <- list()
+  repeat {
+    candidate <- iterator$getNext(list())
+    if (is.null(candidate)) {
+      break
+    }
+    candidates[[length(candidates) + 1]] <- candidate
+  }
+  iterator$finalize(list())
+  candidates
+}
+
+test_that("expanded legacy grids honour random and custom searches", {
+  legacyGrid <- list(list(alpha = 1), list(alpha = 2), list(alpha = 3))
+  jsonGrid <- stats::setNames(legacyGrid, c("1", "2", "3"))
+
+  for (grid in list(legacyGrid, jsonGrid)) {
+    sampled <- drainIterator(prepareHyperparameterGrid(
+      grid,
+      createHyperparameterSettings(search = "random", sampleSize = 1, randomSeed = 7)
+    ))
+    expect_length(sampled, 1)
+    expect_true(sampled[[1]]$alpha %in% 1:3)
+
+    recorded <- NULL
+    fromFunction <- drainIterator(prepareHyperparameterGrid(
+      grid,
+      createHyperparameterSettings(generator = function(definition, expanded, settings) {
+        recorded <<- expanded
+        expanded[2]
+      })
+    ))
+    expect_equal(fromFunction, list(list(alpha = 2)))
+    expect_equal(recorded, legacyGrid)
+  }
+
+  served <- FALSE
+  initialized <- NULL
+  lifecycle <- list(
+    initialize = function(definition, settings) {
+      initialized <<- definition
+      invisible(NULL)
+    },
+    getNext = function(history) {
+      if (served) {
+        return(NULL)
+      }
+      served <<- TRUE
+      list(alpha = 3)
+    }
+  )
+  fromLifecycle <- drainIterator(prepareHyperparameterGrid(
+    legacyGrid, createHyperparameterSettings(generator = lifecycle)
+  ))
+  expect_equal(fromLifecycle, list(list(alpha = 3)))
+  expect_equal(initialized, legacyGrid)
+})
+
+test_that("expanded legacy grids still run every candidate under grid search", {
+  legacyGrid <- list(list(alpha = 1), list(alpha = 2))
+  jsonGrid <- stats::setNames(legacyGrid, c("1", "2"))
+
+  for (grid in list(legacyGrid, jsonGrid)) {
+    candidates <- drainIterator(prepareHyperparameterGrid(
+      grid, createHyperparameterSettings(search = "grid")
+    ))
+    expect_equal(candidates, legacyGrid)
+  }
+})
+
+sampleAlphas <- function(ambientSeed, randomSeed, definition = list(alpha = as.list(1:12))) {
+  withr::local_seed(ambientSeed)
+  candidates <- drainIterator(prepareHyperparameterGrid(
+    definition,
+    createHyperparameterSettings(search = "random", sampleSize = 3, randomSeed = randomSeed)
+  ))
+  vapply(candidates, function(x) as.numeric(x$alpha), numeric(1))
+}
+
+test_that("random search candidates follow randomSeed, not the ambient RNG", {
+  expect_identical(sampleAlphas(1, 42), sampleAlphas(2, 42))
+  expect_false(identical(sampleAlphas(1, 42), sampleAlphas(1, 99)))
+
+  legacy <- lapply(1:12, function(i) list(alpha = i))
+  expect_identical(sampleAlphas(1, 42, legacy), sampleAlphas(2, 42, legacy))
+})
+
+test_that("random search without randomSeed still follows the ambient RNG", {
+  expect_identical(sampleAlphas(1, NULL), sampleAlphas(1, NULL))
+  expect_false(identical(sampleAlphas(1, NULL), sampleAlphas(2, NULL)))
+})
+
+test_that("seeded random search leaves the ambient RNG untouched", {
+  withr::local_seed(11)
+  expected <- stats::runif(1)
+
+  withr::local_seed(11)
+  sampleSettings <- createHyperparameterSettings(
+    search = "random", sampleSize = 3, randomSeed = 42
+  )
+  prepareHyperparameterGrid(list(alpha = as.list(1:12)), sampleSettings)
+  expect_identical(stats::runif(1), expected)
+
+  withr::with_preserve_seed({
+    rm(".Random.seed", envir = .GlobalEnv)
+    prepareHyperparameterGrid(list(alpha = as.list(1:12)), sampleSettings)
+    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  })
+})
+
+test_that("auprcMetric treats outcome counts above one as positive", {
+  skip_if_not_installed("PRROC")
+  prediction <- data.frame(
+    value = c(0.9, 0.8, 0.7, 0.4, 0.3, 0.2, 0.1),
+    outcomeCount = c(2, 1, 0, 2, 0, 1, 0)
+  )
+  binaryPrediction <- prediction
+  binaryPrediction$outcomeCount <- as.numeric(prediction$outcomeCount > 0)
+
+  expect_equal(auprcMetric$fun(prediction), auprcMetric$fun(binaryPrediction))
 })

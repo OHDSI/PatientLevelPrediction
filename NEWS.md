@@ -1,10 +1,203 @@
 PatientLevelPrediction development
 =================================
 
+This release fixes the findings of a review of the whole package. Many of the
+fixes change results; "Changes to results" says where, so that affected models
+can be refitted or re-evaluated.
+
+## Breaking changes
+- `createPlpResultTables()` now defaults to `deleteTables = FALSE`, and
+  `deleteTables = TRUE` removes the existing results from a complete schema.
+  `insertResultsToSqlite()` (new `deleteTables` argument, default `TRUE`) and
+  `viewPlp()` replace the database contents instead of keeping the analyses of
+  earlier runs.
+- `createDefaultSplitSetting()` defaults `trainFraction` to `1 - testFraction`
+  and stops when the fractions sum to more than 1. Calls that set `testFraction`
+  other than 0.25 without `trainFraction` get different splits.
+- scikit-learn AdaBoost models are fitted with SAMME and keep the saved
+  algorithm when loaded. SAMME.R models stop with an error on recent
+  scikit-learn instead of giving different risks.
+
+## New features
+- Custom feature engineering steps change the data they are given and record
+  themselves with the new exported `recordFeatureEngineeringStep()`; the custom
+  feature engineering vignette describes the contract. Steps recorded the old
+  way still work.
+- `createIterativeImputer()` keeps a seed for the random draws of predictive
+  mean matching (`methodSettings$pmm$seed`, drawn when not given), so
+  imputations can be reproduced from the settings.
+- Faster runs that use less disk: fewer copies of the covariate data in
+  covariate summaries, tidying and feature engineering at prediction,
+  imputation, normalization, sampling and sparse matrix building, and the
+  copies a run makes are closed instead of staying on disk until garbage
+  collection.
+
+## Changes to results
+### Evaluation
+- The scaled Brier score is scaled by the observed prevalence. It changes
+  wherever mean predicted risk differs from prevalence and can be negative for
+  miscalibrated models; single-class groups give NA.
+- Calibration E-statistics (Eavg, E90, Emax) include predictions of exactly 0
+  or 1, and give NA instead of 0 when they cannot be estimated.
+- Average precision treats tied scores as one threshold, which changes it for
+  models with tied predictions such as tree models.
+- F1 is 0 instead of NaN or NA at thresholds that capture no cases.
+- `calibrationLine()` bases the Hosmer-Lemeshow degrees of freedom on occupied
+  groups.
+- Pooled covariate summaries count the subgroups in which a sparse covariate is
+  absent, so pooled `CovariateMean` and `CovariateStDev` change, and with labels
+  and strata also outcome-group means and `StandardizedMeanDiff`.
+- Unknown gender concepts are reported as Unknown instead of Female in
+  demographic summaries, stored results and plots.
+- The "Person count" per outcome in `summary.plpData()` counts distinct people.
+
+### Survival models
+- Survival models are predicted and evaluated at the end of the risk window.
+  The default window (days 1 to 365) keeps its 365-day horizon; windows that
+  start at day 0 use day 366, and delayed windows get their statistics and
+  calibration at the window end. Models whose window ends are anchored
+  differently stop instead of giving risks at the wrong time.
+- Survival calibration is evaluated at the prediction timepoint; bins without
+  enough follow-up give NA.
+- Survival statistics that cannot be estimated give NA instead of 0 or -1.
+- Survival net benefit and threshold summaries are computed on predicted
+  probabilities. Models whose predictions are not probabilities, such as a Cox
+  model without baseline survival, get no threshold summary and a logged error.
+- Cox absolute risks from `setCoxModel()` include the Cyclops baseline offset,
+  which changes calibration and the Brier score but not the AUC. Models saved by
+  earlier versions keep the old risks until refitted.
+- Survival demographic summaries keep event-free, all-event and single-person
+  groups, some with NA observed risk.
+- Survival `weakRecalibration` uses the prediction horizon and no longer
+  truncates follow-up at cohort end.
+- `outcomeSurvivalPlot()` measures time from the start of the risk window.
+- Plots: survival net benefit curves account for censoring,
+  `plotSparseCalibration2()` uses the stored Kaplan-Meier bounds, and
+  `plotSparseCalibration()` draws the pointwise interval of the fitted line.
+  `plotSmoothCalibration()` stops for survival models (#270).
+
+### Population, splitting and sampling
+- With `restrictTarToCohortEnd = TRUE` and only same-day episodes, time at risk
+  ends at cohort end.
+- With `binary = FALSE` and recurrent outcomes, patients with more than one
+  outcome stay in stratified and time splits, and xgboost, LightGBM and
+  scikit-learn models train on outcome presence.
+- Oversampled cases get unique rowIds with matching folds and covariates.
+  Every model trained with `type = "overSample"` changes and should be
+  refitted; oversampling a fold without outcomes stops instead of hanging.
+- Under- and oversampling keep the sole control or case of a fold.
+- `plpData` saved with a custom population trains and evaluates on that
+  population after loading.
+
+### Models and tuning
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
   are dropped, with their count logged (#684).
+- Random hyperparameter searches use `randomSeed` when it is set, and restore
+  the global random stream.
+- Legacy and JSON-restored settings that request random or custom search get
+  it.
+- On ties in the tuning metric, the cross-validation predictions come from the
+  selected candidate; per-fold scores are reported against their real folds.
+- LightGBM covariate importance is mapped to the right covariates; predictions
+  do not change.
+- Newly saved GLM and Cyclops models keep full numeric precision.
+
+### Feature engineering and imputation
+- Replaying saved feature engineering no longer changes the caller's data, and
+  every saved selector or spline step is applied at prediction.
+- Models with feature engineering predict after saving and loading exactly as
+  before saving.
+- Spline components of covariates that share an ID prefix get separate columns.
+- Normalizers include the implicit zeros of `missingMeansZero = "Y"` covariates
+  when fitting and applying.
+- The rare feature remover measures prevalence over the whole training
+  population.
+- Missingness is measured over the labeled population, so imputers can remove
+  more features when some patients have no covariates.
+- Missingness indicators get IDs that cannot collide with covariate IDs.
+- `createSimpleImputer()` imputes prediction patients who have no numeric
+  covariates.
+- `createIterativeImputer()` imputes trained features missing from a prediction
+  batch, and selects the rows to impute by rowId.
+- `createIterativeImputer()` draws from its own seed, so its imputations differ
+  from earlier versions for the same global seed.
+- The scikit-learn iterative imputer saves its fitted steps and applies them in
+  R at prediction, without Python.
+- Temporal models with `removeRedundancy = TRUE` replay the deleted
+  covariate-time pairs at prediction, with a FeatureExtraction version that
+  records them.
+
+### Cohort covariates and simulation
+- Count covariates with an age interaction hold count times age (or log age).
+- Count and age-interaction cohort covariates are marked as non-binary, so
+  normalizers scale them; their analysisId is the configured value plus 1000.
+- `getCohortCovariateData()` applies `cohortIds` to the target cohort.
+- The `analysisRef` of cohort covariates has one row per analysisId, so
+  FeatureExtraction aggregates them correctly.
+- `simulatePlpData()` derives cohort gender and the gender covariates from one
+  draw, so seeded output from profiles with gender covariates changes, and keeps
+  the configured outcome IDs in metadata and attrition.
+- `simulatePlpData()` builds the covariates before any Andromeda work and gives
+  each outcome its own seed, so its output for a given seed changes once and no
+  longer depends on Andromeda.
+
+### Validation, recalibration, diagnostics and importance
+- External validation extracts data separately for models that define
+  covariates differently.
+- `recalibrationInTheLarge` matches mean predicted and observed risk, each
+  recalibration method is fitted on the original predictions, and
+  `recalibratePlpRefit()` restricts covariates to the new population and
+  returns one prediction per patient. A failed recalibration no longer discards
+  the validation results.
+- Leakage diagnostics read temporal, detailed and cohort covariate windows;
+  windows that cannot be determined give Unknown. Risk sets are counted on the
+  index time axis.
+- `pfi()` permutes features only within the evaluated population and keeps
+  unrelated predictors when permuting categorical features.
+- Direct `predictPlp()` calls on sparse models (xgboost, LightGBM,
+  scikit-learn) return exactly the given population.
+
+### Results database
+- Analyses that differ only in a custom generator, a custom tuning metric or
+  disabled preprocessing keep separate model designs.
+- Re-uploading a model updates its stored row, and a re-upload without a
+  summary removes the earlier one.
+- Full cohort definitions are stored on PostgreSQL, SQL Server and other
+  platforms.
+
+## Bug fixes
+- Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
+  scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
+  failed since 6.6.0 with "'what' must be a function or character string".
+- Fixed `createSklearnModel()` without a `covariateMap`, which failed since
+  6.4.0 (#531).
+- Fixed `setPythonEnvironment()` with virtual environments.
+- Fixed normalizer models in external validation, after reloading, and in
+  `runPlp()` with a covariate summary, and saved rare feature removers on plain
+  `plpData`, which all failed.
+- Fixed imputers that apply saved settings to full `plpData` objects, and
+  iterative imputers saved in the old format whose PMM model has no
+  predictors.
+- Fixed models saved by earlier versions whose normalizer or imputer learned an
+  empty table.
+- Fixed iterative imputation of patients whose PMM predictors were all unseen
+  in training.
+- Fixed `createStratifiedImputationSettings()`, which did not work before.
+- Fixed `setDecisionTree()` with a seed that is not an integer.
+- Fixed loading tree models saved with older scikit-learn versions, which
+  returned class counts instead of probabilities.
+- Fixed `covariateSummary()` with strata and no labels.
+- Fixed `extractDatabaseToCsv()` with missing counts, which are now left
+  uncensored.
+- Fixed `viewPlp()` with a single external validation result.
+- Uploads that drop a survival calibration summary now warn (#691).
+- Models trained with `createPreprocessSettings(normalize = FALSE)` predict
+  after `savePlpModel()` and `loadPlpModel()`, also when saved by earlier
+  versions; `predictPlp()` stopped with "Data frame with at least one column
+  required".
+- `validateMultiplePlp()` stops with a clear message when it finds no analyses.
 
 PatientLevelPrediction 6.7.0
 ============================

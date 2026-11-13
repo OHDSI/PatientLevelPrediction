@@ -11,6 +11,16 @@ copyTrainData <- function(trainData) {
   return(newTrainData)
 }
 
+# The featureEngineeringSettings saved by the last fitted step that called funct.
+fittedFeatureEngineeringSettings <- function(data, funct) {
+  steps <- featureEngineeringSteps(attr(data$covariateData, "metaData")$featureEngineering)
+  matches <- Filter(function(step) identical(step$funct, funct), steps)
+  if (length(matches) == 0) {
+    stop("No fitted ", funct, " step")
+  }
+  matches[[length(matches)]]$settings$featureEngineeringSettings
+}
+
 # create tiny dataset with subset of covariates based on lasso fit
 createTinyPlpData <- function(plpData, plpResult, n = 20) {
   covariates <- plpResult$model$covariateImportance %>%
@@ -70,4 +80,15 @@ createData <- function(observations, features, totalFeatures,
 
   data <- list(covariates = covariates, labels = labels)
   return(data)
+}
+
+# Skips a test that uses the Eunomia fixtures built in setup.R: on CRAN, and
+# when setup could not build them (Eunomia not installed, or its dataset
+# neither cached nor downloadable).
+skip_if_no_eunomia <- function() {
+  testthat::skip_on_cran()
+  # setup.R objects are visible from the calling test, not from this helper
+  if (!isTRUE(get0("eunomiaAvailable", envir = parent.frame(), ifnotfound = FALSE))) {
+    testthat::skip("Eunomia fixtures are not available")
+  }
 }

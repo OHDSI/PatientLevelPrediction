@@ -127,7 +127,8 @@ varImpLightGBM <- function(model,
   varImp <- lightgbm::lgb.importance(model, percentage = TRUE) %>% dplyr::select("Feature", "Gain")
 
   varImp <- data.frame(
-    covariateId = gsub(".*_", "", varImp$Feature),
+    # LightGBM names features from Column_0; columnId starts at 1.
+    covariateId = as.numeric(gsub(".*_", "", varImp$Feature)) + 1,
     covariateValue = varImp$Gain,
     included = 1
   )

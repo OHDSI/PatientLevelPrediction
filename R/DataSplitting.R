@@ -27,7 +27,8 @@
 #' @param testFraction  (numeric) A real number between 0 and 1
 #' indicating the test set fraction of the data
 #' @param trainFraction (numeric) A real number between 0 and 1 indicating the 
-#' train set fraction of the data. If not set train is equal to 1 - test
+#' train set fraction of the data. If not set train is equal to 1 - test. The
+#' sum of testFraction and trainFraction cannot exceed 1.
 #' @param nfold             (numeric) An integer > 1 specifying the number of
 #' folds used in cross validation
 #' @param splitSeed   (numeric) A seed to use when splitting the data for 
@@ -51,7 +52,7 @@
 #'                           splitSeed=42)
 #' @export
 createDefaultSplitSetting <- function(testFraction = 0.25,
-                                      trainFraction = 0.75,
+                                      trainFraction = 1 - testFraction,
                                       splitSeed = sample(100000, 1),
                                       nfold = 3,
                                       type = "stratified") {
@@ -62,6 +63,11 @@ createDefaultSplitSetting <- function(testFraction = 0.25,
   checkIsClass(trainFraction, c("numeric", "integer"))
   checkHigher(trainFraction, 0)
   checkHigherEqual(-1 * trainFraction, -1)
+
+  if (testFraction + trainFraction > 1) {
+    ParallelLogger::logError("testFraction + trainFraction needs to be <= 1")
+    stop("testFraction + trainFraction needs to be <= 1")
+  }
 
   checkIsClass(nfold, c("numeric", "integer"))
   checkHigher(nfold, 1)
@@ -279,7 +285,7 @@ splitData <- function(plpData = plpData,
     # add pop size to covariateData as used in tidyCovariates
     attr(trainData$covariateData, "metaData") <- 
       list(populationSize = nrow(trainData$labels))
-    class(trainData$covariateData) <- "CovariateData"
+    trainData$covariateData <- asCovariateData(trainData$covariateData)
 
     result <- list(Train = trainData)
   } else {
@@ -392,7 +398,7 @@ randomSplitter <- function(population, splitSettings) {
     nfold,
     " folds) random stratified split by class"
   ))
-  outPpl <- population$rowId[population$outcomeCount == 1]
+  outPpl <- population$rowId[population$outcomeCount > 0]
   nonPpl <- population$rowId[population$outcomeCount == 0]
 
   nonPpl <- nonPpl[order(stats::runif(length(nonPpl)))]
@@ -475,8 +481,8 @@ timeSplitter <- function(population, splitSettings) {
   }
 
   outPpl <- data.frame(
-    rowId = population$rowId[population$outcomeCount == 1],
-    date = dates[population$outcomeCount == 1]
+    rowId = population$rowId[population$outcomeCount > 0],
+    date = dates[population$outcomeCount > 0]
   )
   nonPpl <- data.frame(
     rowId = population$rowId[population$outcomeCount == 0],
@@ -540,7 +546,7 @@ subjectSplitter <- function(population, splitSettings) {
     set.seed(seed)
   }
 
-  if (length(table(population$outcomeCount)) <= 1 ||
+  if (length(table(population$outcomeCount > 0)) <= 1 ||
     sum(population$outcomeCount > 0) < 10) {
     stop("Outcome only occurs in fewer than 10 people or only one class")
   }
@@ -555,7 +561,7 @@ subjectSplitter <- function(population, splitSettings) {
   ))
 
   # get subejct ids for outcome and split them up
-  outPpl <- unique(population$subjectId[population$outcomeCount == 1])
+  outPpl <- unique(population$subjectId[population$outcomeCount > 0])
 
   # get subject id for non outcome and split them up
   nonPpl <- setdiff(unique(population$subjectId), outPpl)
@@ -874,7 +880,7 @@ checkOutcomes <- function(population, train, nfold) {
 
   } else {
     # plp default minimum outcomes, less < 10 in total or less than 5 in train folds
-    if (length(table(population$outcomeCount)) <= 1 ||
+    if (length(table(population$outcomeCount > 0)) <= 1 ||
       sum(population$outcomeCount > 0) < 10) {
       stop("Outcome only occurs in fewer than 10 people or only one class")
     }

@@ -64,11 +64,11 @@ test_that("createStudyPopulation binary", {
 
 test_that("createStudyPopulation includeAllOutcomes", {
   expect_error(
-    createStudyPopulationSettings(includeAllOutcomes = NULL)
+    createStudyPopulationSettings(includeAllOutcomes = NULL), "includeAllOutcomes is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(includeAllOutcomes = 12)
+    createStudyPopulationSettings(includeAllOutcomes = 12), "includeAllOutcomes is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -84,11 +84,11 @@ test_that("createStudyPopulation includeAllOutcomes", {
 
 test_that("createStudyPopulation firstExposureOnly", {
   expect_error(
-    createStudyPopulationSettings(firstExposureOnly = NULL)
+    createStudyPopulationSettings(firstExposureOnly = NULL), "firstExposureOnly is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(firstExposureOnly = 12)
+    createStudyPopulationSettings(firstExposureOnly = 12), "firstExposureOnly is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -105,11 +105,11 @@ test_that("createStudyPopulation firstExposureOnly", {
 
 test_that("createStudyPopulation washoutPeriod", {
   expect_error(
-    createStudyPopulationSettings(washoutPeriod = NULL)
+    createStudyPopulationSettings(washoutPeriod = NULL), "washoutPeriod is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(washoutPeriod = -1)
+    createStudyPopulationSettings(washoutPeriod = -1), "washoutPeriod needs to be >= 0"
   )
 
   rand <- sample(1000, 1)
@@ -122,11 +122,11 @@ test_that("createStudyPopulation washoutPeriod", {
 
 test_that("createStudyPopulation removeSubjectsWithPriorOutcome", {
   expect_error(
-    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = NULL)
+    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = NULL), "removeSubjectsWithPriorOutcome is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = 12)
+    createStudyPopulationSettings(removeSubjectsWithPriorOutcome = 12), "removeSubjectsWithPriorOutcome is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -142,11 +142,11 @@ test_that("createStudyPopulation removeSubjectsWithPriorOutcome", {
 
 test_that("createStudyPopulation priorOutcomeLookback", {
   expect_error(
-    createStudyPopulationSettings(priorOutcomeLookback = NULL)
+    createStudyPopulationSettings(priorOutcomeLookback = NULL), "priorOutcomeLookback is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(priorOutcomeLookback = -1)
+    createStudyPopulationSettings(priorOutcomeLookback = -1), "priorOutcomeLookback needs to be >= 0"
   )
 
   rand <- sample(1000, 1)
@@ -158,11 +158,11 @@ test_that("createStudyPopulation priorOutcomeLookback", {
 
 test_that("createStudyPopulation requireTimeAtRisk", {
   expect_error(
-    createStudyPopulationSettings(requireTimeAtRisk = NULL)
+    createStudyPopulationSettings(requireTimeAtRisk = NULL), "requireTimeAtRisk is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(requireTimeAtRisk = 12)
+    createStudyPopulationSettings(requireTimeAtRisk = 12), "requireTimeAtRisk is wrong class"
   )
 
   populationSettings <- createStudyPopulationSettings(
@@ -178,11 +178,11 @@ test_that("createStudyPopulation requireTimeAtRisk", {
 
 test_that("createStudyPopulation minTimeAtRisk", {
   expect_error(
-    createStudyPopulationSettings(minTimeAtRisk = NULL)
+    createStudyPopulationSettings(minTimeAtRisk = NULL), "minTimeAtRisk is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(minTimeAtRisk = -1)
+    createStudyPopulationSettings(minTimeAtRisk = -1), "minTimeAtRisk needs to be >= 0"
   )
 
   rand <- 365 + sample(365, 1)
@@ -196,7 +196,7 @@ test_that("createStudyPopulation minTimeAtRisk", {
 
 test_that("createStudyPopulation riskWindowStart", {
   expect_error(
-    createStudyPopulationSettings(riskWindowStart = NULL)
+    createStudyPopulationSettings(riskWindowStart = NULL), "riskWindowStart is wrong class"
   )
 
 
@@ -210,7 +210,7 @@ test_that("createStudyPopulation riskWindowStart", {
 
 test_that("createStudyPopulation riskWindowEnd", {
   expect_error(
-    createStudyPopulationSettings(riskWindowEnd = NULL)
+    createStudyPopulationSettings(riskWindowEnd = NULL), "riskWindowEnd is wrong class"
   )
 
 
@@ -224,11 +224,11 @@ test_that("createStudyPopulation riskWindowEnd", {
 
 test_that("createStudyPopulation startAnchor", {
   expect_error(
-    createStudyPopulationSettings(startAnchor = NULL)
+    createStudyPopulationSettings(startAnchor = NULL), "startAnchor is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(startAnchor = "blabla")
+    createStudyPopulationSettings(startAnchor = "blabla"), "Incorrect startAnchor"
   )
 
   rand <- c("cohort end", "cohort start")[sample(2, 1)]
@@ -240,11 +240,11 @@ test_that("createStudyPopulation startAnchor", {
 
 test_that("createStudyPopulation endAnchor", {
   expect_error(
-    createStudyPopulationSettings(endAnchor = NULL)
+    createStudyPopulationSettings(endAnchor = NULL), "endAnchor is wrong class"
   )
 
   expect_error(
-    createStudyPopulationSettings(endAnchor = "blabla")
+    createStudyPopulationSettings(endAnchor = "blabla"), "Incorrect endAnchor"
   )
 
   rand <- c("cohort end", "cohort start")[sample(2, 1)]
@@ -260,7 +260,7 @@ test_that("createStudyPopulation endAnchor", {
 
 test_that("population creation parameters", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   studyPopulation <- createStudyPopulation(
     plpData = plpData,
     outcomeId = outcomeId,
@@ -319,7 +319,7 @@ test_that("population creation parameters", {
       plpData = plpData,
       outcomeId = outcomeId,
       populationSettings = defaultSettings(washoutPeriod = -1)
-    )
+    ), "washoutPeriod needs to be >= 0"
   )
 
   # priorOutcomeLookback < 0 error
@@ -331,7 +331,7 @@ test_that("population creation parameters", {
         priorOutcomeLookback = -1,
         removeSubjectsWithPriorOutcome = TRUE
       )
-    )
+    ), "priorOutcomeLookback needs to be >= 0"
   )
 
   expect_error(
@@ -342,7 +342,7 @@ test_that("population creation parameters", {
         minTimeAtRisk = -1,
         requireTimeAtRisk = TRUE
       )
-    )
+    ), "minTimeAtRisk needs to be >= 0"
   )
 
   # Incorrect startAnchor
@@ -353,7 +353,7 @@ test_that("population creation parameters", {
       populationSettings = defaultSettings(
         startAnchor = "cohort stard"
       )
-    )
+    ), "Incorrect startAnchor"
   )
 
   # Incorrect endAnchor
@@ -364,7 +364,7 @@ test_that("population creation parameters", {
       populationSettings = defaultSettings(
         endAnchor = "cohort ent"
       )
-    )
+    ), "Incorrect endAnchor"
   )
 
 
@@ -468,7 +468,7 @@ test_that("population creation parameters", {
 
 test_that("Providing an existing population and skipping population creation works", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   popSize <- 400
   newPopulation <- population[sample.int(nrow(population), popSize), ]
 
@@ -497,4 +497,109 @@ test_that("Providing an existing population and skipping population creation wor
     dplyr::filter(.data$evaluationType == "Test") %>%
     nrow()
   expect_equal(popSize, trainPredictions + testPredictions)
+})
+
+smallPopulationPlpData <- function(daysToCohortEnd, daysToObsEnd, outcomes) {
+  nRows <- length(daysToCohortEnd)
+  cohorts <- data.frame(
+    rowId = seq_len(nRows),
+    subjectId = seq_len(nRows),
+    targetId = rep(1, nRows),
+    cohortStartDate = rep(as.Date("2015-01-01"), nRows),
+    daysFromObsStart = rep(100, nRows),
+    daysToCohortEnd = daysToCohortEnd,
+    daysToObsEnd = daysToObsEnd,
+    ageYear = rep(50, nRows),
+    gender = rep(8507, nRows)
+  )
+  structure(list(cohorts = cohorts, outcomes = outcomes, metaData = list()), class = "plpData")
+}
+
+test_that("restrictTarToCohortEnd censors when every episode ends on index day", {
+  outcomes <- data.frame(
+    rowId = c(1, 2), outcomeId = 1, outcomeCount = 1, daysToEvent = c(10, 0)
+  )
+  samedayData <- smallPopulationPlpData(
+    daysToCohortEnd = c(0, 0), daysToObsEnd = c(365, 365), outcomes = outcomes
+  )
+  settings <- function(restrict, riskWindowStart = 0) {
+    createStudyPopulationSettings(
+      includeAllOutcomes = FALSE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = FALSE, riskWindowStart = riskWindowStart,
+      riskWindowEnd = 30, restrictTarToCohortEnd = restrict
+    )
+  }
+
+  restricted <- createStudyPopulation(samedayData, outcomeId = 1, populationSettings = settings(TRUE))
+  expect_equal(restricted$outcomeCount, c(0, 1))
+  expect_equal(restricted$timeAtRisk, c(1, 1))
+  expect_equal(restricted$survivalTime, c(1, 1))
+
+  # Control: the flag still does nothing when not requested.
+  unrestricted <- createStudyPopulation(samedayData, outcomeId = 1, populationSettings = settings(FALSE))
+  expect_equal(unrestricted$outcomeCount, c(1, 1))
+  expect_equal(unrestricted$timeAtRisk, c(31, 31))
+
+  # Adding an unrelated longer episode must not change the same-day patients.
+  mixedData <- smallPopulationPlpData(
+    daysToCohortEnd = c(0, 0, 20), daysToObsEnd = c(365, 365, 365), outcomes = outcomes
+  )
+  mixed <- createStudyPopulation(mixedData, outcomeId = 1, populationSettings = settings(TRUE))
+  expect_equal(mixed$outcomeCount[1:2], restricted$outcomeCount)
+  expect_equal(mixed$timeAtRisk[1:2], restricted$timeAtRisk)
+  expect_equal(mixed$timeAtRisk[3], 21)
+
+  # With risk starting after index, no same-day episode has time at risk left.
+  afterIndex <- createStudyPopulation(
+    samedayData,
+    outcomeId = 1,
+    populationSettings = settings(TRUE, riskWindowStart = 1)
+  )
+  expect_null(afterIndex)
+})
+
+test_that("restrictTarToCohortEnd warns when every episode ends on index day", {
+  outcomes <- data.frame(rowId = 1, outcomeId = 1, outcomeCount = 1, daysToEvent = 10)
+  settings <- function(restrict) {
+    createStudyPopulationSettings(
+      includeAllOutcomes = FALSE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = FALSE, riskWindowStart = 0,
+      riskWindowEnd = 30, restrictTarToCohortEnd = restrict
+    )
+  }
+  warned <- function(plpData, restrict) {
+    logged <- capturedWarnings(
+      createStudyPopulation(plpData, outcomeId = 1, populationSettings = settings(restrict))
+    )
+    any(grepl("every target episode ends on its index day", logged))
+  }
+
+  sameday <- smallPopulationPlpData(c(0, 0), c(365, 365), outcomes)
+  expect_true(warned(sameday, restrict = TRUE))
+  expect_false(warned(sameday, restrict = FALSE))
+  mixed <- smallPopulationPlpData(c(0, 20), c(365, 365), outcomes)
+  expect_false(warned(mixed, restrict = TRUE))
+})
+
+test_that("minTimeAtRisk counts days elapsed after the risk window start", {
+  populationRows <- function(daysToObsEnd, minTimeAtRisk, riskWindowEnd) {
+    outcomes <- data.frame(rowId = 2, outcomeId = 1, outcomeCount = 1, daysToEvent = 5)
+    plpDataTar <- smallPopulationPlpData(
+      daysToCohortEnd = rep(1, 2), daysToObsEnd = rep(daysToObsEnd, 2), outcomes = outcomes
+    )
+    settings <- createStudyPopulationSettings(
+      includeAllOutcomes = TRUE, removeSubjectsWithPriorOutcome = FALSE,
+      requireTimeAtRisk = TRUE, minTimeAtRisk = minTimeAtRisk,
+      riskWindowStart = 1, riskWindowEnd = riskWindowEnd
+    )
+    sort(createStudyPopulation(plpDataTar, outcomeId = 1, populationSettings = settings)$rowId)
+  }
+
+  # Row 2 has the outcome, so includeAllOutcomes keeps it; row 1 has to meet the minimum.
+  expect_equal(populationRows(30, minTimeAtRisk = 30, riskWindowEnd = 90), 2)
+  expect_equal(populationRows(31, minTimeAtRisk = 30, riskWindowEnd = 90), c(1, 2))
+
+  # The default minimum of 364 with a risk window of days 1 to 365 requires the full window.
+  expect_equal(populationRows(364, minTimeAtRisk = 364, riskWindowEnd = 365), 2)
+  expect_equal(populationRows(365, minTimeAtRisk = 364, riskWindowEnd = 365), c(1, 2))
 })

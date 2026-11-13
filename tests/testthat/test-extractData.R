@@ -13,39 +13,34 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-test_that("summary.plpData", {
-  skip_if_offline()
+test_that("summary.plpData summarizes extracted data", {
+  skip_if_no_eunomia()
   attr(plpData$outcomes, "metaData")$outcomeIds <- c(outcomeId)
   sum <- summary.plpData(plpData)
   expect_equal(class(sum), "summary.plpData")
 })
 
+# database details of the right class with the given fields; the checks that
+# use them stop before any database is used
+partialDatabaseDetails <- function(...) {
+  structure(list(...), class = "databaseDetails")
+}
+
 test_that("getPlpData errors", {
+  settings <- FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE)
+  expect_error(getPlpData(databaseDetails = list(targetId = 1, outcomeIds = 3), covariateSettings = settings), "databaseDetails is wrong class")
+  expect_error(getPlpData(databaseDetails = partialDatabaseDetails(outcomeIds = 3), covariateSettings = settings), "User must input targetId")
   expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = NULL)
-    )
+    getPlpData(databaseDetails = partialDatabaseDetails(targetId = c(1, 2), outcomeIds = 3), covariateSettings = settings),
+    "Currently only supports one targetId at a time"
   )
-  expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = c(1, 2))
-    )
-  )
-  expect_error(
-    getPlpData(
-      databaseDetails = list(targetId = 1, outcomeIds = NULL)
-    )
-  )
+  expect_error(getPlpData(databaseDetails = partialDatabaseDetails(targetId = 1), covariateSettings = settings), "User must input outcomeIds")
 })
 
 
 test_that("getPlpData works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_true(is(plpData, "plpData"))
-})
-
-test_that("getCovariateData", {
-  expect_error(getCovariateData())
 })
 
 test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
@@ -55,15 +50,19 @@ test_that("createDatabaseDetails with NULL cdmDatabaseId errors", {
     cdmDatabaseId = NULL,
     targetId = 1,
     outcomeIds = 3
-  ))
+  ), "cdmDatabaseId must be a string with length > 0")
 })
 
 test_that("getPlpData checks covariateSettings object", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   expect_error(getPlpData(
-    databaseDetails = list(targetId = 1, outcomeIds = outcomeId),
-    covariateSettings = list()
-  ))
+    databaseDetails = databaseDetails,
+    covariateSettings = "notCovariateSettings"
+  ), "covariateSettings is wrong class")
+  expect_error(getPlpData(
+    databaseDetails = databaseDetails,
+    covariateSettings = list(FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE), "notCovariateSettings")
+  ), "covariateSettings\\[\\[i\\]\\] is wrong class")
 
   settings1 <-
     FeatureExtraction::createCovariateSettings(useDemographicsGender = TRUE)
@@ -73,6 +72,7 @@ test_that("getPlpData checks covariateSettings object", {
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings2)
   )
+  withr::defer(Andromeda::close(plpData$covariateData))
   expect_equal(
     plpData$covariateData$covariateRef %>%
       dplyr::pull(.data$analysisId) %>%
@@ -86,11 +86,11 @@ test_that("getPlpData checks covariateSettings object", {
   expect_error(getPlpData(
     databaseDetails = databaseDetails,
     covariateSettings = list(settings1, settings3)
-  ))
+  ), "covariateSettings\\[\\[i\\]\\] is wrong class")
 })
 
 test_that("Get Eunomia plp data works", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   plpData <- getEunomiaPlpData()
 
@@ -109,7 +109,7 @@ test_that("Get Eunomia plp data works", {
 })
 
 test_that("Get eunomia with custom covariates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   cs <- FeatureExtraction::createCovariateSettings(
     useDemographicsAge = FALSE,
@@ -134,6 +134,7 @@ test_that("plpDataObjectDoc returns expected documentation text", {
 })
 
 test_that("Print and print summary plpData work", {
+  skip_if_no_eunomia()
   out <- capture.output(print(plpData))
   expect_true(any(grepl("plpData object", out)))
   expect_true(any(grepl("At risk concept ID: 1", out)))
@@ -152,8 +153,23 @@ test_that("Print and print summary plpData work", {
   expect_true(any(grepl("Number of non-zero covariate values: 21949", printed)))
 })
 
+test_that("summary.plpData counts distinct people per outcome", {
+  utils::data("simulationProfile", package = "PatientLevelPrediction", envir = environment())
+  simulated <- simulatePlpData(simulationProfile, n = 20, seed = 42)
+  on.exit(Andromeda::close(simulated$covariateData))
+  outcomes <- data.frame(rowId = c(1, 2, 3), outcomeId = 3, outcomeCount = 1, daysToEvent = c(5, 8, 7))
+  attr(outcomes, "metaData") <- attr(simulated$outcomes, "metaData")
+  simulated$outcomes <- outcomes
+  # Rows 1 and 2 are two target-cohort entries of the same person.
+  simulated$cohorts$subjectId[2] <- simulated$cohorts$subjectId[1]
+
+  counts <- summary(simulated)$outcomeCounts
+  expect_equal(counts$eventCount, 3)
+  expect_equal(counts$personCount, 2)
+})
+
 test_that("getPlpData with restrict by dates only", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictDatesSettings <- createRestrictPlpDataSettings(
     studyStartDate = "20150101",
@@ -171,6 +187,7 @@ test_that("getPlpData with restrict by dates only", {
     restrictPlpDataSettings = restrictDatesSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpDateRestricted$covariateData))
 
   # max cohorts$cohortStartDate should be <= 2020-01-01 and >= 2015-01-01
   expect_true(
@@ -182,7 +199,7 @@ test_that("getPlpData with restrict by dates only", {
 })
 
 test_that("getPlpData with restrict by sample size", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictSampleSizeSettings <- createRestrictPlpDataSettings(
     sampleSize = 100
@@ -196,12 +213,13 @@ test_that("getPlpData with restrict by sample size", {
     restrictPlpDataSettings = restrictSampleSizeSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpSampleSizeRestricted$covariateData))
 
   expect_true(nrow(plpSampleSizeRestricted$cohorts) == 100)
 })
 
 test_that("getPlpData with restrict by sampleSize and dates", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictSampleSizeSettings <- createRestrictPlpDataSettings(
     studyStartDate = "20150101",
@@ -217,6 +235,7 @@ test_that("getPlpData with restrict by sampleSize and dates", {
     restrictPlpDataSettings = restrictSampleSizeSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpSampleSizeAndDateRestricted$covariateData))
 
   expect_true(
     max(plpSampleSizeAndDateRestricted$cohorts$cohortStartDate) <= "2020-01-01"
@@ -228,7 +247,7 @@ test_that("getPlpData with restrict by sampleSize and dates", {
 })
 
 test_that("getPlpData with restrict by washoutPeriod", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_if_not_installed("Eunomia")
   restrictWashoutSettings <- createRestrictPlpDataSettings(
     washoutPeriod = 15000
@@ -242,6 +261,7 @@ test_that("getPlpData with restrict by washoutPeriod", {
     restrictPlpDataSettings = restrictWashoutSettings,
     covariateSettings = covAgeOnlySettings
   )
+  withr::defer(Andromeda::close(plpWashoutRestricted$covariateData))
 
   expect_true(
     min(plpWashoutRestricted$cohorts$daysFromObsStart) >= 15000

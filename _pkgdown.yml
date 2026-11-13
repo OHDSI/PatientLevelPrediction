@@ -244,6 +244,7 @@ reference:
   - title: "Helper/utility functions"
     contents:
       - listAppend
+      - recordFeatureEngineeringStep
       - listCartesian
       - createTempModelLoc
       - configurePython

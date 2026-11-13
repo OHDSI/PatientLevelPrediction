@@ -28,7 +28,11 @@
 #' @param removeSubjectsWithPriorOutcome  Remove subjects that have the outcome prior to the risk window start?
 #' @param priorOutcomeLookback            How many days should we look back when identifying prior outcomes?
 #' @param requireTimeAtRisk      Should subject without time at risk be removed?
-#' @param minTimeAtRisk          The minimum number of days at risk required to be included
+#' @param minTimeAtRisk          The minimum time at risk required to be included, in days elapsed after
+#'                               the first day of the risk window. A person therefore needs
+#'                               \code{minTimeAtRisk + 1} days in the risk window, counting its first and
+#'                               last day. The default of 364 with a risk window of days 1 to 365 requires
+#'                               the full window.
 #' @param riskWindowStart        The start of the risk window (in days) relative to the index date (+
 #'                               days of exposure if the \code{addExposureDaysToStart} parameter is
 #'                               specified).
@@ -272,8 +276,14 @@ createStudyPopulation <- function(
 
 
   # censor at cohortEndDate:
-  if (max(population$daysToCohortEnd) > 0 && restrictTarToCohortEnd) {
+  if (restrictTarToCohortEnd) {
     ParallelLogger::logInfo("Restricting tarEnd to end of target cohort")
+    if (nrow(population) > 0 && all(population$daysToCohortEnd == 0)) {
+      ParallelLogger::logWarn(
+        "restrictTarToCohortEnd is TRUE but every target episode ends on its index day, ",
+        "so time at risk ends on the index day and none remains after it."
+      )
+    }
     population <- population %>% dplyr::mutate(tarEnd = ifelse(.data$tarEnd > .data$daysToCohortEnd, .data$daysToCohortEnd, .data$tarEnd))
   }
 

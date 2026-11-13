@@ -17,6 +17,13 @@
 # limitations under the License.
 
 #' Create setting for AdaBoost with python DecisionTreeClassifier base estimator
+#'
+#' @details
+#' Models are fitted with the SAMME algorithm on every scikit-learn version, so a
+#' saved model gives the same predictions on any version it is loaded with.
+#' scikit-learn 1.5 and older would otherwise default to SAMME.R, which later
+#' versions removed.
+#'
 #' @param nEstimators    (list) The maximum number of estimators at which boosting is terminated. In case of perfect fit, the learning procedure is stopped early.
 #' @param learningRate   (list) Weight applied to each classifier at each boosting iteration. A higher learning rate increases the contribution of each classifier. There is a trade-off between the learningRate and nEstimators parameters
 #'                       There is a trade-off between learningRate and nEstimators.
@@ -92,13 +99,23 @@ setAdaBoost <- function(nEstimators = list(10, 50, 200),
 
 
 AdaBoostClassifierInputs <- function(classifier, param) {
-  model <- classifier(
+  args <- list(
     n_estimators = param[[which.max(names(param) == "nEstimators")]],
     learning_rate = param[[which.max(names(param) == "learningRate")]],
     random_state = param[[which.max(names(param) == "seed")]]
   )
+  # scikit-learn 1.5 and older default to SAMME.R, which later versions removed, so a
+  # model fitted with it cannot be loaded there. SAMME is the only algorithm from 1.6.
+  if (adaBoostDefaultsToSammeR(classifier)) {
+    args$algorithm <- "SAMME"
+  }
+  model <- do.call(classifier, args)
 
   return(model)
+}
+
+adaBoostDefaultsToSammeR <- function(classifier) {
+  reticulate::py_has_attr(classifier, "_boost_real")
 }
 
 #' Create setting for the scikit-learn DecisionTree with python
@@ -295,7 +312,7 @@ setDecisionTree <- function(criterion = list("gini"),
     minSamplesLeaf = minSamplesLeaf,
     minWeightFractionLeaf = minWeightFractionLeaf,
     maxFeatures = maxFeatures,
-    seed = list(seed[[1]]),
+    seed = list(as.integer(seed[[1]])),
     maxLeafNodes = maxLeafNodes,
     minImpurityDecrease = minImpurityDecrease,
     classWeight = classWeight

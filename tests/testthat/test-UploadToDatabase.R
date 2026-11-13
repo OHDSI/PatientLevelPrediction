@@ -40,8 +40,11 @@ if (runPostgresUploadTests) {
   conn <- DatabaseConnector::connect(connectionRedshift)
   targetDialect <- "postgresql"
 
-  set.seed(NULL)
-  randVar <- rawToChar(as.raw(sample(c(65:90, 97:122), 5, replace = TRUE)))
+  # a random table prefix, without reseeding the random stream of later tests
+  randVar <- withr::with_preserve_seed({
+    set.seed(NULL)
+    rawToChar(as.raw(sample(c(65:90, 97:122), 5, replace = TRUE)))
+  })
 
   appendRandom <- function(x, rand = randVar) {
     return(paste("plp", rand, x, sep = ""))
@@ -206,13 +209,27 @@ if (runPostgresUploadTests) {
 
 # code to test sqlite creation, result and diagnostic upload all in one
 test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   resultsLoc <- file.path(saveLoc, "sqliteTest")
 
   savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
   # save diagnostic
+  diagnoseResult <- diagnosePlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    analysisId = "Test",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(splitSeed = 12),
+    saveDirectory = file.path(saveLoc, "diagnose"),
+    modelSettings = setLassoLogisticRegression(seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    preprocessSettings = createPreprocessSettings(),
+    sampleSettings = NULL,
+    featureEngineeringSettings = NULL
+  )
   saveRDS(diagnoseResult, file.path(resultsLoc, "Analysis_1", "diagnosePlp.rds"))
 
   sqliteLocation <- insertResultsToSqlite(
@@ -280,8 +297,9 @@ test_that("temporary sqlite with results works", {
 })
 
 test_that("list hyperParamSearch is flattened for sqlite uploads", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   runPlpListHyper <- plpResult
   runPlpListHyper$model$trainDetails$hyperParamSearch <- list(
@@ -452,8 +470,9 @@ test_that("sanitizeHyperparameterSettingsForDatabase handles optional and non-js
 })
 
 test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in runPlp model", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   sqliteLocation <- file.path(tempdir(), "issue620-modeldesign-fallback.sqlite")
   if (file.exists(sqliteLocation)) {
@@ -502,20 +521,10 @@ test_that("insertModelDesignInDatabase handles missing hyperparameterSettings in
 })
 
 # SQL lite test
-test_that("temporary sqlite with results works", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
-  externalVal <- plpResult
-  externalVal$model$model <- "none"
-  externalVal$model$trainDetails <- NULL
-  externalVal$model$validationDetails <- list(
-    targetId = 1,
-    outcomeId = 3,
-    developmentDatabase = "test",
-    validationDatabase = "test",
-    populationSettings = plpResult$model$modelDesign$populationSettings,
-    restrictPlpDataSettings = plpResult$model$modelDesign$restrictPlpDataSettings
-  )
+test_that("insertRunPlpToSqlite stores a development result in a temporary sqlite", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   sqliteLocation <- insertRunPlpToSqlite(
     runPlp = plpResult,
@@ -567,8 +576,9 @@ test_that("temporary sqlite with results works", {
 })
 
 test_that("external validation with no outcomes uploads to sqlite", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
 
   validationPopulation <- population
   validationPopulation$outcomeCount <- 0
@@ -629,18 +639,34 @@ test_that("external validation with no outcomes uploads to sqlite", {
 })
 
 # importFromCsv test here as can use previous csv saving
+# plpResult exported to csv: the folder the export test above writes, or, when
+# this test runs on its own, made here the same way
+exportedCsvFolder <- function() {
+  folder <- file.path(saveLoc, "csvFolder")
+  if (!dir.exists(file.path(folder, "models"))) {
+    sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = NULL)
+    extractDatabaseToCsv(
+      connectionDetails = DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation),
+      databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+      csvFolder = folder
+    )
+  }
+  folder
+}
+
 test_that("import from csv", {
-  # TODO remove dependancy on previous test
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  csvFolder <- exportedCsvFolder()
   cohortDef <- extractCohortDefinitionsCSV(
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(cohortDef, "data.frame"))
   expect_true(ncol(cohortDef) == 4)
 
   databaseList <- extractDatabaseListCSV(
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(databaseList, "list"))
   expect_true(!is.null(databaseList[[1]]$databaseDetails))
@@ -660,14 +686,14 @@ test_that("import from csv", {
 
   modelDesign <- getModelDesignCsv(
     modelDesignSettingTable = res,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(modelDesign, "modelDesign"))
 
   # performance works
   res <- getPerformanceEvaluationCsv(
     performanceId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(res, "list"))
   expect_true(
@@ -683,14 +709,14 @@ test_that("import from csv", {
   # test object extracts
   obj <- extractObjectFromCsv(
     performanceId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(obj, "externalValidatePlp") | inherits(obj, "runPlp"))
 
   # test diagnostic extracted
   diag <- extractDiagnosticFromCsv(
     diagnosticId = 1,
-    csvFolder = file.path(saveLoc, "csvFolder")
+    csvFolder = csvFolder
   )
   expect_true(inherits(diag, "diagnosePlp") | is.null(diag))
 
@@ -705,7 +731,6 @@ test_that("import from csv", {
     dbms = "sqlite",
     server = file.path(csvServerLoc, "newCsv.sqlite")
   )
-  newResultConn <- DatabaseConnector::connect(newResultConnDetails)
   csvDatabaseSchemaSettings <- PatientLevelPrediction::createDatabaseSchemaSettings(
     resultSchema = "main",
     tablePrefix = "",
@@ -725,7 +750,7 @@ test_that("import from csv", {
   )
 
   res <- insertCsvToDatabase(
-    csvFolder = file.path(saveLoc, "csvFolder"),
+    csvFolder = csvFolder,
     connectionDetails = newResultConnDetails,
     databaseSchemaSettings = csvDatabaseSchemaSettings,
     modelSaveLocation = file.path(csvServerLoc, "models"),
@@ -739,8 +764,9 @@ test_that("import from csv", {
 
 # new - check null model just reports message
 test_that("message if model is null", {
-  skip_if_not_installed(c("ResultModelManager", "Eunomia"))
-  skip_if_offline()
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
   model2 <- list(noModel = TRUE)
   model2$modelDesign$modelSettings$settings$predict <- "noModel"
   model2$modelDesign$modelSettings$settings$saveType <- "RtoJson"
@@ -783,4 +809,417 @@ test_that("message if model is null", {
       modelSaveLocation = file.path(tempdir(), "null_model", "models")
     )
   )
+})
+
+
+newUploadDb <- function(env = parent.frame()) {
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  createPlpResultTables(
+    connectionDetails = connectionDetails,
+    targetDialect = "sqlite",
+    resultSchema = "main",
+    deleteTables = TRUE,
+    createTables = TRUE,
+    tablePrefix = ""
+  )
+  withr::defer(unlink(sqliteFile), envir = env)
+  connectionDetails
+}
+
+test_that("insertRunPlpToSqlite stores a single externalValidatePlp result", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  externalVal <- plpResult
+  externalVal$model$model <- "none"
+  externalVal$model$trainDetails <- NULL
+  externalVal$model$validationDetails <- list(
+    targetId = 1,
+    outcomeId = outcomeId,
+    developmentDatabase = "test",
+    validationDatabase = "test",
+    populationSettings = plpResult$model$modelDesign$populationSettings,
+    restrictPlpDataSettings = plpResult$model$modelDesign$restrictPlpDataSettings
+  )
+  class(externalVal) <- "externalValidatePlp"
+
+  # insertRunPlpToSqlite reuses one file per session
+  unlink(file.path(tempdir(), "databaseFile.sqlite"))
+  sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = externalVal)
+  conn <- DatabaseConnector::connect(
+    DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation)
+  )
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  res <- DatabaseConnector::querySql(
+    conn,
+    "select model_development as dev, count(*) as n from main.performances group by model_development;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(res$n[res$dev == 1], 1)
+  expect_equal(res$n[res$dev == 0], 1)
+})
+
+test_that("createPlpResultTables with deleteTables removes rows from complete tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+  countTars <- function() DatabaseConnector::querySql(conn, "select count(*) as n from main.tars;", snakeCaseToCamelCase = TRUE)$n
+
+  # control: deleteTables = FALSE keeps rows and migrates again
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = FALSE, createTables = TRUE, tablePrefix = ""
+  )
+  expect_equal(countTars(), 1)
+
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = ""
+  )
+  expect_equal(countTars(), 0)
+
+  # a reset must reapply migrations
+  columns <- tolower(colnames(DatabaseConnector::querySql(conn, "select * from main.model_designs where 1 = 0;")))
+  expect_true("hyperparameter_setting_id" %in% columns)
+  migrations <- DatabaseConnector::querySql(conn, "select * from main.migration;", snakeCaseToCamelCase = TRUE)
+  expect_gt(nrow(migrations), 0)
+})
+
+test_that("createPlpResultTables keeps existing results by default", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+
+  createPlpResultTables(connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main")
+  n <- DatabaseConnector::querySql(conn, "select count(*) as n from main.tars;", snakeCaseToCamelCase = TRUE)$n
+  expect_equal(n, 1)
+})
+
+test_that("createPlpResultTables explains how to recreate a schema with only some tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  DatabaseConnector::executeSql(conn, "drop table main.tars;")
+
+  expect_error(
+    createPlpResultTables(connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main"),
+    "Use deleteTables = TRUE"
+  )
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE
+  )
+  expect_true("tars" %in% tolower(DatabaseConnector::getTableNames(conn, databaseSchema = "main")))
+})
+
+test_that("createPlpResultTables deleteTables without createTables removes all tables", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  createPlpResultTables(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = FALSE, tablePrefix = ""
+  )
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  remaining <- tolower(DatabaseConnector::getTableNames(conn, databaseSchema = "main"))
+  expect_false(any(c("performances", "models", "migration") %in% remaining))
+})
+
+test_that("createPlpResultTables deleteTables honours a table prefix", {
+  skip_if_not_installed("ResultModelManager")
+  sqliteFile <- tempfile(fileext = ".sqlite")
+  on.exit(unlink(sqliteFile), add = TRUE)
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteFile)
+  args <- list(
+    connectionDetails = connectionDetails, targetDialect = "sqlite", resultSchema = "main",
+    deleteTables = TRUE, createTables = TRUE, tablePrefix = "test"
+  )
+  do.call(createPlpResultTables, args)
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE, after = FALSE)
+  DatabaseConnector::executeSql(conn, "insert into main.test_tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (1,'cohort start',365,'cohort start');")
+  do.call(createPlpResultTables, args)
+  res <- DatabaseConnector::querySql(conn, "select count(*) as n from main.test_tars;", snakeCaseToCamelCase = TRUE)
+  expect_equal(res$n, 0)
+})
+
+test_that("insertResultsToSqlite replaces results by default and can add to them", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  resultsLoc <- tempfile("insertResultsDeleteTables")
+  on.exit(unlink(resultsLoc, recursive = TRUE), add = TRUE)
+  savePlpResult(plpResult, file.path(resultsLoc, "Analysis_1", "plpResult"))
+  insert <- function(...) {
+    insertResultsToSqlite(
+      resultLocation = resultsLoc,
+      sqliteLocation = file.path(resultsLoc, "sqlite"),
+      skipDiagnostics = TRUE,
+      ...
+    )
+  }
+  countMarkers <- function(db) {
+    conn <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = db))
+    on.exit(DatabaseConnector::disconnect(conn))
+    DatabaseConnector::querySql(conn, "select count(*) as n from main.tars where tar_start_day = -999;", snakeCaseToCamelCase = TRUE)$n
+  }
+  addMarker <- function(db) {
+    conn <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = db))
+    on.exit(DatabaseConnector::disconnect(conn))
+    DatabaseConnector::executeSql(conn, "insert into main.tars(tar_start_day, tar_start_anchor, tar_end_day, tar_end_anchor) values (-999,'cohort start',365,'cohort start');")
+  }
+
+  db <- insert()
+  addMarker(db)
+  insert(deleteTables = FALSE)
+  expect_equal(countMarkers(db), 1)
+
+  insert()
+  expect_equal(countMarkers(db), 0)
+})
+
+test_that("addModel replaces the models row of a re-uploaded fit", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  upload <- function(intercept, trainDetails, day) {
+    PatientLevelPrediction:::addModel(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+      analysisId = "Analysis_1", modelDesignId = 1, databaseId = 1, modelType = "lasso",
+      plpModelFile = "folder-1-1", trainDetails = trainDetails, preprocessing = "",
+      executionDateTime = day, trainingTime = "1 secs", intercept = intercept,
+      tempEmulationSchema = NULL
+    )
+  }
+  firstId <- upload(-1.5, '{"first": true}', "2026-01-01")
+  secondId <- upload(-3.25, '{"first": false}', "2026-02-02")
+  otherDatabase <- PatientLevelPrediction:::addModel(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+    analysisId = "Analysis_2", modelDesignId = 1, databaseId = 2, modelType = "lasso",
+    plpModelFile = "folder-1-2", trainDetails = "{}", preprocessing = "",
+    executionDateTime = "2026-03-03", trainingTime = "1 secs", intercept = 9, tempEmulationSchema = NULL
+  )
+  expect_equal(firstId, secondId)
+  expect_false(identical(firstId, otherDatabase))
+
+  row <- DatabaseConnector::querySql(
+    conn, "select * from main.models where database_id = 1;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(nrow(row), 1)
+  expect_equal(row$intercept, -3.25)
+  expect_equal(row$trainDetails, '{"first": false}')
+  expect_equal(as.character(row$executionDateTime), "2026-02-02")
+
+  other <- DatabaseConnector::querySql(
+    conn, "select * from main.models where database_id = 2;",
+    snakeCaseToCamelCase = TRUE
+  )
+  expect_equal(other$intercept, 9)
+})
+
+test_that("addCohort keeps full cohort JSON on PostgreSQL and SQL Server style platforms", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prefix <- paste0('{"criteria":"', strrep("a", 4100))
+  add <- function(id, tail, dialect) {
+    PatientLevelPrediction:::addCohort(
+      conn = conn, resultSchema = "main", targetDialect = dialect, cgTablePrefix = "",
+      plpTablePrefix = "", tempEmulationSchema = NULL,
+      cohortDefinition = data.frame(cohortId = id, cohortName = "shared", json = paste0(prefix, tail))
+    )
+  }
+  first <- add(101, 'early"}', "postgresql")
+  second <- add(202, 'late"}', "postgresql")
+  expect_false(first == second)
+  stored <- DatabaseConnector::querySql(conn, "select length(json) as len from main.cohort_definition order by cohort_definition_id;", snakeCaseToCamelCase = TRUE)
+  expect_equal(stored$len, c(nchar(paste0(prefix, 'early"}')), nchar(paste0(prefix, 'late"}'))))
+
+  # same definition reuses its cohort
+  expect_equal(add(101, 'early"}', "postgresql"), first)
+})
+
+test_that("addCohort does not merge truncated definitions across cohort ids", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prefix <- paste0('{"criteria":"', strrep("a", 4100))
+  add <- function(id, tail) {
+    PatientLevelPrediction:::addCohort(
+      conn = conn, resultSchema = "main", targetDialect = "oracle", cgTablePrefix = "",
+      plpTablePrefix = "", tempEmulationSchema = NULL,
+      cohortDefinition = data.frame(cohortId = id, cohortName = "shared", json = paste0(prefix, tail))
+    )
+  }
+  first <- add(101, 'early"}')
+  second <- add(202, 'late"}')
+  expect_false(first == second)
+  expect_equal(add(101, 'early"}'), first)
+  stored <- DatabaseConnector::querySql(conn, "select length(json) as len from main.cohort_definition;", snakeCaseToCamelCase = TRUE)
+  expect_true(all(stored$len == 4000))
+})
+
+test_that("addEvaluation clears a summary that has no replacement", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  columns <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "threshold_summary")
+  threshold <- as.data.frame(lapply(setNames(columns, columns), function(x) 0.5))
+  threshold$evaluation <- "Test"
+  threshold$performanceId <- NULL
+  upload <- function(thresholdSummary, auc) {
+    PatientLevelPrediction:::addEvaluation(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+      performanceEvaluation = list(
+        thresholdSummary = thresholdSummary,
+        evaluationStatistics = data.frame(evaluation = "Test", metric = "AUC", value = auc)
+      ),
+      overWriteIfExists = TRUE, tempEmulationSchema = NULL
+    )
+  }
+  countRows <- function(id = 1) {
+    DatabaseConnector::querySql(conn, sprintf("select count(*) as n from main.threshold_summary where performance_id = %s;", id), snakeCaseToCamelCase = TRUE)$n
+  }
+
+  upload(threshold, 0.7)
+  expect_equal(countRows(), 1)
+
+  # another performance is not touched
+  PatientLevelPrediction:::addThresholdSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 2,
+    performanceEvaluation = list(thresholdSummary = threshold), overWriteIfExists = TRUE,
+    tempEmulationSchema = NULL
+  )
+
+  upload(NULL, 0.6)
+  expect_equal(countRows(), 0)
+  expect_equal(countRows(id = 2), 1)
+  auc <- DatabaseConnector::querySql(conn, "select value from main.evaluation_statistics where performance_id = 1;")
+  expect_equal(as.numeric(auc[[1]]), 0.6)
+
+  # keeping existing rows stays possible
+  upload(threshold, 0.7)
+  PatientLevelPrediction:::addThresholdSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+    performanceEvaluation = list(thresholdSummary = NULL), overWriteIfExists = FALSE,
+    tempEmulationSchema = NULL
+  )
+  expect_equal(countRows(), 1)
+})
+
+test_that("insertPerformanceInDatabase clears attrition and covariate summary when absent", {
+  skip_if_not_installed("ResultModelManager")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  schema <- createDatabaseSchemaSettings(resultSchema = "main", targetDialect = "sqlite", tempEmulationSchema = NULL)
+  attritionCols <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "attrition")
+  covariateCols <- PatientLevelPrediction:::getColumnNames(conn, "main", "sqlite", tableName = "covariate_summary")
+  attrition <- as.data.frame(lapply(setNames(attritionCols, attritionCols), function(x) 1))
+  attrition$performanceId <- NULL
+  attrition$description <- "start"
+  covariateSummary <- as.data.frame(lapply(setNames(covariateCols, covariateCols), function(x) 1))
+  covariateSummary$performanceId <- NULL
+  covariateSummary$covariateValue <- 2
+
+  upload <- function(attr, cov) {
+    PatientLevelPrediction:::insertPerformanceInDatabase(
+      performanceEvaluation = list(evaluationStatistics = data.frame(evaluation = "Test", metric = "AUC", value = 0.5)),
+      covariateSummary = cov, attrition = attr,
+      executionDateTime = "2026-01-01", plpVersion = "6.7.0", conn = conn,
+      databaseSchemaSettings = schema, modelDesignId = 1, developmentDatabaseId = 1,
+      validationDatabaseId = 1, validationTarId = 1, validationPopulationId = 1,
+      validationPlpDataId = 1, validationTargetId = 1, validationOutcomeId = 1, modelDevelopment = 1
+    )
+  }
+  count <- function(table) DatabaseConnector::querySql(conn, paste0("select count(*) as n from main.", table, ";"), snakeCaseToCamelCase = TRUE)$n
+
+  upload(attrition, covariateSummary)
+  expect_equal(count("attrition"), 1)
+  expect_equal(count("covariate_summary"), 1)
+  upload(NULL, NULL)
+  expect_equal(count("attrition"), 0)
+  expect_equal(count("covariate_summary"), 0)
+})
+
+test_that("addCalibrationSummary warns about calibration summaries it cannot store", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("survival")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  upload <- function(calibration, performanceId) {
+    capturedWarnings(PatientLevelPrediction:::addCalibrationSummary(
+      conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "",
+      performanceId = performanceId,
+      performanceEvaluation = list(calibrationSummary = calibration), overWriteIfExists = TRUE,
+      tempEmulationSchema = NULL
+    ))
+  }
+  stored <- function(performanceId) {
+    DatabaseConnector::querySql(conn, paste(
+      "select count(*) as n from main.calibration_summary where performance_id =", performanceId
+    ))[1, 1]
+  }
+
+  withr::local_seed(1)
+  prediction <- data.frame(
+    rowId = 1:300, value = stats::runif(300, 0.01, 0.5),
+    outcomeCount = stats::rbinom(300, 1, 0.3), survivalTime = stats::rexp(300, 0.002),
+    evaluationType = "Test"
+  )
+  survivalCalibration <- PatientLevelPrediction:::getCalibrationSummary_survival(
+    prediction = prediction, evalColumn = "evaluationType", numberOfStrata = 10,
+    truncateFraction = 0.01, timepoint = 365
+  )
+  output <- upload(survivalCalibration, performanceId = 1)
+  expect_true(any(grepl("Calibration summary for performance 1 was not uploaded", output)))
+  expect_true(any(grepl("personCountWithOutcome", output)))
+  expect_equal(stored(1), 0)
+
+  binaryCalibration <- data.frame(
+    evaluation = "Test", predictionThreshold = 0.1, PersonCountAtRisk = 10, PersonCountWithOutcome = 1,
+    averagePredictedProbability = 0.1, StDevPredictedProbability = 0.1, MinPredictedProbability = 0.1,
+    P25PredictedProbability = 0.1, MedianPredictedProbability = 0.1, P75PredictedProbability = 0.1,
+    MaxPredictedProbability = 0.1, observedIncidence = 0.1
+  )
+  output <- upload(binaryCalibration, performanceId = 2)
+  expect_false(any(grepl("was not uploaded", output)))
+  expect_equal(stored(2), 1)
+})
+
+test_that("addCalibrationSummary stores survival calibration summaries", {
+  testthat::skip("Storing survival calibration needs a results schema migration, see issue #691")
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("survival")
+  connectionDetails <- newUploadDb()
+  conn <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(conn), add = TRUE)
+  prediction <- data.frame(
+    rowId = 1:300, value = stats::runif(300, 0.01, 0.5),
+    outcomeCount = stats::rbinom(300, 1, 0.3), survivalTime = stats::rexp(300, 1 / 300) + 1,
+    evaluationType = "Test"
+  )
+  calibration <- PatientLevelPrediction:::getCalibrationSummary_survival(
+    prediction = prediction, evalColumn = "evaluationType", numberOfStrata = 10,
+    truncateFraction = 0.01, timepoint = 365
+  )
+  PatientLevelPrediction:::addCalibrationSummary(
+    conn = conn, resultSchema = "main", targetDialect = "sqlite", tablePrefix = "", performanceId = 1,
+    performanceEvaluation = list(calibrationSummary = calibration), overWriteIfExists = TRUE,
+    tempEmulationSchema = NULL
+  )
+  stored <- DatabaseConnector::querySql(conn, "select count(*) as n from main.calibration_summary;", snakeCaseToCamelCase = TRUE)$n
+  expect_equal(stored, nrow(calibration))
 })

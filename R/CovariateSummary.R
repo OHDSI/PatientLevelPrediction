@@ -69,25 +69,19 @@ covariateSummary <- function(
     strata = strata
   )
 
-  # apply feature engineering
+  # apply feature engineering to a copy, as at prediction, where the steps see
+  # the population columns and the labels
   if (!is.null(featureEngineering)) {
-    # create copy of covariateData
-    newCovariateData <- Andromeda::andromeda(
-      covariateRef = covariateData$covariateRef,
-      analysisRef = covariateData$analysisRef,
-      covariates = covariateData$covariates
-    )
-    covariateData <- newCovariateData
-
-    if (!is.null(featureEngineering$funct)) {
-      featureEngineering <- list(featureEngineering)
+    replayLabels <- cohort
+    if (!is.null(labels)) {
+      labelColumns <- c("rowId", setdiff(colnames(labels), colnames(cohort)))
+      replayLabels <- dplyr::left_join(cohort, labels[, labelColumns, drop = FALSE], by = "rowId")
     }
-
-    for (fe in featureEngineering) {
-      feSettings <- fe$settings
-      feSettings$trainData <- list(covariateData = covariateData)
-      covariateData <- do.call(fe$funct, feSettings)$covariateData
-    }
+    covariateData <- applyFeatureEngineering(
+      plpData = list(labels = replayLabels, covariateData = covariateData),
+      settings = featureEngineering
+    )$covariateData
+    on.exit(closeAndromedas(list(covariateData)), add = TRUE)
   }
 
   # make this run in parallel for big speed improvements..
@@ -106,7 +100,10 @@ covariateSummary <- function(
   )
 
   covariateSummary <- aggregateCovariateSummaries(
-    covariateSummariesPerStrata = do.call(rbind, covariateSummariesPerStrata),
+    covariateSummariesPerStrata = completeCovariateSummaries(
+      covariateSummaries = do.call(rbind, covariateSummariesPerStrata),
+      subsetList = subsetList
+    ),
     labels = labels,
     strata = strata
   )
@@ -129,6 +126,32 @@ covariateSummary <- function(
     signif(delta, 3), " ", attr(delta, "units")
   )
   return(covariateSummary)
+}
+
+
+# Covariates are stored sparsely, so a subgroup where a covariate is always zero
+# has no row for it. Add those rows so the subgroup still counts in pooled denominators.
+completeCovariateSummaries <- function(covariateSummaries, subsetList) {
+  subsetSizes <- data.frame(
+    group = sapply(subsetList, function(x) x$subsetName),
+    N = sapply(subsetList, function(x) nrow(x$subset))
+  )
+  completeSummaries <- tidyr::crossing(
+    covariateId = unique(covariateSummaries$covariateId),
+    subsetSizes
+  ) %>%
+    dplyr::left_join(
+      covariateSummaries %>% dplyr::select(-"N"),
+      by = c("covariateId", "group")
+    ) %>%
+    tidyr::replace_na(list(
+      CovariateCount = 0,
+      sumVal = 0,
+      sumSquares = 0,
+      CovariateMean = 0,
+      CovariateStDev = 0
+    ))
+  return(completeSummaries)
 }
 
 
@@ -179,8 +202,11 @@ aggregateCovariateSummaries <- function(
       values_fill = 0
     )
 
-    resultLabels <- resultLabels %>%
-      dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean) / sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2) / 2))
+    # the standardized mean difference compares the outcome groups, which only labels define
+    if (!is.null(labels)) {
+      resultLabels <- resultLabels %>%
+        dplyr::mutate(StandardizedMeanDiff = (.data$WithOutcome_CovariateMean - .data$WithNoOutcome_CovariateMean) / sqrt((.data$WithOutcome_CovariateStDev^2 + .data$WithNoOutcome_CovariateStDev^2) / 2))
+    }
 
 
     resultAll <- covariateSummariesPerStrata %>%
@@ -342,14 +368,15 @@ covariateSummarySubset <- function(
   N <- length(subset)
 
   ParallelLogger::logInfo("Restricting to subgroup")
-  newCovariateData <- getCovariatesForGroup(
-    covariateData,
-    restrictIds = subset
-  )
+  # aggregated where the covariates are, without copying them
+  covariateData$restrictIds <- data.frame(rowId = subset)
+  on.exit(covariateData$restrictIds <- NULL, add = TRUE)
+  subsetCovariates <- covariateData$covariates %>%
+    dplyr::inner_join(covariateData$restrictIds, by = "rowId")
 
-  if ("timeId" %in% colnames(newCovariateData$covariates)) {
+  if ("timeId" %in% colnames(subsetCovariates)) {
     # For temporal data, aggregate so that each (rowId, covariateId) appears once.
-    covData <- newCovariateData$covariates %>%
+    covData <- subsetCovariates %>%
       dplyr::group_by(.data$rowId, .data$covariateId) %>%
       dplyr::summarise(
         covariateValue = mean(.data$covariateValue, na.rm = TRUE), # or another summary like mean
@@ -357,7 +384,7 @@ covariateSummarySubset <- function(
       )
   } else {
     # For non-temporal data, use the data as is.
-    covData <- newCovariateData$covariates
+    covData <- subsetCovariates
   }
 
   ParallelLogger::logInfo(paste0("Calculating summary for subgroup ", subsetName))
@@ -380,12 +407,3 @@ covariateSummarySubset <- function(
   return(result)
 }
 
-getCovariatesForGroup <- function(covariateData, restrictIds) {
-  # restrict covariateData to specified rowIds
-  newCovariateData <- Andromeda::copyAndromeda(covariateData)
-  covariateData$restrictIds <- data.frame(rowId = restrictIds)
-  on.exit(covariateData$restrictIds <- NULL)
-  newCovariateData$covariates <- covariateData$covariates %>%
-    dplyr::inner_join(covariateData$restrictIds, by = "rowId")
-  return(newCovariateData)
-}

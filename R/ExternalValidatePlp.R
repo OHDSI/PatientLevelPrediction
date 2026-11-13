@@ -51,6 +51,7 @@ externalValidatePlp <- function(plpModel,
           },
           error = function(e) {
             ParallelLogger::logError(e)
+            prediction
           }
         )
     }
@@ -586,6 +587,7 @@ validateExternal <- function(validationDesignList,
   on.exit(closeLog(logger))
 
   downloadTasks <- createDownloadTasks(validationDesignList)
+  validationDesignList <- splitDesignsByDownloadTask(validationDesignList, downloadTasks)
 
   results <- NULL
   for (design in validationDesignList) {
@@ -618,6 +620,7 @@ validateExternal <- function(validationDesignList,
             "outcomeId", design$outcomeId
           )
         )
+        closeAndromedas(list(plpData$covariateData))
         next
       }
 
@@ -652,6 +655,8 @@ validateExternal <- function(validationDesignList,
 
         analysisInfo[[databaseName]] <<- analysisInfo[[databaseName]] + 1
       })
+      # the next design loads or extracts its own data
+      closeAndromedas(list(plpData$covariateData))
     }
   }
   for (database in databaseDetails) {
@@ -668,7 +673,8 @@ validateExternal <- function(validationDesignList,
             cdmDatabaseNames = database$cdmDatabaseName,
             databaseRefIds = database$cdmDatabaseId
           ),
-          sqliteLocation = sqliteLocation
+          sqliteLocation = sqliteLocation,
+          deleteTables = FALSE
         )
       },
       error = function(e) ParallelLogger::logInfo(e)
@@ -819,6 +825,7 @@ fromDesignOrModel <- function(validationDesign, modelDesigns, settingName) {
 getData <- function(design, database, outputFolder, downloadTasks) {
   # find task associated with design and the index of the task in downloadTasks
   task <- downloadTasks %>%
+    dplyr::mutate(downloadTaskId = dplyr::row_number()) %>%
     dplyr::filter(.data$targetId == design$targetId) %>%
     dplyr::mutate(
       taskId = dplyr::row_number(),
@@ -826,6 +833,10 @@ getData <- function(design, database, outputFolder, downloadTasks) {
     ) %>%
     dplyr::filter(.data$collapsed == paste0(design$restrictPlpDataSettings, collapse = "|")) %>%
     dplyr::select(-"collapsed")
+  if (!is.null(design$downloadTaskId)) {
+    task <- task %>% dplyr::filter(.data$downloadTaskId == design$downloadTaskId)
+  }
+  task <- task[1, ]
   covariateSettings <- task$covariateSettings[[1]]
   task$covariateSettings <- NULL
   if (length(covariateSettings) > 1) {
@@ -908,9 +919,10 @@ getPopulation <- function(validationDesign, modelDesigns, plpData) {
 
 #' createDownloadTasks
 #' create download tasks based on unique combinations of targetId and
-#' restrictPlpDataSettings. It adds all covariateSettings and outcomes that
-#' have that targetId and restrictPlpDataSettings. This is used to avoid
-#' downloading the same data multiple times.
+#' restrictPlpDataSettings. It adds all compatible covariateSettings and
+#' outcomes that have that targetId and restrictPlpDataSettings. This is used
+#' to avoid downloading the same data multiple times. Models whose
+#' covariateSettings define the same covariates differently get separate tasks.
 #' @param validationDesignList A list of validationDesign objects
 #' @return A dataframe where each row is a downloadTask
 #' @keywords internal
@@ -922,7 +934,8 @@ createDownloadTasks <- function(validationDesignList) {
   rowsList <- list()
   modelCache <- list()
 
-  for (design in validationDesignList) {
+  for (designIndex in seq_along(validationDesignList)) {
+    design <- validationDesignList[[designIndex]]
     targetId <- design$targetId
     outcomeId <- design$outcomeId
     restrictPlpDataSettings <- design$restrictPlpDataSettings
@@ -935,7 +948,8 @@ createDownloadTasks <- function(validationDesignList) {
       restrictPlpDataSettings <- restrictList[[1]]
     }
     plpModelList <- design$plpModelList
-    for (model in plpModelList) {
+    for (modelIndex in seq_along(plpModelList)) {
+      model <- plpModelList[[modelIndex]]
       if (is.character(model)) {
         modelKey <- model
         if (!is.null(modelCache[[modelKey]])) {
@@ -957,7 +971,8 @@ createDownloadTasks <- function(validationDesignList) {
         targetId = targetId,
         outcomeIds = outcomeId,
         restrictPlpDataSettings = list(restrictPlpDataSettings),
-        covariateSettings = list(covariateSettings)
+        covariateSettings = list(covariateSettings),
+        modelRef = paste(designIndex, modelIndex, sep = ":")
       )
       rowsList[[length(rowsList) + 1]] <- row
     }
@@ -981,18 +996,122 @@ createDownloadTasks <- function(validationDesignList) {
 
   downloadTasks <- rowsDf %>%
     dplyr::group_by(.data$targetId, .data$restrictKey) %>%
+    dplyr::mutate(covariateGroup = assignCovariateGroups(.data$covariateSettings)) %>%
+    dplyr::group_by(.data$targetId, .data$restrictKey, .data$covariateGroup) %>%
     dplyr::summarise(
       outcomeIds = list(unique(.data$outcomeIds)),
       restrictPlpDataSettings = .data$restrictPlpDataSettings[1],
       covariateSettings = list(uniqueCovariateSettings(.data$covariateSettings, .data$covariateKey)),
+      modelRefs = list(.data$modelRef),
       .groups = "drop"
     ) %>%
     dplyr::select(c(
       "targetId", "outcomeIds", "restrictPlpDataSettings",
-      "covariateSettings"
+      "covariateSettings", "modelRefs"
     ))
 
   return(downloadTasks)
+}
+
+#' assignCovariateGroups - Group models whose covariateSettings can share one
+#' extraction
+#' @param covariateSettings A list with the covariateSettings of each model
+#' @return An integer vector with the group of each model
+#' @keywords internal
+#' @noRd
+assignCovariateGroups <- function(covariateSettings) {
+  groups <- integer(length(covariateSettings))
+  for (i in seq_along(covariateSettings)) {
+    group <- 1L
+    while (any(vapply(
+      covariateSettings[which(groups == group)],
+      modelCovariateSettingsConflict,
+      logical(1),
+      covariateSettings[[i]]
+    ))) {
+      group <- group + 1L
+    }
+    groups[i] <- group
+  }
+  return(groups)
+}
+
+modelCovariateSettingsConflict <- function(settingsA, settingsB) {
+  asList <- function(settings) {
+    if (inherits(settings, "covariateSettings")) list(settings) else settings
+  }
+  for (a in asList(settingsA)) {
+    for (b in asList(settingsB)) {
+      if (covariateSettingsConflict(a, b)) {
+        return(TRUE)
+      }
+    }
+  }
+  return(FALSE)
+}
+
+# Conflicting settings produce the same covariateId with different meanings,
+# which cannot be told apart once the extractions are combined.
+covariateSettingsConflict <- function(a, b) {
+  if (isTRUE(all.equal(a, b, check.attributes = FALSE))) {
+    return(FALSE)
+  }
+  if (!identical(attr(a, "fun"), attr(b, "fun"))) {
+    return(FALSE)
+  }
+  if (identical(attr(a, "fun"), "getDbDefaultCovariateData") &&
+    is.null(a$analyses) && is.null(b$analyses)) {
+    definitionFields <- c(
+      "temporal", "temporalSequence", "longTermStartDays", "mediumTermStartDays",
+      "shortTermStartDays", "endDays", "temporalStartDays", "temporalEndDays",
+      "timePart", "timeInterval", "sequenceEndDay", "sequenceStartDay",
+      "includedCovariateConceptIds", "addDescendantsToInclude",
+      "excludedCovariateConceptIds", "addDescendantsToExclude",
+      "includedCovariateIds"
+    )
+    enabledAnalyses <- function(settings) {
+      enabled <- vapply(settings, isTRUE, logical(1))
+      setdiff(names(settings)[enabled], definitionFields)
+    }
+    if (length(intersect(enabledAnalyses(a), enabledAnalyses(b))) == 0) {
+      return(FALSE)
+    }
+    return(!isTRUE(all.equal(unclass(a)[definitionFields], unclass(b)[definitionFields],
+      check.attributes = FALSE
+    )))
+  }
+  if (!is.null(a$covariateId) && !is.null(b$covariateId)) {
+    return(isTRUE(all.equal(a$covariateId, b$covariateId)))
+  }
+  return(TRUE)
+}
+
+#' splitDesignsByDownloadTask - Split designs whose models need different
+#' extractions. Only neighbouring models are kept together, so models keep
+#' their order and their Analysis_N numbers.
+#' @param validationDesignList A list of validationDesign objects
+#' @param downloadTasks The download tasks from createDownloadTasks
+#' @return A list of validationDesign objects that each use one download task
+#' @keywords internal
+#' @noRd
+splitDesignsByDownloadTask <- function(validationDesignList, downloadTasks) {
+  taskOfModel <- rep(seq_len(nrow(downloadTasks)), times = lengths(downloadTasks$modelRefs))
+  names(taskOfModel) <- unlist(downloadTasks$modelRefs)
+
+  result <- list()
+  for (designIndex in seq_along(validationDesignList)) {
+    design <- validationDesignList[[designIndex]]
+    modelRefs <- paste(designIndex, seq_along(design$plpModelList), sep = ":")
+    taskIds <- unname(taskOfModel[modelRefs])
+    runs <- cumsum(c(TRUE, taskIds[-1] != taskIds[-length(taskIds)]))
+    for (run in unique(runs)) {
+      splitDesign <- design
+      splitDesign$plpModelList <- design$plpModelList[runs == run]
+      splitDesign$downloadTaskId <- taskIds[runs == run][1]
+      result[[length(result) + 1]] <- splitDesign
+    }
+  }
+  return(result)
 }
 
 #' deplucateCovariateData - Remove duplicate covariate data

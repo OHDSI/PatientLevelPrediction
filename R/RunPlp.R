@@ -133,6 +133,14 @@ runPlp <- function(
   logger <- do.call(createLog, logSettings)
   ParallelLogger::registerLogger(logger)
   on.exit(closeLog(logger))
+  # the copies of the data this run makes; none is part of the result
+  ownedData <- list()
+  own <- function(covariateData) {
+    if (!is.null(covariateData)) {
+      ownedData[[length(ownedData) + 1]] <<- covariateData
+    }
+  }
+  on.exit(closeAndromedas(ownedData), add = TRUE)
   
   #check inputs + print 
   settingsValid <- tryCatch(
@@ -218,6 +226,8 @@ runPlp <- function(
     if (is.null(data)) {
       stop("data NULL after splitting")
     }
+    own(data$Train$covariateData)
+    own(data$Test$covariateData)
     
     dataSummary(data)
   } 
@@ -239,6 +249,7 @@ runPlp <- function(
     if (is.null(data$Train)) {
       stop("train data NULL after sample")
     }
+    own(data$Train$covariateData)
     dataSummary(data)
   }
   
@@ -279,6 +290,7 @@ runPlp <- function(
     if (is.null(data$Train$covariateData)) {
       stop("train data NULL after preprocessing")
     }
+    own(data$Train$covariateData)
     dataSummary(data)
   }
   
@@ -318,10 +330,12 @@ runPlp <- function(
       if ("Test" %in% names(data)) {
         predictionTest <- tryCatch(
           {
-            predictPlp(
-              plpModel = model, 
+            # the test split is this run's copy, so prediction can work on it
+            predictPlpData(
+              plpModel = model,
               plpData = data$Test,
-              population = data$Test$labels
+              population = data$Test$labels,
+              ownsData = TRUE
             )
           },
           error = function(e) {
@@ -359,13 +373,15 @@ runPlp <- function(
   if (executeSettings$runCovariateSummary) {
     
     if (!is.null(data$Test)) {
+      # oversampled train copies get new rowIds that can equal test rowIds
+      trainRowIds <- setdiff(data$Train$labels$rowId, data$Test$labels$rowId)
       strata <- data.frame(
         rowId = c(
-          data$Train$labels$rowId, 
+          trainRowIds, 
           data$Test$labels$rowId 
         ),
         strataName = c(
-          rep("Train", nrow(data$Train$labels)), 
+          rep("Train", length(trainRowIds)), 
           rep("Test", nrow(data$Test$labels))
         )
       )
@@ -396,7 +412,7 @@ runPlp <- function(
     covariateSummaryResult <- do.call(covariateSummary,   
       list(
         covariateData = plpData$covariateData,
-        cohort = population %>% dplyr::select("rowId"),
+        cohort = population %>% dplyr::select(-dplyr::any_of("outcomeCount")),
         labels = population %>% dplyr::select("rowId", "outcomeCount"), 
         strata = strata,
         variableImportance = variableImportance,

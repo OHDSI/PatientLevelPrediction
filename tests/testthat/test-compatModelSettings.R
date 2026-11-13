@@ -82,6 +82,25 @@ test_that("computeGridPerformance remains exported and works", {
   expect_true("hyperSummary" %in% names(result))
 })
 
+test_that("computeGridPerformance labels folds with their real identifiers", {
+  prediction <- data.frame(
+    rowId = 1:6,
+    outcomeCount = c(0, 1, 0, 1, 0, 1),
+    value = c(0.1, 0.9, 0.2, 0.8, 0.3, 0.7),
+    index = c(3, 3, 1, 1, 7, 7)
+  )
+  foldScore <- function(prediction) max(prediction$index) / 10
+  result <- computeGridPerformance(
+    prediction,
+    list(hyperParam1 = 5),
+    performanceFunct = foldScore
+  )
+
+  folds <- result$hyperSummary[result$hyperSummary$fold != "CV", ]
+  expect_equal(folds$fold, c("3", "1", "7"))
+  expect_equal(folds$value, c(0.3, 0.1, 0.7))
+})
+
 test_that("computeGridPerformance resolves metric name in PatientLevelPrediction namespace", {
   prediction <- data.frame(
     rowId = 1:4,
@@ -245,7 +264,7 @@ test_that("tuneHyperparameters defaults tuning metric when missing", {
 
 test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClassifier", {
   skip_if_not_installed("Eunomia")
-  skip_if_offline()
+  skip_if_no_eunomia()
   skip_on_cran()
 
   dummyTrain <- function(dataMatrix, labels, hyperParameters, settings) {
@@ -254,8 +273,11 @@ test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClass
   dummyPredict <- function(plpModel, data, cohort) {
     prediction <- cohort
     prediction$value <- rep(0.5, nrow(cohort))
-    if (is.null(prediction$originalRowId)) {
-      prediction$originalRowId <- prediction$rowId
+    # like the package's classifiers, return the original rowIds that
+    # toSparseM() keeps in originalRowId
+    if (!is.null(prediction$originalRowId)) {
+      prediction$rowId <- prediction$originalRowId
+      prediction$originalRowId <- NULL
     }
     prediction
   }
@@ -299,8 +321,9 @@ test_that("fitPlp ignores legacy fitFunction entries and still fits via fitClass
 })
 
 test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitRclassifier modelSettings", {
-  skip_if_not_installed(c("Eunomia", "xgboost"))
-  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  skip_if_not_installed("xgboost")
+  skip_if_no_eunomia()
   skip_on_cran()
 
   paramGrid <- list(
@@ -363,8 +386,9 @@ test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitRclassi
 })
 
 test_that("fitPlp works after ParallelLogger JSON roundtrip of legacy fitSklearn modelSettings", {
-  skip_if_not_installed(c("Eunomia", "reticulate"))
-  skip_if_offline()
+  skip_if_not_installed("Eunomia")
+  skip_if_not_installed("reticulate")
+  skip_if_no_eunomia()
   skip_on_cran()
 
   paramGrid <- list(

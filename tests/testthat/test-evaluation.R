@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 test_that("evaluatePlp", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   eval <- evaluatePlp(
     prediction = plpResult$prediction,
     typeColumn = "evaluationType"
@@ -43,7 +43,7 @@ test_that("evaluatePlp uses All when type column is absent", {
 })
 
 test_that("modelBasedConcordance", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   concordance <- PatientLevelPrediction::modelBasedConcordance(prediction = plpResult$prediction)
   expect_type(concordance, "double")
 })
@@ -117,6 +117,72 @@ test_that("Brierscore", {
   brierScoring <- scoring::brierscore(outcomeCount ~ value, data = ePrediction, group = "dummy")$brieravg
   brierPlp <- brierScore(ePrediction)$brier
   expect_equal(as.double(brierScoring), (brierPlp))
+})
+
+test_that("scaled Brier score uses observed prevalence", {
+  prediction <- data.frame(
+    value = rep(c(0.19, 0.21), each = 10),
+    outcomeCount = rep(c(1, rep(0, 9)), 2)
+  )
+  # by hand: reference loss 0.1*0.9 = 0.09, model loss
+  # ((1-.19)^2 + 9*.19^2 + (1-.21)^2 + 9*.21^2)/20 = 0.1001
+  result <- brierScore(prediction)
+  expect_equal(result$brier, 0.1001)
+  expect_equal(result$brierScaled, 1 - 0.1001 / 0.09)
+  expect_lt(result$brierScaled, 0)
+
+  # predicting prevalence gives zero skill
+  calibrated <- data.frame(value = rep(0.1, 20), outcomeCount = prediction$outcomeCount)
+  expect_equal(brierScore(calibrated)$brierScaled, 0)
+  # perfect separation gives skill of one
+  perfect <- data.frame(value = c(0, 0, 1, 1), outcomeCount = c(0, 0, 1, 1))
+  expect_equal(brierScore(perfect)$brierScaled, 1)
+  # counts above one are still one outcome per person in the reference
+  counted <- data.frame(value = c(0.5, 0.5), outcomeCount = c(0, 2))
+  expect_equal(brierScore(counted)$brierScaled, 1 - brierScore(counted)$brier / 0.25)
+
+  # one class only: there is no reference loss to scale by
+  noEvents <- data.frame(value = c(0.1, 0.2), outcomeCount = c(0, 0))
+  allEvents <- data.frame(value = c(0.1, 0.2), outcomeCount = c(1, 1))
+  expect_true(is.na(brierScore(noEvents)$brierScaled))
+  expect_true(is.na(brierScore(allEvents)$brierScaled))
+})
+
+test_that("evaluation statistics report the observed-prevalence scaled Brier score", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = rep(c(0.19, 0.21), each = 10),
+    outcomeCount = rep(c(1, rep(0, 9)), 2),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  scaled <- as.numeric(stats$value[stats$metric == "brier score scaled"])
+  expect_equal(scaled, 1 - 0.1001 / 0.09)
+})
+
+test_that("Average precision evaluates tied scores together", {
+  prediction <- data.frame(value = c(0.8, 0.8, 0.2), outcomeCount = c(1, 0, 1))
+  swapped <- prediction[c(2, 1, 3), ]
+  # by hand: 0.8 -> TP 1, selected 2; 0.2 -> TP 2, selected 3
+  # AP = (1/2)*(1/2) + (1/2)*(2/3) = 7/12
+  expect_equal(averagePrecision(prediction), 7 / 12)
+  expect_equal(averagePrecision(swapped), 7 / 12)
+
+  # a larger tie: .9 -> TP 1/1; .5 -> TP 3/4; .1 adds no recall
+  # AP = (1/3)*1 + (2/3)*(3/4) = 5/6
+  larger <- data.frame(
+    value = c(0.9, 0.5, 0.5, 0.5, 0.1),
+    outcomeCount = c(1, 1, 0, 1, 0)
+  )
+  expect_equal(averagePrecision(larger), 5 / 6)
+  expect_equal(averagePrecision(larger[c(3, 5, 2, 1, 4), ]), 5 / 6)
+})
+
+test_that("Average precision is unchanged for untied scores", {
+  prediction <- data.frame(value = c(0.9, 0.8, 0.2), outcomeCount = c(1, 0, 1))
+  # by hand: 1/2 * (1/1 + 2/3) = 5/6
+  expect_equal(averagePrecision(prediction), 5 / 6)
 })
 
 test_that("Average precision", {
@@ -197,6 +263,95 @@ test_that("Calibration metrics", {
     hsExist2$p.value)
 })
 
+test_that("Hosmer-Lemeshow df counts occupied groups", {
+  prediction <- data.frame(
+    rowId = 1:300,
+    value = rep(c(0.1, 0.2, 0.3), each = 100),
+    outcomeCount = c(rep(1, 15), rep(0, 85), rep(1, 20), rep(0, 80), rep(1, 25), rep(0, 75))
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  # by hand across the three occupied groups, df = 3 - 2 = 1
+  handChi <- ((15 - 10)^2 / 10 + (85 - 90)^2 / 90) +
+    ((20 - 20)^2 / 20 + (80 - 80)^2 / 80) +
+    ((25 - 30)^2 / 30 + (75 - 70)^2 / 70)
+  expect_equal(result$Xsquared, handChi)
+  expect_equal(result$df, 1)
+  expect_equal(result$pvalue, stats::pchisq(handChi, df = 1, lower.tail = FALSE))
+})
+
+test_that("Hosmer-Lemeshow is unavailable with too few occupied groups", {
+  prediction <- data.frame(
+    rowId = 1:100,
+    value = rep(c(0.2, 0.3), each = 50),
+    outcomeCount = c(rep(1, 10), rep(0, 40), rep(1, 15), rep(0, 35))
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  expect_true(is.finite(result$Xsquared))
+  expect_true(is.na(result$df))
+  expect_true(is.na(result$pvalue))
+})
+
+test_that("Hosmer-Lemeshow df is unchanged when all requested strata are occupied", {
+  withr::local_seed(42)
+  prediction <- data.frame(
+    rowId = 1:200,
+    value = stats::runif(200, 0.05, 0.95),
+    outcomeCount = stats::rbinom(200, 1, 0.3)
+  )
+  result <- calibrationLine(prediction, numberOfStrata = 10)$hosmerlemeshow
+  expect_equal(result$df, 8)
+  expect_equal(result$pvalue, stats::pchisq(result$Xsquared, df = 8, lower.tail = FALSE))
+})
+
+test_that("calibration errors include predictions of exactly 0 and 1", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = rep(c(0, 1), each = 10),
+    outcomeCount = rep(c(1, 0), each = 10),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  values <- as.numeric(stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)])
+  # by hand: every observed risk is 1 - p, so every absolute calibration error is 1
+  expect_equal(values, c(1, 1, 1))
+})
+
+test_that("calibration errors match endpoints-included values for mixed predictions", {
+  prediction <- data.frame(
+    rowId = 1:6,
+    value = c(0, 0.2, 0.4, 0.6, 0.8, 1),
+    outcomeCount = c(0, 0, 0, 1, 1, 1),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  values <- as.numeric(stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)])
+  # LOWESS (iter = 0) over all six points, and over only the interior four
+  fit <- stats::lowess(prediction$value, prediction$outcomeCount, iter = 0)
+  distance <- abs(prediction$value - stats::approx(fit, xout = prediction$value, ties = mean)$y)
+  expect_equal(values, c(mean(distance), unname(stats::quantile(distance, 0.9)), max(distance)))
+  interior <- prediction[prediction$value > 0 & prediction$value < 1, ]
+  excludedFit <- stats::lowess(interior$value, interior$outcomeCount, iter = 0)
+  excludedDistance <- abs(interior$value - stats::approx(excludedFit, xout = interior$value, ties = mean)$y)
+  expect_false(isTRUE(all.equal(values[1], mean(excludedDistance))))
+})
+
+test_that("calibration errors are NA rather than zero when they cannot be estimated", {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = 0.5,
+    outcomeCount = c(rep(1, 10), rep(0, 10)),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "binary")
+  stats <- suppressWarnings(
+    getEvaluationStatistics(prediction, "binary", typeColumn = "evaluation")
+  )
+  values <- stats$value[match(c("Eavg", "E90", "Emax"), stats$metric)]
+  expect_true(all(is.na(values)))
+})
+
 test_that("E statistics binary", {
   prediction <- data.frame(
     value = c(seq(.1, .5, length.out = 5), NA, .2),
@@ -213,3 +368,63 @@ test_that("E statistics binary", {
 # test computePreferenceScore(prediction)
 
 #############################################################################
+
+survivalStatisticsFixture <- function() {
+  prediction <- data.frame(
+    rowId = 1:20,
+    value = seq(0.05, 0.6, length.out = 20),
+    outcomeCount = rep(c(0, 1), 10),
+    survivalTime = seq(30, 600, by = 30),
+    evaluation = "Test"
+  )
+  attr(prediction, "metaData") <- list(modelType = "survival")
+  prediction
+}
+
+survivalStatistic <- function(stats, metric) {
+  stats$value[stats$metric == metric]
+}
+
+test_that("survival statistics are NA rather than placeholders when they cannot be estimated", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
+  prediction <- survivalStatisticsFixture()
+
+  stats <- suppressWarnings(with_mocked_bindings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365),
+    concordance = function(...) stop("concordance failed"),
+    .package = "survival"
+  ))
+  for (metric in c("C-statistic", "C-statistic lower 95% CI", "C-statistic upper 95% CI")) {
+    expect_true(is.na(survivalStatistic(stats, metric)), info = metric)
+  }
+
+  stats <- suppressWarnings(with_mocked_bindings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365),
+    hare = function(...) stop("hare failed"),
+    .package = "polspline"
+  ))
+  expect_true(is.na(survivalStatistic(stats, "E-statistic")))
+  expect_true(is.na(survivalStatistic(stats, "E-statistic 90%")))
+  # the other statistics are still estimated
+  expect_false(is.na(survivalStatistic(stats, "C-statistic")))
+})
+
+test_that("survival risk is NA, in a well-formed row, past the last follow-up", {
+  skip_if_not_installed("survival")
+  skip_if_not_installed("polspline")
+  prediction <- survivalStatisticsFixture()
+  stats <- suppressWarnings(
+    getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 1000)
+  )
+  survivalRow <- stats[stats$metric == "Survival", ]
+  expect_equal(nrow(survivalRow), 1)
+  expect_equal(survivalRow$evaluation, "Test")
+  expect_equal(as.numeric(survivalRow$timepoint), 1000)
+  expect_true(is.na(survivalRow$value))
+
+  # within follow-up the Kaplan-Meier risk is reported as before
+  within <- getEvaluationStatistics_survival(prediction, evalColumn = "evaluation", timepoint = 365)
+  km <- summary(survival::survfit(survival::Surv(prediction$survivalTime, prediction$outcomeCount) ~ 1), times = 365)
+  expect_equal(as.numeric(survivalStatistic(within, "Survival")), 1 - km$surv)
+})

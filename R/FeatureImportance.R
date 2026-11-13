@@ -89,8 +89,10 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
         settings = plpResult$model$preprocessing$featureEngineering
       )
     )
+    featureEngineering <- TRUE
   } else {
     ParallelLogger::logInfo("No FE in model")
+    featureEngineering <- FALSE
   }
 
   if (!is.null(plpResult$model$preprocessing$tidyCovariates)) {
@@ -100,16 +102,24 @@ pfi <- function(plpResult, population, plpData, repeats = 1,
       applyTidyCovariateData,
       list(
         covariateData = plpData$covariateData,
-        preprocessSettings = plpResult$model$preprocessing$tidyCovariates
+        preprocessSettings = plpResult$model$preprocessing$tidyCovariates,
+        # after feature engineering the data is already a private copy
+        inPlace = featureEngineering
       )
     )
+    tidyCovariates <- TRUE
   } else {
     ParallelLogger::logInfo("No data tidying done in model")
+    tidyCovariates <- FALSE
+  }
+  # feature engineering and tidying worked on copies, which are not returned
+  if (featureEngineering || tidyCovariates) {
+    on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
   }
 
   # apply prediction function
   pred <- do.call(
-    attr(plpResult$model, "predictionFunction"),
+    getPredictionFunction(plpResult$model),
     list(
       plpModel = plpResult$model,
       data = plpData,
@@ -194,11 +204,13 @@ permutePerf <- function(settings) {
       ParallelLogger::logInfo(paste0("plpData NULL for covariate: ", settings$covariateId))
       return(0)
     }
+    # each permutation loads its own copy of the data
+    on.exit(closeAndromedas(list(plpData$covariateData)), add = TRUE)
     ParallelLogger::logInfo(paste0("Calculating prediction for permutation of covariate: ", settings$covariateId))
 
     # need to stop preprocessing and do it once...
     pred <- do.call(
-      attr(settings$plpModel, "predictionFunction"),
+      getPredictionFunction(settings$plpModel),
       list(
         plpModel = settings$plpModel,
         data = plpData,
@@ -224,57 +236,53 @@ permute <- function(plpDataLocation, cId, population) {
 
   # if analysis id is not 3 (age group), 4 (race) or 5 (ethnicity)
   if (!aId$analysisId %in% c(3, 4, 5)) {
-    # select covariateId data
+    # select covariateId data of the evaluated population only
     coi <- plpData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId == !!cId) %>%
       dplyr::collect()
-    nSamp <- length(coi$rowId)
+    coi <- coi[coi$rowId %in% population$rowId, ]
 
     # find a new random selection of people and give them the covariate and value
-    newPlp <- sample(population$rowId, nSamp)
-    newData <- dplyr::as_tibble(cbind(rowId = newPlp, coi[, -1]))
+    newData <- dplyr::mutate(coi, rowId = sample(population$rowId, nrow(coi)))
 
     # swap old covariate data with new
     plpData$covariateData$covariates <- plpData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId != !!cId) %>%
       dplyr::collect()
-    Andromeda::appendToTable(plpData$covariateData$covariates, newData)
+    if (nrow(newData) > 0) {
+      Andromeda::appendToTable(plpData$covariateData$covariates, newData)
+    }
   } else {
-    # do some code for the connected variables... with more than 2 options
-
-    # get the ppl with covariates
-    haveCidData <- plpData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId == !!cId) %>%
-      dplyr::collect()
-    nSamp <- length(haveCidData$rowId)
-
-    # sample the pop to replace
-    swapPlp <- sample(population$rowId, nSamp)
-    haveCidDataSwapped <- dplyr::as_tibble(cbind(rowId = swapPlp, haveCidData[, -1]))
-
-    # find the swapped people to switch
+    # one-hot features of one analysis: move whole categories between persons so that
+    # everyone keeps at most one and predictors outside the analysis stay in place.
     connectedCovs <- plpData$covariateData$covariateRef %>%
       dplyr::filter(.data$analysisId == !!aId$analysisId) %>%
       dplyr::group_by(.data$covariateId) %>%
       dplyr::select("covariateId") %>%
       dplyr::collect()
-    plpToSwap <- plpData$covariateData$covariates %>%
+    block <- plpData$covariateData$covariates %>%
       dplyr::filter(.data$covariateId %in% !!connectedCovs$covariateId) %>%
-      dplyr::filter(.data$rowId %in% swapPlp) %>%
       dplyr::collect()
+    block <- block[block$rowId %in% population$rowId, ]
 
-    swappedForCid <- dplyr::as_tibble(cbind(rowId = haveCidData$rowId[1:nrow(plpToSwap)], plpToSwap[, -1]))
+    # newHolders get covariate cId; holders who keep it stay as they are.
+    holders <- unique(block$rowId[block$covariateId == cId])
+    newHolders <- sample(population$rowId, length(holders))
+    gainers <- setdiff(newHolders, holders)
+    losers <- setdiff(holders, newHolders)
+    swapIds <- c(gainers, losers)
 
+    if (length(swapIds) > 0) {
+      swapped <- block[block$rowId %in% swapIds, ]
+      swapped$rowId <- c(losers, gainers)[match(swapped$rowId, swapIds)]
 
-    # swap old covariate data with new
-    plpData$covariateData$covariates <- plpData$covariateData$covariates %>%
-      dplyr::filter(.data$covariateId != !!cId) %>%
-      dplyr::filter(!.data$rowId %in% !!swapPlp) %>%
-      dplyr::collect()
-    Andromeda::appendToTable(
-      plpData$covariateData$covariates,
-      rbind(haveCidDataSwapped, swappedForCid)
-    )
+      # swap old covariate data with new
+      covariates <- plpData$covariateData$covariates %>%
+        dplyr::collect()
+      plpData$covariateData$covariates <-
+        covariates[!(covariates$covariateId %in% connectedCovs$covariateId & covariates$rowId %in% swapIds), ]
+      Andromeda::appendToTable(plpData$covariateData$covariates, swapped)
+    }
   }
 
   return(plpData)

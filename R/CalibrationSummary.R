@@ -171,7 +171,7 @@ getCalibrationSummary_survival <- function(
     evalColumn,
     numberOfStrata = 10,
     truncateFraction = 0.01,
-    timepoint,
+    timepoint = NULL,
     ...) {
   rlang::check_installed(
     pkg = c("survival"),
@@ -187,7 +187,6 @@ getCalibrationSummary_survival <- function(
     t <- predictionOfInterest$survivalTime
     y <- ifelse(predictionOfInterest$outcomeCount > 0, 1, 0)
 
-    S <- survival::Surv(t, y)
     if (length(unique(predictionOfInterest$value)) <= numberOfStrata) {
       gval <- 10
     } else {
@@ -195,6 +194,8 @@ getCalibrationSummary_survival <- function(
     }
     groups <- cut2(predictionOfInterest$value, g = gval)
     n.groups <- length(levels(groups))
+    # labels are rounded and can repeat, so bins are selected by their integer code
+    groupIds <- as.integer(groups)
     pred <- tapply(predictionOfInterest$value, groups, mean)
     sizesN <- tapply(predictionOfInterest$value, groups, length)
     obs.q <- NULL
@@ -202,22 +203,12 @@ getCalibrationSummary_survival <- function(
     obs.upper.q <- NULL
     avPred <- NULL
     for (q in 1:n.groups) {
-      KM <- tryCatch(
-        {
-          survival::survfit(S ~ 1, sub = groups == levels(groups)[q])
-        },
-        error = function(e) {
-          ParallelLogger::logError(e)
-          return(list(
-            surv = 0,
-            upper = 0,
-            lower = 0
-          ))
-        }
-      )
-      obs.q <- c(obs.q, max(1 - KM$surv)) # maximum OK because of prediction_horizon
-      obs.lower.q <- c(obs.lower.q, obs.lower <- max(1 - KM$upper))
-      obs.upper.q <- c(obs.upper.q, obs.upper <- max(1 - KM$lower))
+      inGroup <- groupIds == q
+      horizon <- if (is.null(timepoint)) max(t[inGroup], na.rm = TRUE) else timepoint
+      km <- kmIncidenceAtTimepoint(t[inGroup], y[inGroup], horizon)
+      obs.q <- c(obs.q, km$incidence)
+      obs.lower.q <- c(obs.lower.q, km$lower)
+      obs.upper.q <- c(obs.upper.q, km$upper)
     }
 
     midpoints <- function(x, dp = 6) {

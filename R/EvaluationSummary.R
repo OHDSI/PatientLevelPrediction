@@ -84,17 +84,18 @@ getEvaluationStatistics_binary <- function(prediction, evalColumn, ...) {
     ParallelLogger::logInfo(sprintf("%-20s%.2f", "Brier: ", brier$brier))
 
 
-    # using rms::val.prob
-    indValProb <- predictionOfInterest$value > 0 & predictionOfInterest$value < 1
     valProb <- tryCatch(
-      calculateEStatisticsBinary(prediction = predictionOfInterest[indValProb, ]),
+      calculateEStatisticsBinary(prediction = predictionOfInterest),
       error = function(e) {
-        ParallelLogger::logInfo(e)
+        ParallelLogger::logWarn(paste0(
+          "Calibration error statistics could not be estimated for ",
+          evalType, ": ", conditionMessage(e)
+        ))
         return(
           c(
-            Eavg = 0,
-            E90 = 0,
-            Emax = 0
+            Eavg = NA_real_,
+            E90 = NA_real_,
+            Emax = NA_real_
           )
         )
       }
@@ -210,11 +211,14 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         summary(survival::survfit(survival::Surv(t, y) ~ 1), times = timepoint)
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "Kaplan-Meier risk could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
-    survVal <- 1 - out$surv
+    # summary() returns no row when the timepoint is past the last follow-up
+    survVal <- if (length(out$surv) == 1) 1 - out$surv else NA_real_
     meanSurvivalTime <- mean(t)
 
     result <- rbind(
@@ -231,13 +235,16 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         survival::concordance(S ~ p, reverse = TRUE)
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "C-statistic could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
-    cStatistic <- 0
-    cStatistic_l95CI <- 0
-    cStatistic_u95CI <- 0
+    # NA rather than a number when estimation fails, as 0 would read as reversed discrimination
+    cStatistic <- NA_real_
+    cStatistic_l95CI <- NA_real_
+    cStatistic_u95CI <- NA_real_
 
     if (!is.null(conc)) {
       cStatistic <- round(conc$concordance, 5)
@@ -286,12 +293,14 @@ getEvaluationStatistics_survival <- function(prediction, evalColumn, timepoint, 
         )
       },
       error = function(e) {
-        ParallelLogger::logError(e)
+        ParallelLogger::logWarn(paste0(
+          "E-statistics could not be estimated for ", evalType, ": ", conditionMessage(e)
+        ))
         return(NULL)
       }
     )
 
-    eStatistic <- eStatistic90 <- -1
+    eStatistic <- eStatistic90 <- NA_real_
     if (!is.null(w)) {
       eStatistic <- mean(abs(w$actual - w$estimatedSurvival))
       eStatistic90 <- stats::quantile(abs(w$actual - w$estimatedSurvival),
@@ -446,7 +455,9 @@ aucWithoutCi <- function(prediction, truth) {
 #' @export
 brierScore <- function(prediction) {
   brier <- sum((prediction$outcomeCount - prediction$value)^2) / nrow(prediction)
-  brierMax <- mean(prediction$value) * (1 - mean(prediction$value))
+  # the reference is the prevalence-only predictor, so it uses observed prevalence
+  prevalence <- mean(prediction$outcomeCount > 0)
+  brierMax <- prevalence * (1 - prevalence)
   brierScaled <- ifelse(is.finite(brierMax) && brierMax > 0, 1 - brier / brierMax, NA_real_)
   return(list(brier = brier, brierScaled = brierScaled))
 }
@@ -502,8 +513,15 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
   nhoslem <- merge(obs.count2, expected.count2, by = "group")
   Xsquared <- sum((hoslem$observed - hoslem$expected)^2 / hoslem$expected) +
     sum((nhoslem$observed - nhoslem$expected)^2 / nhoslem$expected)
-  pvalue <- stats::pchisq(Xsquared, df = numberOfStrata - 2, lower.tail = FALSE)
-  hosmerlemeshow <- data.frame(Xsquared = Xsquared, df = numberOfStrata - 2, pvalue = pvalue)
+  # ties can collapse strata, so df comes from the groups actually occupied
+  df <- nrow(hoslem) - 2
+  if (df < 1) {
+    df <- NA_real_
+    pvalue <- NA_real_
+  } else {
+    pvalue <- stats::pchisq(Xsquared, df = df, lower.tail = FALSE)
+  }
+  hosmerlemeshow <- data.frame(Xsquared = Xsquared, df = df, pvalue = pvalue)
 
   # linear model fitting obs to pred:
   lmData <- merge(obs.Points, pred.Points, by = "group")
@@ -538,16 +556,17 @@ calibrationLine <- function(prediction, numberOfStrata = 10) {
 #' averagePrecision(prediction)
 #' @export
 averagePrecision <- function(prediction) {
-  lab.order <- prediction$outcomeCount[order(-prediction$value)]
-  n <- nrow(prediction)
   P <- sum(prediction$outcomeCount > 0)
   if (P == 0) {
     ParallelLogger::logWarn("Cannot compute Average Precision: outcomeCount has no positive class")
     return(NA_real_)
   }
-  val <- rep(0, n)
-  val[lab.order > 0] <- 1:P
-  return(sum(val / (1:n)) / P)
+  ordering <- order(-prediction$value)
+  # tied scores share one threshold, so precision is taken at the last row of each tie
+  lastOfTie <- !duplicated(prediction$value[ordering], fromLast = TRUE)
+  truePositives <- cumsum(prediction$outcomeCount[ordering] > 0)[lastOfTie]
+  selected <- which(lastOfTie)
+  return(sum(diff(c(0, truePositives)) / P * truePositives / selected))
 }
 
 

@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 makeTransferFixture <- function(nfold = 3) {
-  set.seed(43)
+  withr::local_seed(43)
   n <- 300L
   x <- cbind(rbinom(n, 1, 0.4), rbinom(n, 1, 0.6))
   y <- rbinom(n, 1, plogis(-1 + x[, 1] - 2 * x[, 2]))
-  covariateData <- Andromeda::andromeda(
+  covariateData <- makeCovariateData(
     covariates = data.frame(
       rowId = rep(seq_len(n), 2),
       covariateId = rep(c(10, 20), each = n),
@@ -30,28 +30,19 @@ makeTransferFixture <- function(nfold = 3) {
     ),
     analysisRef = data.frame(
       analysisId = 1L, analysisName = "test", domainId = "Condition", isBinary = "Y"
-    )
+    ),
+    metaData = list(populationSize = n)
   )
-  class(covariateData) <- "CovariateData"
-  attr(covariateData, "metaData") <- list(populationSize = n)
   labels <- data.frame(
     rowId = seq_len(n), subjectId = seq_len(n), outcomeCount = y,
     survivalTime = 365, cohortStartDate = as.Date("2000-01-01"),
     daysToCohortEnd = 365, daysToObsEnd = 365, ageYear = 40, gender = 1
   )
-  train <- list(
+  makePlpData(
     covariateData = covariateData, labels = labels,
-    folds = data.frame(rowId = seq_len(n), index = rep(seq_len(nfold), length.out = n))
+    folds = data.frame(rowId = seq_len(n), index = rep(seq_len(nfold), length.out = n)),
+    metaData = syntheticTrainMetaData()
   )
-  class(train) <- "plpData"
-  attr(train, "metaData") <- list(
-    targetId = 1L, outcomeId = 2L,
-    populationSettings = createStudyPopulationSettings(),
-    covariateSettings = FeatureExtraction::createCovariateSettings(useDemographicsAge = TRUE),
-    splitSettings = createDefaultSplitSetting(splitSeed = 42),
-    cdmDatabaseId = "synthetic", cdmDatabaseName = "synthetic"
-  )
-  train
 }
 
 test_that("transfer coefficients match IDs without mutating caller data", {
@@ -129,6 +120,11 @@ test_that("a single training fold uses the supplied variance without CV predicti
   expect_identical(unique(fit$prediction$evaluationType), "Train")
   expect_equal(nrow(fit$trainDetails$hyperParamSearch), 0)
 
+  # the variance is used in the fit, not only stored: a wide prior moves the
+  # coefficients away from the source (a narrow one keeps them, see the first test)
+  wide <- setLassoLogisticRegression(priorCoefs = source, variance = 1, threads = 1, seed = 42)
+  coefs <- fitCyclopsModel(train, wide, analysisId = "test")$model$coefficients
+  expect_gt(max(abs(coefs$betas[match(c("10", "20"), coefs$covariateIds)] - source$betas)), 0.01)
 })
 
 test_that("native CV transfer fits preserve caller data and source predictions", {
@@ -201,7 +197,7 @@ test_that("CV predictions are invariant to label and fold row order", {
       threads = 1, seed = 42
     )
     fit <- fitCyclopsModel(train, settings, analysisId = "test")
-    set.seed(123)
+    withr::local_seed(123)
     shuffledTrain <- train
     shuffledTrain$labels <- train$labels[sample(nrow(train$labels)), ]
     shuffledTrain$folds <- train$folds[sample(nrow(train$folds)), ]
@@ -271,7 +267,32 @@ test_that("ridge transfer also matches source coefficients by ID", {
   expect_false(30 %in% fit$covariateImportance$covariateId)
 })
 
+test_that("transfer covariate IDs normalize the same whatever their format", {
+  expected <- c("1000000000", "2000000000", "3000000000")
+  for (scipen in c(0, 999)) {
+    withr::with_options(list(scipen = scipen), {
+      expect_equal(normalizeTransferCovariateIds(c(1e9, 2e9, 3e9)), expected)
+      expect_equal(normalizeTransferCovariateIds(c("1000000000", "2e+09", "3e9")), expected)
+      expect_equal(normalizeTransferCovariateIds(c("+01000000000", "2000000000", "3000000000")), expected)
+    })
+  }
+  numericMap <- createTransferMap(
+    priorCoefs = data.frame(covariateIds = c(1e9, 2e9, 3e9), betas = c(1, -2, 0.7)),
+    covariateIds = c(1e9, 2e9),
+    excludeCovariateIds = 3e9
+  )
+  textMap <- createTransferMap(
+    priorCoefs = data.frame(covariateIds = c("1000000000", "2e+09", "3000000000"), betas = c(1, -2, 0.7)),
+    covariateIds = c(1e9, 2e9),
+    excludeCovariateIds = "3e+09"
+  )
+  expect_equal(textMap, numericMap)
+  expect_equal(numericMap$covariateIds, expected[1:2])
+})
+
 test_that("transfer predictions do not depend on covariate ID formatting", {
+  # three folds: the cross-validation path maps IDs for every fold as well as
+  # for the final fit, so it covers the single-fold path too
   train <- makeTransferFixture()
   on.exit(Andromeda::close(train$covariateData))
   covariates <- dplyr::collect(train$covariateData$covariates)
@@ -282,34 +303,19 @@ test_that("transfer predictions do not depend on covariate ID formatting", {
   train$covariateData$covariateRef <- covariateRef
   source <- data.frame(covariateIds = c(1e9, 2e9, 3e9), betas = c(1, -2, 0.7))
   ids <- c("1000000000", "2000000000", "3000000000")
-  for (nfold in c(1, 3)) {
-    train$folds$index <- rep(seq_len(nfold), length.out = nrow(train$labels))
-    for (variance in c(0.001, 1)) {
-      settings <- setLassoLogisticRegression(
-        priorCoefs = source, includeCovariateIds = source$covariateIds,
-        variance = variance,
-        threads = 1, seed = 42
-      )
-      reference <- fitCyclopsModel(train, settings, analysisId = "test")
-      settings$param$priorCoefs$covariateIds <- c(ids[1], "2e+09", ids[3])
-      fit <- fitCyclopsModel(train, settings, analysisId = "test")
-      expect_equal(fit$prediction, reference$prediction, tolerance = 1e-8)
-      expect_equal(fit$model$coefficients, reference$model$coefficients, tolerance = 1e-8)
-      coefs <- fit$model$coefficients
-      expect_setequal(coefs$covariateIds, c("(Intercept)", ids[1:2]))
-      expect_equal(nrow(coefs), 3)
-      expect_false(ids[3] %in% coefs$covariateIds)
-      # A single training fold fits the supplied variance without tuning.
-      if (nfold == 1) {
-        expect_equal(fit$model$priorVariance, variance)
-        if (variance == 0.001) {
-          expect_equal(coefs$betas[match(ids[1:2], coefs$covariateIds)], source$betas[1:2])
-        } else {
-          expect_gt(max(abs(coefs$betas[match(ids[1:2], coefs$covariateIds)] - source$betas[1:2])), 0.01)
-        }
-      }
-    }
-  }
+  settings <- setLassoLogisticRegression(
+    priorCoefs = source, includeCovariateIds = source$covariateIds,
+    variance = 1, threads = 1, seed = 42
+  )
+  reference <- fitCyclopsModel(train, settings, analysisId = "test")
+  settings$param$priorCoefs$covariateIds <- c(ids[1], "2e+09", ids[3])
+  fit <- fitCyclopsModel(train, settings, analysisId = "test")
+  expect_equal(fit$prediction, reference$prediction, tolerance = 1e-8)
+  expect_equal(fit$model$coefficients, reference$model$coefficients, tolerance = 1e-8)
+  coefs <- fit$model$coefficients
+  expect_setequal(coefs$covariateIds, c("(Intercept)", ids[1:2]))
+  expect_equal(nrow(coefs), 3)
+  expect_false(ids[3] %in% coefs$covariateIds)
 
   settings$param$includeCovariateIds <- c(1e9, 3e9)
   included <- fitCyclopsModel(train, settings, analysisId = "test")
@@ -355,47 +361,56 @@ test_that("transfer ID validation detects aliases without rounding large IDs", {
   )
 })
 
+test_that("Cyclops coefficient names keep large covariate IDs apart under any scipen", {
+  # distinct doubles whose formatted names can be the same
+  ids <- c(10000000000000000, 10000000000000002)
+  outcomes <- data.frame(rowId = 1:4, y = c(0, 1, 0, 1))
+  covariates <- data.frame(rowId = 1:4, covariateId = rep(ids, 2), covariateValue = 1)
+  for (scipen in c(0, 999)) {
+    coefficientNames <- withr::with_options(list(scipen = scipen), {
+      cyclopsData <- Cyclops::convertToCyclopsData(
+        outcomes, covariates, modelType = "lr", addIntercept = TRUE, quiet = TRUE
+      )
+      getCyclopsCoefficientNames(cyclopsData)
+    })
+    expect_equal(
+      coefficientNames, c("(Intercept)", "10000000000000000", "10000000000000002"),
+      info = paste("scipen:", scipen)
+    )
+  }
+})
+
 test_that("large transfer covariate IDs survive Cyclops coefficient formatting", {
+  # three folds, as in the test above; ridge matches IDs the same way as lasso
   train <- makeTransferFixture()
   on.exit(Andromeda::close(train$covariateData))
   covariates <- dplyr::collect(train$covariateData$covariates)
   covariateRef <- dplyr::collect(train$covariateData$covariateRef)
-  # These distinct numeric IDs can have identical formatted coefficient names.
   ids <- c("10000000000000000", "10000000000000002")
-  largeCovariates <- covariates
-  largeCovariates$covariateId <- as.numeric(ids)[match(covariates$covariateId, c(10, 20))]
-  largeCovariateRef <- covariateRef
-  largeCovariateRef$covariateId <- as.numeric(ids)
+  settings <- setLassoLogisticRegression(
+    priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
+    variance = 1, threads = 1, seed = 42
+  )
+  reference <- fitCyclopsModel(train, settings, analysisId = "test")
 
-  for (constructor in list(setLassoLogisticRegression, setRidgeRegression)) {
-    for (nfold in c(1, 3)) {
-      train$folds$index <- rep(seq_len(nfold), length.out = nrow(train$labels))
-      train$covariateData$covariates <- covariates
-      train$covariateData$covariateRef <- covariateRef
-      settings <- constructor(
-        priorCoefs = data.frame(covariateIds = c("10", "20"), betas = c(1, -2)),
-        variance = 1, threads = 1, seed = 42
-      )
-      reference <- fitCyclopsModel(train, settings, analysisId = "test")
-
-      train$covariateData$covariates <- largeCovariates
-      train$covariateData$covariateRef <- largeCovariateRef
-      settings$param$priorCoefs$covariateIds <- ids
-      scientific <- withr::with_options(
-        list(scipen = 0), fitCyclopsModel(train, settings, analysisId = "test")
-      )
-      decimal <- withr::with_options(
-        list(scipen = 999), fitCyclopsModel(train, settings, analysisId = "test")
-      )
-      expect_equal(scientific$prediction, reference$prediction, tolerance = 1e-8)
-      expect_equal(scientific$prediction, decimal$prediction, tolerance = 1e-8)
-      expect_equal(scientific$model$coefficients, decimal$model$coefficients, tolerance = 1e-8)
-      expect_setequal(scientific$model$coefficients$covariateIds, c("(Intercept)", ids))
-      expect_equal(nrow(scientific$model$coefficients), 3)
-      expect_equal(
-        scientific$model$coefficients$betas, reference$model$coefficients$betas,
-        tolerance = 1e-8
-      )
-    }
-  }
+  covariates$covariateId <- as.numeric(ids)[match(covariates$covariateId, c(10, 20))]
+  covariateRef$covariateId <- as.numeric(ids)
+  train$covariateData$covariates <- covariates
+  train$covariateData$covariateRef <- covariateRef
+  settings$param$priorCoefs$covariateIds <- ids
+  scientific <- withr::with_options(
+    list(scipen = 0), fitCyclopsModel(train, settings, analysisId = "test")
+  )
+  decimal <- withr::with_options(
+    list(scipen = 999), fitCyclopsModel(train, settings, analysisId = "test")
+  )
+  expect_equal(scientific$prediction, reference$prediction, tolerance = 1e-8)
+  expect_equal(scientific$prediction, decimal$prediction, tolerance = 1e-8)
+  expect_equal(scientific$model$coefficients, decimal$model$coefficients, tolerance = 1e-8)
+  expect_setequal(scientific$model$coefficients$covariateIds, c("(Intercept)", ids))
+  expect_equal(nrow(scientific$model$coefficients), 3)
+  expect_equal(
+    scientific$model$coefficients$betas, reference$model$coefficients$betas,
+    tolerance = 1e-8
+  )
 })

@@ -10,6 +10,12 @@ expect_correct_fitPlp <- function(plpModel, trainData, testLocation = TRUE) {
   expect_true(all((plpModel$prediction$value >= 0) &
     (plpModel$prediction$value <= 1)))
 
+  # every prediction carries its own patient's outcome
+  expect_equal(
+    plpModel$prediction$outcomeCount,
+    trainData$labels$outcomeCount[match(plpModel$prediction$rowId, trainData$labels$rowId)]
+  )
+
   # model directory exists
   if (testLocation) {
     expect_true(dir.exists(plpModel$model))

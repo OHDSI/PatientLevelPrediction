@@ -56,48 +56,42 @@ insertPerformanceInDatabase <- function(
   )
   ParallelLogger::logInfo(paste0("performanceId: ", performanceId))
 
-  # add attrition
-  if (!is.null(attrition)) {
-    addAttrition(
-      conn = conn,
-      resultSchema = databaseSchemaSettings$resultSchema,
-      targetDialect = databaseSchemaSettings$targetDialect,
-      performanceId = performanceId,
-      attrition = attrition,
-      overWriteIfExists = TRUE,
-      tablePrefix = databaseSchemaSettings$tablePrefix,
-      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
-    )
-  }
+  # the add functions also clear previous rows when the new value is NULL
+  addAttrition(
+    conn = conn,
+    resultSchema = databaseSchemaSettings$resultSchema,
+    targetDialect = databaseSchemaSettings$targetDialect,
+    performanceId = performanceId,
+    attrition = attrition,
+    overWriteIfExists = TRUE,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
+    tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
 
   # add performance
   # =============
-  if (!is.null(performanceEvaluation)) {
-    addEvaluation(
-      conn = conn,
-      resultSchema = databaseSchemaSettings$resultSchema,
-      targetDialect = databaseSchemaSettings$targetDialect,
-      performanceId = performanceId,
-      performanceEvaluation = performanceEvaluation,
-      overWriteIfExists = TRUE,
-      tablePrefix = databaseSchemaSettings$tablePrefix,
-      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
-    )
-  }
+  addEvaluation(
+    conn = conn,
+    resultSchema = databaseSchemaSettings$resultSchema,
+    targetDialect = databaseSchemaSettings$targetDialect,
+    performanceId = performanceId,
+    performanceEvaluation = performanceEvaluation,
+    overWriteIfExists = TRUE,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
+    tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
 
-  if (!is.null(covariateSummary)) {
-    addCovariateSummary(
-      conn = conn,
-      resultSchema = databaseSchemaSettings$resultSchema,
-      targetDialect = databaseSchemaSettings$targetDialect,
-      performanceId = performanceId,
-      covariateSummary = covariateSummary,
-      restrictToIncluded = TRUE,
-      overWriteIfExists = TRUE,
-      tablePrefix = databaseSchemaSettings$tablePrefix,
-      tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
-    )
-  }
+  addCovariateSummary(
+    conn = conn,
+    resultSchema = databaseSchemaSettings$resultSchema,
+    targetDialect = databaseSchemaSettings$targetDialect,
+    performanceId = performanceId,
+    covariateSummary = covariateSummary,
+    restrictToIncluded = TRUE,
+    overWriteIfExists = TRUE,
+    tablePrefix = databaseSchemaSettings$tablePrefix,
+    tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
+  )
 
   return(invisible(performanceId))
 }
@@ -242,6 +236,13 @@ addAttrition <- function(
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- attrition
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "attrition"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -409,6 +410,13 @@ addPredictionDistribution <- function(conn, resultSchema, targetDialect,
                                       tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- performanceEvaluation$predictionDistribution
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "prediction_distribution"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -484,6 +492,13 @@ addThresholdSummary <- function(conn, resultSchema, targetDialect,
                                 tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- performanceEvaluation$thresholdSummary
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "threshold_summary"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -560,6 +575,13 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
                                   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- performanceEvaluation$calibrationSummary
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "calibration_summary"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -585,6 +607,12 @@ addCalibrationSummary <- function(conn, resultSchema, targetDialect,
     tempEmulationSchema = tempEmulationSchema
   )
   isValid <- sum(colnames(value) %in% columnNames) == length(columnNames)
+  if (!isValid) {
+    ParallelLogger::logWarn(paste0(
+      "Calibration summary for performance ", performanceId, " was not uploaded. Missing columns: ",
+      paste(setdiff(columnNames, colnames(value)), collapse = ", ")
+    ))
+  }
 
   exists <- checkResultExists(
     conn = conn,
@@ -634,15 +662,22 @@ addEvaluationStatistics <- function(conn, resultSchema, targetDialect,
                                     performanceEvaluation,
                                     overWriteIfExists = TRUE,
                                     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
+  if (is.null(performanceEvaluation$evaluationStatistics)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "evaluation_statistics"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
+    return(NULL)
+  }
+
   value <- data.frame(
     evaluation = unlist(performanceEvaluation$evaluationStatistics$evaluation),
     metric = unlist(performanceEvaluation$evaluationStatistics$metric),
     value = as.numeric(unlist(performanceEvaluation$evaluationStatistics$value))
   )
-
-  if (is.null(value)) {
-    return(NULL)
-  }
 
   # edit names
   firstLower <- function(x) {
@@ -713,6 +748,13 @@ addDemographicSummary <- function(conn, resultSchema, targetDialect,
                                   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- performanceEvaluation$demographicSummary
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "demographic_summary"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -787,6 +829,13 @@ addCovariateSummary <- function(conn, resultSchema, targetDialect,
                                 tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   value <- covariateSummary
   if (is.null(value)) {
+    if (overWriteIfExists) {
+      deleteExistingResult(
+        conn = conn, resultSchema = resultSchema, targetDialect = targetDialect,
+        tableName = paste0(tablePrefix, "covariate_summary"),
+        performanceId = performanceId, tempEmulationSchema = tempEmulationSchema
+      )
+    }
     return(NULL)
   }
 
@@ -881,6 +930,35 @@ getColumnNames <- function(conn, resultSchema, targetDialect, tableName, tablePr
   result <- DatabaseConnector::querySql(connection = conn, sql = sql, snakeCaseToCamelCase = TRUE)
 
   return(colnames(result))
+}
+
+# Removes the rows of a result that has no replacement in the current upload
+deleteExistingResult <- function(conn, resultSchema, targetDialect, tableName, performanceId,
+                                 tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
+  exists <- checkResultExists(
+    conn = conn,
+    resultSchema = resultSchema,
+    targetDialect = targetDialect,
+    tableName = tableName,
+    resultIdName = "performance_id",
+    resultId = performanceId,
+    tempEmulationSchema = tempEmulationSchema
+  )
+  if (exists) {
+    ParallelLogger::logInfo(paste0("Removing stale ", tableName, " rows for performance ", performanceId))
+    sql <- "delete from @result_schema.@table_name where performance_id = @performance_id;"
+    sql <- SqlRender::render(sql,
+      performance_id = performanceId,
+      result_schema = resultSchema,
+      table_name = tableName
+    )
+    sql <- SqlRender::translate(sql,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    DatabaseConnector::executeSql(conn, sql)
+  }
+  return(invisible(NULL))
 }
 
 # True/False check whether results exist in table

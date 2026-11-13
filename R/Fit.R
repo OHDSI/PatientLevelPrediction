@@ -241,6 +241,18 @@ fitClassifier <- function(
   labels <- preparedData$labels
   covariateRef <- preparedData$covariateRef
 
+  # These classifiers are binary, so they are trained on outcome presence, as
+  # Cyclops clamps counts; with binary = FALSE outcomeCount can be above 1.
+  # The original counts are put back in the predictions used for evaluation.
+  # They are taken from trainData: prepareData() can number the matrix rows
+  # differently (toSparseM() keeps the original rowId in originalRowId), but
+  # the predictions come back with the original rowIds.
+  originalLabels <- data.frame(
+    rowId = trainData$labels$rowId,
+    outcomeCount = trainData$labels$outcomeCount
+  )
+  labels$outcomeCount <- as.numeric(labels$outcomeCount > 0)
+
   # Hyperparameter optimization
   # input: matrixData, labels, settings, hyperparamSettings
   # output: model, prediction, finalParam, hyperSummary
@@ -251,6 +263,14 @@ fitClassifier <- function(
     settings = settings,
     hyperparamSettings = hyperparameterSettings
   )
+  labelRows <- match(tuneResult$prediction$rowId, originalLabels$rowId)
+  if (anyNA(labelRows)) {
+    stop(
+      "The predictions of ", settings$modelName, " have rowIds that are not in the training labels; ",
+      "its predict function must return the original rowIds (toSparseM() keeps them in originalRowId)"
+    )
+  }
+  tuneResult$prediction$outcomeCount <- originalLabels$outcomeCount[labelRows]
 
   # add code for var imp here - model and settings
 
@@ -357,8 +377,8 @@ tuneHyperparameters <- function(
   )
   history <- list()
   metric <- hyperparamSettings$tuningMetric
-  bestPerformance <- if (metric$maximize) -Inf else Inf
   bestCvPrediction <- c()
+  foldIds <- unique(labels$index)
 
   repeat {
     candidate <- iterator$getNext(history)
@@ -368,7 +388,7 @@ tuneHyperparameters <- function(
     cvPrediction <- c()
     cvPerformance <- c()
 
-    for (i in unique(labels$index)) {
+    for (i in foldIds) {
       ind <- labels$index != i
       model <- do.call(
         settings$train,
@@ -389,7 +409,7 @@ tuneHyperparameters <- function(
       )
       performance <- metric$fun(prediction)
       cvPrediction <- rbind(cvPrediction, prediction)
-      cvPerformance <- c(performance, cvPerformance)
+      cvPerformance <- c(cvPerformance, performance)
     }
     meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
     history[[length(history) + 1]] <- list(
@@ -401,18 +421,15 @@ tuneHyperparameters <- function(
         metric,
         meanCvPerformance,
         cvPerformance,
-        candidate
+        candidate,
+        foldIds
       )
     )
-    bestPerformance <- if (metric$maximize) {
-      max(bestPerformance, meanCvPerformance, na.rm = TRUE)
-    } else {
-      min(bestPerformance, meanCvPerformance, na.rm = TRUE)
-    }
-    if (identical(bestPerformance, meanCvPerformance)) {
+    # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
+    if (identical(selectBest(history, metric), length(history))) {
       ParallelLogger::logInfo(paste0(
         "New best performance ",
-        round(bestPerformance, 4),
+        round(meanCvPerformance, 4),
         " with param: ",
         paste(names(candidate), candidate, sep = "=", collapse = ", ")
       ))
@@ -483,10 +500,10 @@ selectBest <- function(history, metric) {
   best
 }
 
-makeHyperSummary <- function(metric, meanScore, foldScores, param) {
+makeHyperSummary <- function(metric, meanScore, foldScores, param, foldIds) {
   perfRows <- data.frame(
     metric = metric$name,
-    fold = c("CV", paste0("Fold", seq_along(foldScores))),
+    fold = c("CV", paste0("Fold", foldIds)),
     value = c(meanScore, foldScores),
     stringsAsFactors = FALSE
   )

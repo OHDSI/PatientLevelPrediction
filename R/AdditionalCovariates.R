@@ -32,7 +32,7 @@
 #' @param cohortTable  the table name that contains the target population cohort
 #' @param rowIdField  string representing the unique identifier in the target population cohort
 #' @param aggregated  whether the covariate should be aggregated
-#' @param cohortIds  cohort id for the target cohort
+#' @param cohortIds  cohort id(s) for the target cohort; -1 uses every cohort in the table
 #' @param covariateSettings  settings for the covariate cohorts and time periods
 #' @param ...  additional arguments from FeatureExtraction
 #'
@@ -72,7 +72,7 @@ getCohortCovariateData <- function(
     cohortTable = "#cohort_person",
     rowIdField = "row_id",
     aggregated,
-    cohortIds,
+    cohortIds = -1,
     covariateSettings,
     ...) {
   if (!is.null(oracleTempSchema) && oracleTempSchema != "") {
@@ -86,17 +86,18 @@ getCohortCovariateData <- function(
   # Some SQL to construct the covariate:
   sql <- paste(
     "select a.@row_id_field AS row_id, @covariate_id AS covariate_id,",
-    "{@lnAgeInteraction}?{LOG(max(YEAR(a.cohort_start_date)-p.year_of_birth))}:{",
-    "{@ageInteraction}?{max(YEAR(a.cohort_start_date)-p.year_of_birth)}:{",
     "{@countval}?{count(distinct b.cohort_start_date)}:{max(1)}",
-    "}} as covariate_value",
+    "{@lnAgeInteraction}?{ * LOG(max(YEAR(a.cohort_start_date)-p.year_of_birth))}:{",
+    "{@ageInteraction}?{ * max(YEAR(a.cohort_start_date)-p.year_of_birth)}",
+    "} as covariate_value",
     "from @cohort_temp_table a inner join @covariate_cohort_schema.@covariate_cohort_table b",
     " on a.subject_id = b.subject_id and ",
     " b.cohort_start_date <= dateadd(day, @endDays, a.cohort_start_date) and ",
     " b.cohort_end_date >= dateadd(day, @startDay, a.cohort_start_date) ",
     "{@ageInteraction | @lnAgeInteraction}?{inner join @cdm_database_schema.person p on p.person_id=a.subject_id}",
-    "where b.cohort_definition_id = @covariate_cohort_id
-    group by a.@row_id_field; "
+    "where b.cohort_definition_id = @covariate_cohort_id",
+    "{@cohort_ids != -1}?{and a.cohort_definition_id in (@cohort_ids)}",
+    "group by a.@row_id_field; "
   )
 
   if (is.null(covariateSettings$cohortTable) &&
@@ -132,7 +133,8 @@ getCohortCovariateData <- function(
     countval = covariateSettings$count,
     ageInteraction = covariateSettings$ageInteraction,
     lnAgeInteraction = covariateSettings$lnAgeInteraction,
-    cdm_database_schema = cdmDatabaseSchema
+    cdm_database_schema = cdmDatabaseSchema,
+    cohort_ids = cohortIds
   )
 
   sql <- SqlRender::translate(
@@ -148,13 +150,17 @@ getCohortCovariateData <- function(
     snakeCaseToCamelCase = TRUE
   )
 
+  isBinary <- isBinaryCohortCovariate(covariateSettings)
+  analysisId <- covariateSettings$reportedAnalysisId %||%
+    reportedCohortCovariateAnalysisId(covariateSettings$analysisId, isBinary)
+
   # Construct covariate reference:
   sql <- "select @covariate_id as covariate_id, '@concept_set' as covariate_name,
   @analysis_id as analysis_id, -1 as concept_id;"
   sql <- SqlRender::render(
     sql = sql,
     covariate_id = covariateSettings$covariateId,
-    analysis_id = covariateSettings$analysisId,
+    analysis_id = analysisId,
     concept_set = paste(
       "Cohort_covariate during day",
       covariateSettings$startDay,
@@ -182,12 +188,12 @@ getCohortCovariateData <- function(
   )
 
   analysisRef <- data.frame(
-    analysisId = covariateSettings$analysisId,
+    analysisId = analysisId,
     analysisName = "cohort covariate",
     domainId = "cohort covariate",
     startDay = covariateSettings$startDay,
     endDay = covariateSettings$endDays,
-    isBinary = "Y",
+    isBinary = ifelse(isBinary, "Y", "N"),
     missingMeansZero = "Y"
   )
 
@@ -199,7 +205,7 @@ getCohortCovariateData <- function(
   )
 
   attr(result, "metaData") <- metaData
-  class(result) <- "CovariateData"
+  result <- asCovariateData(result)
   return(result)
 }
 
@@ -211,7 +217,13 @@ getCohortCovariateData <- function(
 #' cohort during the time periods relative to target population cohort index
 #'
 #' @param cohortName  Name for the cohort
-#' @param settingId   A unique id for the covariate time and
+#' @param settingId   An id between 1 and 100 for this combination of time window
+#'                    (startDay, endDay) and value (count, ageInteraction,
+#'                    lnAgeInteraction). It is part of the covariateId
+#'                    (cohortId x 100000 + settingId x 1000 + analysisId), so settings
+#'                    for the same cohort need different settingIds. Using the same
+#'                    settingId for the same window and value across cohorts keeps
+#'                    covariateIds readable.
 #' @param cohortDatabaseSchema  The schema of the database with the cohort. If
 #' nothing is specified then the cohortDatabaseSchema from databaseDetails at runtime is used.
 #' @param cohortTable  the table name that contains the covariate cohort. If
@@ -223,11 +235,13 @@ getCohortCovariateData <- function(
 #'                If TRUE then the covariate value is the number of unique cohort_start_dates between index+startDay and index+endDay
 #' @param ageInteraction  If TRUE multiple covariate value by the patient's age in years
 #' @param lnAgeInteraction  If TRUE multiple covariate value by the log of the patient's age in years
-#' @param analysisId  The analysisId for the covariate
+#' @param analysisId  The analysisId for the covariate. Count or age-interaction covariates are
+#'                    reported with analysisId + 1000 in the covariateRef and analysisRef
 #'
 #' @return
 #' An object of class `covariateSettings` specifying how to create the cohort covariate with the covariateId
-#'  cohortId x 100000 + settingId x 1000 + analysisId
+#'  cohortId x 100000 + settingId x 1000 + analysisId. Its `reportedAnalysisId` element is the
+#'  analysisId the covariate gets in the covariateRef and analysisRef.
 #' @examples
 #' createCohortCovariateSettings(cohortName="testCohort",
 #'                               settingId=1,
@@ -264,8 +278,23 @@ createCohortCovariateSettings <- function(
     lnAgeInteraction = lnAgeInteraction,
     analysisId = analysisId
   )
+  covariateSettings$reportedAnalysisId <- reportedCohortCovariateAnalysisId(
+    analysisId, isBinaryCohortCovariate(covariateSettings)
+  )
 
   attr(covariateSettings, "fun") <- "PatientLevelPrediction::getCohortCovariateData"
   class(covariateSettings) <- "covariateSettings"
   return(covariateSettings)
+}
+
+isBinaryCohortCovariate <- function(covariateSettings) {
+  !(covariateSettings$count || covariateSettings$ageInteraction ||
+    covariateSettings$lnAgeInteraction)
+}
+
+# Consumers classify covariates as binary per analysisId, so non-binary variants
+# must not share one with binary cohort covariates (default analysisId is 456).
+# covariateId keeps the configured analysisId, so stored models keep matching.
+reportedCohortCovariateAnalysisId <- function(analysisId, isBinary) {
+  analysisId + ifelse(isBinary, 0, 1000)
 }

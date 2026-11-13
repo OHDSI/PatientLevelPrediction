@@ -4,7 +4,7 @@
 \alias{pmmFit}
 \title{Predictive mean matching using lasso}
 \usage{
-pmmFit(data, k = 5, alpha = 1)
+pmmFit(data, k = 5, alpha = 1, seed = NULL)
 }
 \arguments{
 \item{data}{An andromeda object with the following fields:
@@ -15,6 +15,9 @@ yObs: outcome variable that we want to impute}
 \item{k}{The number of donors to use for matching (default 5)}
 
 \item{alpha}{Elastic-net mixing parameter (\code{1} = lasso, \code{0} = ridge)}
+
+\item{seed}{The seed of the model's random draws (cross-validation folds and
+donor sampling), or NULL to use the global random stream}
 }
 \description{
 Predictive mean matching using lasso

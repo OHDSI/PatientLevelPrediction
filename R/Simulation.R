@@ -345,19 +345,12 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
   covariateIds <- as.numeric(names(covariatePrevalence))
   covariateId <- rep(covariateIds, personsPerCov)
 
-  covariateValue <- rep(1, length(covariateId))
-  covariateData <- Andromeda::andromeda(
-    covariates = data.frame(
-      rowId = rowId,
-      covariateId = covariateId,
-      covariateValue = covariateValue
-    ),
-    covariateRef = plpDataSimulationProfile$covariateRef,
-    analysisRef = data.frame(analysisId = 1)
+  # all covariates are built in R and written to Andromeda once
+  covariates <- data.frame(
+    rowId = rowId,
+    covariateId = covariateId,
+    covariateValue = rep(1, length(covariateId))
   )
-
-  class(covariateData) <- "CovariateData"
-  attr(class(covariateData), "package") <- "FeatureExtraction"
 
   continuousCovariates <- plpDataSimulationProfile$covariateInfo$continuousCovariates
   continuousCovSim <- do.call(rbind, lapply(seq_len(nrow(continuousCovariates)), function(i) {
@@ -371,9 +364,10 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
       covariateValue = simValues
     )
   }))
-  covariateData$covariates <- covariateData$covariates %>%
-    dplyr::filter(!.data$covariateId %in% !!continuousCovariates$covariateId)
-  Andromeda::appendToTable(covariateData$covariates, continuousCovSim)
+  covariates <- rbind(
+    covariates[!covariates$covariateId %in% continuousCovariates$covariateId, ],
+    continuousCovSim
+  )
 
   writeLines("Generating cohorts")
   cohorts <- data.frame(rowId = 1:n, subjectId = 2e+10 + (1:n), targetId = 1)
@@ -381,17 +375,32 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
   cohorts$daysFromObsStart <- sample(1:1000, n, replace = TRUE)
   cohorts$daysToCohortEnd <- sample(1:1000, n, replace = TRUE)
   cohorts$daysToObsEnd <- cohorts$daysToCohortEnd + sample(1:1000, n, replace = TRUE)
-  cohorts$ageYear <- covariateData$covariates %>%
-    dplyr::filter(.data$covariateId == 1002) %>%
-    dplyr::arrange(.data$rowId) %>%
-    dplyr::pull(.data$covariateValue)
-  cohorts$gender <- 8532 # female
-  cohorts$gender[sample((seq_len(nrow(cohorts))), nrow(cohorts) / 2)] <- 8507
+  ageRows <- covariates[covariates$covariateId == 1002, ]
+  cohorts$ageYear <- ageRows$covariateValue[order(ageRows$rowId)]
+  simulatedGender <- simulateGenderCovariates(covariatePrevalence, n = nrow(cohorts))
+  cohorts$gender <- simulatedGender$gender
+  if (!is.null(simulatedGender$covariates)) {
+    covariates <- rbind(
+      covariates[!covariates$covariateId %in% simulatedGender$covariateIds, ],
+      simulatedGender$covariates
+    )
+  }
+  rownames(covariates) <- NULL
+
+  outcomeIds <- plpDataSimulationProfile$metaData$databaseDetails$outcomeIds
+  # each outcome's draws get a seed drawn here, before any Andromeda work, so
+  # they do not depend on Andromeda's own random draws
+  outcomeSeeds <- sample.int(.Machine$integer.max, length(outcomeIds))
+  covariateData <- Andromeda::andromeda(
+    covariates = covariates,
+    covariateRef = plpDataSimulationProfile$covariateRef,
+    analysisRef = data.frame(analysisId = 1)
+  )
+  covariateData <- asCovariateData(covariateData)
 
   writeLines("Generating outcomes")
-  allOutcomes <- vector("list", length(plpDataSimulationProfile$metaData$databaseDetails$outcomeIds))
-  allSimulationTruth <- vector("list", length(plpDataSimulationProfile$metaData$databaseDetails$outcomeIds))
-  outcomeIds <- plpDataSimulationProfile$metaData$databaseDetails$outcomeIds
+  allOutcomes <- vector("list", length(outcomeIds))
+  allSimulationTruth <- vector("list", length(outcomeIds))
   timeMax <- max(plpDataSimulationProfile$timeMax)
   for (i in seq_along(outcomeIds)) {
     prediction <- predictSimulationOutcomeRisk(
@@ -401,10 +410,12 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
       covariateData = covariateData,
       metaData = plpDataSimulationProfile$metaData
     )
-    outcomeCount <- stats::rbinom(nrow(prediction), size = 1, prob = prediction$value)
     daysToEvent <- rep(NA_integer_, nrow(prediction))
-    eventRows <- outcomeCount != 0
-    daysToEvent[eventRows] <- round(stats::runif(sum(eventRows), 0, timeMax))
+    withLocalSeed(outcomeSeeds[i], {
+      outcomeCount <- stats::rbinom(nrow(prediction), size = 1, prob = prediction$value)
+      eventRows <- outcomeCount != 0
+      daysToEvent[eventRows] <- round(stats::runif(sum(eventRows), 0, timeMax))
+    })
     linearPredictor <- rep(NA_real_, nrow(prediction))
     if ("rawValue" %in% colnames(prediction)) {
       linearPredictor <- prediction$rawValue
@@ -439,7 +450,7 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
     cohortTable = NULL,
     cdmVersion = 5,
     targetId = 1,
-    outcomeIds = 3
+    outcomeIds = outcomeIds
   )
   metaData$restrictPlpDataSettings <- PatientLevelPrediction::createRestrictPlpDataSettings()
   metaData$covariateSettings <- FeatureExtraction::createCovariateSettings(
@@ -451,16 +462,16 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
 
   attrition <- data.frame(
-    outcomeId = 3, description = "Simulated data",
+    outcomeId = outcomeIds, description = "Simulated data",
     targetCount = nrow(cohorts), uniquePeople = nrow(cohorts),
-    outcomes = nrow(outcomes)
+    outcomes = vapply(outcomeIds, function(id) sum(allOutcomes$outcomeId == id), numeric(1))
   )
   attr(cohorts, "metaData") <- list(
     targetId = 1,
     attrition = attrition
   )
 
-  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = 3)
+  attr(allOutcomes, "metaData") <- data.frame(outcomeIds = outcomeIds)
 
   attr(covariateData, "metaData") <- list(populationSize = n, cohortId = 1)
 
@@ -475,6 +486,44 @@ simulatePlpData <- function(plpDataSimulationProfile, n = 10000, seed = NULL) {
 
   class(result) <- "plpData"
   return(result)
+}
+
+simulateGenderCovariates <- function(covariatePrevalence, n) {
+  genderConceptIds <- c(8532, 8507) # female, male
+  covariateIds <- genderConceptIds * 1000 + 1 # FeatureExtraction's gender covariate ids
+  prevalence <- as.numeric(covariatePrevalence[as.character(covariateIds)])
+  hasCovariate <- !is.na(prevalence)
+
+  # A profile with only one of the two covariates implies the other as its complement.
+  maleShare <- 0.5
+  if (all(hasCovariate)) {
+    maleShare <- prevalence[2] / sum(prevalence)
+  } else if (hasCovariate[2]) {
+    maleShare <- prevalence[2]
+  } else if (hasCovariate[1]) {
+    maleShare <- 1 - prevalence[1]
+  }
+  if (!is.finite(maleShare)) {
+    maleShare <- 0.5
+  }
+  maleShare <- min(max(maleShare, 0), 1)
+
+  gender <- rep(genderConceptIds[1], n)
+  gender[sample(seq_len(n), n * maleShare)] <- genderConceptIds[2]
+
+  if (!any(hasCovariate)) {
+    return(list(gender = gender))
+  }
+  rowHasCovariate <- hasCovariate[match(gender, genderConceptIds)]
+  return(list(
+    gender = gender,
+    covariateIds = covariateIds[hasCovariate],
+    covariates = data.frame(
+      rowId = seq_len(n)[rowHasCovariate],
+      covariateId = covariateIds[match(gender[rowHasCovariate], genderConceptIds)],
+      covariateValue = 1
+    )
+  ))
 }
 
 predictSimulationOutcomeRisk <- function(outcomeModel, plpModel, cohorts, covariateData, metaData) {
@@ -896,8 +945,7 @@ resampleBenchmarkCovariateData <- function(covariateData, rowMap, populationSize
       covariateValue = .data$covariateValue
     )
 
-  class(result) <- "CovariateData"
-  attr(class(result), "package") <- "FeatureExtraction"
+  result <- asCovariateData(result)
   metaData <- attr(covariateData, "metaData")
   if (is.null(metaData)) {
     metaData <- list()

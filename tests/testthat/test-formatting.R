@@ -54,6 +54,9 @@ test_that("MapIds with no cohort", {
 
   # 4 rowIds in the data
   expect_equal(mappings$rowMap %>% dplyr::tally() %>% dplyr::pull(), 4)
+  # without a cohort the rows are numbered in rowId order
+  rowMap <- mappings$rowMap %>% dplyr::collect() %>% dplyr::arrange(.data$xId)
+  expect_equal(rowMap$rowId, sort(rowMap$rowId))
 
   # some covariates not in data 5,6,7 so should be removed from covRef
   expect_equal(mappings$covariateRef %>% dplyr::tally() %>% dplyr::pull(), 7)
@@ -100,7 +103,7 @@ test_that("MapIds with a cohort", {
 
 # switch of all messages
 test_that("toSparseM", {
-  skip_if_offline()
+  skip_if_no_eunomia()
   cohorts <- data.frame(
     rowId = 1:6,
     subjectId = 1:6,
@@ -252,9 +255,244 @@ test_that("MapIds with temporalData", {
       timeName = c("time1", "time2", "time3", "time4", "time5")
     )
   )
-  class(formattingCovs) <- "CovariateData"
+  formattingCovs <- asCovariateData(formattingCovs)
   mapped <- MapIds(formattingCovs)
 
   expect_true(!is.null(mapped$timeRef))
   expect_true(!is.null(mapped$covariates %>% dplyr::pull(.data$timeId)))
+})
+
+makeStoredLabelData <- function() {
+  covariateData <- Andromeda::andromeda(
+    covariates = data.frame(
+      rowId = c(10, 20, 30),
+      covariateId = rep(100, 3),
+      covariateValue = c(1, 2, 3)
+    ),
+    covariateRef = data.frame(
+      covariateId = 100,
+      covariateName = "x",
+      analysisId = 1,
+      conceptId = 100
+    ),
+    analysisRef = data.frame(analysisId = 1, analysisName = "test")
+  )
+  structure(
+    list(
+      labels = data.frame(rowId = c(10, 20, 30), outcomeCount = c(0, 1, 1)),
+      covariateData = covariateData
+    ),
+    class = "plpData"
+  )
+}
+
+revisedPopulation <- function() {
+  data.frame(rowId = 20, outcomeCount = 0)
+}
+
+test_that("toSparseM uses an explicit cohort over stored labels", {
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+
+  sparse <- toSparseM(plpDataWithLabels, cohort = revisedPopulation())
+
+  expect_equal(dim(sparse$dataMatrix), c(1L, 1L))
+  expect_equal(as.numeric(as.matrix(sparse$dataMatrix)), 2)
+  expect_equal(sparse$labels$originalRowId, 20)
+  expect_equal(sparse$labels$outcomeCount, 0)
+})
+
+test_that("toSparseM falls back to stored labels without a cohort", {
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+
+  sparse <- toSparseM(plpDataWithLabels)
+
+  expect_equal(as.numeric(as.matrix(sparse$dataMatrix)), c(1, 2, 3))
+  expect_equal(sparse$labels$originalRowId, c(10, 20, 30))
+  expect_equal(sparse$labels$outcomeCount, c(0, 1, 1))
+})
+
+test_that("toSparseM with a cohort but no stored labels is unchanged", {
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+  plpDataWithLabels$labels <- NULL
+
+  sparse <- toSparseM(plpDataWithLabels, cohort = revisedPopulation())
+
+  expect_equal(as.numeric(as.matrix(sparse$dataMatrix)), 2)
+  expect_equal(sparse$labels$outcomeCount, 0)
+})
+
+# patients 10, 20 and 30 with covariates 100, 200 and 300; patient 40 has none,
+# and the labels are not in rowId order
+makeMappedData <- function() {
+  makePlpData(
+    covariateData = makeCovariateData(data.frame(
+      rowId = c(10, 10, 20, 30, 30),
+      covariateId = c(100, 200, 100, 300, 200),
+      covariateValue = c(1, 2, 3, 4, 5)
+    )),
+    labels = data.frame(rowId = c(30, 10, 40, 20), outcomeCount = c(1, 0, 0, 1))
+  )
+}
+
+test_that("toSparseM follows the cohort order and a saved map", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  map <- data.frame(covariateId = c(300, 100), columnId = c(1, 2))
+
+  sparse <- toSparseM(data, map = map)
+
+  # rows in cohort order, columns as in the map; covariate 200 is not in the map
+  expect_equal(
+    as.matrix(sparse$dataMatrix),
+    matrix(c(4, 0, 0, 0, 0, 1, 0, 3), nrow = 4)
+  )
+  expect_equal(sparse$labels$originalRowId, c(30, 10, 40, 20))
+  expect_equal(sparse$labels$rowId, 1:4)
+  expect_equal(sparse$covariateMap, map)
+  expect_equal(sparse$covariateRef$columnId[order(sparse$covariateRef$covariateId)], c(2, 1))
+})
+
+test_that("toSparseM numbers columns by covariateId without copying the covariates", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  tables <- names(data$covariateData)
+  created <- 0
+  createAndromeda <- Andromeda::andromeda
+  local_mocked_bindings(
+    andromeda = function(...) {
+      created <<- created + 1
+      createAndromeda(...)
+    },
+    .package = "Andromeda"
+  )
+
+  sparse <- toSparseM(data)
+
+  expect_equal(sparse$covariateMap, data.frame(covariateId = c(100, 200, 300), columnId = 1:3))
+  # patient 30: covariate 200 is 5 and 300 is 4
+  expect_equal(as.matrix(sparse$dataMatrix)[1, ], c(0, 5, 4))
+  # no new Andromeda for a copy of the covariates, and no tables left behind
+  expect_equal(created, 0)
+  expect_setequal(names(data$covariateData), tables)
+})
+
+test_that("toSparseM needs a cohort or stored labels", {
+  data <- makeMappedData()
+  withr::defer(Andromeda::close(data$covariateData))
+  data$labels <- NULL
+  expect_error(toSparseM(data), "needs a cohort")
+})
+
+test_that("predictPlp honours the population for xgboost models", {
+  skip_if_not_installed("xgboost")
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+  x <- matrix(c(1, 2, 3), ncol = 1)
+  booster <- xgboost::xgb.train(
+    params = list(
+      objective = "binary:logistic",
+      base_score = 0.5,
+      max_depth = 1,
+      min_child_weight = 0,
+      eta = 0.3,
+      nthread = 1,
+      seed = 42
+    ),
+    data = xgboost::xgb.DMatrix(x, label = c(0, 1, 1)),
+    nrounds = 1,
+    verbose = 0
+  )
+  plpModel <- structure(
+    list(
+      model = booster,
+      modelDesign = list(
+        modelSettings = setGradientBoostingMachine(nthread = 1, seed = 42)
+      ),
+      covariateImportance = data.frame(covariateId = 100, columnId = 1)
+    ),
+    class = "plpModel",
+    modelType = "binary"
+  )
+
+  prediction <- predictPlp(plpModel, plpDataWithLabels, revisedPopulation())
+  expect_equal(prediction$rowId, 20)
+  expect_equal(prediction$outcomeCount, 0)
+  expect_equal(
+    as.numeric(prediction$value),
+    as.numeric(stats::predict(booster, x[2, , drop = FALSE])),
+    tolerance = 1e-7
+  )
+
+  full <- predictPlp(plpModel, plpDataWithLabels, plpDataWithLabels$labels)
+  expect_equal(full$rowId, c(10, 20, 30))
+  expect_equal(full$outcomeCount, c(0, 1, 1))
+})
+
+test_that("predictPlp honours the population for LightGBM models", {
+  skip_if_not_installed("lightgbm")
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+  x <- matrix(c(1, 2, 3), ncol = 1)
+  booster <- lightgbm::lgb.train(
+    params = list(
+      objective = "binary",
+      num_leaves = 2,
+      min_data_in_leaf = 1,
+      min_data_in_bin = 1,
+      num_threads = 1,
+      verbose = -1
+    ),
+    data = lightgbm::lgb.Dataset(x, label = c(0, 1, 1)),
+    nrounds = 1,
+    verbose = -1
+  )
+  plpModel <- structure(
+    list(
+      model = booster,
+      modelDesign = list(modelSettings = setLightGBM(nthread = 1)),
+      covariateImportance = data.frame(covariateId = 100, columnId = 1)
+    ),
+    class = "plpModel",
+    modelType = "binary"
+  )
+
+  prediction <- predictPlp(plpModel, plpDataWithLabels, revisedPopulation())
+  expect_equal(prediction$rowId, 20)
+  expect_equal(prediction$outcomeCount, 0)
+})
+
+test_that("predictPlp honours the population for sklearn models", {
+  skip_on_cran()
+  skip_if_not_installed("reticulate")
+  skip_if(!reticulate::py_module_available("sklearn"), "sklearn not available")
+  plpDataWithLabels <- makeStoredLabelData()
+  withr::defer(Andromeda::close(plpDataWithLabels$covariateData))
+  sklearn <- reticulate::import("sklearn", convert = FALSE)
+  x <- matrix(c(1, 2, 3), ncol = 1)
+  classifier <- sklearn$linear_model$LogisticRegression()$fit(
+    reticulate::r_to_py(x),
+    reticulate::r_to_py(c(0, 1, 1))
+  )
+  plpModel <- structure(
+    list(
+      model = classifier,
+      modelDesign = list(
+        modelSettings = list(settings = list(predict = "predictSklearn"))
+      ),
+      covariateImportance = data.frame(covariateId = 100, columnId = 1)
+    ),
+    class = "plpModel",
+    modelType = "binary"
+  )
+
+  prediction <- predictPlp(plpModel, plpDataWithLabels, revisedPopulation())
+  expect_equal(prediction$rowId, 20)
+  expect_equal(prediction$outcomeCount, 0)
+  expected <- reticulate::py_to_r(
+    classifier$predict_proba(reticulate::r_to_py(x[2, , drop = FALSE]))
+  )[, 2]
+  expect_equal(as.numeric(prediction$value), expected, tolerance = 1e-7)
 })

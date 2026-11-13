@@ -49,6 +49,9 @@ insertRunPlpToSqlite <- function(
 
   # add validation results if entered
   if (!is.null(externalValidatePlp)) {
+    if (inherits(x = externalValidatePlp, what = "externalValidatePlp")) {
+      externalValidatePlp <- list(externalValidatePlp)
+    }
     if (inherits(x = externalValidatePlp, what = "list")) {
       for (i in 1:length(externalValidatePlp)) {
         tryCatch(
@@ -104,6 +107,8 @@ insertRunPlpToSqlite <- function(
 #' @param databaseList             A list created by \code{createDatabaseList} to specify the databases
 #' @param sqliteLocation               (string) location of directory where the sqlite database will be saved
 #' @param skipDiagnostics             Whether to skip uploading the diagnostics
+#' @param deleteTables                 If TRUE any results already in the sqlite database are removed
+#'                                     first. Use FALSE to add results to an existing database.
 #'
 #' @return
 #' Returns the location of the sqlite database file
@@ -133,7 +138,8 @@ insertResultsToSqlite <- function(
     cohortDefinitions = NULL,
     databaseList = NULL,
     sqliteLocation = file.path(resultLocation, "sqlite"),
-    skipDiagnostics = FALSE
+    skipDiagnostics = FALSE,
+    deleteTables = TRUE
     ) {
   if (!dir.exists(sqliteLocation)) {
     dir.create(sqliteLocation, recursive = TRUE)
@@ -150,7 +156,7 @@ insertResultsToSqlite <- function(
     connectionDetails = connectionDetails,
     targetDialect = "sqlite",
     resultSchema = "main",
-    deleteTables = TRUE,
+    deleteTables = deleteTables,
     createTables = TRUE,
     tablePrefix = ""
   )
@@ -189,7 +195,10 @@ insertResultsToSqlite <- function(
 #' @param connectionDetails            The database connection details
 #' @param targetDialect                The database management system being used
 #' @param resultSchema                 The name of the database schema that the result tables will be created.
-#' @param deleteTables                 If true any existing tables matching the PatientLevelPrediction result tables names will be deleted
+#' @param deleteTables                 If TRUE, existing PatientLevelPrediction result tables (and the
+#'                                     migration tables) in the schema are deleted first, with all
+#'                                     their results. FALSE by default, so results are never removed
+#'                                     unless asked for.
 #' @param createTables                 If true the PatientLevelPrediction result tables will be created
 #' @param tablePrefix         A string that appends to the PatientLevelPrediction result tables
 #' @param tempEmulationSchema          The temp schema used when the database management system is oracle
@@ -221,7 +230,7 @@ createPlpResultTables <- function(
     connectionDetails,
     targetDialect = "postgresql",
     resultSchema,
-    deleteTables = TRUE,
+    deleteTables = FALSE,
     createTables = TRUE,
     tablePrefix = "",
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
@@ -229,68 +238,71 @@ createPlpResultTables <- function(
   conn <- DatabaseConnector::connect(connectionDetails = connectionDetails)
   on.exit(DatabaseConnector::disconnect(conn))
 
-  tablesExists <- sum(tolower(getPlpResultTables()) %in% tolower(DatabaseConnector::getTableNames(connection = conn, databaseSchema = resultSchema)))
-  tablesExists <- tablesExists == length(getPlpResultTables())
+  if (tablePrefix != "") {
+    tablePrefix <- paste0(toupper(gsub("_", "", gsub(" ", "", tablePrefix))), "_")
+  }
 
-  if (!tablesExists) {
-    ParallelLogger::logInfo("All or some PLP result tables do not exist, tables being recreated")
-    if (deleteTables) {
-      ParallelLogger::logInfo("Deleting existing tables")
+  if (deleteTables) {
+    ParallelLogger::logInfo("Deleting existing PLP result tables")
+    deleteTables(
+      conn = conn,
+      databaseSchema = resultSchema,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema,
+      # the migration state has to go with the tables so migrations re-run on the new ones
+      tableNames = c(getPlpResultTables(), "MIGRATION", "PACKAGE_VERSION"),
+      tablePrefix = tablePrefix
+    )
+  }
 
-      tableNames <- getPlpResultTables()
+  existing <- tolower(paste0(tablePrefix, getPlpResultTables())) %in%
+    tolower(DatabaseConnector::getTableNames(connection = conn, databaseSchema = resultSchema))
+  tablesExist <- all(existing)
 
-      deleteTables(
-        conn = conn,
-        databaseSchema = resultSchema,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema,
-        tableNames = tableNames,
-        tablePrefix = tablePrefix
+  if (createTables && !tablesExist) {
+    if (any(existing)) {
+      errorMessage <- paste0(
+        "Some PLP result tables already exist in ", resultSchema, " but not all. ",
+        "Use deleteTables = TRUE to recreate them, which removes their results."
       )
+      ParallelLogger::logError(errorMessage)
+      stop(errorMessage)
     }
+    ParallelLogger::logInfo("Creating PLP results tables")
 
+    pathToSql <- system.file(
+      paste("sql/", targetDialect,
+        sep = ""
+      ),
+      "PlpResultTables.sql",
+      package = "PatientLevelPrediction"
+    )
 
-    if (createTables) {
-      ParallelLogger::logInfo("Creating PLP results tables")
-
-      if (tablePrefix != "") {
-        tablePrefix <- paste0(toupper(gsub("_", "", gsub(" ", "", tablePrefix))), "_")
-      }
-
+    if (!file.exists(pathToSql)) {
+      # if no dbms specific file use sql_server
       pathToSql <- system.file(
-        paste("sql/", targetDialect,
+        paste("sql/", "sql_server",
           sep = ""
         ),
         "PlpResultTables.sql",
         package = "PatientLevelPrediction"
       )
-
-      if (!file.exists(pathToSql)) {
-        # if no dbms specific file use sql_server
-        pathToSql <- system.file(
-          paste("sql/", "sql_server",
-            sep = ""
-          ),
-          "PlpResultTables.sql",
-          package = "PatientLevelPrediction"
-        )
-      }
-
-      sql <- readChar(pathToSql, file.info(pathToSql)$size)
-      renderedSql <- SqlRender::render(
-        sql = sql[1],
-        my_schema = resultSchema,
-        string_to_append = tablePrefix
-      )
-      renderedSql <- SqlRender::translate(
-        sql = renderedSql,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema
-      )
-
-      DatabaseConnector::executeSql(conn, renderedSql)
     }
-  } else {
+
+    sql <- readChar(pathToSql, file.info(pathToSql)$size)
+    renderedSql <- SqlRender::render(
+      sql = sql[1],
+      my_schema = resultSchema,
+      string_to_append = tablePrefix
+    )
+    renderedSql <- SqlRender::translate(
+      sql = renderedSql,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+    )
+
+    DatabaseConnector::executeSql(conn, renderedSql)
+  } else if (tablesExist) {
     ParallelLogger::logInfo("PLP result tables already exist")
   }
   
@@ -302,17 +314,6 @@ createPlpResultTables <- function(
       databaseSchema = resultSchema,
       tablePrefix = tablePrefix
     )
-  } else {
-    ParallelLogger::logInfo("Deleting PLP migration tables") 
-    migrationTableNames <- c("MIGRATION", "PACKAGE_VERSION") 
-    deleteTables(
-        conn = conn,
-        databaseSchema = resultSchema,
-        targetDialect = targetDialect,
-        tempEmulationSchema = tempEmulationSchema,
-        tableNames = migrationTableNames,
-        tablePrefix = tablePrefix
-      )
   }
 }
 
@@ -842,11 +843,59 @@ sanitizeTuningMetricForDatabase <- function(tuningMetric) {
     return(NULL)
   }
 
-  list(
+  sanitized <- list(
     name = tuningMetric$name,
     maximize = tuningMetric$maximize,
     funArgs = sanitizeObjectForDatabaseJson(tuningMetric$funArgs)
   )
+  builtIn <- if (is.character(tuningMetric$name)) {
+    list(AUC = aucMetric, AUPRC = auprcMetric)[[tuningMetric$name]]
+  }
+  if (is.function(tuningMetric$fun)) {
+    fingerprint <- fingerprintFunction(tuningMetric$fun)
+    if (is.null(builtIn) || !identical(fingerprint, fingerprintFunction(builtIn$fun))) {
+      sanitized$funFingerprint <- fingerprint
+    }
+  }
+  sanitized
+}
+
+# Identifies a function by its code and the captured values it uses, so that designs
+# differing only in a custom function get separate rows. Unused enclosing variables
+# are ignored because they vary between runs without changing the function.
+fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv())) {
+  captured <- list()
+  env <- environment(fn)
+  if (is.environment(env)) {
+    assign(format(env), TRUE, envir = seen)
+  }
+  remaining <- unique(all.names(body(fn)))
+  while (is.environment(env) && !nzchar(environmentName(env)) && length(remaining) > 0) {
+    found <- sort(intersect(remaining, ls(env, all.names = TRUE)))
+    remaining <- setdiff(remaining, found)
+    for (name in found) {
+      value <- tryCatch(get(name, envir = env), error = function(e) NULL)
+      captured[[name]] <- if (is.function(value)) {
+        if (exists(format(environment(value)), envir = seen, inherits = FALSE)) {
+          deparse(value)
+        } else {
+          fingerprintFunction(value, seen)
+        }
+      } else {
+        sanitizeObjectForDatabaseJson(value)
+      }
+    }
+    env <- parent.env(env)
+  }
+  digest::digest(list(code = deparse(fn), captured = captured), algo = "sha256")
+}
+
+fingerprintGenerator <- function(generator) {
+  if (is.function(generator)) {
+    return(fingerprintFunction(generator))
+  }
+  methods <- intersect(c("initialize", "getNext", "finalize"), names(generator))
+  digest::digest(lapply(methods, function(name) fingerprintFunction(generator[[name]])), algo = "sha256")
 }
 
 sanitizeGeneratorForDatabase <- function(generator) {
@@ -867,12 +916,17 @@ sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
     return(NULL)
   }
 
+  generator <- sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
+  if (!is.null(generator)) {
+    generator$fingerprint <- fingerprintGenerator(hyperparameterSettings$generator)
+  }
+
   list(
     search = hyperparameterSettings$search,
     tuningMetric = sanitizeTuningMetricForDatabase(hyperparameterSettings$tuningMetric),
     sampleSize = hyperparameterSettings$sampleSize,
     randomSeed = hyperparameterSettings$randomSeed,
-    generator = sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
+    generator = generator
   )
 }
 
@@ -998,6 +1052,39 @@ addModel <- function(
       ),
       tempEmulationSchema = tempEmulationSchema
     )
+  } else {
+    # The model files are overwritten, so the row has to describe the new fit
+    sql <- "UPDATE @my_schema.@string_to_appendmodels SET
+    analysis_id = '@analysis_id',
+    model_type = '@model_type',
+    plp_model_file = '@plp_model_file',
+    train_details = '@train_details',
+    preprocessing = '@preprocessing',
+    execution_date_time = '@execution_date_time',
+    training_time = '@training_time',
+    intercept = @intercept
+    WHERE model_design_id = @model_design_id AND database_id = @database_id"
+    sql <- SqlRender::render(
+      sql,
+      my_schema = resultSchema,
+      analysis_id = analysisId,
+      model_design_id = modelDesignId,
+      database_id = databaseId,
+      model_type = modelType,
+      plp_model_file = plpModelFile,
+      train_details = trainDetails,
+      preprocessing = preprocessing,
+      execution_date_time = executionDateTime,
+      training_time = trainingTime,
+      intercept = intercept,
+      string_to_append = tablePrefix
+    )
+    sql <- SqlRender::translate(
+      sql,
+      targetDialect = targetDialect,
+      tempEmulationSchema = tempEmulationSchema
+    )
+    DatabaseConnector::executeSql(conn, sql)
   }
 
   return(result$modelId[1])
@@ -1093,8 +1180,9 @@ deleteTables <- function(
     tableNames,
     tablePrefix) {
   if (tablePrefix != "") {
-    tableNames <- tolower(paste0(gsub("_", "", gsub(" ", "", tablePrefix)), "_", tableNames))
+    tableNames <- paste0(gsub("_", "", gsub(" ", "", tablePrefix)), "_", tableNames)
   }
+  tableNames <- tolower(tableNames)
 
   alltables <- tolower(DatabaseConnector::getTableNames(
     connection = conn,
@@ -1261,9 +1349,11 @@ addCohort <- function(
     json <- as.character(json) # now convert to character
   }
 
-  # reduce the size to save
-  if (!targetDialect %in% c("sqlite", "postgres")) {
-    json <- substr(json, 1, 4000) # TESTING - FIX THIS [TODO]
+  # only platforms where VARCHAR(MAX) has a hard limit get a shortened json
+  truncateJson <- targetDialect %in% c("oracle", "redshift", "pdw", "netezza", "synapse") &&
+    nchar(json) > 4000
+  if (truncateJson) {
+    json <- substr(json, 1, 4000)
   }
 
   # check whether cohort already in COHORT_DEFINITION table:
@@ -1278,14 +1368,19 @@ addCohort <- function(
     tempEmulationSchema = tempEmulationSchema
   )
 
+  matches <- result$json %in% json
+  if (truncateJson) {
+    # a shared prefix does not make cohorts identical, so the id has to agree too
+    matches <- matches & result$cohortDefinitionId == cohortDefinition$cohortId
+  }
   addNew <- FALSE
   if (nrow(result) > 0) {
-    addNew <- json %in% result$json
+    addNew <- any(matches)
     ParallelLogger::logInfo(paste0("json in jsons:", addNew))
   }
 
   if (addNew) {
-    cohortDefinitionId <- result$cohortDefinitionId[result$json %in% json][1] # restrict to 1 if duplicates
+    cohortDefinitionId <- result$cohortDefinitionId[matches][1] # restrict to 1 if duplicates
     ParallelLogger::logInfo(paste0("Cohort ", gsub("'", "", cohortDefinition$cohortName), " exists in cohort_definition with cohort id", cohortDefinitionId))
   } else {
     ParallelLogger::logInfo(paste0("Adding cohort ", gsub("'", "", cohortDefinition$cohortName)))

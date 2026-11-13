@@ -28,7 +28,12 @@
 #'                                         data extracted from the CDM.
 #' @param returnModel                      Logical: return the refitted model
 #' @return
-#' An prediction dataframe with the predictions of the recalibrated model added
+#' A prediction data frame with the original model's predictions for
+#' `newPopulation` (evaluationType "validation") and one prediction per patient
+#' from the refitted model (evaluationType "recalibrationRefit"). The refitted
+#' model is fitted on these same patients, so its predictions are in-sample and
+#' their performance is optimistic. With `returnModel = TRUE`, a list with this
+#' `prediction` and the refitted `model`. `NULL` if the refit fails.
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
 #' data("simulationProfile")
@@ -76,6 +81,12 @@ recalibratePlpRefit <- function(
   )
 
   newData$labels <- newPopulation
+  # covariates of patients outside newPopulation must not reach the refit
+  newData$covariateData <- limitCovariatesToPopulation(
+    covariateData = newData$covariateData,
+    rowIds = newPopulation$rowId
+  )
+  on.exit(closeAndromedas(list(newData$covariateData)), add = TRUE)
 
   newData$folds <- data.frame(
     rowId = newData$labels$rowId,
@@ -112,6 +123,10 @@ recalibratePlpRefit <- function(
     return(NULL)
   }
 
+  # fitPlp also returns out-of-fold predictions; those are not from the refitted model
+  if ("evaluationType" %in% names(newModel$prediction)) {
+    newModel$prediction <- newModel$prediction[newModel$prediction$evaluationType == "Train", , drop = FALSE]
+  }
   newModel$prediction$evaluationType <- "recalibrationRefit"
 
   oldPred <- predictPlp(
@@ -228,6 +243,19 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 }
 
 
+# Each method fits on the original predictions only, not on rows that another
+# recalibration added.
+getOriginalPredictions <- function(prediction, columnType) {
+  recalibrationTypes <- c("recalibrationInTheLarge", "weakRecalibration", "recalibrationRefit")
+  prediction[!prediction[[columnType]] %in% recalibrationTypes, , drop = FALSE]
+}
+
+# Re-running a method replaces its earlier rows.
+appendRecalibrated <- function(prediction, recalibrated, columnType, method) {
+  recalibrated[, columnType] <- method
+  rbind(prediction[!prediction[[columnType]] %in% method, , drop = FALSE], recalibrated)
+}
+
 #' recalibrationInTheLarge
 #'
 #' @description
@@ -242,26 +270,29 @@ recalibratePlp <- function(prediction, analysisId, typeColumn = "evaluationType"
 #' @keywords internal
 recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
   if (attr(prediction, "metaData")$modelType == "binary") {
-    misCal <- calibrationInLarge(prediction)
+    recalibrated <- getOriginalPredictions(prediction, columnType)
 
     eps <- .Machine$double.eps
-    obsRisk <- pmin(pmax(misCal$observedRisk, eps), 1 - eps)
-    predRisk <- pmin(pmax(misCal$meanPredictionRisk, eps), 1 - eps)
-    correctionFactor <- stats::qlogis(obsRisk) - stats::qlogis(predRisk)
-
-    recalibrated <- prediction
-
-    if ("rawValue" %in% names(recalibrated))  {
-      recalibrated$rawValue <- recalibrated$rawValue + correctionFactor
-      recalibrated$value <- stats::plogis(recalibrated$rawValue)
+    if ("rawValue" %in% names(recalibrated)) {
+      lp <- recalibrated$rawValue
     } else {
       p <- pmin(pmax(recalibrated$value, eps), 1 - eps)
-      lp <- stats::qlogis(p) + correctionFactor
-      recalibrated$value <- stats::plogis(lp)
+      lp <- stats::qlogis(p)
     }
+    y <- ifelse(recalibrated$outcomeCount > 0, 1, 0)
 
-    recalibrated[, columnType] <- "recalibrationInTheLarge"
-    prediction <- rbind(prediction, recalibrated)
+    # an intercept-only logistic model with the logits as offset is what makes
+    # mean recalibrated risk equal observed risk for heterogeneous predictions
+    refit <- suppressWarnings(stats::glm(y ~ 1, offset = lp, family = "binomial"))
+    correctionFactor <- unname(refit$coefficients[1])
+
+    newLp <- lp + correctionFactor
+    if ("rawValue" %in% names(recalibrated)) {
+      recalibrated$rawValue <- newLp
+    }
+    recalibrated$value <- stats::plogis(newLp)
+
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "recalibrationInTheLarge")
     attr(prediction, "metaData")$recalibrationInTheLarge <-
       list(correctionFactor = correctionFactor)
 
@@ -270,6 +301,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 
   if (attr(prediction, "metaData")$modelType == "survival") {
     ParallelLogger::logError("Survival recal in the large not currently available")
+    return(prediction)
   }
 }
 
@@ -288,7 +320,7 @@ recalibrationInTheLarge <- function(prediction, columnType = "evaluationType") {
 weakRecalibration <- function(prediction, columnType = "evaluationType") {
   # if binary:
   if (attr(prediction, "metaData")$modelType == "binary") {
-    recalibrated <- prediction
+    recalibrated <- getOriginalPredictions(prediction, columnType)
     epsilon <- .Machine$double.eps
 
     if ("rawValue" %in% names(recalibrated)) {
@@ -310,8 +342,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     }
     recalibrated$value <- stats::plogis(newLp)
 
-    recalibrated[, columnType] <- "weakRecalibration"
-    prediction <- rbind(prediction, recalibrated)
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "weakRecalibration")
     attr(prediction, "metaData")$weakRecalibration <- list(
       adjustGradient = refit$coefficients[2],
       adjustIntercept = refit$coefficients[1]
@@ -325,7 +356,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     rlang::check_installed("survival",
       reason = "weakRecalibration for survival models requires the survival package to be installed"
     )
-    recalibrated <- prediction
+    recalibrated <- getOriginalPredictions(prediction, columnType)
 
     # this will make the recalibration work if the baselineSurvival is missing
     baseline <- ifelse(is.null(attr(recalibrated, "baselineSurvival")), 0.9, attr(recalibrated, "baselineSurvival"))
@@ -334,7 +365,13 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     offset <- ifelse(is.null(attr(recalibrated, "offset")), 0, attr(recalibrated, "offset"))
     ParallelLogger::logInfo(paste0("recal initial offset: ", offset))
 
-    timepoint <- ifelse(is.null(attr(recalibrated, "timePoint")), 365, attr(recalibrated, "timePoint"))
+    timepoint <- attr(recalibrated, "metaData")$timepoint
+    if (is.null(timepoint)) {
+      timepoint <- attr(recalibrated, "timePoint")
+    }
+    if (is.null(timepoint) || length(timepoint) != 1 || !is.finite(timepoint) || timepoint <= 0) {
+      stop("weakRecalibration of a survival model needs a positive timepoint in the prediction metaData")
+    }
     ParallelLogger::logInfo(paste0("recal initial timepoint: ", timepoint))
 
     if ("rawValue" %in% names(recalibrated)) {
@@ -348,7 +385,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     }
 
 
-    t <- apply(cbind(recalibrated$daysToCohortEnd, recalibrated$survivalTime), 1, min)
+    t <- recalibrated$survivalTime
     y <- ifelse(recalibrated$outcomeCount > 0, 1, 0) # observed outcome
     y[t > timepoint] <- 0
     t[t > timepoint] <- timepoint
@@ -364,8 +401,7 @@ weakRecalibration <- function(prediction, columnType = "evaluationType") {
     # 1-h.slope^exp(lp.slope)
 
 
-    recalibrated[, columnType] <- "weakRecalibration"
-    prediction <- rbind(prediction, recalibrated)
+    prediction <- appendRecalibrated(prediction, recalibrated, columnType, "weakRecalibration")
     attr(prediction, "metaData")$weakRecalibration <- list(
       adjustGradient = f.slope$coefficients["lp"],
       adjustIntercept = h.slope

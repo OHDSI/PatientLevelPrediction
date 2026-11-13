@@ -389,20 +389,21 @@ predictCyclops <- function(plpModel, data, cohort) {
 
   if (predictionType == "survival") {
     if (!is.null(plpModel$model$baselineSurvival)) {
-      if (is.null(attr(cohort, "timepoint"))) {
-        timepoint <- attr(cohort, "metaData")$populationSettings$riskWindowEnd
-      } else {
-        timepoint <- attr(cohort, "timepoint")
-      }
-      bhind <- which.min(abs(plpModel$model$baselineSurvival$time - timepoint))
-      # 1- baseline survival(time)^ (exp(betas*values))
-      prediction$value <- 1 - plpModel$model$baselineSurvival$surv[bhind]^prediction$value
+      timepoint <- getSurvivalTimepoint(
+        attr(cohort, "metaData")$populationSettings,
+        attr(cohort, "timepoint")
+      )
+      baselineSurvival <- baselineSurvivalAt(plpModel$model$baselineSurvival, timepoint)
+      # Models saved before the offset was stored have no value to apply here.
+      offset <- plpModel$model$baselineSurvival$offset %||% 0
+      # 1- baseline survival(time)^ (exp(betas*values - offset))
+      prediction$value <- 1 - baselineSurvival^(prediction$value * exp(-offset))
 
 
       metaData <- list()
-      metaData$baselineSurvivalTimepoint <- plpModel$model$baselineSurvival$time[bhind]
-      metaData$baselineSurvival <- plpModel$model$baselineSurvival$surv[bhind]
-      metaData$offset <- 0
+      metaData$baselineSurvivalTimepoint <- timepoint
+      metaData$baselineSurvival <- baselineSurvival
+      metaData$offset <- offset
 
       attr(prediction, "metaData") <- metaData
     }
@@ -518,7 +519,10 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   if (modelType == "cox" || modelType == "survival") {
     baselineSurvival <- tryCatch(
       {
-        survival::survfit(fit, type = "aalen")
+        curve <- survival::survfit(fit, type = "aalen")
+        # Cyclops returns survival at the mean linear predictor, so risks need exp(xBeta - offset).
+        curve$offset <- Cyclops::meanLinearPredictor(fit)
+        curve
       },
       error = function(e) {
         ParallelLogger::logInfo(e)

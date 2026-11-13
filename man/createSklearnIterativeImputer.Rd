@@ -38,6 +38,14 @@ The settings for the sklearn iterative imputer of class \code{featureEngineering
 This function creates settings for a dense iterative imputer
 powered by scikit-learn's \code{IterativeImputer} through \code{reticulate}.
 }
+\details{
+scikit-learn fits the imputer; at prediction its fitted steps (the
+starting value of each feature and the coefficients of each BayesianRidge
+model) are applied in R, so a saved model can be loaded and applied without
+Python. With \code{samplePosterior = TRUE} the imputer draws random values, which
+cannot be repeated in R, so such a model can only be applied in the R session
+it was fitted in.
+}
 \examples{
 \dontshow{ # dontrun reason: requires python and scikit-learn }
 \dontrun{

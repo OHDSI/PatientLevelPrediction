@@ -13,7 +13,7 @@ getCohortCovariateData(
   cohortTable = "#cohort_person",
   rowIdField = "row_id",
   aggregated,
-  cohortIds,
+  cohortIds = -1,
   covariateSettings,
   ...
 )
@@ -35,7 +35,7 @@ getCohortCovariateData(
 
 \item{aggregated}{whether the covariate should be aggregated}
 
-\item{cohortIds}{cohort id for the target cohort}
+\item{cohortIds}{cohort id(s) for the target cohort; -1 uses every cohort in the table}
 
 \item{covariateSettings}{settings for the covariate cohorts and time periods}
 
