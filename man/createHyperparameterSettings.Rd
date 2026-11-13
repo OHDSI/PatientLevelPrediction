@@ -9,7 +9,8 @@ createHyperparameterSettings(
   tuningMetric = aucMetric,
   sampleSize = NULL,
   randomSeed = NULL,
-  generator = NULL
+  generator = NULL,
+  validation = "cv"
 )
 }
 \arguments{
@@ -30,6 +31,15 @@ settings)} and \code{getNext(history)} methods, and may provide an optional
 \code{finalize(history)} method. A candidate the model skipped with
 \code{\link[=stopCandidate]{stopCandidate()}} is in the history with \code{cvPerformance = NA} and its
 message in \code{error}.}
+
+\item{validation}{How each candidate is scored: \code{"cv"} (the default) fits it
+once per fold and scores it on the left-out fold, \code{"trainValidation"} fits
+it once on all folds but the last and scores it on the last fold, for
+models where one fit takes long. The size of the validation part is set by
+the number of folds in the split settings (with \code{nfold = 5} it is a fifth of
+the training data). The retained predictions of the selected candidate
+have evaluationType \code{"CV"} or \code{"TrainValidation"}. Cyclops models select
+their penalty with their own cross-validation and ignore this setting.}
 }
 \description{
 Create Hyperparameter Settings

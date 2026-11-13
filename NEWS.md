@@ -48,6 +48,11 @@ can be refitted or re-evaluated.
 - Errors in a model's variable importance are logged as warnings instead of
   information.
 - `createLearningCurve()` takes `hyperparameterSettings`.
+- `createHyperparameterSettings(validation = "trainValidation")` fits each
+  hyperparameter candidate once, on all folds but the last, and scores it on
+  the last fold, instead of once per fold; for models where one fit takes
+  long. The predictions kept from the search then have evaluationType
+  `"TrainValidation"` instead of `"CV"`. Cyclops models ignore it.
 - The custom models vignette describes the current model interface.
 
 ## Changes to results
@@ -198,6 +203,8 @@ can be refitted or re-evaluated.
   data.
 - Saving a model whose `saveType` cannot be found stops instead of saving
   nothing.
+- Cyclops models warn about each non-default hyperparameter setting they
+  ignore; before, only when both the search and the tuning metric were changed.
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.

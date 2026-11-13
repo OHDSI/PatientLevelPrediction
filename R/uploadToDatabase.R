@@ -921,13 +921,20 @@ sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
     generator$fingerprint <- fingerprintGenerator(hyperparameterSettings$generator)
   }
 
-  list(
+  result <- list(
     search = hyperparameterSettings$search,
     tuningMetric = sanitizeTuningMetricForDatabase(hyperparameterSettings$tuningMetric),
     sampleSize = hyperparameterSettings$sampleSize,
     randomSeed = hyperparameterSettings$randomSeed,
     generator = generator
   )
+  # the default validation is not written, so settings that use it keep the
+  # JSON, and the database id, they had before the setting existed
+  validation <- hyperparameterSettings$validation %||% "cv"
+  if (!identical(validation, "cv")) {
+    result$validation <- validation
+  }
+  result
 }
 
 addModel <- function(
