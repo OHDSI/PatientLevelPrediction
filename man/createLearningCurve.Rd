@@ -22,7 +22,8 @@ createLearningCurve(
   logSettings = createLogSettings(),
   executeSettings = createExecuteSettings(runSplitData = TRUE, runSampleData = FALSE,
     runFeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
-    runCovariateSummary = FALSE)
+    runCovariateSummary = FALSE),
+  hyperparameterSettings = createHyperparameterSettings()
 )
 }
 \arguments{
@@ -79,6 +80,10 @@ The default is none.}
 \item{preprocessSettings}{An object of \code{preprocessSettings}. This setting specifies the minimum fraction of
 target population who must have a covariate for it to be included in the model training
 and whether to normalise the covariates before training}
+
+\item{hyperparameterSettings}{An object of \code{hyperparameterSettings} created using
+\code{createHyperparameterSettings}, used to tune the model
+at every training fraction (default: the default search and AUC)}
 
 \item{logSettings}{An object of \code{logSettings} created using \code{createLogSettings}
 specifying how the logging is done}
