@@ -31,6 +31,24 @@ can be refitted or re-evaluated.
   imputation, normalization, sampling and sparse matrix building, and the
   copies a run makes are closed instead of staying on disk until garbage
   collection.
+- Model hooks (fit function, `prepareData`, `train`, `predict`,
+  `variableImportance`, `saveType`) and the functions of feature engineering,
+  sampling and splitting settings are found the same way everywhere: a
+  function, a function name, or `"pkg::fn"` from a package that is loaded but
+  not attached. A missing function stops with a message naming the hook.
+- All hooks are looked up before fitting, so a misspelled one fails before
+  the hyperparameter search instead of after it.
+- `prepareData` gets the model settings when it has a `settings` argument.
+- A save handler can name the file it writes in the model folder (`fileName`,
+  a plain name, default `"model.json"`).
+- New exported `stopCandidate()`: a model's train or predict function calls it
+  when a hyperparameter candidate cannot be fitted (for example out of
+  memory). The search warns, records the candidate with its message and goes
+  on. Any other error still stops the search.
+- Errors in a model's variable importance are logged as warnings instead of
+  information.
+- `createLearningCurve()` takes `hyperparameterSettings`.
+- The custom models vignette describes the current model interface.
 
 ## Changes to results
 ### Evaluation
@@ -178,6 +196,8 @@ can be refitted or re-evaluated.
   no `isBinary` or `missingMeansZero`, so normalizers and imputers failed.
   Profiles made by `createSimulationProfile()` keep the `analysisRef` of their
   data.
+- Saving a model whose `saveType` cannot be found stops instead of saving
+  nothing.
 - Fixed normalizer models in external validation, after reloading, and in
   `runPlp()` with a covariate summary, and saved rare feature removers on plain
   `plpData`, which all failed.
