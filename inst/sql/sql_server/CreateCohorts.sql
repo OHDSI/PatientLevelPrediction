@@ -24,6 +24,7 @@ limitations under the License.
 {DEFAULT @washout_period = 0}
 {DEFAULT @use_sample = FALSE}
 {DEFAULT @sample_number = 100000}
+{DEFAULT @person_hash = ''}
 
 IF OBJECT_ID('tempdb..#cohort_person', 'U') IS NOT NULL
 	DROP TABLE #cohort_person;
@@ -63,7 +64,7 @@ INTO #cohort_person
 
 {@use_sample}?{From ( select *  -- sampdata
                 from ( select {@first_only} ? {first_only.*}:{raw_cohorts.*}, p.year_of_birth, p.gender_concept_id, op.observation_period_start_date, op.observation_period_end_date , -- alldata
-                row_number() over (order by (CAST(p.person_id*month(cohort_start_date) AS BIGINT) % 123)*(CAST(year(cohort_start_date)*day(cohort_start_date) AS BIGINT) % 123 ), p.person_id  ) rn
+                DENSE_RANK() over (order by @person_hash, p.person_id) rn
   } 
 
 

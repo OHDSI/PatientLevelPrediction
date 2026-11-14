@@ -111,6 +111,12 @@ can be refitted or re-evaluated.
 - Under- and oversampling keep the sole control or case of a fold.
 - `plpData` saved with a custom population trains and evaluates on that
   population after loading.
+- Fixed `createRestrictPlpDataSettings(sampleSize = )`, which gave a biased sample
+  and failed on Oracle. It now orders people by a hash of their person ID, counts
+  people instead of cohort entries, and keeps all entries of a sampled person.
+  With `firstExposureOnly = FALSE`, the result can have more rows than
+  `sampleSize`. Any analysis using `sampleSize` will get a different sample than
+  before (#689).
 
 ### Models and tuning
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
