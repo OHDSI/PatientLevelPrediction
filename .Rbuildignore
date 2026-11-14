@@ -28,3 +28,5 @@ _pkgdown.yml
 .cache
 ^\.git$
 ^results$
+^AGENTS\.md$
+^CLAUDE\.md$

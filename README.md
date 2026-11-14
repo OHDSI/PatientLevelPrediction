@@ -110,7 +110,7 @@ Support
 
 Contributing
 ============
-Read [here](https://ohdsi.github.io/Hades/contribute.html) how you can contribute to this package. 
+Read the [contributing guide](https://github.com/OHDSI/PatientLevelPrediction/blob/develop/.github/CONTRIBUTING.md) before opening a pull request. It builds on the [HADES developer guidelines](https://ohdsi.github.io/Hades/developerGuidelines.html) and adds what is specific to this package.
  
 License
 =======
