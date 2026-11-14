@@ -368,6 +368,36 @@ test_that("applyMinCellCount censors the values that give a count back", {
   expect_equal(minCellResult$target_count, c(1000, 990))
 })
 
+test_that("applyMinCellCount censors the counts of the diagnostics", {
+  km <- data.frame(
+    diagnostic_id = 1,
+    days_to_event = 1:3,
+    outcome_at_time = c(2, 7, 1),
+    observed_at_start_of_day = c(500, 498, 3),
+    probast_id = "4.1",
+    input_type = "Full"
+  )
+  minCellResult <- applyMinCellCount(
+    "DIAGNOSTIC_PREDICTORS", getPlpSensitiveColumns(), km, 5
+  )
+  expect_equal(minCellResult$outcome_at_time, c(-1, 7, -1))
+  expect_equal(minCellResult$observed_at_start_of_day, c(500, 498, -1))
+  expect_equal(minCellResult$days_to_event, 1:3)
+
+  participants <- data.frame(
+    diagnostic_id = 1,
+    design = rep(c("washoutPeriod: 0", "washoutPeriod: 365"), each = 4),
+    metric = rep(c("N", "outcomePercent", "malePercent", "meanAge"), 2),
+    value = c(1000, 0.3, 50, 61, 4, 25, 50, 60),
+    probast_id = "1.1"
+  )
+  minCellResult <- applyMinCellCount(
+    "diagnostic_participants", getPlpSensitiveColumns(), participants, 5
+  )
+  # 0.3% of 1000 is 3 people; the second design has 4 people in all
+  expect_equal(minCellResult$value, c(1000, -1, 50, 61, -1, -1, -1, 60))
+})
+
 test_that("applyMinCellCount matches camel case columns and keeps old rules", {
   # the columns of a runPlp result, as savePlpShareable() writes them
   demographic <- data.frame(

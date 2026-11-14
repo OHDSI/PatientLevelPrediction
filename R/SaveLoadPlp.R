@@ -769,8 +769,9 @@ loadPlpShareable <- function(loadDirectory) {
 #'                       \code{list(metric = "outcomeCount")}, the rows that hold counts).
 #'                       The default covers the counts in the prediction distribution,
 #'                       covariate, calibration, demographic and threshold summaries, the
-#'                       attrition and the population size and outcome count of the evaluation
-#'                       statistics.
+#'                       attrition, the population size and outcome count of the evaluation
+#'                       statistics and the counts of the diagnostics. The attrition saved with
+#'                       each model in the \code{models} folder is censored too.
 #' @param fileAppend     If set to a string this will be appended to the start of the csv file names
 #' @return The directory path where the results were saved
 #' @examples
@@ -884,6 +885,13 @@ extractDatabaseToCsv <- function(
         }
       )
       if (!is.null(plpModel)) {
+        # the model keeps the attrition of its training population
+        plpModel$trainDetails$attrition <- applyMinCellCount(
+          tableName = "attrition",
+          sensitiveColumns = sensitiveColumns,
+          result = plpModel$trainDetails$attrition,
+          minCellCount = minCellCount
+        )
         PatientLevelPrediction::savePlpModel(plpModel, file.path(csvFolder, "models", modelLocAppend))
       }
     }
@@ -901,7 +909,10 @@ extractDatabaseToCsv <- function(
 #   alsoCensor: columns censored with them because they give the counts back,
 #     such as means, rates and the risks of a handful of people,
 #   rows: for tables in long format, the values a column must have for a row to
-#     hold a count, as list(metric = c("outcomeCount")).
+#     hold a count, as list(metric = c("outcomeCount")),
+#   countFrom: in place of counts, a function of the table that returns the
+#     count each row gives back (NA for none), with the columns to censor in
+#     alsoCensor.
 # Names are those of the result database. Columns are matched ignoring case and
 # underscores, so the same rules apply to the camel case columns of a runPlp
 # result, and columns a table does not have are skipped.
@@ -973,10 +984,34 @@ getPlpSensitiveColumns <- function() {
         counts = "value",
         rows = list(metric = c("populationSize", "outcomeCount"))
       )
+    ),
+    # the Kaplan-Meier counts of the outcome diagnostic, per day
+    diagnostic_predictors = list(
+      c("outcome_at_time"),
+      c("observed_at_start_of_day")
+    ),
+    # the participant diagnostic gives each design's size and percentages of it
+    diagnostic_participants = list(
+      list(counts = "value", rows = list(metric = "N")),
+      list(countFrom = participantPercentCounts, alsoCensor = "value")
     )
   )
 
   return(result)
+}
+
+
+# The number of people an outcomePercent or malePercent row of the participant
+# diagnostic stands for, from the N of the same design.
+participantPercentCounts <- function(result) {
+  colnames(result) <- tolower(gsub("_", "", colnames(result)))
+  group <- paste(result$diagnosticid, result$probastid, result$design, sep = "\r")
+  isN <- result$metric == "N"
+  designSize <- as.numeric(result$value[isN])[match(group, group[isN])]
+  isPercent <- result$metric %in% c("outcomePercent", "malePercent")
+  counts <- rep(NA_real_, nrow(result))
+  counts[isPercent] <- round(as.numeric(result$value[isPercent]) * designSize[isPercent] / 100)
+  counts
 }
 
 
@@ -1001,6 +1036,14 @@ applyMinCellCount <- function(
   for (rule in rules) {
     if (!is.list(rule)) {
       rule <- list(counts = rule)
+    }
+    if (is.function(rule$countFrom)) {
+      count <- rule$countFrom(result)
+      rowInd <- !is.na(count) & count < minCellCount
+      for (index in findColumns(rule$alsoCensor)) {
+        result[[index]][rowInd] <- censoredValue
+      }
+      next
     }
     countColumns <- findColumns(rule$counts)
     if (length(countColumns) == 0) {

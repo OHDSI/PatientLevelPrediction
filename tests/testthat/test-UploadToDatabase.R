@@ -686,6 +686,31 @@ test_that("extractDatabaseToCsv censors counts below minCellCount", {
   expect_true(any(thresholds$true_positive_count >= 5))
 })
 
+test_that("extractDatabaseToCsv censors the attrition of the exported models", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = NULL)
+  csvFolder <- file.path(saveLoc, "csvFolderCensored")
+  on.exit(unlink(csvFolder, recursive = TRUE), add = TRUE)
+  extractDatabaseToCsv(
+    connectionDetails = DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation),
+    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+    csvFolder = csvFolder,
+    minCellCount = 1e9
+  )
+  models <- dir(file.path(csvFolder, "models"), full.names = TRUE)
+  expect_true(length(models) > 0)
+  for (model in models) {
+    attrition <- loadPlpModel(model)$trainDetails$attrition
+    expect_true(nrow(attrition) > 0)
+    expect_true(all(attrition$outcomes == -1))
+    expect_true(all(attrition$targetCount == -1))
+  }
+  attrition <- utils::read.csv(file.path(csvFolder, "attrition.csv"))
+  expect_true(all(attrition$outcomes == -1))
+})
+
 test_that("import from csv", {
   skip_if_not_installed("ResultModelManager")
   skip_if_not_installed("Eunomia")

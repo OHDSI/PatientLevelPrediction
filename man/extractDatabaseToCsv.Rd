@@ -36,8 +36,9 @@ with them) and, for long tables, \code{rows} (such as
 \code{list(metric = "outcomeCount")}, the rows that hold counts).
 The default covers the counts in the prediction distribution,
 covariate, calibration, demographic and threshold summaries, the
-attrition and the population size and outcome count of the evaluation
-statistics.}
+attrition, the population size and outcome count of the evaluation
+statistics and the counts of the diagnostics. The attrition saved with
+each model in the \code{models} folder is censored too.}
 
 \item{fileAppend}{If set to a string this will be appended to the start of the csv file names}
 }
