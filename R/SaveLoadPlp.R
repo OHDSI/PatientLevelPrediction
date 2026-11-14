@@ -540,7 +540,9 @@ loadPlpResult <- function(dirPath) {
 #'
 #' @param result                      An object of class runPlp with development or validation results
 #' @param saveDirectory               The directory the save the results as csv files
-#' @param minCellCount                Minimum cell count for the covariateSummary and certain evaluation results
+#' @param minCellCount                Counts below this value, and the values that give them back,
+#'                                     are left empty in the covariate summary and evaluation results.
+#'                                     The rules are those of \code{extractDatabaseToCsv()}.
 #' @return                            The directory path where the results were saved
 #' @examples
 #' \donttest{ \dontshow{ # takes too long }
@@ -576,29 +578,41 @@ savePlpShareable <- function(result, saveDirectory, minCellCount = 10) {
   if (!dir.exists(file.path(saveDirectory, "performanceEvaluation"))) {
     dir.create(file.path(saveDirectory, "performanceEvaluation"), recursive = TRUE)
   }
-  utils::write.csv(removeList(result$performanceEvaluation$evaluationStatistics), file = file.path(saveDirectory, "performanceEvaluation", "evaluationStatistics.csv"), row.names = FALSE)
-  utils::write.csv(result$performanceEvaluation$thresholdSummary, file = file.path(saveDirectory, "performanceEvaluation", "thresholdSummary.csv"), row.names = FALSE)
-  utils::write.csv(
-    removeCellCount(
-      result$performanceEvaluation$demographicSummary,
+  # the same rules as extractDatabaseToCsv(), with censored cells left empty
+  censor <- function(data, tableName) {
+    applyMinCellCount(
+      tableName = tableName,
+      sensitiveColumns = getPlpSensitiveColumns(),
+      result = data,
       minCellCount = minCellCount,
-      filterColumns = c("PersonCountAtRisk", "PersonCountWithOutcome")
-    ),
-    file = file.path(saveDirectory, "performanceEvaluation", "demographicSummary.csv"),
-    row.names = FALSE
+      censoredValue = NA
+    )
+  }
+  performanceTables <- list(
+    evaluationStatistics = "evaluation_statistics",
+    thresholdSummary = "threshold_summary",
+    demographicSummary = "demographic_summary",
+    calibrationSummary = "calibration_summary",
+    predictionDistribution = "prediction_distribution"
   )
-  utils::write.csv(result$performanceEvaluation$calibrationSummary, file = file.path(saveDirectory, "performanceEvaluation", "calibrationSummary.csv"), row.names = FALSE)
-  utils::write.csv(result$performanceEvaluation$predictionDistribution, file = file.path(saveDirectory, "performanceEvaluation", "predictionDistribution.csv"), row.names = FALSE)
+  for (table in names(performanceTables)) {
+    data <- result$performanceEvaluation[[table]]
+    if (table == "evaluationStatistics") {
+      data <- removeList(data)
+    }
+    utils::write.csv(
+      censor(data, performanceTables[[table]]),
+      file = file.path(saveDirectory, "performanceEvaluation", paste0(table, ".csv")),
+      row.names = FALSE
+    )
+  }
 
   if (!is.null(result$covariateSummary)) {
     # covariateSummary
     utils::write.csv(
-      removeCellCount(
-        result$covariateSummary,
-        minCellCount = minCellCount,
-        filterColumns = c("CovariateCount", "WithOutcome_CovariateCount", "WithNoOutcome_CovariateCount"),
-        extraCensorColumns = c("WithOutcome_CovariateMean", "WithNoOutcome_CovariateMean"),
-        restrictColumns = c("covariateId", "covariateName", "analysisId", "conceptId", "CovariateCount", "covariateValue", "WithOutcome_CovariateCount", "WithNoOutcome_CovariateCount", "WithOutcome_CovariateMean", "WithNoOutcome_CovariateMean", "StandardizedMeanDiff")
+      censor(
+        result$covariateSummary[, c("covariateId", "covariateName", "analysisId", "conceptId", "CovariateCount", "covariateValue", "WithOutcome_CovariateCount", "WithNoOutcome_CovariateCount", "WithOutcome_CovariateMean", "WithNoOutcome_CovariateMean", "StandardizedMeanDiff")],
+        "covariate_summary"
       ),
       file = file.path(saveDirectory, "covariateSummary.csv"),
       row.names = FALSE
@@ -734,36 +748,6 @@ loadPlpShareable <- function(loadDirectory) {
 }
 
 
-removeCellCount <- function(
-    data,
-    minCellCount = minCellCount,
-    filterColumns = c("CovariateCount", "WithOutcome_CovariateCount", "WithNoOutcome_CovariateCount"),
-    extraCensorColumns = c("WithOutcome_CovariateMean", "WithNoOutcome_CovariateMean"),
-    restrictColumns = NULL) {
-  # first restrict to certain columns if required
-  if (!is.null(restrictColumns)) {
-    data <- data[, restrictColumns]
-  }
-
-  # next find the rows that need censoring
-  ind <- rep(FALSE, nrow(data))
-  for (i in 1:length(filterColumns)) {
-    data[, filterColumns[i]][is.na(data[, filterColumns[i]])] <- 0
-    ind <- ind | (data[, filterColumns[i]] < minCellCount)
-  }
-
-  # now replace these value with -1
-
-  removeColumns <- c(filterColumns, extraCensorColumns)[c(filterColumns, extraCensorColumns) %in% colnames(data)]
-
-  for (i in 1:length(removeColumns)) {
-    data[ind, removeColumns[i]] <- NA
-  }
-
-  return(data)
-}
-
-
 #' Exports all the results from a database into csv files
 #'
 #' @details
@@ -773,8 +757,20 @@ removeCellCount <- function(
 #' @param connectionDetails                    The connectionDetails for the result database
 #' @param databaseSchemaSettings         The result database schema settings
 #' @param csvFolder      Location to save the csv files
-#' @param minCellCount   The min value to show in cells that are sensitive (values less than this value will be replaced with -1)
-#' @param sensitiveColumns A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.
+#' @param minCellCount   The min value to show in cells that are sensitive. Counts below this
+#'                       value are replaced with -1, together with the values that give them
+#'                       back, such as covariate means, observed incidences, the rates of a
+#'                       threshold summary row and the predicted risks of a small group.
+#' @param sensitiveColumns A named list, one element per result table (lower case, such as
+#'                       \code{"demographic_summary"}), each a list of column groups. A group is
+#'                       a character vector of count columns censored together, or a list with
+#'                       \code{counts} (the count columns), \code{alsoCensor} (columns censored
+#'                       with them) and, for long tables, \code{rows} (such as
+#'                       \code{list(metric = "outcomeCount")}, the rows that hold counts).
+#'                       The default covers the counts in the prediction distribution,
+#'                       covariate, calibration, demographic and threshold summaries, the
+#'                       attrition and the population size and outcome count of the evaluation
+#'                       statistics.
 #' @param fileAppend     If set to a string this will be appended to the start of the csv file names
 #' @return The directory path where the results were saved
 #' @examples
@@ -854,10 +850,9 @@ extractDatabaseToCsv <- function(
     # lower case for consistency in sharing csv results
     colnames(result) <- tolower(SqlRender::camelCaseToSnakeCase(colnames(result)))
 
-    # TODO: add min cell count filter here
     if (tolower(table) %in% names(sensitiveColumns)) {
       result <- applyMinCellCount(
-        tableName = table,
+        tableName = tolower(table),
         sensitiveColumns = sensitiveColumns,
         result = result,
         minCellCount = minCellCount
@@ -898,21 +893,86 @@ extractDatabaseToCsv <- function(
 }
 
 
+# The count columns of each result table that minCellCount applies to. Each
+# element of a table's list is one group of columns: a character vector of count
+# columns that are censored together when any of them is below minCellCount, or
+# a list with
+#   counts: the count columns that trigger censoring,
+#   alsoCensor: columns censored with them because they give the counts back,
+#     such as means, rates and the risks of a handful of people,
+#   rows: for tables in long format, the values a column must have for a row to
+#     hold a count, as list(metric = c("outcomeCount")).
+# Names are those of the result database. Columns are matched ignoring case and
+# underscores, so the same rules apply to the camel case columns of a runPlp
+# result, and columns a table does not have are skipped.
 getPlpSensitiveColumns <- function() {
+  predictedRisk <- c(
+    "average_predicted_probability", "st_dev_predicted_probability",
+    "min_predicted_probability", "p_05_predicted_probability",
+    "p_25_predicted_probability", "median_predicted_probability",
+    "p_50_predicted_probability", "p_75_predicted_probability",
+    "p_95_predicted_probability", "max_predicted_probability"
+  )
   result <- list(
     prediction_distribution = list(
-      c("person_count")
+      list(counts = "person_count", alsoCensor = predictedRisk)
     ),
+    # the overall count is the sum of the two group counts and a group mean
+    # times the group size is its count, so the three are censored together
     covariate_summary = list(
-      c("covariate_count"),
-      c("with_no_outcome_covariate_count", "with_outcome_covariate_count")
+      list(
+        counts = c(
+          "covariate_count", "with_no_outcome_covariate_count",
+          "with_outcome_covariate_count"
+        ),
+        alsoCensor = c(
+          "covariate_mean", "covariate_st_dev",
+          "with_no_outcome_covariate_mean", "with_no_outcome_covariate_st_dev",
+          "with_outcome_covariate_mean", "with_outcome_covariate_st_dev",
+          "standardized_mean_diff"
+        )
+      )
     ),
     calibration_summary = list(
-      c("person_count_at_risk", "person_count_with_outcome")
+      list(
+        counts = c("person_count_at_risk", "person_count_with_outcome"),
+        alsoCensor = c(
+          predictedRisk, "observed_incidence", "observed_incidence_lb",
+          "observed_incidence_ub"
+        )
+      )
     ),
     demographic_summary = list(
-      c("person_count_at_risk"),
-      c("person_count_with_outcome")
+      list(counts = "person_count_at_risk", alsoCensor = predictedRisk),
+      list(counts = "person_count_with_outcome", alsoCensor = "observed_risk")
+    ),
+    # the rates of a row give its counts back from the totals
+    threshold_summary = list(
+      list(
+        counts = c(
+          "positive_count", "negative_count", "true_count", "false_count",
+          "true_positive_count", "true_negative_count",
+          "false_positive_count", "false_negative_count"
+        ),
+        alsoCensor = c(
+          "f_1_score", "accuracy", "sensitivity", "false_negative_rate",
+          "false_positive_rate", "specificity", "positive_predictive_value",
+          "false_discovery_rate", "negative_predictive_value",
+          "false_omission_rate", "positive_likelihood_ratio",
+          "negative_likelihood_ratio", "diagnostic_odds_ratio"
+        )
+      )
+    ),
+    attrition = list(
+      c("target_count"),
+      c("unique_people"),
+      c("outcomes")
+    ),
+    evaluation_statistics = list(
+      list(
+        counts = "value",
+        rows = list(metric = c("populationSize", "outcomeCount"))
+      )
     )
   )
 
@@ -924,14 +984,51 @@ applyMinCellCount <- function(
     tableName,
     sensitiveColumns,
     result,
-    minCellCount) {
-  columnsToCensor <- sensitiveColumns[[tableName]]
+    minCellCount,
+    censoredValue = -1) {
+  # the result tables are named in upper case, the rules in lower case
+  rules <- sensitiveColumns[[tolower(tableName)]]
+  if (is.null(rules) || is.null(result) || nrow(result) == 0) {
+    return(result)
+  }
 
-  for (columns in columnsToCensor) {
+  normalise <- function(x) tolower(gsub("_", "", x))
+  findColumns <- function(columns) {
+    index <- match(normalise(columns), normalise(colnames(result)))
+    unique(index[!is.na(index)])
+  }
+
+  for (rule in rules) {
+    if (!is.list(rule)) {
+      rule <- list(counts = rule)
+    }
+    countColumns <- findColumns(rule$counts)
+    if (length(countColumns) == 0) {
+      next
+    }
+    censorColumns <- unique(c(countColumns, findColumns(rule$alsoCensor)))
+
+    holdsCount <- rep(TRUE, nrow(result))
+    for (column in names(rule$rows)) {
+      index <- findColumns(column)
+      if (length(index) == 0) {
+        holdsCount <- rep(FALSE, nrow(result))
+      } else {
+        holdsCount <- holdsCount & result[[index]] %in% rule$rows[[column]]
+      }
+    }
+
     # a missing count discloses nothing, so it stays NA and does not trigger censoring
-    rowInd <- rowSums(result[, columns, drop = FALSE] < minCellCount, na.rm = TRUE) > 0
+    small <- rep(FALSE, nrow(result))
+    for (index in countColumns) {
+      count <- suppressWarnings(as.numeric(result[[index]]))
+      small <- small | (!is.na(count) & count < minCellCount)
+    }
+    rowInd <- holdsCount & small
     if (any(rowInd)) {
-      result[rowInd, columns] <- -1
+      for (index in censorColumns) {
+        result[[index]][rowInd] <- censoredValue
+      }
     }
   }
 

@@ -200,6 +200,26 @@ test_that("savePlpShareable works", {
   )
 })
 
+test_that("savePlpShareable censors small counts in every table", {
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  saveDirectory <- file.path(saveLoc, "plpFriendlyCensored")
+  on.exit(unlink(saveDirectory, recursive = TRUE), add = TRUE)
+  savePlpShareable(plpResult, saveDirectory, minCellCount = 1e9)
+  shareable <- loadPlpShareable(saveDirectory)
+  performance <- shareable$performanceEvaluation
+  expect_true(all(is.na(performance$thresholdSummary$truePositiveCount)))
+  expect_true(all(is.na(performance$thresholdSummary$sensitivity)))
+  expect_true(all(is.na(performance$calibrationSummary$PersonCountAtRisk)))
+  expect_true(all(is.na(performance$predictionDistribution$PersonCount)))
+  expect_true(all(is.na(performance$demographicSummary$PersonCountWithOutcome)))
+  counts <- performance$evaluationStatistics$metric %in% c("populationSize", "outcomeCount")
+  expect_true(any(counts))
+  expect_true(all(is.na(performance$evaluationStatistics$value[counts])))
+  expect_false(any(is.na(performance$evaluationStatistics$value[!counts])))
+  expect_true(all(is.na(shareable$covariateSummary$WithOutcome_CovariateMean)))
+})
+
 # Note: saving from database to csv is in the database upload test file
 
 
@@ -241,10 +261,136 @@ test_that("applyMinCellCount works", {
     result = result,
     minCellCount = 10
   )
-  expect_equal(0, sum(minCellResult$covariate_count == -1))
-  expect_equal(minCellResult$with_no_outcome_covariate_count[2], -1)
-  expect_equal(1, sum(minCellResult$with_no_outcome_covariate_count == -1))
-  expect_equal(1, sum(minCellResult$with_outcome_covariate_count == -1))
+  # the overall count is the sum of the group counts, so the three go together,
+  # with the means and the standardized difference that give them back
+  censored <- c(
+    "covariate_count", "with_no_outcome_covariate_count",
+    "with_outcome_covariate_count", "covariate_mean", "covariate_st_dev",
+    "with_no_outcome_covariate_mean", "with_no_outcome_covariate_st_dev",
+    "with_outcome_covariate_mean", "with_outcome_covariate_st_dev",
+    "standardized_mean_diff"
+  )
+  expect_true(all(unlist(minCellResult[2, censored]) == -1))
+  expect_false(any(unlist(minCellResult[1, censored]) == -1))
+  expect_equal(minCellResult$covariate_value, result$covariate_value)
+  expect_equal(minCellResult$covariate_name, result$covariate_name)
+})
+
+test_that("applyMinCellCount censors tables named in upper case", {
+  # extractDatabaseToCsv() loops over getPlpResultTables(), which are upper case
+  result <- data.frame(
+    performance_id = 1,
+    person_count_at_risk = c(3, 100),
+    person_count_with_outcome = c(1, 20)
+  )
+  minCellResult <- applyMinCellCount(
+    tableName = "DEMOGRAPHIC_SUMMARY",
+    sensitiveColumns = getPlpSensitiveColumns(),
+    result = result,
+    minCellCount = 5
+  )
+  expect_equal(minCellResult$person_count_at_risk, c(-1, 100))
+  expect_equal(minCellResult$person_count_with_outcome, c(-1, 20))
+  # every table with counts in the CSV export has rules
+  expect_true(all(
+    names(getPlpSensitiveColumns()) %in% tolower(getPlpResultTables())
+  ))
+})
+
+test_that("applyMinCellCount censors the values that give a count back", {
+  thresholds <- data.frame(
+    performance_id = 1,
+    evaluation = "Test",
+    prediction_threshold = c(0.9, 0.5, 0.1),
+    positive_count = c(2, 60, 95),
+    negative_count = c(98, 40, 5),
+    true_count = 20,
+    false_count = 80,
+    true_positive_count = c(2, 15, 20),
+    true_negative_count = c(80, 35, 5),
+    false_positive_count = c(0, 45, 75),
+    false_negative_count = c(18, 5, 0),
+    sensitivity = c(0.1, 0.75, 1),
+    specificity = c(1, 0.44, 0.06)
+  )
+  minCellResult <- applyMinCellCount(
+    "threshold_summary", getPlpSensitiveColumns(), thresholds, 5
+  )
+  expect_true(all(minCellResult[c(1, 3), 4:13] == -1))
+  expect_equal(minCellResult[2, ], thresholds[2, ])
+  expect_equal(minCellResult$prediction_threshold, thresholds$prediction_threshold)
+
+  statistics <- data.frame(
+    performance_id = 1,
+    evaluation = "Test",
+    metric = c("populationSize", "outcomeCount", "AUROC", "brier score"),
+    value = c("100", "3", "0.71", "0.002")
+  )
+  minCellResult <- applyMinCellCount(
+    "evaluation_statistics", getPlpSensitiveColumns(), statistics, 5
+  )
+  expect_equal(minCellResult$value, c("100", "-1", "0.71", "0.002"))
+
+  calibration <- data.frame(
+    person_count_at_risk = c(100, 100),
+    person_count_with_outcome = c(2, 30),
+    average_predicted_probability = c(0.02, 0.3),
+    observed_incidence = c(0.02, 0.3)
+  )
+  minCellResult <- applyMinCellCount(
+    "calibration_summary", getPlpSensitiveColumns(), calibration, 5
+  )
+  expect_true(all(minCellResult[1, ] == -1))
+  expect_equal(minCellResult[2, ], calibration[2, ])
+
+  distribution <- data.frame(
+    class_label = c(0, 1),
+    person_count = c(500, 2),
+    min_predicted_probability = c(0.01, 0.2),
+    max_predicted_probability = c(0.4, 0.3)
+  )
+  minCellResult <- applyMinCellCount(
+    "prediction_distribution", getPlpSensitiveColumns(), distribution, 5
+  )
+  expect_equal(unname(unlist(minCellResult[2, 2:4])), c(-1, -1, -1))
+  expect_equal(minCellResult[1, ], distribution[1, ])
+
+  attrition <- data.frame(
+    description = c("Original", "Require time at risk"),
+    target_count = c(1000, 990),
+    unique_people = c(1000, 990),
+    outcomes = c(6, 4)
+  )
+  minCellResult <- applyMinCellCount(
+    "attrition", getPlpSensitiveColumns(), attrition, 5
+  )
+  expect_equal(minCellResult$outcomes, c(6, -1))
+  expect_equal(minCellResult$target_count, c(1000, 990))
+})
+
+test_that("applyMinCellCount matches camel case columns and keeps old rules", {
+  # the columns of a runPlp result, as savePlpShareable() writes them
+  demographic <- data.frame(
+    ageGroup = c("Age group: 20-24", "Age group: 25-29"),
+    PersonCountAtRisk = c(3, 100),
+    PersonCountWithOutcome = c(1, 2),
+    observedRisk = c(0.33, 0.02),
+    averagePredictedProbability = c(0.2, 0.03)
+  )
+  minCellResult <- applyMinCellCount(
+    "demographic_summary", getPlpSensitiveColumns(), demographic, 5,
+    censoredValue = NA
+  )
+  expect_equal(minCellResult$PersonCountAtRisk, c(NA, 100))
+  expect_equal(minCellResult$PersonCountWithOutcome, c(NA_real_, NA_real_))
+  expect_equal(minCellResult$observedRisk, c(NA_real_, NA_real_))
+  expect_equal(minCellResult$averagePredictedProbability, c(NA, 0.03))
+
+  # rules given as plain vectors of columns, the documented format before
+  oldRules <- list(demographic_summary = list(c("PersonCountWithOutcome")))
+  minCellResult <- applyMinCellCount("demographic_summary", oldRules, demographic, 5)
+  expect_equal(minCellResult$PersonCountWithOutcome, c(-1, -1))
+  expect_equal(minCellResult$PersonCountAtRisk, c(3, 100))
 })
 
 test_that("applyMinCellCount leaves missing counts missing", {

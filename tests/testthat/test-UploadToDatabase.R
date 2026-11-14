@@ -654,6 +654,38 @@ exportedCsvFolder <- function() {
   folder
 }
 
+test_that("extractDatabaseToCsv censors counts below minCellCount", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  csvFolder <- exportedCsvFolder()
+  # the export above uses the default minCellCount of 5
+  for (table in names(getPlpSensitiveColumns())) {
+    csv <- file.path(csvFolder, paste0(table, ".csv"))
+    if (!file.exists(csv)) next
+    data <- utils::read.csv(csv)
+    for (rule in getPlpSensitiveColumns()[[table]]) {
+      if (!is.list(rule)) rule <- list(counts = rule)
+      holdsCount <- rep(TRUE, nrow(data))
+      for (column in names(rule$rows)) {
+        holdsCount <- holdsCount & data[[column]] %in% rule$rows[[column]]
+      }
+      for (column in intersect(rule$counts, colnames(data))) {
+        count <- suppressWarnings(as.numeric(data[[column]][holdsCount]))
+        expect_false(
+          any(count >= 0 & count < 5, na.rm = TRUE),
+          info = paste(table, column)
+        )
+      }
+    }
+  }
+  # the first thresholds hold a handful of people and are censored
+  thresholds <- utils::read.csv(file.path(csvFolder, "threshold_summary.csv"))
+  expect_true(any(thresholds$true_positive_count == -1))
+  expect_true(any(thresholds$sensitivity == -1))
+  expect_true(any(thresholds$true_positive_count >= 5))
+})
+
 test_that("import from csv", {
   skip_if_not_installed("ResultModelManager")
   skip_if_not_installed("Eunomia")
