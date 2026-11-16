@@ -85,7 +85,7 @@ test_that("createHyperparameterSettings accepts generator objects without finali
 test_that("createHyperparameterSettings rejects invalid generator objects", {
   expect_error(
     createHyperparameterSettings(generator = list(getNext = function(history) NULL)),
-    "`generator` must be a function or an object with initialize and getNext methods",
+    "`generator` must be a function, the name of a function that returns a generator, or an object with initialize and getNext methods",
     fixed = TRUE
   )
   expect_error(
@@ -94,12 +94,12 @@ test_that("createHyperparameterSettings rejects invalid generator objects", {
       getNext = function(history) NULL,
       finalize = "not a function"
     )),
-    "`generator` must be a function or an object with initialize and getNext methods",
+    "`generator` must be a function, the name of a function that returns a generator, or an object with initialize and getNext methods",
     fixed = TRUE
   )
   expect_error(
     createHyperparameterSettings(generator = 1),
-    "`generator` must be a function or an object with initialize and getNext methods",
+    "`generator` must be a function, the name of a function that returns a generator, or an object with initialize and getNext methods",
     fixed = TRUE
   )
 })
@@ -518,6 +518,56 @@ test_that("the database form of hyperparameter settings writes validation only w
     )$validation,
     "trainValidation"
   )
+})
+
+test_that("the database form writes the newer settings only when they change the results", {
+  plain <- sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings())
+  expect_identical(
+    sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings(foldWorkers = 4)),
+    plain
+  )
+  expect_identical(
+    sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings(tuningMetric = aucMetric)),
+    plain
+  )
+  expect_equal(
+    names(plain),
+    c("search", "tuningMetric", "sampleSize", "randomSeed", "generator")
+  )
+  named <- sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings(
+    generator = "somePackage::someGenerator", generatorArgs = list(width = 3),
+    selector = "somePackage::someSelector"
+  ))
+  expect_equal(named$generator, list(type = "name", name = "somePackage::someGenerator"))
+  expect_equal(named$generatorArgs, list(width = 3))
+  expect_equal(named$selector, list(type = "name", name = "somePackage::someSelector"))
+  byFunction <- sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings(
+    selector = function(history, metric) 1L
+  ))
+  expect_equal(byFunction$selector$type, "function")
+  expect_true(nzchar(byFunction$selector$fingerprint))
+})
+
+test_that("the database form names the metric a model is tuned on", {
+  model <- list(settings = list(tuningMetric = "logLikelihoodMetric"))
+  byDefault <- sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings(), modelSettings = model)
+  expect_equal(byDefault$tuningMetric$name, "logLikelihood")
+  expect_true(byDefault$tuningMetric$maximize)
+  expect_null(byDefault$tuningMetric$funFingerprint)
+  # a metric the settings name wins
+  explicit <- sanitizeHyperparameterSettingsForDatabase(
+    createHyperparameterSettings(tuningMetric = aucMetric), modelSettings = model
+  )
+  expect_equal(explicit$tuningMetric$name, "AUC")
+  # models without a default metric are written as before
+  plain <- sanitizeHyperparameterSettingsForDatabase(createHyperparameterSettings())
+  expect_identical(
+    sanitizeHyperparameterSettingsForDatabase(
+      createHyperparameterSettings(), modelSettings = setLassoLogisticRegression()
+    ),
+    plain
+  )
+  expect_equal(plain$tuningMetric$name, "AUC")
 })
 
 test_that("Cyclops models say which hyperparameter settings they ignore", {
