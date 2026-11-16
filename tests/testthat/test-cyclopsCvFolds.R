@@ -104,6 +104,41 @@ test_that("the selected variance depends on PLP's folds, not on the Cyclops seed
     variance(setLassoLogisticRegression(threads = 1, seed = 1), folds),
     variance(setLassoLogisticRegression(threads = 1, seed = 1))
   )
+  # another partition of the rows does
+  withr::local_seed(99)
+  otherFolds <- data.frame(rowId = train$folds$rowId, index = sample(train$folds$index))
+  expect_false(isTRUE(all.equal(
+    variance(setLassoLogisticRegression(threads = 1, seed = 1), otherFolds),
+    variance(setLassoLogisticRegression(threads = 1, seed = 1))
+  )))
+})
+
+test_that("CV results are named by PLP's fold labels", {
+  train <- makeCvFoldsFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  train$folds$index <- c(2, 5, 7)[train$folds$index]
+  fit <- fitCyclopsModel(train, setLassoLogisticRegression(threads = 1, seed = 42), analysisId = "test")
+  expect_equal(fit$trainDetails$hyperParamSearch$fold, c("CV", "Fold2", "Fold5", "Fold7"))
+  cv <- fit$prediction[fit$prediction$evaluationType == "CV", ]
+  expect_equal(nrow(cv), nrow(train$labels))
+})
+
+test_that("a model whose fold refits all failed keeps its fit without CV rows", {
+  train <- makeCvFoldsFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  createModel <- createCyclopsModel
+  local_mocked_bindings(createCyclopsModel = function(...) {
+    model <- createModel(...)
+    model$cv <- lapply(model$cv, function(x) {
+      x$predCV <- x$predCV[0, ]
+      x$out_sample_auc <- NA_real_
+      x
+    })
+    model
+  })
+  fit <- fitCyclopsModel(train, setLassoLogisticRegression(threads = 1, seed = 42), analysisId = "test")
+  expect_equal(unique(fit$prediction$evaluationType), "Train")
+  expect_true(all(is.na(fit$trainDetails$hyperParamSearch$value)))
 })
 
 test_that("CV predictions do not depend on the number of threads", {

@@ -253,11 +253,13 @@ fitCyclopsModel <- function(
     cvPrediction <- do.call(rbind, lapply(modelTrained$cv, function(x) {
       x$predCV
     }))
-    cvPrediction$evaluationType <- "CV"
-    # fit date issue convertion caused by andromeda
-    cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = "1970-01-01")
-
-    prediction <- rbind(prediction, cvPrediction[, colnames(prediction)])
+    # no rows when the refit of every fold failed
+    if (nrow(cvPrediction) > 0) {
+      cvPrediction$evaluationType <- "CV"
+      # fit date issue convertion caused by andromeda
+      cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = "1970-01-01")
+      prediction <- rbind(prediction, cvPrediction[, colnames(prediction)])
+    }
 
     cvPerFold <- unlist(lapply(modelTrained$cv, function(x) {
       x$out_sample_auc
@@ -269,7 +271,7 @@ fitCyclopsModel <- function(
       }
       cvPerFold <- data.frame(
         metric = "AUC",
-        fold = c("CV", paste0("Fold", seq_along(cvPerFold))),
+        fold = c("CV", paste0("Fold", vapply(modelTrained$cv, function(x) x$fold, numeric(1)))),
         value = c(cvMean, cvPerFold),
         startingVariance = ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance),
         lowerLimit = ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit),
@@ -877,7 +879,7 @@ cyclopsCvByFold <- function(cvPredictions, labels) {
     if (nrow(inFold) > 0) {
       auc <- aucWithoutCi(rawValue, inFold$y)
     }
-    list(out_sample_auc = auc, predCV = predCV)
+    list(fold = as.numeric(i), out_sample_auc = auc, predCV = predCV)
   })
 }
 
@@ -951,6 +953,7 @@ getCV <- function(
       rawValue = rawValueAll[hold_out]
     )
     return(list(
+      fold = as.numeric(i),
       out_sample_auc = auc,
       predCV = predCV,
       log_likelihood = subset_fit$log_likelihood,
