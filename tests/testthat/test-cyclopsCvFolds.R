@@ -168,19 +168,77 @@ test_that("cyclopsCvByFold keeps folds whose refit failed", {
   expect_true(is.na(cv[[2]]$out_sample_auc))
 })
 
-test_that("models with a fit hook still refit PLP's folds themselves", {
-  skip_if_not_installed("BrokenAdaptiveRidge")
+test_that("Cyclops gets PLP's folds for every model that cross-validates", {
+  train <- list(
+    folds = data.frame(rowId = 1:6, index = c(1, 2, 3, 1, 2, 3)),
+    labels = data.frame(rowId = 1:5)
+  )
+  cvPrior <- Cyclops::createPrior("laplace", useCrossValidation = TRUE)
+  fixedPrior <- Cyclops::createPrior("laplace", variance = 1)
+  hookPrior <- structure(list(useCrossValidation = FALSE, fitHook = function(...) NULL), class = "cyclopsPrior")
+
+  for (prior in list(cvPrior, fixedPrior, hookPrior)) {
+    cv <- cyclopsCvArguments(prior, train, "logistic")
+    expect_equal(cv$cvFolds, data.frame(rowId = 1:5, fold = c(1, 2, 3, 1, 2)))
+    expect_true(cv$returnCvPredictions)
+  }
+  # Cox selects its variance on the folds; Cyclops has no CV predictions for it
+  cv <- cyclopsCvArguments(cvPrior, train, "cox")
+  expect_equal(nrow(cv$cvFolds), 5)
+  expect_false(cv$returnCvPredictions)
+  expect_null(cyclopsCvArguments(fixedPrior, train, "cox")$cvFolds)
+  # one fold: nothing to cross-validate
+  train$folds$index <- 1
+  cv <- cyclopsCvArguments(cvPrior, train, "logistic")
+  expect_null(cv$cvFolds)
+  expect_false(cv$returnCvPredictions)
+})
+
+# Refits of each fold, with the prior of modelSettings, predicting its held-out rows
+independentFoldPredictions <- function(train, prior) {
+  covariates <- dplyr::collect(train$covariateData$covariates)
+  outcomes <- data.frame(rowId = train$labels$rowId, y = train$labels$outcomeCount)
+  outcomes <- outcomes[order(outcomes$rowId), ]
+  fold <- train$folds$index[match(outcomes$rowId, train$folds$rowId)]
+  predictions <- rep(NA_real_, nrow(outcomes))
+  for (i in sort(unique(fold))) {
+    cyclopsData <- Cyclops::convertToCyclopsData(
+      outcomes, covariates, modelType = "lr", addIntercept = TRUE, quiet = TRUE
+    )
+    foldFit <- Cyclops::fitCyclopsModel(
+      cyclopsData, prior = prior, weights = as.numeric(fold != i),
+      control = Cyclops::createControl(noiseLevel = "silent", threads = 1)
+    )
+    predictions[fold == i] <- stats::predict(foldFit)[fold == i]
+  }
+  data.frame(rowId = outcomes$rowId, value = predictions)
+}
+
+test_that("IHT CV predictions select covariates within each fold", {
+  skip_if_not_installed("IterativeHardThresholding")
+  skip_on_cran()
   train <- makeCvFoldsFixture()
   on.exit(Andromeda::close(train$covariateData))
-  prior <- do.call(
-    BrokenAdaptiveRidge::createBarPrior,
-    setBrokenAdaptiveRidge(initialRidgeVariance = 0.5, penalty = 1)$param$priorParams
-  )
-  expect_null(cyclopsCvFolds(prior, train))
-  fit <- fitCyclopsModel(
-    train, setBrokenAdaptiveRidge(initialRidgeVariance = 0.5, penalty = 1, threads = 1, seed = 42),
-    analysisId = "test"
-  )
+  settings <- setIterativeHardThresholding(K = 3, seed = 42)
+  fit <- suppressWarnings(fitCyclopsModel(train, settings, analysisId = "test"))
   cv <- fit$prediction[fit$prediction$evaluationType == "CV", ]
   expect_equal(sort(cv$rowId), sort(train$labels$rowId))
+
+  prior <- do.call(IterativeHardThresholding::createIhtPrior, settings$param$priorParams)
+  expected <- suppressWarnings(independentFoldPredictions(train, prior))
+  expect_equal(cv$value[match(expected$rowId, cv$rowId)], expected$value, tolerance = 1e-6)
+})
+
+test_that("BAR CV predictions refit each fold with the BAR prior", {
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  skip_on_cran()
+  train <- makeCvFoldsFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  settings <- setBrokenAdaptiveRidge(initialRidgeVariance = 0.5, penalty = 1, threads = 1, seed = 42)
+  fit <- fitCyclopsModel(train, settings, analysisId = "test")
+  cv <- fit$prediction[fit$prediction$evaluationType == "CV", ]
+
+  prior <- do.call(BrokenAdaptiveRidge::createBarPrior, settings$param$priorParams)
+  expected <- independentFoldPredictions(train, prior)
+  expect_equal(cv$value[match(expected$rowId, cv$rowId)], expected$value, tolerance = 1e-6)
 })

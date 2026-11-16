@@ -104,13 +104,10 @@ test_that("BAR tuning matches independent fits and refits all training rows", {
   expect_equal(stats::coef(reversed$modelFit), stats::coef(result$modelFit))
 })
 
-test_that("BAR numeric and BIC penalty CV refits match independent folds", {
+test_that("BAR numeric and BIC penalty CV predictions match independent folds", {
   skip_if_not_installed("BrokenAdaptiveRidge")
   skip_on_cran()
   fixture <- createBarFitStateData()
-  covariateData <- Andromeda::andromeda(covariates = fixture$covariates)
-  covariateData <- asCovariateData(covariateData)
-  withr::defer(Andromeda::close(covariateData))
 
   for (penalty in list(0.5, "bic")) {
     settings <- setBrokenAdaptiveRidge(
@@ -119,12 +116,15 @@ test_that("BAR numeric and BIC penalty CV refits match independent folds", {
     prior <- do.call(BrokenAdaptiveRidge::createBarPrior, settings$param$priorParams)
     control <- createCyclopsRefitControl(settings)
     cyclopsData <- fixture$newCyclopsData()
-    fullFit <- Cyclops::fitCyclopsModel(cyclopsData, prior = prior, control = control)
+    # Cyclops runs the BAR hook on each fold's training rows
+    fullFit <- Cyclops::fitCyclopsModel(
+      cyclopsData, prior = prior, control = control, forceNewObject = TRUE,
+      cvFolds = data.frame(rowId = fixture$folds$rowId, fold = fixture$folds$index),
+      returnCvPredictions = TRUE
+    )
     model <- createCyclopsModel(
-      fit = fullFit, modelType = "logistic", useCrossValidation = TRUE,
-      cyclopsData = cyclopsData, labels = fixture$labels, folds = fixture$folds,
-      modelSettings = settings, covariateData = covariateData, control = control,
-      cvPrior = prior
+      fit = fullFit, modelType = "logistic", cyclopsData = cyclopsData,
+      labels = fixture$labels
     )
 
     for (fold in 1:3) {
@@ -134,8 +134,7 @@ test_that("BAR numeric and BIC penalty CV refits match independent folds", {
         weights = as.numeric(!holdOut)
       )
       scores <- as.numeric(fixture$designMatrix %*% stats::coef(independentFit))
-      expect_equal(model$cv[[fold]]$coef, stats::coef(independentFit))
-      expect_equal(model$cv[[fold]]$predCV$value, plogis(scores[holdOut]))
+      expect_equal(model$cv[[fold]]$predCV$value, plogis(scores[holdOut]), tolerance = 1e-6)
       expect_equal(
         model$cv[[fold]]$out_sample_auc,
         aucWithoutCi(scores[holdOut], fixture$labels$y[holdOut])
