@@ -226,6 +226,7 @@ insertModelDesignSettings <- function(
     resultSchema = databaseSchemaSettings$resultSchema,
     targetDialect = databaseSchemaSettings$targetDialect,
     json = hyperparameterSettings,
+    modelSettings = object$modelSettings,
     tablePrefix = databaseSchemaSettings$tablePrefix,
     tempEmulationSchema = databaseSchemaSettings$tempEmulationSchema
   )
@@ -1104,9 +1105,10 @@ addHyperparameterSetting <- function(
     targetDialect,
     tablePrefix = "",
     json,
+    modelSettings = NULL,
     tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
   if (!inherits(x = json, what = "character")) {
-    json <- sanitizeHyperparameterSettingsForDatabase(json)
+    json <- sanitizeHyperparameterSettingsForDatabase(json, modelSettings = modelSettings)
     json <- orderJson(json) # to ensure attributes are alphabetic order
     json <- ParallelLogger::convertSettingsToJson(json)
     json <- as.character(json) # now convert to character

@@ -10,14 +10,20 @@ createHyperparameterSettings(
   sampleSize = NULL,
   randomSeed = NULL,
   generator = NULL,
-  validation = "cv"
+  validation = "cv",
+  selector = NULL,
+  foldWorkers = 1,
+  generatorArgs = list()
 )
 }
 \arguments{
 \item{search}{The type of hyperparameter search to perform. Options are "grid" for grid search, "random" for random search, and "custom" for a user-defined search strategy.}
 
-\item{tuningMetric}{The metric to optimize during hyperparameter tuning. Common
-choices include \code{aucMetric} and \code{auprcMetric}.}
+\item{tuningMetric}{The metric to optimize during hyperparameter tuning:
+\link{aucMetric} (the default), \link{auprcMetric}, \link{logLikelihoodMetric} or one
+made with \code{\link[=createTuningMetric]{createTuningMetric()}}. When it is not given, a model that names
+its own default metric (such as iterative hard thresholding, which uses
+\link{logLikelihoodMetric}) is tuned on that metric.}
 
 \item{sampleSize}{Sample size in case of random sampling}
 
@@ -26,11 +32,15 @@ choices include \code{aucMetric} and \code{auprcMetric}.}
 \item{generator}{Optional custom hyperparameter generator. This can be either
 a function with arguments \code{definition}, \code{expanded}, and \code{settings} that
 returns a finite list of named parameter lists, or an object with lifecycle
-methods. Lifecycle generator objects must provide \code{initialize(definition,
-settings)} and \code{getNext(history)} methods, and may provide an optional
+methods. Lifecycle generator objects must provide \code{initialize(definition, settings)} and \code{getNext(history)} methods, and may provide an optional
 \code{finalize(history)} method. A candidate the model skipped with
 \code{\link[=stopCandidate]{stopCandidate()}} is in the history with \code{cvPerformance = NA} and its
-message in \code{error}.}
+message in \code{error}.
+
+The generator can also be the name of a function (\code{"pkg::fn"}) that returns
+such a generator when called with \code{generatorArgs}. It is called afresh for
+every search, and the settings stay valid after they are saved as JSON (a
+lifecycle object's methods lose the state they share when saved as JSON).}
 
 \item{validation}{How each candidate is scored: \code{"cv"} (the default) fits it
 once per fold and scores it on the left-out fold, \code{"trainValidation"} fits
@@ -40,6 +50,20 @@ the number of folds in the split settings (with \code{nfold = 5} it is a fifth o
 the training data). The retained predictions of the selected candidate
 have evaluationType \code{"CV"} or \code{"TrainValidation"}. Cyclops models select
 their penalty with their own cross-validation and ignore this setting.}
+
+\item{selector}{Optional function (or its name) \verb{function(history, metric)}
+that returns the index of the selected candidate in \code{history}, for example
+a one-standard-error rule. The default selects the best mean performance,
+the first one on ties. A model can name its own default selector.}
+
+\item{foldWorkers}{Number of worker processes that fit the folds of a
+candidate in parallel, for models that support it (their settings name
+\code{parallelFolds}); other models fit the folds one after the other. Each
+fold stays on one worker for the whole search, and the results are the
+same as with one worker.}
+
+\item{generatorArgs}{A named list of arguments for a \code{generator} given by
+name.}
 }
 \description{
 Create Hyperparameter Settings

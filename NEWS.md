@@ -19,6 +19,25 @@ can be refitted or re-evaluated.
   scikit-learn instead of giving different risks.
 
 ## New features
+- The hyperparameter search can tune models that start from earlier fits.
+  A model's settings can name optional hooks: `prepareFold` (prepares each
+  fold's training data once, for example as a Cyclops data object), a `train`
+  function with a `context` argument (gets the state its fold kept from the
+  earlier candidates), `updateState` (what the fold keeps), `fitInfo` (small
+  results kept in the search history) and `parallelFolds`. The state never
+  leaves its fold, and the final fit on all training rows starts without it.
+  Models without these hooks are fitted as before.
+- `createHyperparameterSettings()` gains `foldWorkers` (fit the folds in
+  parallel worker processes, for models that support it, with the same
+  results as one worker), `selector` (how the candidate is chosen from the
+  history, for example a one-standard-error rule) and `generatorArgs` (a
+  generator can be given by name, so that it survives saving as JSON). A
+  model can name its default tuning metric and selector; the result database
+  records the metric the model was tuned on.
+- New exported `logLikelihoodMetric` (mean held-out log-likelihood);
+  `aucMetric` and `auprcMetric` are now exported too.
+- A tuning metric can be `NA` for a fold, for example the AUC of a fold with
+  one class; the fold is left out of the mean instead of stopping the search.
 - Custom feature engineering steps change the data they are given and record
   themselves with the new exported `recordFeatureEngineeringStep()`; the custom
   feature engineering vignette describes the contract. Steps recorded the old
