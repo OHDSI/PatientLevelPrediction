@@ -210,6 +210,20 @@ can be refitted or re-evaluated.
   platforms.
 
 ## Bug fixes
+- `extractDatabaseToCsv()` applies `minCellCount`. It looked the rules up by
+  the upper case table name and found none, so the CSV files, which Strategus
+  shares, kept counts of any size. The rules now also cover the threshold
+  summary (a row's counts and rates), the attrition, the population size
+  and outcome count of the evaluation statistics, the Kaplan-Meier counts and
+  participant sizes of the diagnostics, and the attrition saved with each
+  model in the `models` folder. Values that give a censored
+  count back are censored with it: covariate means and the standardized mean
+  difference, observed incidences, and the predicted risks of a small group.
+  The three covariate counts are censored together, as their sum gave a
+  censored count back. `savePlpShareable()` uses the same rules, so its
+  threshold summary, calibration summary, prediction distribution and
+  evaluation statistics are censored too; it still leaves censored cells empty
+  and defaults to `minCellCount = 10`.
 - Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
   scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
   failed since 6.6.0 with "'what' must be a function or character string".
