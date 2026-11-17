@@ -265,18 +265,21 @@ test_that("set IHT inputs", {
 
   # the 1.0.3 algorithm keeps its arguments and is fitted by fitCyclopsModel
   modelSet <- setIterativeHardThresholding(
-    K = 5, algorithm = "legacy", penalty = "aic", fitBestSubset = TRUE, maxIterations = 200
+    K = 5, algorithm = "legacy", penalty = 2, fitBestSubset = TRUE, maxIterations = 200
   )
   expect_equal(modelSet$fitFunction, "fitCyclopsModel")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
   expect_equal(modelSet$param$priorParams$algorithm, "legacy")
-  expect_equal(modelSet$param$priorParams$penalty, "aic")
+  expect_equal(modelSet$param$priorParams$penalty, 2)
   expect_true(modelSet$param$priorParams$fitBestSubset)
   expect_equal(modelSet$param$priorParams$maxIterations, 200)
   expect_null(modelSet$param$priorParams$variance)
   expect_false(modelSet$settings$useControl)
   # the legacy algorithm keeps the default K of earlier versions
   expect_equal(setIterativeHardThresholding(algorithm = "legacy")$param$priorParams$K, 10)
+  # 1.0.3 only handled a number or "bic"; IterativeHardThresholding now says so
+  # when the settings are made instead of when the model is fitted
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", penalty = "aic"))
 })
 
 
