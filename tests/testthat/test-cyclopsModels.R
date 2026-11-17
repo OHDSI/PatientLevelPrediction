@@ -288,6 +288,11 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(K = Inf), "K must be")
   expect_error(setIterativeHardThresholding(control = list(maxIterations = 50, TRUE)), "named list")
   expect_error(setIterativeHardThresholding(algorithm = "legacy", variance = 1), "not used")
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", K = c(5, 10)), "takes one K")
+  expect_error(setIterativeHardThresholding(variance = "big"), "variance must be one or more positive numbers")
+  expect_error(setIterativeHardThresholding(variance = -1))
+  # Inf as text, as it comes back from JSON
+  expect_equal(setIterativeHardThresholding(variance = c("Inf"))$param$variance, Inf)
   expect_error(setIterativeHardThresholding(algorithm = "legacy", control = list(maxIterations = 5)), "not used")
   expect_error(setIterativeHardThresholding(variance = -1), "variance")
   expect_error(setIterativeHardThresholding(variance = "bic"), "variance")

@@ -751,9 +751,10 @@ createCyclopsFitControl <- function(param, settings) {
 # The IHT prior of model settings fitted by fitCyclopsModel(): the "legacy"
 # algorithm, and settings saved before IterativeHardThresholding 2.0, which
 # have no algorithm and run "legacy" (1.0.3) to reproduce the models fitted
-# with them. setIterativeHardThresholding() also checks its values with it.
-# The settings hold plain lists, so that they survive saving as JSON;
-# IterativeHardThresholding wants its control objects.
+# with them. setIterativeHardThresholding() also checks its values with it, one
+# K and variance at a time (IterativeHardThresholding takes one of each; PLP
+# tunes them). The settings hold plain lists, so that they survive saving as
+# JSON; IterativeHardThresholding wants its control object.
 createIhtPriorFromSettings <- function(priorParams) {
   rlang::check_installed("IterativeHardThresholding", version = "2.0.0")
   if (is.null(priorParams$algorithm)) {
@@ -765,10 +766,6 @@ createIhtPriorFromSettings <- function(priorParams) {
     priorParams$algorithm <- "legacy"
   }
   if (!identical(priorParams$algorithm, "legacy")) {
-    priorParams$cv <- do.call(
-      IterativeHardThresholding::createIhtCvControl,
-      as.list(priorParams$cv)
-    )
     priorParams$control <- do.call(
       IterativeHardThresholding::createIhtControl,
       as.list(priorParams$control)

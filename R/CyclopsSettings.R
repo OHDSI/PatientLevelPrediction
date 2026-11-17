@@ -392,6 +392,9 @@ setIterativeHardThresholding <- function(
   if (!is.numeric(K) || length(K) < 1 || any(!is.finite(K)) || any(K < 1) || any(K != round(K))) {
     stop("K must be one or more whole numbers of at least 1", call. = FALSE)
   }
+  if (algorithm == "legacy" && length(K) != 1) {
+    stop("algorithm = \"legacy\" takes one K", call. = FALSE)
+  }
   if (!is.logical(forceIntercept) || length(forceIntercept) != 1 || is.na(forceIntercept)) {
     stop("forceIntercept must be TRUE or FALSE", call. = FALSE)
   }
@@ -410,28 +413,30 @@ setIterativeHardThresholding <- function(
       list(K = K, exclude = exclude, forceIntercept = forceIntercept, algorithm = "legacy"),
       legacyArguments
     )
+    # IterativeHardThresholding checks the values
+    suppressWarnings(createIhtPriorFromSettings(priorParams))
   } else {
-    priorParams <- list(
-      K = K,
-      variance = variance,
-      exclude = exclude,
-      forceIntercept = forceIntercept,
-      algorithm = algorithm,
-      control = control,
-      cv = list(oneStandardError = oneStandardError)
-    )
-  }
-  # IterativeHardThresholding checks the values (K, variance, control)
-  suppressWarnings(createIhtPriorFromSettings(priorParams))
-
-  if (algorithm != "legacy") {
     # tuned by the generic hyperparameter search: a grid with K varying
     # fastest, so that each fold starts K from its fit at the next smaller K
     varianceGrid <- if (identical(variance, "tune")) {
       ihtTuneVarianceGrid
     } else {
+      if (!(is.numeric(variance) || (is.character(variance) && all(variance == "Inf"))) ||
+          length(variance) < 1 || anyNA(variance)) {
+        stop("variance must be one or more positive numbers, Inf, or \"tune\"", call. = FALSE)
+      }
       sort(unique(as.numeric(variance)))
     }
+    # IterativeHardThresholding checks the values, one variance at a time
+    for (v in varianceGrid) {
+      createIhtPriorFromSettings(list(
+        K = K[1], variance = v, exclude = exclude, forceIntercept = forceIntercept,
+        algorithm = algorithm, control = control
+      ))
+    }
+  }
+
+  if (algorithm != "legacy") {
     settings <- list(
       modelType = "binary",
       modelName = "iterativeHardThresholding",

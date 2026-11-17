@@ -24,8 +24,7 @@
 # first). The "legacy" algorithm and settings saved before
 # IterativeHardThresholding 2.0 are fitted by fitCyclopsModel() instead.
 
-# The variances that variance = "tune" tries (IterativeHardThresholding's
-# default grid, without its extension past an edge winner)
+# The variances that variance = "tune" tries
 ihtTuneVarianceGrid <- c(0.01, 0.03, 0.1, 0.3, 1, 3, Inf)
 
 # The sparse matrix of toSparseM(), with the covariateIds as column names, so
