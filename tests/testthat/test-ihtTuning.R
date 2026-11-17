@@ -133,14 +133,15 @@ test_that("IHT gives the same results with one and several fold workers", {
   on.exit(Andromeda::close(train$covariateData))
   settings <- setIterativeHardThresholding(K = c(1, 3), variance = c(0.5, Inf), seed = 42)
   one <- fitIht(train, settings)
-  three <- fitIht(train, settings, foldWorkers = 3)
+  # at most 2 workers under R CMD check; one of them keeps two folds
+  two <- fitIht(train, settings, foldWorkers = 2)
   dropTimes <- function(search) lapply(search, function(e) {
     e$seconds <- NULL
     e
   })
-  expect_identical(three$prediction, one$prediction)
-  expect_identical(three$model, one$model)
-  expect_equal(dropTimes(three$trainDetails$hyperParamSearch), dropTimes(one$trainDetails$hyperParamSearch))
+  expect_identical(two$prediction, one$prediction)
+  expect_identical(two$model, one$model)
+  expect_equal(dropTimes(two$trainDetails$hyperParamSearch), dropTimes(one$trainDetails$hyperParamSearch))
 })
 
 test_that("IHT predicts new data with its coefficients, also after saving", {
