@@ -33,6 +33,7 @@ Imports:
     FeatureExtraction (>= 3.7.0),
     Matrix,
     memuse,
+    methods,
     parallel,
     ParallelLogger (>= 2.0.2),
     pROC,

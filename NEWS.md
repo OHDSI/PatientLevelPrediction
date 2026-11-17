@@ -34,6 +34,14 @@ can be refitted or re-evaluated.
   generator can be given by name, so that it survives saving as JSON). A
   model can name its default tuning metric and selector; the result database
   records the metric the model was tuned on.
+- An interrupted hyperparameter search resumes. `runPlp()` and `fitPlp()`
+  save the search under the analysis folder after each candidate, and a rerun
+  with the same data and settings goes on after the last finished candidate,
+  with the same result as an uninterrupted search. The saved search is removed
+  when the result is saved. `options(plp.resumeSearch = FALSE)` turns this
+  off; a model can name a `fingerprint` function for data or settings PLP
+  cannot look into. See "Resuming an interrupted search" in the custom models
+  vignette.
 - New exported `logLikelihoodMetric` (mean held-out log-likelihood);
   `aucMetric` and `auprcMetric` are now exported too.
 - A tuning metric can be `NA` for a fold, for example the AUC of a fold with

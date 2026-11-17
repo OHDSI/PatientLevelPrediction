@@ -34,6 +34,10 @@
 #   about a fold fit, kept in the search history.
 # - parallelFolds: "fork" and/or "psock", the kinds of worker processes in
 #   which the model can be fitted, for createHyperparameterSettings(foldWorkers).
+# - checkpointState: TRUE when the fold state of updateState() can be saved
+#   with saveRDS() (no external pointers, such as Python objects), so that an
+#   interrupted search resumes (SearchCheckpoint.R). Searches of models with
+#   updateState() are not checkpointed without it.
 #
 # Models without these hooks are fitted exactly as before. For models with
 # them, every fold runs every candidate, each fold fit has its own seed (from
@@ -143,7 +147,8 @@ runFoldCandidate <- function(runner, candidate, candidateIndex, baseSeed, settin
 # Runs the folds of each candidate, in this process or in worker processes
 # that each keep their folds for the whole search. Returns a list with
 # run(candidate, candidateIndex), which gives the fold results in the order of
-# foldIds, and stop(), which frees the folds.
+# foldIds; getStates() and setStates(states), the folds' states in the order of
+# foldIds (for checkpoints of the search); and stop(), which frees the folds.
 createFoldExecutor <- function(foldIds, data, labels, settings, hooks, baseSeed, foldWorkers = 1) {
   type <- foldWorkerType(hooks, foldWorkers, length(foldIds), settings$modelName)
   if (is.null(type)) {
@@ -155,6 +160,13 @@ createFoldExecutor <- function(foldIds, data, labels, settings, hooks, baseSeed,
       run = function(candidate, candidateIndex) {
         lapply(runners, runFoldCandidate, candidate = candidate, candidateIndex = candidateIndex,
                baseSeed = baseSeed, settings = settings, hooks = hooks)
+      },
+      getStates = function() lapply(runners, function(runner) runner$state),
+      setStates = function(states) {
+        for (i in seq_along(runners)) {
+          runners[[i]]$state <- states[[i]]
+        }
+        invisible(NULL)
       },
       stop = function() {
         runners <<- NULL
@@ -193,6 +205,19 @@ createFoldExecutor <- function(foldIds, data, labels, settings, hooks, baseSeed,
       )
       results <- unlist(byWorker, recursive = FALSE)
       results[match(foldIds, vapply(results, function(x) x$foldId, numeric(1)))]
+    },
+    getStates = function() {
+      byWorker <- parallel::clusterApply(cluster, seq_len(workers), getWorkerStates)
+      states <- unlist(byWorker, recursive = FALSE)
+      states <- states[match(foldIds, vapply(states, function(x) x$foldId, numeric(1)))]
+      lapply(states, function(x) x$state)
+    },
+    setStates = function(states) {
+      parallel::clusterApply(
+        cluster, seq_len(workers), setWorkerStates,
+        states = lapply(seq_len(workers), function(w) states[assignment == w])
+      )
+      invisible(NULL)
     },
     stop = stopWorkers
   )
@@ -288,6 +313,19 @@ runWorkerCandidate <- function(worker, candidate, candidateIndex) {
   env <- get(".plpTuning", envir = asNamespace("PatientLevelPrediction"))
   lapply(env$runners, runFoldCandidate, candidate = candidate, candidateIndex = candidateIndex,
          baseSeed = env$baseSeed, settings = env$settings, hooks = env$hooks)
+}
+
+getWorkerStates <- function(worker) {
+  env <- get(".plpTuning", envir = asNamespace("PatientLevelPrediction"))
+  lapply(env$runners, function(runner) list(foldId = runner$foldId, state = runner$state))
+}
+
+setWorkerStates <- function(worker, states) {
+  env <- get(".plpTuning", envir = asNamespace("PatientLevelPrediction"))
+  for (i in seq_along(env$runners)) {
+    env$runners[[i]]$state <- states[[worker]][[i]]
+  }
+  TRUE
 }
 
 # The metric to tune on: the model's default metric when the hyperparameter

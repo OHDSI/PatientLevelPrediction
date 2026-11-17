@@ -311,6 +311,10 @@ runPlp <- function(
     ParallelLogger::logInfo(sprintf("Training %s model",
       settings$modelSettings$modelName %||% settings$modelSettings$name))  
 
+    # an interrupted hyperparameter search resumes from its checkpoint, which
+    # is kept until the result is saved
+    .plpCheckpoint$deferRemoval <- TRUE
+    on.exit(.plpCheckpoint$deferRemoval <- NULL, add = TRUE)
     model <- tryCatch(
       {
         do.call(fitPlp, settings)
@@ -470,6 +474,11 @@ runPlp <- function(
   tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
     finally = ParallelLogger::logTrace("Done."))
   ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
+  .plpCheckpoint$deferRemoval <- NULL
+  # a failed fit leaves the search saved, to resume when runPlp() is run again
+  if (!isTRUE(model$noModel)) {
+    removeSearchCheckpoints(analysisPath)
+  }
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0("runPlp time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)
