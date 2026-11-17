@@ -65,9 +65,13 @@ createStatefulResumeFixture <- function(calls) {
       if (isTRUE(context$candidateIndex == calls$stopCandidate)) {
         stop("simulated crash")
       }
+      earlier <- vapply(context$state, function(s) s$slope, numeric(1))
       list(
-        slope = hyperParameters$slope + 0.1 * length(context$state) + stats::rnorm(1, sd = 0.1),
-        stateSize = length(context$state)
+        # the warm start: the fold's earlier fits change this one
+        slope = hyperParameters$slope + 0.1 * sum(earlier) + stats::rnorm(1, sd = 0.1),
+        foldId = context$foldId,
+        stateSize = length(context$state),
+        ownFoldsOnly = all(vapply(context$state, function(s) s$foldId, numeric(1)) == context$foldId)
       )
     },
     predict = function(plpModel, data, cohort) {
@@ -75,9 +79,11 @@ createStatefulResumeFixture <- function(calls) {
       cohort
     },
     updateState = function(state, model, hyperParameters, settings) {
-      c(state, list(model$slope))
+      c(state, list(list(foldId = model$foldId, slope = model$slope)))
     },
-    fitInfo = function(model, hyperParameters, settings) list(stateSize = model$stateSize),
+    fitInfo = function(model, hyperParameters, settings) {
+      list(stateSize = model$stateSize, ownFoldsOnly = model$ownFoldsOnly)
+    },
     parallelFolds = "fork"
   )
   fixture
@@ -240,7 +246,10 @@ test_that("skipped candidates and a selector's earlier choice survive a resume",
   saved <- list.files(file.path(path, "hyperparameterSearch"), recursive = TRUE)
   # the selector can choose any earlier candidate, so the predictions of both
   # fitted candidates are kept
-  expect_equal(sort(basename(saved)), c("prediction-2.rds", "prediction-3.rds", "search.rds"))
+  expect_equal(
+    sort(sub("^(prediction-[0-9]+)-.*[.]rds$", "\\1.rds", basename(saved))),
+    c("prediction-2.rds", "prediction-3.rds", "search.rds")
+  )
 
   fixture$calls$stopAt <- NULL
   fixture$calls$n <- 0
@@ -446,11 +455,14 @@ test_that("fold states are saved for models that allow it, and the search resume
     calls$stopCandidate <- NULL
     capture.output(resumed <- runSearch(fixture, grid, analysisPath = path, foldWorkers = workers))
     expectSameSearch(resumed, uninterrupted)
-    # the warm starts after the resume come from the saved fold states
+    # the warm starts after the resume come from each fold's own saved state
     expect_equal(
       vapply(resumed$paramSearch[[4]]$info, function(f) f$stateSize, numeric(1)),
       c(3, 3, 3)
     )
+    expect_true(all(unlist(lapply(resumed$paramSearch, function(entry) {
+      lapply(entry$info, function(f) f$ownFoldsOnly)
+    }))))
   }
 
   # without checkpointState, the search is not saved
@@ -493,15 +505,25 @@ test_that("fitPlp removes the checkpoint of a finished search; runPlp keeps it u
     tuningMetric = createTuningMetric(fun = function(prediction) 0.5, name = "constant")
   )
   path <- withr::local_tempdir()
-  # as in runPlp()
+  # as in runPlp(): the finished search is recorded, and removed only when
+  # every step succeeded; the saved search of another model is left alone
+  other <- file.path(path, "hyperparameterSearch", "otherSearch")
+  dir.create(other, recursive = TRUE)
   .plpCheckpoint$deferRemoval <- TRUE
+  .plpCheckpoint$completed <- NULL
   fitPlp(tinyTrainData, modelSettings, hyperparameterSettings, analysisId = "checkpoint", analysisPath = path)
+  completed <- .plpCheckpoint$completed
   .plpCheckpoint$deferRemoval <- NULL
-  expect_true(dir.exists(file.path(path, "hyperparameterSearch")))
-  keepSearchCheckpoints(path, "evaluation")
-  expect_true(dir.exists(file.path(path, "hyperparameterSearch")))
-  keepSearchCheckpoints(path, character(0))
-  expect_false(dir.exists(file.path(path, "hyperparameterSearch")))
+  .plpCheckpoint$completed <- NULL
+  expect_length(completed, 1)
+  expect_true(dir.exists(completed))
+  output <- capture.output(finishSearchCheckpoints(path, completed, "evaluation"))
+  expect_true(any(grepl("is kept because the evaluation failed", output)))
+  expect_true(dir.exists(completed))
+  finishSearchCheckpoints(path, completed, character(0))
+  expect_false(dir.exists(completed))
+  expect_true(dir.exists(other))
+  unlink(file.path(path, "hyperparameterSearch"), recursive = TRUE)
 
   fitPlp(tinyTrainData, modelSettings, hyperparameterSettings, analysisId = "checkpoint", analysisPath = path)
   expect_false(dir.exists(file.path(path, "hyperparameterSearch")))
@@ -593,4 +615,141 @@ test_that("runPlp resumes a search that crashed, and removes it once the result 
   expect_equal(result$model$trainDetails$finalModelParameters$risk, 0.4)
   expect_length(result$model$trainDetails$hyperParamSearch, 3)
   expect_false(dir.exists(searchDirectory))
+})
+
+test_that("a helper's captured value is part of the fingerprint, and a function inside the settings it captures is fingerprinted once", {
+  makeSettings <- function(offset) {
+    helper <- function(slope) slope + offset
+    settings <- list(modelName = "factoryModel", resumeSearch = TRUE)
+    settings$train <- function(dataMatrix, labels, hyperParameters, settings) {
+      list(slope = helper(hyperParameters$slope))
+    }
+    settings$predict <- function(plpModel, data, cohort) {
+      cohort$value <- stats::plogis(plpModel$slope * data[, 1])
+      cohort
+    }
+    settings
+  }
+  part <- function(settings) {
+    rlang::hash(fingerprintValue(settings, "the model settings"))
+  }
+  expect_equal(part(makeSettings(0)), part(makeSettings(0)))
+  expect_false(part(makeSettings(0)) == part(makeSettings(1)))
+
+  # the train function uses its own settings argument; the factory's settings
+  # variable, which holds the train function, is not captured
+  factory <- function(scale) {
+    settings <- list(scale = scale)
+    settings$train <- function(dataMatrix, labels, hyperParameters, settings) settings$scale
+    settings
+  }
+  expect_equal(part(factory(1)), part(factory(1)))
+  # a function that refers to the list holding it is fingerprinted once
+  selfReferring <- local({
+    holder <- list()
+    holder$fun <- function() holder
+    holder
+  })
+  expect_type(part(selfReferring), "character")
+})
+
+test_that("a generator object resumes after it was used, and a named generator by its code", {
+  makeGenerator <- function() {
+    i <- 0
+    candidates <- list(list(slope = -1), list(slope = 0.5), list(slope = 1), list(slope = 2))
+    list(
+      initialize = function(definition, settings) i <<- 0,
+      getNext = function(history) {
+        i <<- i + 1
+        if (i > length(candidates)) NULL else candidates[[i]]
+      }
+    )
+  }
+  generator <- makeGenerator()
+  fixture <- createResumeFixture()
+  set.seed(3)
+  uninterrupted <- runSearch(fixture, list(slope = list(0)), analysisPath = NULL, search = "custom", generator = generator)
+  path <- withr::local_tempdir()
+  fixture$calls$n <- 0
+  fixture$calls$stopAt <- 8
+  set.seed(3)
+  expect_error(
+    runSearch(fixture, list(slope = list(0)), analysisPath = path, search = "custom", generator = generator),
+    "simulated crash"
+  )
+  fixture$calls$stopAt <- NULL
+  fixture$calls$n <- 0
+  # the same generator object, whose counter the interrupted search moved on
+  output <- capture.output(
+    resumed <- runSearch(fixture, list(slope = list(0)), analysisPath = path, search = "custom", generator = generator)
+  )
+  expect_true(any(grepl("Resuming", output)))
+  expectSameSearch(resumed, uninterrupted)
+
+  parts <- function(name) {
+    searchFingerprintParts(
+      matrix(1), data.frame(rowId = 1), NULL, list(), createHyperparameterSettings(generator = name),
+      aucMetric, list(train = NULL)
+    )$generator
+  }
+  expect_equal(parts("base::identity"), fingerprintValue(base::identity, "x"))
+})
+
+test_that("a selector is called as often in a resumed search as in an uninterrupted one", {
+  fixture <- createResumeFixture()
+  calls <- new.env()
+  calls$n <- 0
+  # chooses the best candidate among the first ones it was called for
+  countingSelector <- function(history, metric) {
+    calls$n <- calls$n + 1
+    performances <- vapply(history, function(x) x$cvPerformance, numeric(1))
+    which.max(performances[seq_len(max(1, min(length(history), 6 - calls$n)))])
+  }
+  set.seed(5)
+  uninterrupted <- runSearch(fixture, slopes, analysisPath = NULL, selector = countingSelector)
+  uninterruptedCalls <- calls$n
+
+  path <- withr::local_tempdir()
+  calls$n <- 0
+  fixture$calls$n <- 0
+  fixture$calls$stopAt <- 11
+  set.seed(5)
+  expect_error(runSearch(fixture, slopes, analysisPath = path, selector = countingSelector), "simulated crash")
+  calls$n <- 0
+  fixture$calls$stopAt <- NULL
+  capture.output(resumed <- runSearch(fixture, slopes, analysisPath = path, selector = countingSelector))
+  expect_equal(calls$n, uninterruptedCalls)
+  expectSameSearch(resumed, uninterrupted)
+})
+
+test_that("two runs of the same search keep their own prediction files", {
+  fixture <- createResumeFixture()
+  path <- withr::local_tempdir()
+  open <- function() {
+    openSearchCheckpoint(path, fixture$data, fixture$labels, slopes, fixture$settings,
+                         createHyperparameterSettings(), aucMetric, resolveTuningHooks(fixture$settings))
+  }
+  a <- open()
+  Sys.sleep(0.01)
+  b <- open()
+  expect_equal(a$directory, b$directory)
+  expect_false(identical(a$token, b$token))
+  history <- list(list(param = list(slope = 1)))
+  commitSearchCheckpoint(a, history, list(1, 2), list(`1` = data.frame(value = "a")))
+  commitSearchCheckpoint(b, history, list(1, 2), list(`1` = data.frame(value = "b")))
+  # b's checkpoint is the last one written, and refers to b's prediction
+  expect_equal(loadSearchCheckpoint(open())$predictions[[1]]$value, "b")
+  # a moving on removes only its own file
+  commitSearchCheckpoint(a, c(history, history), list(1, 2, 3), list(`2` = data.frame(value = "a2")))
+  expect_true(file.exists(file.path(b$directory, b$predictionFiles[["1"]])))
+  expect_false(file.exists(file.path(a$directory, predictionFileName(1, a$token))))
+})
+
+test_that("runPlp without model development leaves a saved search alone", {
+  path <- withr::local_tempdir()
+  directory <- file.path(path, "hyperparameterSearch", "someSearch")
+  dir.create(directory, recursive = TRUE)
+  # what runPlp() calls when every step that ran succeeded
+  finishSearchCheckpoints(path, NULL, character(0))
+  expect_true(dir.exists(directory))
 })

@@ -864,9 +864,7 @@ sanitizeTuningMetricForDatabase <- function(tuningMetric) {
 # Identifies a function by its code and the captured values it uses, so that designs
 # differing only in a custom function get separate rows. Unused enclosing variables
 # are ignored because they vary between runs without changing the function.
-# valueFingerprint: how captured values that are not functions are described.
-fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv()),
-                                valueFingerprint = sanitizeObjectForDatabaseJson) {
+fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv())) {
   captured <- list()
   env <- environment(fn)
   if (is.environment(env)) {
@@ -882,10 +880,10 @@ fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv()),
         if (exists(format(environment(value)), envir = seen, inherits = FALSE)) {
           deparse(value)
         } else {
-          fingerprintFunction(value, seen, valueFingerprint)
+          fingerprintFunction(value, seen)
         }
       } else {
-        valueFingerprint(value)
+        sanitizeObjectForDatabaseJson(value)
       }
     }
     env <- parent.env(env)

@@ -381,7 +381,9 @@ fitClassifier <- function(
   class(result) <- "plpModel"
   attr(result, "modelType") <- settings$modelType
   # the search is no longer needed; runPlp() keeps it until the result is saved
-  if (!isTRUE(.plpCheckpoint$deferRemoval)) {
+  if (isTRUE(.plpCheckpoint$deferRemoval)) {
+    .plpCheckpoint$completed <- c(.plpCheckpoint$completed, tuneResult$checkpoint$directory)
+  } else {
     removeSearchCheckpoint(tuneResult$checkpoint)
   }
   return(result)
@@ -426,7 +428,7 @@ tuneHyperparameters <- function(
   # search makes the same draws when it builds the candidates, and after each
   # candidate.
   checkpoint <- openSearchCheckpoint(analysisPath, data, labels, param, settings,
-                                     hyperparamSettings, metric, hooks)
+                                     hyperparamSettings, metric, hooks, selector)
   saved <- loadSearchCheckpoint(checkpoint)
   randomSeeds <- list()
   if (!is.null(checkpoint)) {
@@ -462,7 +464,7 @@ tuneHyperparameters <- function(
         ))
         saved <- NULL
         removeSearchCheckpoint(checkpoint)
-        checkpoint$predictionFiles <- integer(0)
+        checkpoint$predictionFiles <- character(0)
         setRandomSeed(randomSeeds[[1]])
         startCandidates()
         break
@@ -513,6 +515,15 @@ tuneHyperparameters <- function(
       bestCvPrediction <- savedPredictions[[1]]
     }
     rm(savedPredictions)
+    # the selector is called after each candidate with a performance, as in
+    # the saved search, for a selector that keeps track of its calls
+    if (!is.null(selector)) {
+      for (i in seq_along(history)) {
+        if (is.null(history[[i]]$error)) {
+          select(history[seq_len(i)])
+        }
+      }
+    }
     if (checkpointStates) {
       executor$setStates(saved$foldStates)
     }

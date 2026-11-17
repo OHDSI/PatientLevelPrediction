@@ -313,9 +313,12 @@ runPlp <- function(
       settings$modelSettings$modelName %||% settings$modelSettings$name))  
 
     # an interrupted hyperparameter search resumes from its checkpoint, which
-    # is kept until the result is saved
+    # is kept until the result is saved (restored on exit, for a runPlp()
+    # inside another one)
+    outerCheckpointState <- mget(c("deferRemoval", "completed"), envir = .plpCheckpoint, ifnotfound = list(NULL))
+    on.exit(list2env(outerCheckpointState, envir = .plpCheckpoint), add = TRUE)
     .plpCheckpoint$deferRemoval <- TRUE
-    on.exit(.plpCheckpoint$deferRemoval <- NULL, add = TRUE)
+    .plpCheckpoint$completed <- NULL
     model <- tryCatch(
       {
         do.call(fitPlp, settings)
@@ -475,7 +478,6 @@ runPlp <- function(
   tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
     finally = ParallelLogger::logTrace("Done."))
   ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
-  .plpCheckpoint$deferRemoval <- NULL
   # The saved search is removed only when the run is complete: a step that
   # failed above was logged and left NULL, and a rerun to repeat it resumes
   # the search instead of refitting every candidate
@@ -485,7 +487,9 @@ runPlp <- function(
       "Test" %in% names(data) && is.null(predictionTest),
     "evaluation" = executeSettings$runModelDevelopment && !isTRUE(model$noModel) && is.null(performance)
   )
-  keepSearchCheckpoints(analysisPath, names(failedSteps)[failedSteps])
+  if (executeSettings$runModelDevelopment) {
+    finishSearchCheckpoints(analysisPath, .plpCheckpoint$completed, names(failedSteps)[failedSteps])
+  }
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0("runPlp time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)

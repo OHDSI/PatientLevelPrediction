@@ -40,9 +40,11 @@
 # as environments, external pointers or database connections in the data or
 # settings) are not checkpointed.
 
-checkpointFormatVersion <- 1L
+checkpointFormatVersion <- 2L
 
-# runPlp() sets deferRemoval while it fits, and removes the checkpoints itself
+# runPlp() sets deferRemoval while it fits; fitClassifier() then adds the
+# directory of the search it finished to completed, for runPlp() to remove
+# once its result is saved
 .plpCheckpoint <- new.env(parent = emptyenv())
 
 # Whether the search of a model is checkpointed: the option when it is set,
@@ -57,7 +59,7 @@ resumeSearchEnabled <- function(settings) {
 
 # The checkpoint of one search, or NULL when the search is not checkpointed
 openSearchCheckpoint <- function(analysisPath, data, labels, param, settings,
-                                 hyperparamSettings, metric, hooks) {
+                                 hyperparamSettings, metric, hooks, selector = NULL) {
   if (is.null(analysisPath) || !resumeSearchEnabled(settings)) {
     return(NULL)
   }
@@ -70,7 +72,7 @@ openSearchCheckpoint <- function(analysisPath, data, labels, param, settings,
     return(NULL)
   }
   parts <- tryCatch(
-    searchFingerprintParts(data, labels, param, settings, hyperparamSettings, metric, hooks),
+    searchFingerprintParts(data, labels, param, settings, hyperparamSettings, metric, hooks, selector),
     plpUnhashable = function(e) {
       ParallelLogger::logInfo(paste0(
         "The hyperparameter search of ", modelName, " is not checkpointed: ",
@@ -98,7 +100,8 @@ openSearchCheckpoint <- function(analysisPath, data, labels, param, settings,
   )
 }
 
-searchFingerprintParts <- function(data, labels, param, settings, hyperparamSettings, metric, hooks) {
+searchFingerprintParts <- function(data, labels, param, settings, hyperparamSettings, metric, hooks,
+                                   selector = NULL) {
   modelPart <- NULL
   if (!is.null(settings$fingerprint)) {
     modelFingerprint <- resolveHook(settings$fingerprint, "fingerprint")
@@ -109,11 +112,20 @@ searchFingerprintParts <- function(data, labels, param, settings, hyperparamSett
   hyper$foldWorkers <- NULL
   hyper$tuningMetric <- NULL
   hyper$tuningMetricIsDefault <- NULL
-  if (!is.null(hyper$generator) && !is.character(hyper$generator) && !is.function(hyper$generator)) {
-    # a generator object by its methods; the replay of the candidates checks the rest
-    methods <- intersect(c("initialize", "getNext", "finalize"), names(hyper$generator))
-    hyper$generator <- lapply(stats::setNames(methods, methods), function(m) hyper$generator[[m]])
+  generator <- hyper$generator
+  if (is.character(generator)) {
+    # a generator given by name, by the code of the function it names
+    generator <- resolveHook(generator, "generator")
   }
+  if (!is.null(hyper$generator) && !is.function(generator)) {
+    # A generator object by the code of its methods: the values they capture
+    # (counters, remaining candidates) change as it is used, and initialize()
+    # resets them. The replay of the candidates checks what the generator does.
+    methods <- intersect(c("initialize", "getNext", "finalize"), names(generator))
+    generator <- lapply(stats::setNames(methods, methods), function(m) deparse(generator[[m]]))
+  }
+  hyper$generator <- NULL
+  hyper$selector <- NULL
   list(
     formatVersion = checkpointFormatVersion,
     data = if (is.null(modelPart)) fingerprintValue(data, "the data") else NULL,
@@ -127,15 +139,26 @@ searchFingerprintParts <- function(data, labels, param, settings, hyperparamSett
       "the tuning metric"
     ),
     hooks = fingerprintValue(hooks[c("train", "predict", "prepareFold", "updateState")], "the model's functions"),
-    versions = list(
+    generator = fingerprintValue(generator, "the hyperparameter generator"),
+    selector = fingerprintValue(selector, "the selector"),
+    # the packages of the functions, for changes in their code that the
+    # fingerprint of a function does not see (the functions it calls)
+    versions = c(
       PatientLevelPrediction = as.character(utils::packageVersion("PatientLevelPrediction")),
-      model = hookPackageVersion(hooks$train)
+      unlist(lapply(
+        c(hooks[c("train", "predict", "prepareFold", "updateState")],
+          list(generator = if (is.function(generator)) generator, selector = selector, metric = metric$fun)),
+        functionPackageVersion
+      ))
     )
   )
 }
 
-# The package and version of a model function, for a model from another package
-hookPackageVersion <- function(fn) {
+# The package and version of a function from a package other than PLP
+functionPackageVersion <- function(fn) {
+  if (!is.function(fn) || is.primitive(fn)) {
+    return(NULL)
+  }
   env <- topenv(environment(fn))
   if (!isNamespace(env)) {
     return(NULL)
@@ -152,16 +175,12 @@ hookPackageVersion <- function(fn) {
 # vectors), lists element by element with their attributes, data frames by
 # their columns, functions by their code and the captured values they use.
 # Objects whose content PLP cannot see signal a plpUnhashable condition.
-fingerprintValue <- function(x, what) {
+fingerprintValue <- function(x, what, visiting = new.env(parent = emptyenv())) {
   if (is.null(x)) {
     return(NULL)
   }
   if (is.function(x)) {
-    # environments that a function captures (such as an R6 object) are not
-    # looked into, as in DeepPatientLevelPrediction's fingerprint
-    return(fingerprintFunction(x, valueFingerprint = function(v) {
-      if (is.environment(v)) list(type = "environment") else fingerprintValue(v, what)
-    }))
+    return(fingerprintClosure(x, what, visiting))
   }
   if (isS4(x)) {
     if (methods::is(x, "Matrix")) {
@@ -169,7 +188,7 @@ fingerprintValue <- function(x, what) {
       slots <- setdiff(methods::slotNames(x), "factors")
       return(list(
         class = class(x),
-        slots = lapply(stats::setNames(slots, slots), function(s) fingerprintValue(methods::slot(x, s), what))
+        slots = lapply(stats::setNames(slots, slots), function(s) fingerprintValue(methods::slot(x, s), what, visiting))
       ))
     }
     unhashable(what, paste0("an object of class ", class(x)[1]))
@@ -182,11 +201,11 @@ fingerprintValue <- function(x, what) {
     # data frames that are identical() can differ in the form of their row names
     attrs$row.names <- NULL
   }
-  attrs <- if (length(attrs) > 0) lapply(attrs, fingerprintValue, what = what)
+  attrs <- if (length(attrs) > 0) lapply(attrs, fingerprintValue, what = what, visiting = visiting)
   if (is.list(x)) {
     return(list(
       type = "list",
-      values = lapply(seq_along(x), function(i) fingerprintValue(.subset2(x, i), what)),
+      values = lapply(seq_along(x), function(i) fingerprintValue(.subset2(x, i), what, visiting)),
       attributes = attrs
     ))
   }
@@ -196,6 +215,55 @@ fingerprintValue <- function(x, what) {
     return(list(type = typeof(x), hash = rlang::hash(c(value)), attributes = attrs))
   }
   unhashable(what, paste0("an object of type ", typeof(x)))
+}
+
+# A function by its code and the values it uses from the environments it was
+# made in (not a package's): the variables its body names (not its arguments),
+# and, for helper functions made in the same environment, the variables
+# those name too. Other functions it uses are fingerprinted the same way; a
+# function that is reached again while it is being fingerprinted (such as a
+# train function inside the settings it captures) is identified by its code.
+# Environments it captures (such as an R6 object) are not looked into, as in
+# DeepPatientLevelPrediction's fingerprint.
+fingerprintClosure <- function(fn, what, visiting) {
+  code <- deparse(fn)
+  env <- environment(fn)
+  if (is.primitive(fn) || !is.environment(env)) {
+    return(list(code = code))
+  }
+  key <- paste(format(env), rlang::hash(code))
+  if (exists(key, envir = visiting, inherits = FALSE)) {
+    return(list(code = code, again = TRUE))
+  }
+  assign(key, TRUE, envir = visiting)
+  on.exit(rm(list = key, envir = visiting), add = TRUE)
+
+  usedNames <- function(f) setdiff(unique(all.names(body(f))), names(formals(f)))
+  pending <- usedNames(fn)
+  captured <- list()
+  while (is.environment(env) && !nzchar(environmentName(env)) && length(pending) > 0) {
+    found <- intersect(pending, ls(env, all.names = TRUE))
+    if (length(found) == 0) {
+      env <- parent.env(env)
+      next
+    }
+    pending <- setdiff(pending, found)
+    for (name in found) {
+      value <- tryCatch(get(name, envir = env), error = function(e) NULL)
+      if (is.function(value) && identical(environment(value), env)) {
+        # a helper made with this function: its code, and what it uses here
+        captured[[name]] <- deparse(value)
+        pending <- union(pending, setdiff(usedNames(value), names(captured)))
+      } else if (is.function(value)) {
+        captured[[name]] <- fingerprintClosure(value, what, visiting)
+      } else if (is.environment(value)) {
+        captured[[name]] <- list(type = "environment")
+      } else {
+        captured[[name]] <- fingerprintValue(value, what, visiting)
+      }
+    }
+  }
+  list(code = code, captured = captured[sort(names(captured))])
 }
 
 unhashable <- function(what, object) {
@@ -212,7 +280,11 @@ createSearchCheckpoint <- function(directory, fingerprint, parts, modelName) {
   checkpoint$parts <- parts
   checkpoint$modelName <- modelName
   checkpoint$active <- TRUE
-  checkpoint$predictionFiles <- integer(0)
+  # The prediction files of this search, named by candidate index. Their names
+  # hold a token of this run, so that two runs of the same search (which PLP
+  # does not lock against each other) never write or delete each other's.
+  checkpoint$predictionFiles <- character(0)
+  checkpoint$token <- paste0(Sys.getpid(), "-", format(as.numeric(Sys.time()) * 1000, scientific = FALSE))
   checkpoint
 }
 
@@ -236,8 +308,9 @@ loadSearchCheckpoint <- function(checkpoint) {
         !identical(saved$formatVersion, checkpointFormatVersion)) {
         stop("it is from another search")
       }
-      saved$predictions <- lapply(saved$predictionIndex, function(i) {
-        readRDS(checkpointFile(checkpoint, predictionFileName(i)))
+      saved$predictionIndex <- as.integer(names(saved$predictionFiles))
+      saved$predictions <- lapply(unname(saved$predictionFiles), function(name) {
+        readRDS(checkpointFile(checkpoint, name))
       })
       saved
     },
@@ -250,13 +323,13 @@ loadSearchCheckpoint <- function(checkpoint) {
     }
   )
   if (!is.null(saved)) {
-    checkpoint$predictionFiles <- saved$predictionIndex
+    checkpoint$predictionFiles <- saved$predictionFiles
   }
   saved
 }
 
-predictionFileName <- function(i) {
-  sprintf("prediction-%d.rds", as.integer(i))
+predictionFileName <- function(i, token) {
+  sprintf("prediction-%d-%s.rds", as.integer(i), token)
 }
 
 # Writes a file so that it is either complete or not there: to a temporary file
@@ -293,25 +366,27 @@ commitSearchCheckpoint <- function(checkpoint, history, randomSeeds, predictions
   tryCatch(
     {
       dir.create(checkpoint$directory, recursive = TRUE, showWarnings = FALSE)
-      index <- as.integer(names(predictions))
-      for (i in setdiff(index, checkpoint$predictionFiles)) {
-        writeCheckpointFile(predictions[[as.character(i)]], checkpointFile(checkpoint, predictionFileName(i)))
+      index <- as.character(as.integer(names(predictions)))
+      files <- checkpoint$predictionFiles[intersect(index, names(checkpoint$predictionFiles))]
+      for (i in setdiff(index, names(files))) {
+        name <- predictionFileName(i, checkpoint$token)
+        writeCheckpointFile(predictions[[i]], checkpointFile(checkpoint, name))
+        files[i] <- name
       }
+      files <- files[index]
       writeCheckpointFile(
         list(
           formatVersion = checkpointFormatVersion,
           fingerprint = checkpoint$fingerprint,
           history = history,
           randomSeeds = randomSeeds,
-          predictionIndex = index,
+          predictionFiles = files,
           foldStates = foldStates
         ),
         checkpointFile(checkpoint, "search.rds")
       )
-      for (i in setdiff(checkpoint$predictionFiles, index)) {
-        unlink(checkpointFile(checkpoint, predictionFileName(i)))
-      }
-      checkpoint$predictionFiles <- index
+      unlink(checkpointFile(checkpoint, setdiff(checkpoint$predictionFiles, files)))
+      checkpoint$predictionFiles <- files
     },
     error = function(e) {
       checkpoint$active <- FALSE
@@ -339,20 +414,25 @@ removeSearchCheckpoint <- function(checkpoint) {
 }
 
 # At the end of runPlp(), after its result is saved: removes the saved
-# searches of the analysis when every step succeeded, and otherwise says that
-# they are kept
-keepSearchCheckpoints <- function(analysisPath, failedSteps) {
-  directory <- file.path(analysisPath, "hyperparameterSearch")
-  if (is.null(analysisPath) || !dir.exists(directory)) {
+# searches that this run finished (completed) when every step succeeded, and
+# otherwise says that the saved searches of the analysis are kept. Searches of
+# other models or settings in the same analysis folder are left alone.
+finishSearchCheckpoints <- function(analysisPath, completed, failedSteps) {
+  if (is.null(analysisPath)) {
     return(invisible(NULL))
   }
   if (length(failedSteps) > 0) {
-    ParallelLogger::logInfo(paste0(
-      "The saved hyperparameter search in ", directory, " is kept because the ",
-      paste(failedSteps, collapse = " and "), " failed; running the analysis again resumes it"
-    ))
-  } else {
-    unlink(directory, recursive = TRUE)
+    directory <- file.path(analysisPath, "hyperparameterSearch")
+    if (dir.exists(directory)) {
+      ParallelLogger::logInfo(paste0(
+        "The saved hyperparameter search in ", directory, " is kept because the ",
+        paste(failedSteps, collapse = " and "), " failed; running the analysis again resumes it"
+      ))
+    }
+    return(invisible(NULL))
+  }
+  for (directory in completed) {
+    removeSearchCheckpoint(list(directory = directory))
   }
   invisible(NULL)
 }
