@@ -152,18 +152,18 @@ fitCyclopsModel <- function(
     }
     control <- Cyclops::createControl(
       cvType = "auto",
-      fold = max(trainData$folds$index),
       startingVariance = startingVariance,
       lowerLimit = param$lowerLimit,
       upperLimit = param$upperLimit,
       tolerance = settings$tolerance,
-      cvRepetitions = 1, # make an option?
-      selectorType = settings$selectorType,
+      cvRepetitions = 1,
+      selectorType = "byRow",
       noiseLevel = "silent",
       threads = settings$threads,
       maxIterations = settings$maxIterations,
       seed = settings$seed
     )
+    cvFolds <- cyclopsCvFolds(prior, trainData)
 
     fit <- tryCatch(
       {
@@ -172,7 +172,11 @@ fitCyclopsModel <- function(
           cyclopsData = cyclopsData,
           prior = prior,
           control = control,
-          forceNewObject = isBar
+          forceNewObject = isBar,
+          cvFolds = cvFolds,
+          # the out-of-fold predictions replace PLP's own refits of the folds
+          returnCvPredictions = !is.null(cvFolds) &&
+            identical(settings$cyclopsModelType, "logistic")
         )
       },
       finally = ParallelLogger::logInfo("Done.")
@@ -249,11 +253,13 @@ fitCyclopsModel <- function(
     cvPrediction <- do.call(rbind, lapply(modelTrained$cv, function(x) {
       x$predCV
     }))
-    cvPrediction$evaluationType <- "CV"
-    # fit date issue convertion caused by andromeda
-    cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = "1970-01-01")
-
-    prediction <- rbind(prediction, cvPrediction[, colnames(prediction)])
+    # no rows when the refit of every fold failed
+    if (nrow(cvPrediction) > 0) {
+      cvPrediction$evaluationType <- "CV"
+      # fit date issue convertion caused by andromeda
+      cvPrediction$cohortStartDate <- as.Date(cvPrediction$cohortStartDate, origin = "1970-01-01")
+      prediction <- rbind(prediction, cvPrediction[, colnames(prediction)])
+    }
 
     cvPerFold <- unlist(lapply(modelTrained$cv, function(x) {
       x$out_sample_auc
@@ -265,7 +271,7 @@ fitCyclopsModel <- function(
       }
       cvPerFold <- data.frame(
         metric = "AUC",
-        fold = c("CV", paste0("Fold", seq_along(cvPerFold))),
+        fold = c("CV", paste0("Fold", vapply(modelTrained$cv, function(x) x$fold, numeric(1)))),
         value = c(cvMean, cvPerFold),
         startingVariance = ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance),
         lowerLimit = ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit),
@@ -526,7 +532,12 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
   class(outcomeModel) <- "plpModel"
 
   # get CV - added && status == "OK" to only run if the model fit sucsessfully
-  if (modelType == "logistic" && useCrossValidation && status == "OK") {
+  if (modelType == "logistic" && useCrossValidation && status == "OK" &&
+      !is.null(fit$cvPredictions)) {
+    outcomeModel$cv <- cyclopsCvByFold(fit$cvPredictions, labels)
+  } else if (modelType == "logistic" && useCrossValidation && status == "OK") {
+    # priors with a fit hook (IHT, BAR) do not use Cyclops's cross-validation,
+    # so PLP refits each fold itself
     if (is.null(cvPrior)) {
       cvPrior <- createCyclopsCvPrior(
         modelSettings = modelSettings,
@@ -542,8 +553,6 @@ createCyclopsModel <- function(fit, modelType, useCrossValidation, cyclopsData, 
       covariateData = covariateData,
       modelType = modelType,
       control = control,
-      transferMap = transferMap,
-      # the offset is part of the data, so refits on the same object keep it
       forceNewObject = identical(
         modelSettings$settings$priorfunction,
         "BrokenAdaptiveRidge::createBarPrior"
@@ -686,12 +695,11 @@ resolveCyclopsPriorParams <- function(
     )
     normalControl <- Cyclops::createControl(
       cvType = "auto",
-      fold = max(folds$index),
       lowerLimit = param$lowerLimit,
       upperLimit = param$upperLimit,
       tolerance = settings$tolerance,
       cvRepetitions = 1,
-      selectorType = settings$selectorType,
+      selectorType = "byRow",
       noiseLevel = "silent",
       threads = settings$threads,
       maxIterations = settings$maxIterations,
@@ -704,7 +712,8 @@ resolveCyclopsPriorParams <- function(
         Cyclops::fitCyclopsModel(
           cyclopsData = cyclopsData,
           prior = normalPrior,
-          control = normalControl
+          control = normalControl,
+          cvFolds = cyclopsCvFolds(normalPrior, list(folds = folds))
         )
       },
       finally = ParallelLogger::logInfo("Done.")
@@ -838,6 +847,42 @@ createBarPenaltyGrid <- function(labels, penaltyRatio, penaltyGridSize) {
 
 
 
+# PLP's training folds for Cyclops's cross-validation, or NULL when the prior
+# does not use it. Priors with a fit hook (IHT, BAR) cannot take folds.
+cyclopsCvFolds <- function(prior, trainData) {
+  if (!isTRUE(prior$useCrossValidation) || !is.null(prior$fitHook)) {
+    return(NULL)
+  }
+  folds <- trainData$folds
+  if (!is.null(trainData$labels)) {
+    folds <- folds[folds$rowId %in% trainData$labels$rowId, , drop = FALSE]
+  }
+  data.frame(rowId = folds$rowId, fold = folds$index)
+}
+
+# The out-of-fold predictions from fitCyclopsModel(returnCvPredictions = TRUE)
+# in the per-fold form getCV() returns. Cyclops refit each of PLP's folds at
+# the selected variance; the predictions are probabilities.
+cyclopsCvByFold <- function(cvPredictions, labels) {
+  # merge sorts by rowId
+  labels <- merge(labels, cvPredictions, by = "rowId")
+  lapply(sort(unique(labels$fold)), function(i) {
+    # a fold whose refit failed has no predictions (Cyclops warns)
+    inFold <- labels[labels$fold == i & !is.na(labels$prediction), , drop = FALSE]
+    value <- inFold$prediction
+    rawValue <- stats::qlogis(pmin(pmax(value, 1e-15), 1 - 1e-15))
+    predCV <- inFold[, setdiff(colnames(inFold), c("fold", "prediction")), drop = FALSE]
+    predCV$index <- rep(i, nrow(predCV))
+    predCV$value <- value
+    predCV$rawValue <- rawValue
+    auc <- NA_real_
+    if (nrow(inFold) > 0) {
+      auc <- aucWithoutCi(rawValue, inFold$y)
+    }
+    list(fold = as.numeric(i), out_sample_auc = auc, predCV = predCV)
+  })
+}
+
 getCV <- function(
     cyclopsData,
     labels,
@@ -846,11 +891,25 @@ getCV <- function(
     covariateData = NULL,
     modelType = "logistic",
     control = NULL,
-    forceNewObject = FALSE,
-    transferMap = NULL
+    forceNewObject = FALSE
 ) {
   # merge sorts by rowId, matching Cyclops' ordering of logistic outcomes.
   labels <- merge(labels, folds, by = "rowId")
+
+  # Covariates the full fit dropped (IHT) have prior variance 0. Cyclops cannot
+  # fit a normal prior with variance 0, so hold them at 0 instead.
+  fixedCoefficients <- NULL
+  startingCoefficients <- NULL
+  zeroVariance <- length(cvPrior$variance) > 1 &
+    length(cvPrior$variance) == length(cvPrior$priorType)
+  if (zeroVariance) {
+    zeroVariance <- cvPrior$priorType != "none" & cvPrior$variance == 0
+    if (any(zeroVariance)) {
+      cvPrior$priorType[zeroVariance] <- "none"
+      fixedCoefficients <- zeroVariance
+      startingCoefficients <- rep(0, length(zeroVariance))
+    }
+  }
 
   result <- lapply(1:max(labels$index), function(i) {
     hold_out <- labels$index == i
@@ -860,20 +919,16 @@ getCV <- function(
       prior = cvPrior,
       weights = weights,
       control = control,
-      forceNewObject = forceNewObject
+      forceNewObject = forceNewObject,
+      startingCoefficients = startingCoefficients,
+      fixedCoefficients = fixedCoefficients
     ))
     coefficients <- stats::coef(subset_fit)
-    if (!is.null(transferMap)) {
-      names(coefficients) <- getCyclopsCoefficientNames(cyclopsData)
-    }
     coefDf <- data.frame(
       betas = as.numeric(coefficients),
       covariateIds = names(coefficients),
       stringsAsFactors = FALSE
     )
-    if (!is.null(transferMap)) {
-      coefDf <- reparamTransferCoefs(inCoefs = coefDf, transferMap = transferMap)
-    }
     if (!is.null(covariateData)) {
       predAll <- predictCyclopsType(
         coefficients = coefDf,
@@ -898,6 +953,7 @@ getCV <- function(
       rawValue = rawValueAll[hold_out]
     )
     return(list(
+      fold = as.numeric(i),
       out_sample_auc = auc,
       predCV = predCV,
       log_likelihood = subset_fit$log_likelihood,
