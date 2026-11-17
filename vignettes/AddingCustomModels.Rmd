@@ -115,6 +115,18 @@ fitMadeUp <- function(dataMatrix, labels, hyperParameters, settings) {
 }
 ```
 
+### Resuming an interrupted search
+
+A model whose candidates take long to fit, such as a deep learning model, can ask PLP to save its hyperparameter search with `resumeSearch = TRUE` in its settings. When `runPlp()` is then interrupted during the search, for example by a crash or a time limit, running it again with the same analysis folder resumes the search after the last finished candidate, and gives the same result as an uninterrupted search. `options(plp.resumeSearch = TRUE)` or `FALSE` turns this on or off for every model.
+
+The search is saved after each candidate under `<analysisPath>/hyperparameterSearch/`: the search history, the state of R's random number generator, and the cross-validation predictions of the best candidate. `runPlp()` removes it once the result is saved and every step succeeded (the model fit, the test prediction and the evaluation); when a step failed, it keeps the search and says so in the log, and running the analysis again only refits the final model. `fitPlp()` removes it at the end of the fit.
+
+The search resumes only if nothing it depends on has changed: the data, labels and folds, the model settings, the hyperparameter settings and tuning metric, and the versions of PatientLevelPrediction and the model's package. Seeds are part of this: `createDefaultSplitSetting()` and some model settings draw a random seed when no seed is given, and the default `analysisId` of `runPlp()` contains the date, so give fixed seeds and an `analysisId` to be able to resume. Changes in the code of a model package that is loaded with `devtools::load_all()` are not seen; delete the `hyperparameterSearch` folder to start over.
+
+For identical results, the train hook should set its seeds in each fit, as `fitMadeUp()` does above; random number generators outside R (Python, torch) are not saved with the search.
+
+PLP fingerprints the data and settings by their content. A model whose data or settings hold objects it cannot look into (environments, Python objects, database connections) is not resumed, unless it names a `fingerprint` function in its settings, `fingerprint(dataMatrix, labels, settings)`. Its result, any R object of vectors and lists, replaces the data and settings in the fingerprint; it should cover everything in them that changes the results, such as the contents of files the model reads.
+
 ## Predict
 
 The predict hook gets:

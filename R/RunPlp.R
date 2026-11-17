@@ -297,6 +297,7 @@ runPlp <- function(
   
   model <- NULL
   prediction <- NULL
+  predictionTest <- NULL
   performance <- NULL
   if (executeSettings$runModelDevelopment) {
     # fit model
@@ -311,6 +312,13 @@ runPlp <- function(
     ParallelLogger::logInfo(sprintf("Training %s model",
       settings$modelSettings$modelName %||% settings$modelSettings$name))  
 
+    # an interrupted hyperparameter search resumes from its checkpoint, which
+    # is kept until the result is saved (restored on exit, for a runPlp()
+    # inside another one)
+    outerCheckpointState <- mget(c("deferRemoval", "completed"), envir = .plpCheckpoint, ifnotfound = list(NULL))
+    on.exit(list2env(outerCheckpointState, envir = .plpCheckpoint), add = TRUE)
+    .plpCheckpoint$deferRemoval <- TRUE
+    .plpCheckpoint$completed <- NULL
     model <- tryCatch(
       {
         do.call(fitPlp, settings)
@@ -344,9 +352,9 @@ runPlp <- function(
           }
         )
         
-        predictionTest$evaluationType <- "Test"
-        
+        # a failed test prediction is NULL, and stays NULL
         if (!is.null(predictionTest)) {
+          predictionTest$evaluationType <- "Test"
           prediction <- rbind(predictionTest, prediction[, colnames(prediction) != "index"])
         } 
         
@@ -470,6 +478,18 @@ runPlp <- function(
   tryCatch(savePlpResult(results, file.path(analysisPath, "plpResult")),
     finally = ParallelLogger::logTrace("Done."))
   ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
+  # The saved search is removed only when the run is complete: a step that
+  # failed above was logged and left NULL, and a rerun to repeat it resumes
+  # the search instead of refitting every candidate
+  failedSteps <- c(
+    "model fit" = executeSettings$runModelDevelopment && isTRUE(model$noModel),
+    "test prediction" = executeSettings$runModelDevelopment && !isTRUE(model$noModel) &&
+      "Test" %in% names(data) && is.null(predictionTest),
+    "evaluation" = executeSettings$runModelDevelopment && !isTRUE(model$noModel) && is.null(performance)
+  )
+  if (executeSettings$runModelDevelopment) {
+    finishSearchCheckpoints(analysisPath, .plpCheckpoint$completed, names(failedSteps)[failedSteps])
+  }
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0("runPlp time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)

@@ -23,7 +23,10 @@ one of the \code{createModelSettings} functions}
 
 \item{analysisId}{The id of the analysis}
 
-\item{analysisPath}{The path of the analysis}
+\item{analysisPath}{The path of the analysis. For models that ask for it
+(\code{resumeSearch = TRUE} in their settings), or with \code{options(plp.resumeSearch = TRUE)}, the
+hyperparameter search is saved there after each candidate, so that an interrupted search resumes
+when it is run again with the same data and settings. \code{NULL} saves nothing.}
 }
 \value{
 An object of class \code{plpModel} containing:

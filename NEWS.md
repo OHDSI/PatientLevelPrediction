@@ -54,6 +54,18 @@ can be refitted or re-evaluated.
   generator can be given by name, so that it survives saving as JSON). A
   model can name its default tuning metric and selector; the result database
   records the metric the model was tuned on.
+- An interrupted hyperparameter search can resume, for models that ask for it
+  with `resumeSearch = TRUE` in their settings (or for every model with
+  `options(plp.resumeSearch = TRUE)`). `runPlp()` and `fitPlp()` then save the
+  search under the analysis folder after each candidate, and a rerun with the
+  same data and settings goes on after the last finished candidate, with the
+  same result as an uninterrupted search. `runPlp()` removes the saved search
+  once the result is saved and every step succeeded. A model can name a
+  `fingerprint` function for data or settings PLP cannot look into. See
+  "Resuming an interrupted search" in the custom models vignette.
+- `runPlp()` no longer stops with an error when the prediction on the test
+  set fails; the error is logged and the result has no test predictions, as
+  intended.
 - New exported `logLikelihoodMetric` (mean held-out log-likelihood);
   `aucMetric` and `auprcMetric` are now exported too.
 - A tuning metric can be `NA` for a fold, for example the AUC of a fold with
@@ -252,6 +264,20 @@ can be refitted or re-evaluated.
   platforms.
 
 ## Bug fixes
+- `extractDatabaseToCsv()` applies `minCellCount`. It looked the rules up by
+  the upper case table name and found none, so the CSV files, which Strategus
+  shares, kept counts of any size. The rules now also cover the threshold
+  summary (a row's counts and rates), the attrition, the population size
+  and outcome count of the evaluation statistics, the Kaplan-Meier counts and
+  participant sizes of the diagnostics, and the attrition saved with each
+  model in the `models` folder. Values that give a censored
+  count back are censored with it: covariate means and the standardized mean
+  difference, observed incidences, and the predicted risks of a small group.
+  The three covariate counts are censored together, as their sum gave a
+  censored count back. `savePlpShareable()` uses the same rules, so its
+  threshold summary, calibration summary, prediction distribution and
+  evaluation statistics are censored too; it still leaves censored cells empty
+  and defaults to `minCellCount = 10`.
 - Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
   scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
   failed since 6.6.0 with "'what' must be a function or character string".
