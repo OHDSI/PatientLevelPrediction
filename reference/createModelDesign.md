@@ -381,9 +381,6 @@ createModelDesign(
 #> $settings$priorfunction
 #> [1] "Cyclops::createPrior"
 #> 
-#> $settings$selectorType
-#> [1] "byPid"
-#> 
 #> $settings$crossValidationInPrior
 #> [1] TRUE
 #> 
@@ -451,8 +448,8 @@ createModelDesign(
 #>     }
 #>     result
 #> }
-#> <bytecode: 0x5a2131286bd0>
-#> <environment: 0x5a2131295388>
+#> <bytecode: 0x62d6d70f7b28>
+#> <environment: 0x62d6d70f1f50>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE

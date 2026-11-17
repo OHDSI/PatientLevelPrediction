@@ -32,7 +32,7 @@ modelDesign <- createModelDesign(targetId = 1, outcomeId = 2,
                                  modelSettings = setLassoLogisticRegression())
 saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
 savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
-#> [1] "/tmp/Rtmpvtv7Kb/loadPlpAnalysesJson/predictionAnalysisList.json"
+#> [1] "/tmp/RtmptkjC7L/loadPlpAnalysesJson/predictionAnalysisList.json"
 loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $plpVersion
 #> [1] "6.7.0"
@@ -314,9 +314,6 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $settings$priorfunction
 #> [1] "Cyclops::createPrior"
 #> 
-#> $settings$selectorType
-#> [1] "byPid"
-#> 
 #> $settings$crossValidationInPrior
 #> [1] TRUE
 #> 
@@ -327,7 +324,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] TRUE
 #> 
 #> $settings$seed
-#> [1] 93153728
+#> [1] 41004677
 #> 
 #> $settings$threads
 #> [1] -1
@@ -359,7 +356,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] 0.75
 #> 
 #> $seed
-#> [1] 45681
+#> [1] 94669
 #> 
 #> $nfold
 #> [1] 3
@@ -384,8 +381,8 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #>     }
 #>     result
 #> }
-#> <bytecode: 0x5a214701e250>
-#> <environment: 0x5a214701b558>
+#> <bytecode: 0x62d6e24ec5f8>
+#> <environment: 0x62d6e2501310>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE

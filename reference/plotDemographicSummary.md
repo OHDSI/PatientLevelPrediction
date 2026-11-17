@@ -60,7 +60,7 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #> Generating covariates
 #> Generating cohorts
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpvtv7Kb/duckdb
+#> ℹ /tmp/RtmptkjC7L/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -71,10 +71,10 @@ plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 saveLoc <- file.path(tempdir(), "plotDemographicSummary")
 plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Use timeStamp: TRUE
-#> Creating save directory at: /tmp/Rtmpvtv7Kb/plotDemographicSummary/2026-11-17-3
+#> Creating save directory at: /tmp/RtmptkjC7L/plotDemographicSummary/2026-11-17-3
 #> Currently in a tryCatch or withCallingHandlers block, so unable to add global calling handlers. ParallelLogger will not capture R messages, errors, and warnings, only explicit calls to ParallelLogger. (This message will not be shown again this R session)
 #> Patient-Level Prediction Package version 6.7.0
-#> Study started at: 2026-11-17 12:20:07.793735
+#> Study started at: 2026-11-17 14:23:58.66544
 #> AnalysisID:         2026-11-17-3
 #> AnalysisName:       Study details
 #> TargetID:           1
@@ -84,12 +84,12 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Creating population
 #> Outcome is 0 or 1
 #> Population created with: 965 observations, 965 unique subjects and 493 outcomes
-#> Population created in 0.0597 secs
+#> Population created in 0.042 secs
 #> seed: 123
 #> Creating a 25% test and 75% train (into 3 folds) random stratified split by class
 #> Data split into 241 test cases and 724 train cases (242, 241, 241)
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpvtv7Kb/duckdb
+#> ℹ /tmp/RtmptkjC7L/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -97,7 +97,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpvtv7Kb/duckdb
+#> ℹ /tmp/RtmptkjC7L/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -105,7 +105,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpvtv7Kb/duckdb
+#> ℹ /tmp/RtmptkjC7L/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -113,7 +113,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpvtv7Kb/duckdb
+#> ℹ /tmp/RtmptkjC7L/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -121,7 +121,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
 #> ℹ This message has been shown 60 times and will not be shown again this session.
-#> Data split in 1.39 secs
+#> Data split in 1.12 secs
 #> Train Set:
 #> Fold 1 242 patients with 124 outcomes - Fold 2 241 patients with 123 outcomes - Fold 3 241 patients with 123 outcomes
 #> 62 covariates in train data
@@ -130,7 +130,7 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Removing 3 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.49 secs
+#> Tidying covariates took 1.38 secs
 #> Train Set:
 #> Fold 1 242 patients with 124 outcomes - Fold 2 241 patients with 123 outcomes - Fold 3 241 patients with 123 outcomes
 #> 59 covariates in train data
@@ -141,53 +141,53 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Done.
 #> GLM fit status:  OK
 #> Creating variable importance data frame
-#> Prediction took 0.165 secs
-#> Time to fit model: 0.991 secs
+#> Prediction took 0.137 secs
+#> Time to fit model: 0.292 secs
 #> Removing infrequent and redundant covariates and normalizing
-#> Removing infrequent and redundant covariates covariates and normalizing took 0.261 secs
-#> Prediction took 0.155 secs
-#> Prediction done in: 0.475 secs
+#> Removing infrequent and redundant covariates covariates and normalizing took 0.62 secs
+#> Prediction took 0.292 secs
+#> Prediction done in: 0.972 secs
 #> Calculating Performance for Test
 #> =============
-#> AUC                 60.86
-#> 95% lower AUC:      53.76
-#> 95% upper AUC:      67.97
-#> AUPRC:              64.84
+#> AUC                 60.79
+#> 95% lower AUC:      53.69
+#> 95% upper AUC:      67.90
+#> AUPRC:              64.91
 #> Brier:              0.24
 #> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.5112 : observed risk 0.5104
-#> Calibration in large- Intercept -0.0125
-#> Weak calibration intercept: -0.0125 - gradient:1.2592
-#> Hosmer-Lemeshow calibration gradient: 1.24 intercept:         -0.12
+#> Calibration in large- Mean predicted risk 0.5114 : observed risk 0.5104
+#> Calibration in large- Intercept -0.0135
+#> Weak calibration intercept: -0.0135 - gradient:1.263
+#> Hosmer-Lemeshow calibration gradient: 1.29 intercept:         -0.15
 #> Average Precision:  0.65
 #> Calculating Performance for Train
 #> =============
-#> AUC                 63.52
-#> 95% lower AUC:      59.49
-#> 95% upper AUC:      67.55
-#> AUPRC:              65.12
+#> AUC                 63.62
+#> 95% lower AUC:      59.59
+#> 95% upper AUC:      67.65
+#> AUPRC:              65.33
 #> Brier:              0.24
-#> Eavg:               0.02
-#> Calibration in large- Mean predicted risk 0.5111 : observed risk 0.511
-#> Calibration in large- Intercept -0.0125
-#> Weak calibration intercept: -0.0125 - gradient:1.3689
-#> Hosmer-Lemeshow calibration gradient: 1.35 intercept:         -0.18
+#> Eavg:               0.03
+#> Calibration in large- Mean predicted risk 0.511 : observed risk 0.511
+#> Calibration in large- Intercept -0.0126
+#> Weak calibration intercept: -0.0126 - gradient:1.3798
+#> Hosmer-Lemeshow calibration gradient: 1.37 intercept:         -0.19
 #> Average Precision:  0.65
 #> Calculating Performance for CV
 #> =============
-#> AUC                 57.47
-#> 95% lower AUC:      53.32
-#> 95% upper AUC:      61.62
-#> AUPRC:              59.36
+#> AUC                 57.52
+#> 95% lower AUC:      53.37
+#> 95% upper AUC:      61.67
+#> AUPRC:              59.28
 #> Brier:              0.24
 #> Eavg:               0.01
-#> Calibration in large- Mean predicted risk 0.5107 : observed risk 0.511
-#> Calibration in large- Intercept 0.0033
-#> Weak calibration intercept: 0.0033 - gradient:0.9434
-#> Hosmer-Lemeshow calibration gradient: 0.96 intercept:         0.02
+#> Calibration in large- Mean predicted risk 0.5109 : observed risk 0.511
+#> Calibration in large- Intercept 0.0034
+#> Weak calibration intercept: 0.0034 - gradient:0.9317
+#> Hosmer-Lemeshow calibration gradient: 0.99 intercept:         0.00
 #> Average Precision:  0.59
-#> Time to calculate evaluation metrics: 0.252 secs
-#> Calculating covariate summary @ 2026-11-17 12:20:12.775926
+#> Time to calculate evaluation metrics: 0.189 secs
+#> Calculating covariate summary @ 2026-11-17 14:24:03.003353
 #> This can take a while...
 #> Creating binary labels
 #> Joining with strata
@@ -204,13 +204,13 @@ plpResult <- runPlp(plpData, outcomeId = 3, saveDirectory = saveLoc)
 #> Restricting to subgroup
 #> Calculating summary for subgroup TestWithNoOutcome
 #> Aggregating with labels and strata
-#> Finished covariate summary @ 2026-11-17 12:20:13.43264
-#> Time to calculate covariate summary: 0.657 secs
+#> Finished covariate summary @ 2026-11-17 14:24:03.895655
+#> Time to calculate covariate summary: 0.893 secs
 #> Run finished successfully.
 #> Saving PlpResult
 #> Creating directory to save model
-#> plpResult saved to ..\/tmp/Rtmpvtv7Kb/plotDemographicSummary/2026-11-17-3\plpResult
-#> runPlp time taken: 5.69 secs
+#> plpResult saved to ..\/tmp/RtmptkjC7L/plotDemographicSummary/2026-11-17-3\plpResult
+#> runPlp time taken: 5.27 secs
 plotDemographicSummary(plpResult)
 
 # clean up 
