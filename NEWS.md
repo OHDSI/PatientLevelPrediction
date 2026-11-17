@@ -35,6 +35,18 @@ can be refitted or re-evaluated.
   generator can be given by name, so that it survives saving as JSON). A
   model can name its default tuning metric and selector; the result database
   records the metric the model was tuned on.
+- An interrupted hyperparameter search can resume, for models that ask for it
+  with `resumeSearch = TRUE` in their settings (or for every model with
+  `options(plp.resumeSearch = TRUE)`). `runPlp()` and `fitPlp()` then save the
+  search under the analysis folder after each candidate, and a rerun with the
+  same data and settings goes on after the last finished candidate, with the
+  same result as an uninterrupted search. `runPlp()` removes the saved search
+  once the result is saved and every step succeeded. A model can name a
+  `fingerprint` function for data or settings PLP cannot look into. See
+  "Resuming an interrupted search" in the custom models vignette.
+- `runPlp()` no longer stops with an error when the prediction on the test
+  set fails; the error is logged and the result has no test predictions, as
+  intended.
 - New exported `logLikelihoodMetric` (mean held-out log-likelihood);
   `aucMetric` and `auprcMetric` are now exported too.
 - A tuning metric can be `NA` for a fold, for example the AUC of a fold with

@@ -31,7 +31,10 @@
 #' one of the \code{createModelSettings} functions
 #' @param hyperparameterSettings An object of class \code{hyperparameterSettings}'
 #' @param analysisId                       The id of the analysis
-#' @param analysisPath                     The path of the analysis
+#' @param analysisPath                     The path of the analysis. For models that ask for it
+#' (`resumeSearch = TRUE` in their settings), or with `options(plp.resumeSearch = TRUE)`, the
+#' hyperparameter search is saved there after each candidate, so that an interrupted search resumes
+#' when it is run again with the same data and settings. `NULL` saves nothing.
 #' @return
 #' An object of class \code{plpModel} containing:
 #'
@@ -190,6 +193,7 @@ fitClassifier <- function(
   modelSettings,
   hyperparameterSettings = createHyperparameterSettings(),
   analysisId,
+  analysisPath = NULL,
   ...
 ) {
   modelSettings <- normalizeModelSettings(modelSettings)
@@ -275,7 +279,8 @@ fitClassifier <- function(
     labels,
     param = param,
     settings = settings,
-    hyperparamSettings = hyperparameterSettings
+    hyperparamSettings = hyperparameterSettings,
+    analysisPath = analysisPath
   )
   labelRows <- match(tuneResult$prediction$rowId, originalLabels$rowId)
   if (anyNA(labelRows)) {
@@ -375,6 +380,12 @@ fitClassifier <- function(
 
   class(result) <- "plpModel"
   attr(result, "modelType") <- settings$modelType
+  # the search is no longer needed; runPlp() keeps it until the result is saved
+  if (isTRUE(.plpCheckpoint$deferRemoval)) {
+    .plpCheckpoint$completed <- c(.plpCheckpoint$completed, tuneResult$checkpoint$directory)
+  } else {
+    removeSearchCheckpoint(tuneResult$checkpoint)
+  }
   return(result)
 }
 
@@ -384,7 +395,8 @@ tuneHyperparameters <- function(
   labels,
   param,
   settings,
-  hyperparamSettings
+  hyperparamSettings,
+  analysisPath = NULL
 ) {
   if (is.null(hyperparamSettings) || is.null(hyperparamSettings$tuningMetric)) {
     hyperparamSettings <- createHyperparameterSettings()
@@ -410,12 +422,58 @@ tuneHyperparameters <- function(
     }
     as.integer(best)
   }
-  iterator <- prepareHyperparameterGrid(
-    paramDefinition = param,
-    hyperSettings = hyperparamSettings
-  )
+  # With an analysisPath, the search is saved after each candidate and an
+  # interrupted search resumes (see SearchCheckpoint.R). The random number
+  # generator is saved too: at the start of the search, so that a resumed
+  # search makes the same draws when it builds the candidates, and after each
+  # candidate.
+  checkpoint <- openSearchCheckpoint(analysisPath, data, labels, param, settings,
+                                     hyperparamSettings, metric, hooks, selector)
+  saved <- loadSearchCheckpoint(checkpoint)
+  randomSeeds <- list()
+  if (!is.null(checkpoint)) {
+    if (!is.null(saved)) {
+      setRandomSeed(saved$randomSeeds[[1]])
+    }
+    randomSeeds[[1]] <- getRandomSeed()
+  }
+  baseSeed <- NULL
+  startCandidates <- function() {
+    iterator <<- prepareHyperparameterGrid(
+      paramDefinition = param,
+      hyperSettings = hyperparamSettings
+    )
+    if (hooks$stateful) {
+      # one seed for the search, from the model's seed or the random stream
+      baseSeed <<- settings$seed %||% sample.int(2147483646L, 1L)
+    }
+  }
+  iterator <- NULL
+  startCandidates()
+  if (!is.null(saved)) {
+    # the candidates the saved search ran must be the ones this search makes
+    for (i in seq_along(saved$history)) {
+      if (i > 1) {
+        setRandomSeed(saved$randomSeeds[[i]])
+      }
+      candidate <- iterator$getNext(saved$history[seq_len(i - 1)])
+      if (!identical(candidate, saved$history[[i]]$param)) {
+        ParallelLogger::logInfo(paste0(
+          "The saved hyperparameter search of ", settings$modelName, " in ", checkpoint$directory,
+          " made other candidates; starting the search over"
+        ))
+        saved <- NULL
+        removeSearchCheckpoint(checkpoint)
+        checkpoint$predictionFiles <- character(0)
+        setRandomSeed(randomSeeds[[1]])
+        startCandidates()
+        break
+      }
+    }
+  }
   history <- list()
   bestCvPrediction <- c()
+  bestIndex <- NA_integer_
   # with a selector that can choose an earlier candidate, every candidate's
   # predictions are kept
   cvPredictions <- list()
@@ -434,16 +492,57 @@ tuneHyperparameters <- function(
 
   executor <- NULL
   if (hooks$stateful) {
-    # one seed for the search, from the model's seed or the random stream
-    baseSeed <- settings$seed %||% sample.int(2147483646L, 1L)
     executor <- createFoldExecutor(
       foldIds, data, labels, settings, hooks, baseSeed,
       foldWorkers = hyperparamSettings$foldWorkers %||% 1L
     )
     on.exit(executor$stop(), add = TRUE)
   }
+  checkpointStates <- !is.null(checkpoint) && !is.null(hooks$updateState)
 
   candidateIndex <- 0L
+  if (!is.null(saved)) {
+    history <- saved$history
+    candidateIndex <- length(history)
+    savedPredictions <- stats::setNames(saved$predictions, saved$predictionIndex)
+    if (!is.null(selector)) {
+      cvPredictions <- vector("list", length(history))
+      for (i in saved$predictionIndex) {
+        cvPredictions[i] <- list(savedPredictions[[as.character(i)]])
+      }
+    } else if (length(saved$predictionIndex) > 0) {
+      bestIndex <- saved$predictionIndex[[1]]
+      bestCvPrediction <- savedPredictions[[1]]
+    }
+    rm(savedPredictions)
+    # the selector is called after each candidate with a performance, as in
+    # the saved search, for a selector that keeps track of its calls
+    if (!is.null(selector)) {
+      for (i in seq_along(history)) {
+        if (is.null(history[[i]]$error)) {
+          select(history[seq_len(i)])
+        }
+      }
+    }
+    if (checkpointStates) {
+      executor$setStates(saved$foldStates)
+    }
+    randomSeeds <- saved$randomSeeds
+    setRandomSeed(randomSeeds[[length(history) + 1]])
+    ParallelLogger::logInfo(paste0(
+      "Resuming the hyperparameter search of ", settings$modelName, " after ",
+      length(history), " candidates, from ", checkpoint$directory
+    ))
+    for (entry in history) {
+      if (!is.null(entry$error)) {
+        ParallelLogger::logInfo(paste0(
+          "Param ", paste(names(entry$param), entry$param, sep = "=", collapse = ", "),
+          " was skipped in the saved search: ", entry$error
+        ))
+      }
+    }
+    saved <- NULL
+  }
   repeat {
     candidate <- iterator$getNext(history)
     if (is.null(candidate)) {
@@ -552,25 +651,43 @@ tuneHyperparameters <- function(
     if (!is.null(selector)) {
       cvPredictions[length(history)] <- list(cvPrediction)
     }
-    if (!is.null(candidateError)) {
-      next
+    if (is.null(candidateError)) {
+      # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
+      if (identical(select(history), length(history))) {
+        ParallelLogger::logInfo(paste0(
+          "New best performance ",
+          round(meanCvPerformance, 4),
+          " with param: ",
+          paste(names(candidate), candidate, sep = "=", collapse = ", ")
+        ))
+        bestCvPrediction <- cvPrediction
+        bestIndex <- length(history)
+      } else {
+        ParallelLogger::logInfo(paste0(
+          "Performance ",
+          round(meanCvPerformance, 4),
+          " with param: ",
+          paste(names(candidate), candidate, sep = "=", collapse = ", ")
+        ))
+      }
     }
-    # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
-    if (identical(select(history), length(history))) {
-      ParallelLogger::logInfo(paste0(
-        "New best performance ",
-        round(meanCvPerformance, 4),
-        " with param: ",
-        paste(names(candidate), candidate, sep = "=", collapse = ", ")
-      ))
-      bestCvPrediction <- cvPrediction
-    } else {
-      ParallelLogger::logInfo(paste0(
-        "Performance ",
-        round(meanCvPerformance, 4),
-        " with param: ",
-        paste(names(candidate), candidate, sep = "=", collapse = ", ")
-      ))
+    if (!is.null(checkpoint) && checkpoint$active) {
+      randomSeeds[[length(history) + 1]] <- getRandomSeed()
+      keep <- if (!is.null(selector)) {
+        which(!vapply(cvPredictions, is.null, logical(1)))
+      } else if (!is.na(bestIndex)) {
+        bestIndex
+      } else {
+        integer(0)
+      }
+      predictions <- if (!is.null(selector)) cvPredictions[keep] else list(bestCvPrediction)[seq_along(keep)]
+      commitSearchCheckpoint(
+        checkpoint,
+        history,
+        randomSeeds,
+        stats::setNames(predictions, keep),
+        foldStates = if (checkpointStates) executor$getStates()
+      )
     }
   }
   iterator$finalize(history)
@@ -643,7 +760,8 @@ tuneHyperparameters <- function(
     model = finalModel,
     prediction = prediction,
     finalParam = finalParam,
-    paramSearch = history
+    paramSearch = history,
+    checkpoint = checkpoint
   )
 }
 
