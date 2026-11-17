@@ -8,7 +8,9 @@ createTuningMetric(fun, maximize = TRUE, name, funArgs = list())
 }
 \arguments{
 \item{fun}{Function (or function name) that returns a single numeric score
-when given a prediction data frame.}
+when given a prediction data frame. A missing score (\code{NA}, for example the
+AUC of a fold with one class) is recorded and left out of the mean over
+the folds.}
 
 \item{maximize}{Logical; TRUE if larger is better.}
 

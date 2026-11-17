@@ -654,6 +654,63 @@ exportedCsvFolder <- function() {
   folder
 }
 
+test_that("extractDatabaseToCsv censors counts below minCellCount", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  csvFolder <- exportedCsvFolder()
+  # the export above uses the default minCellCount of 5
+  for (table in names(getPlpSensitiveColumns())) {
+    csv <- file.path(csvFolder, paste0(table, ".csv"))
+    if (!file.exists(csv)) next
+    data <- utils::read.csv(csv)
+    for (rule in getPlpSensitiveColumns()[[table]]) {
+      if (!is.list(rule)) rule <- list(counts = rule)
+      holdsCount <- rep(TRUE, nrow(data))
+      for (column in names(rule$rows)) {
+        holdsCount <- holdsCount & data[[column]] %in% rule$rows[[column]]
+      }
+      for (column in intersect(rule$counts, colnames(data))) {
+        count <- suppressWarnings(as.numeric(data[[column]][holdsCount]))
+        expect_false(
+          any(count >= 0 & count < 5, na.rm = TRUE),
+          info = paste(table, column)
+        )
+      }
+    }
+  }
+  # the first thresholds hold a handful of people and are censored
+  thresholds <- utils::read.csv(file.path(csvFolder, "threshold_summary.csv"))
+  expect_true(any(thresholds$true_positive_count == -1))
+  expect_true(any(thresholds$sensitivity == -1))
+  expect_true(any(thresholds$true_positive_count >= 5))
+})
+
+test_that("extractDatabaseToCsv censors the attrition of the exported models", {
+  skip_if_not_installed("ResultModelManager")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  sqliteLocation <- insertRunPlpToSqlite(runPlp = plpResult, externalValidatePlp = NULL)
+  csvFolder <- file.path(saveLoc, "csvFolderCensored")
+  on.exit(unlink(csvFolder, recursive = TRUE), add = TRUE)
+  extractDatabaseToCsv(
+    connectionDetails = DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = sqliteLocation),
+    databaseSchemaSettings = createDatabaseSchemaSettings(resultSchema = "main"),
+    csvFolder = csvFolder,
+    minCellCount = 1e9
+  )
+  models <- dir(file.path(csvFolder, "models"), full.names = TRUE)
+  expect_true(length(models) > 0)
+  for (model in models) {
+    attrition <- loadPlpModel(model)$trainDetails$attrition
+    expect_true(nrow(attrition) > 0)
+    expect_true(all(attrition$outcomes == -1))
+    expect_true(all(attrition$targetCount == -1))
+  }
+  attrition <- utils::read.csv(file.path(csvFolder, "attrition.csv"))
+  expect_true(all(attrition$outcomes == -1))
+})
+
 test_that("import from csv", {
   skip_if_not_installed("ResultModelManager")
   skip_if_not_installed("Eunomia")
