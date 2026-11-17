@@ -102,30 +102,28 @@ returns the fileLocation where the prediction is saved</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">savePrediction</span><span class="op">(</span><span class="va">prediction</span>, <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpnQyFOs/prediction.json"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpdnvUil/prediction.json"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">dir</a></span><span class="op">(</span><span class="va">saveLoc</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "bslib-3c9f20102fef19cec6d808200c837da2"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [2] "downlit"                               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [3] "duckdb"                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "file1cef14b241c1"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "file1cef21b92cf5.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "file1cef393cec34"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "file1cef3f6fba28"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "file1cef4cffb140.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "file1cef4cffb140.duckdb.wal"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "file1cef519e8f60.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "file1cef519e8f60.duckdb.wal"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "file1cef5276f47b.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "file1cef55e52427"                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "file1cef5ce8c575.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "file1cef5ce8c575.duckdb.wal"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "file1cef623857b9.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "file1cef623857b9.duckdb.wal"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "file1cef64f59a94.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "file1cef64f59a94.duckdb.wal"           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "file1cef69e7294f.duckdb"               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [21] "prediction.json"                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [22] "temp_libpath1cef29cdd56"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [4] "file1c1623341c18.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [5] "file1c1623341c18.duckdb.wal"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [6] "file1c1624bf4c56"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "file1c162c8b23c4.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [8] "file1c162c8b23c4.duckdb.wal"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [9] "file1c1637d61c4e"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [10] "file1c163b42af53"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [11] "file1c164d7682bc.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [12] "file1c164d7682bc.duckdb.wal"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [13] "file1c166bc1d219"                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [14] "file1c166e0530dd.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [15] "file1c166e0530dd.duckdb.wal"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [16] "file1c166e33535f.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [17] "file1c1672da4e9b.duckdb"               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [18] "file1c1672da4e9b.duckdb.wal"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [19] "prediction.json"                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [20] "temp_libpath1c167c9f72ae"              </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># clean up</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">saveLoc</span>, <span class="st">"prediction.json"</span><span class="op">)</span><span class="op">)</span></span></span>

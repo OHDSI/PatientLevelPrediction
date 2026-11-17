@@ -451,8 +451,8 @@ createModelDesign(
 #>     }
 #>     as.numeric(result)
 #> }
-#> <bytecode: 0x557380c04a28>
-#> <environment: 0x557380c01198>
+#> <bytecode: 0x6499ccc8a5e0>
+#> <environment: 0x6499ccc84e30>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
