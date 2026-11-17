@@ -142,6 +142,8 @@ test_that("fold fits are seeded per candidate and fold, without changing the cal
   expect_equal(first$prediction, second$prediction)
 })
 
+# R CMD check allows at most 2 cores (_R_CHECK_LIMIT_CORES_); with 3 folds on
+# 2 workers, one worker keeps two folds
 test_that("one and several forked workers give the same results", {
   skip_on_os("windows")
   run <- function(workers) {
@@ -149,7 +151,7 @@ test_that("one and several forked workers give the same results", {
     runStateful(fixture, list(slope = list(0.5, 1, 2)), foldWorkers = workers)
   }
   one <- run(1)
-  for (workers in 2:3) {
+  for (workers in 2) {
     several <- run(workers)
     expect_equal(withoutTimes(several$paramSearch), withoutTimes(one$paramSearch))
     expect_identical(several$prediction, one$prediction)
@@ -178,7 +180,7 @@ test_that("a candidate one fold cannot fit is skipped in every fold and leaves t
     c(2, 1, 2)
   )
   skip_on_os("windows")
-  several <- run(3)
+  several <- run(2)
   expect_equal(withoutTimes(several$paramSearch), withoutTimes(one$paramSearch))
   expect_identical(several$prediction, one$prediction)
 })
@@ -300,7 +302,7 @@ test_that("PSOCK workers give the same results as one worker", {
     runStateful(fixture, list(slope = list(0.5, 1, 2)), foldWorkers = workers)
   }
   one <- run(1)
-  several <- run(3)
+  several <- run(2)
   expect_equal(withoutTimes(several$paramSearch), withoutTimes(one$paramSearch))
   expect_identical(several$prediction, one$prediction)
 })
