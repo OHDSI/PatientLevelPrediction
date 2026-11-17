@@ -230,6 +230,50 @@ skipped.</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="resuming-an-interrupted-search">Resuming an interrupted search<a class="anchor" aria-label="anchor" href="#resuming-an-interrupted-search"></a>
+</h4>
+<p>A model whose candidates take long to fit, such as a deep learning
+model, can ask PLP to save its hyperparameter search with
+<code>resumeSearch = TRUE</code> in its settings. When
+<code><a href="../reference/runPlp.html">runPlp()</a></code> is then interrupted during the search, for example
+by a crash or a time limit, running it again with the same analysis
+folder resumes the search after the last finished candidate, and gives
+the same result as an uninterrupted search.
+<code>options(plp.resumeSearch = TRUE)</code> or <code>FALSE</code>
+turns this on or off for every model.</p>
+<p>The search is saved after each candidate under
+<code>&lt;analysisPath&gt;/hyperparameterSearch/</code>: the search
+history, the state of R’s random number generator, and the
+cross-validation predictions of the best candidate.
+<code><a href="../reference/runPlp.html">runPlp()</a></code> removes it once the result is saved and every step
+succeeded (the model fit, the test prediction and the evaluation); when
+a step failed, it keeps the search and says so in the log, and running
+the analysis again only refits the final model. <code><a href="../reference/fitPlp.html">fitPlp()</a></code>
+removes it at the end of the fit.</p>
+<p>The search resumes only if nothing it depends on has changed: the
+data, labels and folds, the model settings, the hyperparameter settings
+and tuning metric, and the versions of PatientLevelPrediction and the
+model’s package. Seeds are part of this:
+<code><a href="../reference/createDefaultSplitSetting.html">createDefaultSplitSetting()</a></code> and some model settings draw a
+random seed when no seed is given, and the default
+<code>analysisId</code> of <code><a href="../reference/runPlp.html">runPlp()</a></code> contains the date, so
+give fixed seeds and an <code>analysisId</code> to be able to resume.
+Changes in the code of a model package that is loaded with
+<code>devtools::load_all()</code> are not seen; delete the
+<code>hyperparameterSearch</code> folder to start over.</p>
+<p>For identical results, the train hook should set its seeds in each
+fit, as <code>fitMadeUp()</code> does above; random number generators
+outside R (Python, torch) are not saved with the search.</p>
+<p>PLP fingerprints the data and settings by their content. A model
+whose data or settings hold objects it cannot look into (environments,
+Python objects, database connections) is not resumed, unless it names a
+<code>fingerprint</code> function in its settings,
+<code>fingerprint(dataMatrix, labels, settings)</code>. Its result, any
+R object of vectors and lists, replaces the data and settings in the
+fingerprint; it should cover everything in them that changes the
+results, such as the contents of files the model reads.</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="predict">Predict<a class="anchor" aria-label="anchor" href="#predict"></a>
