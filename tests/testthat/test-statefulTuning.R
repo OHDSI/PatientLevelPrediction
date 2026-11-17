@@ -185,6 +185,37 @@ test_that("a candidate one fold cannot fit is skipped in every fold and leaves t
   expect_identical(several$prediction, one$prediction)
 })
 
+# A model whose fold fits write to the log, and the log lines of a search
+loggedFoldFits <- function(workers, type) {
+  fixture <- createStatefulFixture()
+  fixture$settings$parallelFolds <- type
+  train <- fixture$settings$train
+  fixture$settings$train <- function(dataMatrix, labels, hyperParameters, settings, context) {
+    ParallelLogger::logInfo("fold fit ", context$foldId)
+    train(dataMatrix, labels, hyperParameters, settings, context)
+  }
+  logFile <- tempfile(fileext = ".txt")
+  withr::defer(unlink(logFile))
+  loggers <- ParallelLogger::getLoggers()
+  withr::defer({
+    ParallelLogger::clearLoggers()
+    for (logger in loggers) ParallelLogger::registerLogger(logger)
+  })
+  ParallelLogger::clearLoggers()
+  ParallelLogger::addDefaultFileLogger(logFile, name = "TUNING_TEST")
+  runStateful(fixture, list(slope = list(0.5, 1)), foldWorkers = workers)
+  # the fold fits; the final fit (no fold) runs in this process
+  grep("fold fit [0-9]", readLines(logFile), value = TRUE)
+}
+
+test_that("fold workers write to the log, naming the worker", {
+  skip_on_os("windows")
+  lines <- loggedFoldFits(2, "fork")
+  # 2 candidates on 3 folds
+  expect_length(lines, 6)
+  expect_true(any(grepl("Thread 1", lines)) && any(grepl("Thread 2", lines)))
+})
+
 test_that("a worker that dies stops the search with an error", {
   skip_on_os("windows")
   fixture <- createStatefulFixture()
@@ -305,4 +336,8 @@ test_that("PSOCK workers give the same results as one worker", {
   several <- run(2)
   expect_equal(withoutTimes(several$paramSearch), withoutTimes(one$paramSearch))
   expect_identical(several$prediction, one$prediction)
+  # socket workers get PLP's loggers
+  lines <- loggedFoldFits(2, "psock")
+  expect_length(lines, 6)
+  expect_true(any(grepl("Thread 2", lines)))
 })
