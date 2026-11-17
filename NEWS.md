@@ -6,6 +6,7 @@ fixes change results; "Changes to results" says where, so that affected models
 can be refitted or re-evaluated.
 
 ## Breaking changes
+- PatientLevelPrediction needs Cyclops 4.0.0 or later.
 - `createPlpResultTables()` now defaults to `deleteTables = FALSE`, and
   `deleteTables = TRUE` removes the existing results from a complete schema.
   `insertResultsToSqlite()` (new `deleteTables` argument, default `TRUE`) and
@@ -144,6 +145,15 @@ can be refitted or re-evaluated.
   population after loading.
 
 ### Models and tuning
+- Lasso, ridge and Cox models select their variance by cross-validation on
+  PatientLevelPrediction's training folds (the split settings) instead of
+  folds Cyclops drew at random, and the out-of-fold predictions and CV AUC of
+  lasso and ridge models come from Cyclops's refits of those folds at the
+  selected variance. The selected variance, and so the model, can differ from
+  earlier versions. Fitting is faster, as the folds are no longer refitted a
+  second time from scratch. The `selectorType` model setting is gone.
+- The cross-validation refits of iterative hard thresholding models hold the
+  covariates the model dropped at 0. With Cyclops 4 they no longer converged.
 - Fixed coefficient matching and cross-validation refits when using `priorCoefs`
   with lasso or ridge logistic regression. Fitting no longer adds covariates to
   the input data. Source coefficients for covariates absent from target training
@@ -231,6 +241,20 @@ can be refitted or re-evaluated.
   platforms.
 
 ## Bug fixes
+- `extractDatabaseToCsv()` applies `minCellCount`. It looked the rules up by
+  the upper case table name and found none, so the CSV files, which Strategus
+  shares, kept counts of any size. The rules now also cover the threshold
+  summary (a row's counts and rates), the attrition, the population size
+  and outcome count of the evaluation statistics, the Kaplan-Meier counts and
+  participant sizes of the diagnostics, and the attrition saved with each
+  model in the `models` folder. Values that give a censored
+  count back are censored with it: covariate means and the standardized mean
+  difference, observed incidences, and the predicted risks of a small group.
+  The three covariate counts are censored together, as their sum gave a
+  censored count back. `savePlpShareable()` uses the same rules, so its
+  threshold summary, calibration summary, prediction distribution and
+  evaluation statistics are censored too; it still leaves censored cells empty
+  and defaults to `minCellCount = 10`.
 - Fixed `pfi()` for models other than Cyclops models (xgboost, LightGBM,
   scikit-learn, R classifiers, and existing GLM and scikit-learn models), which
   failed since 6.6.0 with "'what' must be a function or character string".

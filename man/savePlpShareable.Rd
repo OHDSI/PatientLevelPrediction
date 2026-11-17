@@ -11,7 +11,9 @@ savePlpShareable(result, saveDirectory, minCellCount = 10)
 
 \item{saveDirectory}{The directory the save the results as csv files}
 
-\item{minCellCount}{Minimum cell count for the covariateSummary and certain evaluation results}
+\item{minCellCount}{Counts below this value, and the values that give them back,
+are left empty in the covariate summary and evaluation results.
+The rules are those of \code{extractDatabaseToCsv()}.}
 }
 \value{
 \if{html}{\out{<div class="sourceCode">}}\preformatted{                       The directory path where the results were saved
