@@ -67,6 +67,11 @@ Design settings required when developing a model.
 - [`createTuningMetric()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createTuningMetric.md)
   : Create a tuning metric descriptor
 
+- [`aucMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  [`auprcMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  [`logLikelihoodMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  : Tuning metrics
+
 - [`stopCandidate()`](https://ohdsi.github.io/PatientLevelPrediction/reference/stopCandidate.md)
   : Skip a hyperparameter candidate that cannot be fitted
 

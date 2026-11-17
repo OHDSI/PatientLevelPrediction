@@ -91,7 +91,7 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-in"><span>                                 modelSettings <span class="op">=</span> <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"loadPlpAnalysesJson"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="savePlpAnalysesJson.html">savePlpAnalysesJson</a></span><span class="op">(</span>modelDesignList <span class="op">=</span> <span class="va">modelDesign</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmptkjC7L/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpqsNDM6/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
 <span class="r-in"><span><span class="fu">loadPlpAnalysesJson</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">saveLoc</span>, <span class="st">"predictionAnalysisList.json"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $plpVersion</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "6.7.0"</span>
@@ -434,14 +434,17 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (prediction) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     result &lt;- do.call(fun, c(list(prediction = prediction), funArgs))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one finite numeric value.", </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (length(result) == 1 &amp;&amp; is.logical(result) &amp;&amp; is.na(result)) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         result &lt;- NA_real_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one numeric value.", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             call. = FALSE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     result</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     as.numeric(result)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x62d6e24ec5f8&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x62d6e2501310&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x562f7cfcc728&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x562f7cfc7ff0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetric$maximize</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -464,6 +467,9 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $validation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetricIsDefault</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "hyperparameterSettings"</span>

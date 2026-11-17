@@ -442,14 +442,17 @@ createModelDesign(
 #> function (prediction) 
 #> {
 #>     result <- do.call(fun, c(list(prediction = prediction), funArgs))
-#>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
-#>         stop("Metric function must return one finite numeric value.", 
+#>     if (length(result) == 1 && is.logical(result) && is.na(result)) {
+#>         result <- NA_real_
+#>     }
+#>     if (!is.numeric(result) || length(result) != 1) {
+#>         stop("Metric function must return one numeric value.", 
 #>             call. = FALSE)
 #>     }
-#>     result
+#>     as.numeric(result)
 #> }
-#> <bytecode: 0x62d6d70f7b28>
-#> <environment: 0x62d6d70f1f50>
+#> <bytecode: 0x562f717022f0>
+#> <environment: 0x562f716fcb40>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
@@ -472,6 +475,9 @@ createModelDesign(
 #> 
 #> $validation
 #> [1] "cv"
+#> 
+#> $tuningMetricIsDefault
+#> [1] TRUE
 #> 
 #> attr(,"class")
 #> [1] "hyperparameterSettings"

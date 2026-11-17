@@ -70,7 +70,10 @@
 <span>  sampleSize <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  randomSeed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  generator <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  validation <span class="op">=</span> <span class="st">"cv"</span></span>
+<span>  validation <span class="op">=</span> <span class="st">"cv"</span>,</span>
+<span>  selector <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  foldWorkers <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  generatorArgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,8 +86,11 @@
 
 
 <dt id="arg-tuningmetric">tuningMetric<a class="anchor" aria-label="anchor" href="#arg-tuningmetric"></a></dt>
-<dd><p>The metric to optimize during hyperparameter tuning. Common
-choices include <code>aucMetric</code> and <code>auprcMetric</code>.</p></dd>
+<dd><p>The metric to optimize during hyperparameter tuning:
+<a href="tuningMetrics.html">aucMetric</a> (the default), <a href="tuningMetrics.html">auprcMetric</a>, <a href="tuningMetrics.html">logLikelihoodMetric</a> or one
+made with <code><a href="createTuningMetric.html">createTuningMetric()</a></code>. When it is not given, a model that names
+its own default metric (such as iterative hard thresholding, which uses
+<a href="tuningMetrics.html">logLikelihoodMetric</a>) is tuned on that metric.</p></dd>
 
 
 <dt id="arg-samplesize">sampleSize<a class="anchor" aria-label="anchor" href="#arg-samplesize"></a></dt>
@@ -99,11 +105,14 @@ choices include <code>aucMetric</code> and <code>auprcMetric</code>.</p></dd>
 <dd><p>Optional custom hyperparameter generator. This can be either
 a function with arguments <code>definition</code>, <code>expanded</code>, and <code>settings</code> that
 returns a finite list of named parameter lists, or an object with lifecycle
-methods. Lifecycle generator objects must provide <code>initialize(definition,
-settings)</code> and <code>getNext(history)</code> methods, and may provide an optional
+methods. Lifecycle generator objects must provide <code>initialize(definition, settings)</code> and <code>getNext(history)</code> methods, and may provide an optional
 <code>finalize(history)</code> method. A candidate the model skipped with
 <code><a href="stopCandidate.html">stopCandidate()</a></code> is in the history with <code>cvPerformance = NA</code> and its
-message in <code>error</code>.</p></dd>
+message in <code>error</code>.</p>
+<p>The generator can also be the name of a function (<code>"pkg::fn"</code>) that returns
+such a generator when called with <code>generatorArgs</code>. It is called afresh for
+every search, and the settings stay valid after they are saved as JSON (a
+lifecycle object's methods lose the state they share when saved as JSON).</p></dd>
 
 
 <dt id="arg-validation">validation<a class="anchor" aria-label="anchor" href="#arg-validation"></a></dt>
@@ -115,6 +124,26 @@ the number of folds in the split settings (with <code>nfold = 5</code> it is a f
 the training data). The retained predictions of the selected candidate
 have evaluationType <code>"CV"</code> or <code>"TrainValidation"</code>. Cyclops models select
 their penalty with their own cross-validation and ignore this setting.</p></dd>
+
+
+<dt id="arg-selector">selector<a class="anchor" aria-label="anchor" href="#arg-selector"></a></dt>
+<dd><p>Optional function (or its name) <code>function(history, metric)</code>
+that returns the index of the selected candidate in <code>history</code>, for example
+a one-standard-error rule. The default selects the best mean performance,
+the first one on ties. A model can name its own default selector.</p></dd>
+
+
+<dt id="arg-foldworkers">foldWorkers<a class="anchor" aria-label="anchor" href="#arg-foldworkers"></a></dt>
+<dd><p>Number of worker processes that fit the folds of a
+candidate in parallel, for models that support it (their settings name
+<code>parallelFolds</code>); other models fit the folds one after the other. Each
+fold stays on one worker for the whole search, and the results are the
+same as with one worker.</p></dd>
+
+
+<dt id="arg-generatorargs">generatorArgs<a class="anchor" aria-label="anchor" href="#arg-generatorargs"></a></dt>
+<dd><p>A named list of arguments for a <code>generator</code> given by
+name.</p></dd>
 
 </dl></div>
 

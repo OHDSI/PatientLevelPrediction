@@ -73,7 +73,9 @@
 
 <dl><dt id="arg-fun">fun<a class="anchor" aria-label="anchor" href="#arg-fun"></a></dt>
 <dd><p>Function (or function name) that returns a single numeric score
-when given a prediction data frame.</p></dd>
+when given a prediction data frame. A missing score (<code>NA</code>, for example the
+AUC of a fold with one class) is recorded and left out of the mean over
+the folds.</p></dd>
 
 
 <dt id="arg-maximize">maximize<a class="anchor" aria-label="anchor" href="#arg-maximize"></a></dt>

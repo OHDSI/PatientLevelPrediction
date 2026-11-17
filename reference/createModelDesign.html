@@ -491,14 +491,17 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (prediction) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     result &lt;- do.call(fun, c(list(prediction = prediction), funArgs))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one finite numeric value.", </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (length(result) == 1 &amp;&amp; is.logical(result) &amp;&amp; is.na(result)) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         result &lt;- NA_real_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one numeric value.", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             call. = FALSE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     result</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     as.numeric(result)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x62d6d70f7b28&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x62d6d70f1f50&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x562f717022f0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x562f716fcb40&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetric$maximize</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -521,6 +524,9 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $validation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetricIsDefault</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "hyperparameterSettings"</span>
