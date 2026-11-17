@@ -17,7 +17,10 @@
 # limitations under the License.
 
 # Checkpoints of the hyperparameter search, so that an interrupted search
-# resumes where it stopped.
+# resumes where it stopped. They are off by default: a model whose candidates
+# take long to fit (such as a deep learning model) turns them on with
+# settings$resumeSearch = TRUE, and options(plp.resumeSearch = TRUE / FALSE)
+# turns them on or off for every model.
 #
 # After each candidate, tuneHyperparameters() saves its search history, the
 # random number generator state, the cross-validation predictions it still
@@ -42,10 +45,20 @@ checkpointFormatVersion <- 1L
 # runPlp() sets deferRemoval while it fits, and removes the checkpoints itself
 .plpCheckpoint <- new.env(parent = emptyenv())
 
+# Whether the search of a model is checkpointed: the option when it is set,
+# else the model's setting
+resumeSearchEnabled <- function(settings) {
+  option <- getOption("plp.resumeSearch")
+  if (!is.null(option)) {
+    return(isTRUE(option))
+  }
+  isTRUE(settings$resumeSearch)
+}
+
 # The checkpoint of one search, or NULL when the search is not checkpointed
 openSearchCheckpoint <- function(analysisPath, data, labels, param, settings,
                                  hyperparamSettings, metric, hooks) {
-  if (is.null(analysisPath) || !isTRUE(getOption("plp.resumeSearch", TRUE))) {
+  if (is.null(analysisPath) || !resumeSearchEnabled(settings)) {
     return(NULL)
   }
   modelName <- settings$modelName %||% "the model"
@@ -325,10 +338,21 @@ removeSearchCheckpoint <- function(checkpoint) {
   invisible(NULL)
 }
 
-# Removes every saved search of an analysis (runPlp(), once its result is saved)
-removeSearchCheckpoints <- function(analysisPath) {
-  if (!is.null(analysisPath)) {
-    unlink(file.path(analysisPath, "hyperparameterSearch"), recursive = TRUE)
+# At the end of runPlp(), after its result is saved: removes the saved
+# searches of the analysis when every step succeeded, and otherwise says that
+# they are kept
+keepSearchCheckpoints <- function(analysisPath, failedSteps) {
+  directory <- file.path(analysisPath, "hyperparameterSearch")
+  if (is.null(analysisPath) || !dir.exists(directory)) {
+    return(invisible(NULL))
+  }
+  if (length(failedSteps) > 0) {
+    ParallelLogger::logInfo(paste0(
+      "The saved hyperparameter search in ", directory, " is kept because the ",
+      paste(failedSteps, collapse = " and "), " failed; running the analysis again resumes it"
+    ))
+  } else {
+    unlink(directory, recursive = TRUE)
   }
   invisible(NULL)
 }

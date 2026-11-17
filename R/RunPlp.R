@@ -297,6 +297,7 @@ runPlp <- function(
   
   model <- NULL
   prediction <- NULL
+  predictionTest <- NULL
   performance <- NULL
   if (executeSettings$runModelDevelopment) {
     # fit model
@@ -348,9 +349,9 @@ runPlp <- function(
           }
         )
         
-        predictionTest$evaluationType <- "Test"
-        
+        # a failed test prediction is NULL, and stays NULL
         if (!is.null(predictionTest)) {
+          predictionTest$evaluationType <- "Test"
           prediction <- rbind(predictionTest, prediction[, colnames(prediction) != "index"])
         } 
         
@@ -475,10 +476,16 @@ runPlp <- function(
     finally = ParallelLogger::logTrace("Done."))
   ParallelLogger::logInfo(paste0("plpResult saved to ..\\", analysisPath, "\\plpResult"))
   .plpCheckpoint$deferRemoval <- NULL
-  # a failed fit leaves the search saved, to resume when runPlp() is run again
-  if (!isTRUE(model$noModel)) {
-    removeSearchCheckpoints(analysisPath)
-  }
+  # The saved search is removed only when the run is complete: a step that
+  # failed above was logged and left NULL, and a rerun to repeat it resumes
+  # the search instead of refitting every candidate
+  failedSteps <- c(
+    "model fit" = executeSettings$runModelDevelopment && isTRUE(model$noModel),
+    "test prediction" = executeSettings$runModelDevelopment && !isTRUE(model$noModel) &&
+      "Test" %in% names(data) && is.null(predictionTest),
+    "evaluation" = executeSettings$runModelDevelopment && !isTRUE(model$noModel) && is.null(performance)
+  )
+  keepSearchCheckpoints(analysisPath, names(failedSteps)[failedSteps])
   delta <- Sys.time() - start
   ParallelLogger::logInfo(paste0("runPlp time taken: ", signif(delta, 3), " ", attr(delta, "units")))
   return(results)

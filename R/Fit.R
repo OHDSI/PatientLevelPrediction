@@ -31,10 +31,10 @@
 #' one of the \code{createModelSettings} functions
 #' @param hyperparameterSettings An object of class \code{hyperparameterSettings}'
 #' @param analysisId                       The id of the analysis
-#' @param analysisPath                     The path of the analysis. The hyperparameter search is
-#' saved there after each candidate, so that an interrupted search resumes when it is run again
-#' with the same data and settings (set `options(plp.resumeSearch = FALSE)` to turn this off).
-#' `NULL` saves nothing.
+#' @param analysisPath                     The path of the analysis. For models that ask for it
+#' (`resumeSearch = TRUE` in their settings), or with `options(plp.resumeSearch = TRUE)`, the
+#' hyperparameter search is saved there after each candidate, so that an interrupted search resumes
+#' when it is run again with the same data and settings. `NULL` saves nothing.
 #' @return
 #' An object of class \code{plpModel} containing:
 #'

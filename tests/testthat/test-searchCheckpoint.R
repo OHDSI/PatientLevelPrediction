@@ -31,6 +31,7 @@ createResumeFixture <- function(n = 60, folds = 3, calls = new.env()) {
   settings <- list(
     modelType = "binary",
     modelName = "resumeModel",
+    resumeSearch = TRUE,
     train = function(dataMatrix, labels, hyperParameters, settings) {
       calls$n <- calls$n + 1
       if (identical(calls$n, calls$stopAt)) {
@@ -58,6 +59,7 @@ createStatefulResumeFixture <- function(calls) {
     modelType = "binary",
     modelName = "statefulResumeModel",
     seed = 11,
+    resumeSearch = TRUE,
     checkpointState = TRUE,
     train = function(dataMatrix, labels, hyperParameters, settings, context) {
       if (isTRUE(context$candidateIndex == calls$stopCandidate)) {
@@ -327,6 +329,24 @@ test_that("equal values in another form resume", {
   expect_true(any(grepl("Resuming", output)))
 })
 
+test_that("searches are saved only for models that ask for it, or with the option on", {
+  fixture <- createResumeFixture()
+  path <- withr::local_tempdir()
+  interrupt <- function(settings) {
+    fixture$calls$n <- 0
+    fixture$calls$stopAt <- 5
+    expect_error(runSearch(fixture, slopes, analysisPath = path, settings = settings), "simulated crash")
+    dir.exists(file.path(path, "hyperparameterSearch"))
+  }
+  settings <- fixture$settings
+  settings$resumeSearch <- NULL
+  expect_false(interrupt(settings))
+  withr::with_options(list(plp.resumeSearch = TRUE), expect_true(interrupt(settings)))
+  unlink(path, recursive = TRUE)
+  withr::with_options(list(plp.resumeSearch = FALSE), expect_false(interrupt(fixture$settings)))
+  expect_true(interrupt(fixture$settings))
+})
+
 test_that("searches are not saved without an analysisPath, with the option off, or when PLP cannot fingerprint them", {
   fixture <- createResumeFixture()
   path <- withr::local_tempdir()
@@ -455,6 +475,7 @@ test_that("fitPlp removes the checkpoint of a finished search; runPlp keeps it u
     param = list(slope = list(1)),
     settings = list(
       modelName = "checkpointedModel",
+      resumeSearch = TRUE,
       train = function(dataMatrix, labels, hyperParameters, settings) list(),
       predict = function(plpModel, data, cohort) {
         cohort$value <- rep(0.5, nrow(cohort))
@@ -477,7 +498,9 @@ test_that("fitPlp removes the checkpoint of a finished search; runPlp keeps it u
   fitPlp(tinyTrainData, modelSettings, hyperparameterSettings, analysisId = "checkpoint", analysisPath = path)
   .plpCheckpoint$deferRemoval <- NULL
   expect_true(dir.exists(file.path(path, "hyperparameterSearch")))
-  removeSearchCheckpoints(path)
+  keepSearchCheckpoints(path, "evaluation")
+  expect_true(dir.exists(file.path(path, "hyperparameterSearch")))
+  keepSearchCheckpoints(path, character(0))
   expect_false(dir.exists(file.path(path, "hyperparameterSearch")))
 
   fitPlp(tinyTrainData, modelSettings, hyperparameterSettings, analysisId = "checkpoint", analysisPath = path)
@@ -494,6 +517,7 @@ test_that("runPlp resumes a search that crashed, and removes it once the result 
     settings = list(
       modelName = "crashingModel",
       seed = 3,
+      resumeSearch = TRUE,
       train = function(dataMatrix, labels, hyperParameters, settings) {
         calls$n <- calls$n + 1
         if (identical(calls$n, calls$stopAt)) {
@@ -502,9 +526,13 @@ test_that("runPlp resumes a search that crashed, and removes it once the result 
         list(risk = hyperParameters$risk)
       },
       predict = function(plpModel, data, cohort) {
+        if (inherits(plpModel, "plpModel") && isTRUE(calls$failTest)) {
+          stop("simulated failure of the test prediction")
+        }
         # in the search the model, on new data the plpModel
         risk <- if (inherits(plpModel, "plpModel")) plpModel$model$risk else plpModel$risk
-        cohort$value <- rep(risk, nrow(cohort))
+        # risks that vary, so that the evaluation can run
+        cohort$value <- risk * (1 + 0.5 * (cohort$rowId %% 2))
         if (!is.null(cohort$originalRowId)) {
           cohort$rowId <- cohort$originalRowId
           cohort$originalRowId <- NULL
@@ -544,11 +572,24 @@ test_that("runPlp resumes a search that crashed, and removes it once the result 
   expect_true(crashed$model$noModel)
   expect_true(dir.exists(searchDirectory))
 
+  # the search finishes, but the test prediction fails: runPlp saves a result
+  # without a test prediction, and the search stays saved
   calls$stopAt <- NULL
   calls$n <- 0
-  result <- run()
+  calls$failTest <- TRUE
+  withoutTest <- run()
+  expect_false(isTRUE(withoutTest$model$noModel))
+  expect_false("Test" %in% withoutTest$prediction$evaluationType)
+  expect_true(dir.exists(searchDirectory))
   # the 3 folds of the 3rd candidate and the final fit
   expect_equal(calls$n, 3 + 1)
+
+  calls$failTest <- NULL
+  calls$n <- 0
+  result <- run()
+  # all candidates were saved: only the final fit
+  expect_equal(calls$n, 1)
+  expect_true("Test" %in% result$prediction$evaluationType)
   expect_equal(result$model$trainDetails$finalModelParameters$risk, 0.4)
   expect_length(result$model$trainDetails$hyperParamSearch, 3)
   expect_false(dir.exists(searchDirectory))
