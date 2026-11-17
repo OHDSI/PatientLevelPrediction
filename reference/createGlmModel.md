@@ -101,7 +101,7 @@ plpData <- simulatePlpData(simulationProfile, n = 50, seed = 42)
 #> Generating covariates
 #> Generating cohorts
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmpf7DTHg/duckdb
+#> ℹ /tmp/Rtmpvtv7Kb/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -113,8 +113,8 @@ prediction <- predictPlp(model, plpData, plpData$cohorts)
 #> did FE
 #> did tidy
 #> predict risk probabilities using predictGlm
-#> Prediction took 0.117 secs
-#> Prediction done in: 0.123 secs
+#> Prediction took 0.142 secs
+#> Prediction done in: 0.149 secs
 # see the predicted risk values
 prediction$value
 #>  [1] 0.3543437 0.3775407 0.3429895 0.3775407 0.4013123 0.3100255 0.3100255
