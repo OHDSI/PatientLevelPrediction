@@ -322,9 +322,14 @@ test_that("a generator given by name is made for each search and survives JSON",
 })
 
 test_that("PSOCK workers give the same results as one worker", {
-  # PSOCK workers load the installed package, so this runs only against an
-  # installed build of this version
-  skip_if_not(identical(Sys.getenv("PLP_TEST_PSOCK"), "true"), "PLP_TEST_PSOCK is not set")
+  # PSOCK workers load the installed package: this runs in R CMD check and
+  # covr, which test an installed build, and with devtools::load_all() only
+  # when PLP_TEST_PSOCK is set (with an installed build of this version)
+  loadedForDevelopment <- exists(".__DEVTOOLS__", envir = asNamespace("PatientLevelPrediction"), inherits = FALSE)
+  skip_if(
+    loadedForDevelopment && !identical(Sys.getenv("PLP_TEST_PSOCK"), "true"),
+    "loaded with load_all() and PLP_TEST_PSOCK is not set"
+  )
   run <- function(workers) {
     fixture <- createStatefulFixture()
     fixture$settings$parallelFolds <- "psock"
@@ -340,4 +345,90 @@ test_that("PSOCK workers give the same results as one worker", {
   lines <- loggedFoldFits(2, "psock")
   expect_length(lines, 6)
   expect_true(any(grepl("Thread 2", lines)))
+})
+
+test_that("the worker side of PSOCK workers loads the data's package and keeps the data", {
+  env <- get(".plpTuning", envir = asNamespace("PatientLevelPrediction"))
+  on.exit(rm(list = ls(env, all.names = TRUE), envir = env), add = TRUE)
+  expect_true(loadPlpOnWorker(.libPaths()))
+  payload <- list(data = Matrix::Matrix(diag(2), sparse = TRUE), labels = data.frame(rowId = 1:2), baseSeed = 3)
+  expect_true(receiveFoldData(payload))
+  expect_identical(env$data, payload$data)
+  expect_identical(env$baseSeed, 3)
+})
+
+test_that("the fold workers are forked where possible, else PSOCK when the model allows it", {
+  hooks <- function(parallelFolds) list(parallelFolds = parallelFolds)
+  expect_equal(foldWorkerType(hooks(c("fork", "psock")), 2, 3, canFork = TRUE), "fork")
+  expect_equal(foldWorkerType(hooks(c("fork", "psock")), 2, 3, canFork = FALSE), "psock")
+  expect_equal(foldWorkerType(hooks("psock"), 2, 3, canFork = TRUE), "psock")
+  expect_output(
+    expect_null(foldWorkerType(hooks("fork"), 2, 3, modelName = "forkOnly", canFork = FALSE)),
+    "foldWorkers is ignored: forkOnly only supports forked workers"
+  )
+  expect_null(foldWorkerType(hooks("fork"), 1, 3, canFork = TRUE))
+  expect_null(foldWorkerType(hooks("fork"), 2, 1, canFork = TRUE))
+})
+
+test_that("a model with tuning hooks but no prepareFold is trained on its fold's rows", {
+  fixture <- createStatefulFixture()
+  fixture$settings$prepareFold <- NULL
+  fixture$settings$train <- function(dataMatrix, labels, hyperParameters, settings, context) {
+    stopifnot(is.matrix(dataMatrix), nrow(dataMatrix) == nrow(labels))
+    list(slope = hyperParameters$slope)
+  }
+  result <- runStateful(fixture, list(slope = list(0.5, 1)))
+  expect_length(result$paramSearch, 2)
+  expect_equal(result$model$slope, result$finalParam$slope)
+})
+
+test_that("tuning objects given by name are found, and errors name what is missing", {
+  expect_identical(resolveTuningObject("aucMetric", "tuningMetric"), aucMetric)
+  expect_identical(resolveTuningObject("PatientLevelPrediction::auprcMetric", "tuningMetric"), auprcMetric)
+  expect_error(resolveTuningObject("noSuchMetric", "tuningMetric"), "Could not find 'noSuchMetric' given as the tuningMetric")
+  expect_error(
+    resolveTuningMetric(list(tuningMetric = list(fun = "not a function", name = "x")), list()),
+    "The tuning metric must be a list with fun, maximize and name"
+  )
+  expect_error(
+    resolveTuningMetric(list(tuningMetric = aucMetric, tuningMetricIsDefault = TRUE), list(tuningMetric = "noSuchMetric")),
+    "Could not find 'noSuchMetric'"
+  )
+})
+
+test_that("the log-likelihood clips risks of 0 and 1", {
+  # called directly: the metric object holds the function as it was when the package was built
+  prediction <- data.frame(outcomeCount = c(0, 1, 2), value = c(0, 1, 0.5))
+  expect_equal(computeLogLikelihood(prediction), mean(c(log1p(-1e-15), log(1 - 1e-15), log(0.5))))
+})
+
+test_that("a selector must return one candidate with a performance", {
+  fixture <- createStatefulFixture()
+  run <- function(selector, ...) {
+    runStateful(fixture, list(slope = list(0.5, 1)), selector = selector, ...)
+  }
+  expect_error(run(function(history, metric) 5L), "The selector must return the index of one candidate")
+  expect_error(run(function(history, metric) c(1L, 2L)), "The selector must return the index of one candidate")
+  skipFirst <- createTuningMetric(
+    function(prediction) if (all(abs(prediction$value - stats::plogis(0.5 * 0)) < 1)) NA_real_ else 1,
+    name = "missing"
+  )
+  expect_error(
+    run(function(history, metric) 1L, tuningMetric = skipFirst),
+    "The selector chose a candidate without a performance"
+  )
+  # a selector that chooses none: every candidate is without a performance
+  expect_error(run(function(history, metric) integer(0)), "were skipped or had no performance")
+})
+
+test_that("a generator given by name must make a generator, and its arguments must be named", {
+  expect_error(
+    createHyperparameterSettings(generator = "PatientLevelPrediction::aucMetric", generatorArgs = list(1)),
+    "`generatorArgs` must be a named list"
+  )
+  settings <- createHyperparameterSettings(generator = "base::identity", generatorArgs = list(x = "not a generator"))
+  expect_error(
+    prepareHyperparameterGrid(list(slope = list(1)), settings),
+    "The generator function 'base::identity' must return a function or an object with initialize and getNext methods"
+  )
 })

@@ -224,7 +224,8 @@ createFoldExecutor <- function(foldIds, data, labels, settings, hooks, baseSeed,
 }
 
 # The kind of workers to use, or NULL to fit the folds in this process
-foldWorkerType <- function(hooks, foldWorkers, nFolds, modelName = NULL) {
+foldWorkerType <- function(hooks, foldWorkers, nFolds, modelName = NULL,
+                           canFork = .Platform$OS.type == "unix") {
   if (foldWorkers <= 1 || nFolds < 2) {
     return(NULL)
   }
@@ -234,7 +235,6 @@ foldWorkerType <- function(hooks, foldWorkers, nFolds, modelName = NULL) {
     ))
     return(NULL)
   }
-  canFork <- .Platform$OS.type == "unix"
   if (canFork && "fork" %in% hooks$parallelFolds) {
     return("fork")
   }
