@@ -181,7 +181,7 @@ createFoldExecutor <- function(foldIds, data, labels, settings, hooks, baseSeed,
   }
   ok <- FALSE
   on.exit(if (!ok) stopWorkers(), add = TRUE)
-  parallel::clusterApply(cluster, foldsByWorker, initFoldWorker)
+  parallel::clusterApply(cluster, seq_len(workers), initFoldWorker, foldsByWorker = foldsByWorker)
   ok <- TRUE
   list(
     workers = workers,
@@ -237,7 +237,9 @@ startFoldCluster <- function(type, workers, data, labels, settings, hooks, baseS
     gc(verbose = FALSE)
     return(parallel::makeForkCluster(workers))
   }
-  cluster <- parallel::makePSOCKcluster(workers)
+  # with PLP's loggers and Andromeda settings in each worker, as
+  # createLearningCurve() and the feature importance get them
+  cluster <- ParallelLogger::makeCluster(numberOfThreads = workers)
   ok <- FALSE
   on.exit(if (!ok) parallel::stopCluster(cluster), add = TRUE)
   parallel::clusterCall(cluster, loadPlpOnWorker, .libPaths())
@@ -269,7 +271,12 @@ receiveFoldData <- function(payload) {
   TRUE
 }
 
-initFoldWorker <- function(foldIds) {
+initFoldWorker <- function(worker, foldsByWorker) {
+  # log lines name the worker, as ParallelLogger's clusters do; forked workers
+  # keep the loggers they inherited, socket workers get them from
+  # ParallelLogger::makeCluster()
+  options(PARALLELLOGGER_THREAD_NUMBER = worker)
+  foldIds <- foldsByWorker[[worker]]
   env <- get(".plpTuning", envir = asNamespace("PatientLevelPrediction"))
   env$runners <- lapply(foldIds, createFoldRunner, data = env$data, labels = env$labels,
                         settings = env$settings, hooks = env$hooks, baseSeed = env$baseSeed)
