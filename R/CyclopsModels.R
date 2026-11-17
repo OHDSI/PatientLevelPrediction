@@ -30,7 +30,9 @@ fitCyclopsModel <- function(
     ignored <- c(
       search = !identical(hyperparameterSettings$search %||% "grid", "grid"),
       tuningMetric = !identical(hyperparameterSettings$tuningMetric$name %||% "AUC", "AUC"),
-      validation = !identical(hyperparameterSettings$validation %||% "cv", "cv")
+      validation = !identical(hyperparameterSettings$validation %||% "cv", "cv"),
+      selector = !is.null(hyperparameterSettings$selector),
+      foldWorkers = !identical(as.numeric(hyperparameterSettings$foldWorkers %||% 1), 1)
     )
     if (any(ignored)) {
       warning(

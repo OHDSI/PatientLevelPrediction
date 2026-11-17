@@ -740,7 +740,8 @@ insertModelInDatabase <- function(
   hyperparameterSettings <- NULL
   if (!is.null(model$modelDesign) && is.list(model$modelDesign)) {
     hyperparameterSettings <- sanitizeHyperparameterSettingsForDatabase(
-      model$modelDesign$hyperparameterSettings
+      model$modelDesign$hyperparameterSettings,
+      modelSettings = model$modelDesign$modelSettings
     )
   }
   trainDetails <- list(
@@ -849,7 +850,7 @@ sanitizeTuningMetricForDatabase <- function(tuningMetric) {
     funArgs = sanitizeObjectForDatabaseJson(tuningMetric$funArgs)
   )
   builtIn <- if (is.character(tuningMetric$name)) {
-    list(AUC = aucMetric, AUPRC = auprcMetric)[[tuningMetric$name]]
+    list(AUC = aucMetric, AUPRC = auprcMetric, logLikelihood = logLikelihoodMetric)[[tuningMetric$name]]
   }
   if (is.function(tuningMetric$fun)) {
     fingerprint <- fingerprintFunction(tuningMetric$fun)
@@ -891,6 +892,9 @@ fingerprintFunction <- function(fn, seen = new.env(parent = emptyenv())) {
 }
 
 fingerprintGenerator <- function(generator) {
+  if (is.character(generator)) {
+    return(NULL)
+  }
   if (is.function(generator)) {
     return(fingerprintFunction(generator))
   }
@@ -905,15 +909,30 @@ sanitizeGeneratorForDatabase <- function(generator) {
   if (is.function(generator)) {
     return(list(type = "function"))
   }
+  if (is.character(generator)) {
+    return(list(type = "name", name = generator))
+  }
   list(
     type = paste(class(generator), collapse = "/"),
     methods = intersect(c("initialize", "getNext", "finalize"), names(generator))
   )
 }
 
-sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
+# modelSettings: the model the settings tune. A model that names its own
+# default metric (such as iterative hard thresholding) is tuned on it when the
+# settings do not name one, and that metric is the one written; other models
+# get the settings' metric, as before.
+sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings, modelSettings = NULL) {
   if (is.null(hyperparameterSettings)) {
     return(NULL)
+  }
+  tuningMetric <- hyperparameterSettings$tuningMetric
+  if (isTRUE(hyperparameterSettings$tuningMetricIsDefault) &&
+    !is.null(modelSettings$settings$tuningMetric)) {
+    tuningMetric <- tryCatch(
+      resolveTuningMetric(hyperparameterSettings, modelSettings$settings),
+      error = function(e) tuningMetric
+    )
   }
 
   generator <- sanitizeGeneratorForDatabase(hyperparameterSettings$generator)
@@ -923,7 +942,7 @@ sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
 
   result <- list(
     search = hyperparameterSettings$search,
-    tuningMetric = sanitizeTuningMetricForDatabase(hyperparameterSettings$tuningMetric),
+    tuningMetric = sanitizeTuningMetricForDatabase(tuningMetric),
     sampleSize = hyperparameterSettings$sampleSize,
     randomSeed = hyperparameterSettings$randomSeed,
     generator = generator
@@ -933,6 +952,17 @@ sanitizeHyperparameterSettingsForDatabase <- function(hyperparameterSettings) {
   validation <- hyperparameterSettings$validation %||% "cv"
   if (!identical(validation, "cv")) {
     result$validation <- validation
+  }
+  # likewise for the newer settings that change the results; foldWorkers
+  # does not change them and is not written
+  if (length(hyperparameterSettings$generatorArgs) > 0) {
+    result$generatorArgs <- sanitizeObjectForDatabaseJson(hyperparameterSettings$generatorArgs)
+  }
+  selector <- hyperparameterSettings$selector
+  if (is.character(selector)) {
+    result$selector <- list(type = "name", name = selector)
+  } else if (is.function(selector)) {
+    result$selector <- list(type = "function", fingerprint = fingerprintFunction(selector))
   }
   result
 }

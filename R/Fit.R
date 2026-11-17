@@ -389,15 +389,36 @@ tuneHyperparameters <- function(
   if (is.null(hyperparamSettings) || is.null(hyperparamSettings$tuningMetric)) {
     hyperparamSettings <- createHyperparameterSettings()
   }
-  trainFun <- resolveHook(settings$train, "train")
-  predictFun <- resolveHook(settings$predict, "predict")
+  hooks <- resolveTuningHooks(settings)
+  trainFun <- hooks$train
+  predictFun <- hooks$predict
+  metric <- resolveTuningMetric(hyperparamSettings, settings)
+  selector <- resolveSelector(hyperparamSettings, settings)
+  select <- function(history) {
+    if (is.null(selector)) {
+      return(selectBest(history, metric))
+    }
+    best <- selector(history = history, metric = metric)
+    if (length(best) == 0) {
+      return(integer(0))
+    }
+    if (length(best) != 1L || is.na(best) || !best %in% seq_along(history)) {
+      stop("The selector must return the index of one candidate in the history", call. = FALSE)
+    }
+    if (is.na(history[[best]]$cvPerformance)) {
+      stop("The selector chose a candidate without a performance", call. = FALSE)
+    }
+    as.integer(best)
+  }
   iterator <- prepareHyperparameterGrid(
     paramDefinition = param,
     hyperSettings = hyperparamSettings
   )
   history <- list()
-  metric <- hyperparamSettings$tuningMetric
   bestCvPrediction <- c()
+  # with a selector that can choose an earlier candidate, every candidate's
+  # predictions are kept
+  cvPredictions <- list()
   foldIds <- unique(labels$index)
   # settings saved by earlier versions have no validation
   validation <- hyperparamSettings$validation %||% "cv"
@@ -411,46 +432,81 @@ tuneHyperparameters <- function(
     evaluationType <- trainValidationEvaluationType
   }
 
+  executor <- NULL
+  if (hooks$stateful) {
+    # one seed for the search, from the model's seed or the random stream
+    baseSeed <- settings$seed %||% sample.int(2147483646L, 1L)
+    executor <- createFoldExecutor(
+      foldIds, data, labels, settings, hooks, baseSeed,
+      foldWorkers = hyperparamSettings$foldWorkers %||% 1L
+    )
+    on.exit(executor$stop(), add = TRUE)
+  }
+
+  candidateIndex <- 0L
   repeat {
     candidate <- iterator$getNext(history)
     if (is.null(candidate)) {
       break
     }
-    # A candidate the model cannot run (it signals this with stopCandidate(),
-    # for example when it runs out of memory) is recorded with a missing
-    # performance and the search goes on with the next one; selectBest() skips
-    # missing performances. Any other error stops the search.
-    folds <- tryCatch(
-      {
-        cvPrediction <- c()
-        cvPerformance <- c()
-        for (i in foldIds) {
-          ind <- labels$index != i
-          model <- do.call(
-            trainFun,
-            list(
-              dataMatrix = data[ind, , drop = FALSE],
-              labels = labels[ind, ],
-              hyperParameters = candidate,
-              settings = settings
+    candidateIndex <- candidateIndex + 1L
+    foldInfo <- NULL
+    if (hooks$stateful) {
+      # every fold runs the candidate; it is skipped if any fold could not fit it
+      foldResults <- executor$run(candidate, candidateIndex)
+      foldErrors <- unique(unlist(lapply(foldResults, function(x) x$error)))
+      foldSeconds <- vapply(foldResults, function(x) x$seconds, numeric(1))
+      if (!is.null(hooks$fitInfo)) {
+        foldInfo <- lapply(foldResults, function(x) x$info)
+      }
+      folds <- if (length(foldErrors) > 0) {
+        errorCondition(paste(foldErrors, collapse = "; "), class = "plpCandidateError")
+      } else {
+        list(
+          prediction = do.call(rbind, lapply(foldResults, function(x) x$prediction)),
+          performance = vapply(foldResults, function(x) metric$fun(x$prediction), numeric(1))
+        )
+      }
+    } else {
+      # A candidate the model cannot run (it signals this with stopCandidate(),
+      # for example when it runs out of memory) is recorded with a missing
+      # performance and the search goes on with the next one; selectBest() skips
+      # missing performances. Any other error stops the search.
+      foldSeconds <- c()
+      folds <- tryCatch(
+        {
+          cvPrediction <- c()
+          cvPerformance <- c()
+          for (i in foldIds) {
+            foldStart <- Sys.time()
+            ind <- labels$index != i
+            model <- do.call(
+              trainFun,
+              list(
+                dataMatrix = data[ind, , drop = FALSE],
+                labels = labels[ind, ],
+                hyperParameters = candidate,
+                settings = settings
+              )
             )
-          )
-          prediction <- do.call(
-            predictFun,
-            list(
-              plpModel = model,
-              data = data[!ind, , drop = FALSE],
-              cohort = labels[!ind, ]
+            prediction <- do.call(
+              predictFun,
+              list(
+                plpModel = model,
+                data = data[!ind, , drop = FALSE],
+                cohort = labels[!ind, ]
+              )
             )
-          )
-          performance <- metric$fun(prediction)
-          cvPrediction <- rbind(cvPrediction, prediction)
-          cvPerformance <- c(cvPerformance, performance)
-        }
-        list(prediction = cvPrediction, performance = cvPerformance)
-      },
-      plpCandidateError = function(e) e
-    )
+            performance <- metric$fun(prediction)
+            cvPrediction <- rbind(cvPrediction, prediction)
+            cvPerformance <- c(cvPerformance, performance)
+            foldSeconds <- c(foldSeconds, as.numeric(difftime(Sys.time(), foldStart, units = "secs")))
+          }
+          list(prediction = cvPrediction, performance = cvPerformance)
+        },
+        plpCandidateError = function(e) e
+      )
+    }
     candidateError <- NULL
     if (inherits(folds, "plpCandidateError")) {
       candidateError <- conditionMessage(folds)
@@ -468,8 +524,11 @@ tuneHyperparameters <- function(
       cvPrediction <- folds$prediction
       cvPerformance <- folds$performance
       meanCvPerformance <- mean(cvPerformance, na.rm = TRUE)
+      if (is.nan(meanCvPerformance)) {
+        meanCvPerformance <- NA_real_
+      }
     }
-    history[[length(history) + 1]] <- list(
+    entry <- list(
       metric = metric$name,
       param = candidate,
       cvPerformance = meanCvPerformance,
@@ -482,13 +541,22 @@ tuneHyperparameters <- function(
         candidate,
         foldIds,
         evaluationType
-      )
+      ),
+      foldIds = foldIds,
+      seconds = foldSeconds
     )
+    if (!is.null(foldInfo)) {
+      entry$info <- foldInfo
+    }
+    history[[length(history) + 1]] <- entry
+    if (!is.null(selector)) {
+      cvPredictions[length(history)] <- list(cvPrediction)
+    }
     if (!is.null(candidateError)) {
       next
     }
     # Same rule as the final selection, so CV predictions match the fitted candidate on ties.
-    if (identical(selectBest(history, metric), length(history))) {
+    if (identical(select(history), length(history))) {
       ParallelLogger::logInfo(paste0(
         "New best performance ",
         round(meanCvPerformance, 4),
@@ -506,32 +574,51 @@ tuneHyperparameters <- function(
     }
   }
   iterator$finalize(history)
-  best <- selectBest(history, metric)
+  best <- select(history)
   if (length(best) == 0) {
     errors <- unique(unlist(lapply(history, function(x) x$error)))
     stop(
       "All ", length(history), " hyperparameter candidates of ", settings$modelName,
-      " were skipped: ", paste(errors, collapse = "; "),
+      " were skipped",
+      if (length(errors) > 0) paste0(": ", paste(errors, collapse = "; ")) else
+        " or had no performance",
       call. = FALSE
     )
   }
 
   finalParam <- history[[best]]$param
 
-  cvPrediction <- bestCvPrediction
+  cvPrediction <- if (!is.null(selector)) cvPredictions[[best]] else bestCvPrediction
+  rm(cvPredictions)
   cvPrediction$evaluationType <- evaluationType
 
   # fit final model
   ParallelLogger::logInfo("Fit best model on whole training set")
-  finalModel <- do.call(
-    trainFun,
-    list(
-      dataMatrix = data,
-      labels = labels,
-      hyperParameters = finalParam,
-      settings = settings
-    )
+  finalArgs <- list(
+    dataMatrix = data,
+    labels = labels,
+    hyperParameters = finalParam,
+    settings = settings
   )
+  if (hooks$stateful) {
+    # the folds are freed first; the final fit starts cold, on all rows
+    executor$stop()
+    if (!is.null(hooks$prepareFold)) {
+      finalArgs$dataMatrix <- withLocalSeed(tuningSeed(baseSeed, 0, 0), do.call(
+        hooks$prepareFold,
+        list(dataMatrix = data, labels = labels, settings = settings)
+      ))
+    }
+    if (hooks$trainContext) {
+      finalArgs$context <- list(foldId = NULL, final = TRUE, state = NULL, candidateIndex = best)
+    }
+  }
+  finalModel <- if (hooks$stateful) {
+    withLocalSeed(tuningSeed(baseSeed, 0, -1), do.call(trainFun, finalArgs))
+  } else {
+    do.call(trainFun, finalArgs)
+  }
+  rm(finalArgs)
 
   prediction <- do.call(
     predictFun,
