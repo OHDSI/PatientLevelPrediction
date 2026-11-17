@@ -47,7 +47,7 @@ Suggests:
     glmnet,
     ggplot2,
     gridExtra,
-    IterativeHardThresholding,
+    IterativeHardThresholding (>= 2.0.0),
     knitr,
     lightgbm (>= 4.2.0),
     Metrics,

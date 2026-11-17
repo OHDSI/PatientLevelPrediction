@@ -125,6 +125,10 @@ fitCyclopsModel <- function(
     settings$priorfunction,
     "BrokenAdaptiveRidge::createBarPrior"
   )
+  isIht <- identical(
+    settings$priorfunction,
+    "IterativeHardThresholding::createIhtPrior"
+  )
   finalBarPenalty <- NULL
   finalBarInitialRidgeVariance <- NULL
   if (isBar) {
@@ -140,29 +144,15 @@ fitCyclopsModel <- function(
   if (!isTRUE(settings$manualPenaltyCv)) {
     if (isBar) {
       prior <- do.call(BrokenAdaptiveRidge::createBarPrior, param$priorParams)
+    } else if (isIht) {
+      prior <- createIhtPriorFromSettings(param$priorParams)
     } else {
       prior <- do.call(resolveHook(settings$priorfunction, "priorfunction"), param$priorParams)
     }
   }
 
   if (settings$useControl) {
-    startingVariance <- param$priorParams$variance
-    if (is.null(startingVariance)) {
-      startingVariance <- param$priorParams$initialRidgeVariance
-    }
-    control <- Cyclops::createControl(
-      cvType = "auto",
-      startingVariance = startingVariance,
-      lowerLimit = param$lowerLimit,
-      upperLimit = param$upperLimit,
-      tolerance = settings$tolerance,
-      cvRepetitions = 1,
-      selectorType = "byRow",
-      noiseLevel = "silent",
-      threads = settings$threads,
-      maxIterations = settings$maxIterations,
-      seed = settings$seed
-    )
+    control <- createCyclopsFitControl(param, settings)
     cv <- cyclopsCvArguments(prior, trainData, settings$cyclopsModelType)
 
     fit <- tryCatch(
@@ -267,12 +257,12 @@ fitCyclopsModel <- function(
         metric = "AUC",
         fold = c("CV", paste0("Fold", vapply(modelTrained$cv, function(x) x$fold, numeric(1)))),
         value = c(cvMean, cvPerFold),
-        startingVariance = ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance),
-        lowerLimit = ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit),
-        upperLimit = ifelse(is.null(param$upperLimit), "NULL", param$upperLimit),
-        tolerance = ifelse(is.null(settings$tolerance), "NULL", settings$tolerance),
         stringsAsFactors = FALSE
       )
+      cvPerFold$startingVariance <- ifelse(is.null(param$priorParams$variance), "NULL", param$priorParams$variance)
+      cvPerFold$lowerLimit <- ifelse(is.null(param$lowerLimit), "NULL", param$lowerLimit)
+      cvPerFold$upperLimit <- ifelse(is.null(param$upperLimit), "NULL", param$upperLimit)
+      cvPerFold$tolerance <- ifelse(is.null(settings$tolerance), "NULL", settings$tolerance)
     } else {
       cvPerFold <- data.frame()
     }
@@ -732,6 +722,60 @@ createBarPenaltyGrid <- function(labels, penaltyRatio, penaltyGridSize) {
 }
 
 
+
+# The Cyclops control of a model fit: PLP's threads, seed and convergence
+# settings, and for the models whose variance Cyclops cross-validates, the
+# start and limits of the variance search.
+createCyclopsFitControl <- function(param, settings) {
+  startingVariance <- param$priorParams$variance %||%
+    param$priorParams$initialRidgeVariance
+  controlArguments <- list(
+    cvType = "auto",
+    startingVariance = startingVariance,
+    lowerLimit = param$lowerLimit,
+    upperLimit = param$upperLimit,
+    tolerance = settings$tolerance,
+    cvRepetitions = 1,
+    selectorType = "byRow",
+    noiseLevel = "silent",
+    threads = settings$threads,
+    maxIterations = settings$maxIterations,
+    seed = settings$seed
+  )
+  do.call(
+    Cyclops::createControl,
+    controlArguments[!vapply(controlArguments, is.null, logical(1))]
+  )
+}
+
+# The IHT prior of model settings fitted by fitCyclopsModel(): the "legacy"
+# algorithm, and settings saved before IterativeHardThresholding 2.0, which
+# have no algorithm and run "legacy" (1.0.3) to reproduce the models fitted
+# with them. setIterativeHardThresholding() also checks its values with it.
+# The settings hold plain lists, so that they survive saving as JSON;
+# IterativeHardThresholding wants its control objects.
+createIhtPriorFromSettings <- function(priorParams) {
+  rlang::check_installed("IterativeHardThresholding", version = "2.0.0")
+  if (is.null(priorParams$algorithm)) {
+    warning(
+      "These iterative hard thresholding settings were saved before ",
+      "IterativeHardThresholding 2.0.0; fitting them with its \"legacy\" algorithm",
+      call. = FALSE
+    )
+    priorParams$algorithm <- "legacy"
+  }
+  if (!identical(priorParams$algorithm, "legacy")) {
+    priorParams$cv <- do.call(
+      IterativeHardThresholding::createIhtCvControl,
+      as.list(priorParams$cv)
+    )
+    priorParams$control <- do.call(
+      IterativeHardThresholding::createIhtControl,
+      as.list(priorParams$control)
+    )
+  }
+  do.call(IterativeHardThresholding::createIhtPrior, priorParams)
+}
 
 # PLP's training folds for Cyclops (fitCyclopsModel(cvFolds = )), or NULL with
 # fewer than two folds
