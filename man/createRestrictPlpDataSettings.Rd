@@ -30,7 +30,14 @@ date for a person to be included in the at risk cohort. Note that
 this is typically done in the \code{createStudyPopulation} function,
 but can already be done here for efficiency reasons.}
 
-\item{sampleSize}{If not NULL, the number of people to sample from the target cohort}
+\item{sampleSize}{If not NULL, the number of people to sample from the target cohort.
+People are chosen by a fixed hash of their person ID, so the same
+settings give the same people and a smaller sample is part of a
+larger one. All entries of a sampled person are kept, so with
+\code{firstExposureOnly = FALSE} there can be more rows than
+\code{sampleSize}. The sample is taken before
+\code{createStudyPopulation} is applied, so the final population
+can be smaller.}
 }
 \value{
 A setting object of class \code{restrictPlpDataSettings} containing a list of
