@@ -81,10 +81,21 @@ jobs:
           print(table(schema = p$schema, age = cut(p$ageDays,
             c(-Inf, 1, 7, 30, 90, 365, Inf), c("<1d", "1-7d", "7-30d", "30-90d", "90-365d", ">1y"))))
 
-          cat("\n== Most common name prefixes in <OHDSI_SCHEMA>\n")
+          prefixOf <- function(x) sub("^([a-z]+_?[a-z]*).*$", "\\1", tolower(x))
+          for (sch in c("<OHDSI_SCHEMA>", "public")) {
+            cat("\n== Most common name prefixes in", sch, "\n")
+            print(head(sort(table(prefixOf(p$tableName[p$schema == sch])), decreasing = TRUE), 40))
+          }
+          cat("\n== public: prefix by age\n")
+          pub <- p[p$schema == "public", ]
+          top <- names(head(sort(table(prefixOf(pub$tableName)), decreasing = TRUE), 15))
+          pub$prefix <- ifelse(prefixOf(pub$tableName) %in% top, prefixOf(pub$tableName), "<other>")
+          print(table(prefix = pub$prefix, age = cut(pub$ageDays,
+            c(-Inf, 7, 30, 90, 365, Inf), c("<7d", "7-30d", "30-90d", "90-365d", ">1y"))))
+          cat("\n== 20 sample table names in public\n")
+          set.seed(1)
+          print(sort(sample(pub$tableName, min(20, nrow(pub)))))
           o <- p[p$schema == "<OHDSI_SCHEMA>", ]
-          prefix <- sub("^([a-z]+_?[a-z]*).*$", "\\1", tolower(o$tableName))
-          print(head(sort(table(prefix), decreasing = TRUE), 40))
           cat("\nPLP sampleSize test tables (plp_ss_*):", sum(grepl("^plp_ss_", o$tableName)), "\n")
 
           cat("\n== 30 oldest tables in <OHDSI_SCHEMA>\n")
