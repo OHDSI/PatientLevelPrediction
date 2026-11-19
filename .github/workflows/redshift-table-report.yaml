@@ -98,8 +98,24 @@ jobs:
           o <- p[p$schema == "<OHDSI_SCHEMA>", ]
           cat("\nPLP sampleSize test tables (plp_ss_*):", sum(grepl("^plp_ss_", o$tableName)), "\n")
 
+          cat("\n== ct_ cohort tables in <OHDSI_SCHEMA>\n")
+          ct <- o[grepl("^ct_[0-9]+$", o$tableName), c("tableName", "created")]
+          companions <- o$tableName[grepl("^ct_[0-9]+_", o$tableName)]
+          ct$companions <- vapply(ct$tableName, function(t) sum(startsWith(companions, paste0(t, "_"))), integer(1))
+          cat("base tables:", nrow(ct), " with companions:", sum(ct$companions > 0),
+              " without:", sum(ct$companions == 0), " companion tables:", length(companions), "\n")
+          cat("companion tables without a base table:",
+              sum(!sub("^(ct_[0-9]+)_.*$", "\\1", companions) %in% ct$tableName), "\n")
+          print(table(companions = ct$companions, year = format(ct$created, "%Y")))
+          dir.create("report", showWarnings = FALSE)
+          write.csv(ct, "report/ct_tables.csv", row.names = FALSE)
           cat("\n== 30 oldest tables in <OHDSI_SCHEMA>\n")
           print(head(o[order(o$created), c("tableName", "owner", "created")], 30), row.names = FALSE)
           cat("\n== 30 newest tables in <OHDSI_SCHEMA>\n")
           print(head(o[order(o$created, decreasing = TRUE), c("tableName", "owner", "created")], 30),
             row.names = FALSE)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ct-tables
+          path: report/ct_tables.csv
