@@ -30,6 +30,10 @@ jobs:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
+        env:
+          # skip apt; Java is preinstalled and the R packages are cached
+          PKG_SYSREQS: "false"
+        timeout-minutes: 10
         with:
           packages: any::DatabaseConnector
           cache: always
