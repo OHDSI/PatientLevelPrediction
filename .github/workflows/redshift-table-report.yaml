@@ -115,6 +115,74 @@ jobs:
           print(head(o[order(o$created, decreasing = TRUE), c("tableName", "owner", "created")], 30),
             row.names = FALSE)
 
+      - name: Clean up leftover test tables
+        shell: Rscript {0}
+        env:
+          # "dry-run" only counts; "drop" drops
+          CLEANUP_MODE: dry-run
+        run: |
+          mode <- Sys.getenv("CLEANUP_MODE")
+          connection <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(
+            dbms = "redshift",
+            server = Sys.getenv("CDM5_REDSHIFT_SERVER"),
+            user = Sys.getenv("CDM5_REDSHIFT_USER"),
+            password = URLdecode(Sys.getenv("CDM5_REDSHIFT_PASSWORD"))
+          ))
+          on.exit(DatabaseConnector::disconnect(connection))
+          ohdsi <- tolower(Sys.getenv("CDM5_REDSHIFT_OHDSI_SCHEMA"))
+          me <- tolower(Sys.getenv("CDM5_REDSHIFT_USER"))
+          tables <- DatabaseConnector::querySql(connection, "
+            SELECT n.nspname AS schema_name, c.relname AS table_name, u.usename AS owner,
+                   c.relcreationtime AS created
+            FROM pg_class_info c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            LEFT JOIN pg_user u ON u.usesysid = c.relowner
+            WHERE c.relkind = 'r'", snakeCaseToCamelCase = TRUE)
+          tables$ageDays <- as.numeric(difftime(Sys.time(), as.POSIXct(tables$created, tz = "UTC"),
+            units = "days"))
+          old <- !is.na(tables$ageDays) & tables$ageDays > 7 & tolower(tables$owner) == me
+          rules <- list(
+            "ct_* in <OHDSI_SCHEMA>" = tolower(tables$schemaName) == ohdsi &
+              grepl("^ct_[0-9]+(_|$)", tables$tableName),
+            "temp<digits>_* in public" = tables$schemaName == "public" & grepl("^temp[0-9]+_", tables$tableName),
+            "tbl<digits>_* in public" = tables$schemaName == "public" & grepl("^tbl[0-9]+_", tables$tableName),
+            "test* in public" = tables$schemaName == "public" & grepl("^test", tables$tableName)
+          )
+          drop <- Reduce(`|`, rules) & old
+          for (r in names(rules)) cat(r, ": ", sum(rules[[r]] & old), " to drop, ",
+            sum(rules[[r]] & !old), " kept (7 days or newer, or other owner)\n", sep = "")
+          cat("Total to drop:", sum(drop), "of", nrow(tables), "tables\n")
+          if (mode != "drop") quit(save = "no")
+
+          targets <- sprintf('%s."%s"', tables$schemaName[drop], tables$tableName[drop])
+          batches <- split(targets, ceiling(seq_along(targets) / 100))
+          dropped <- 0
+          failed <- character()
+          for (b in batches) {
+            ok <- tryCatch({
+              DatabaseConnector::executeSql(connection, paste0("DROP TABLE IF EXISTS ", paste(b, collapse = ", "), ";"),
+                progressBar = FALSE, reportOverallTime = FALSE, errorReportFile = tempfile())
+              TRUE
+            }, error = function(e) FALSE)
+            if (ok) {
+              dropped <- dropped + length(b)
+            } else {
+              for (t in b) {
+                ok1 <- tryCatch({
+                  DatabaseConnector::executeSql(connection, paste0("DROP TABLE IF EXISTS ", t, ";"),
+                    progressBar = FALSE, reportOverallTime = FALSE, errorReportFile = tempfile())
+                  TRUE
+                }, error = function(e) FALSE)
+                if (ok1) dropped <- dropped + 1 else failed <- c(failed, t)
+              }
+            }
+          }
+          cat("Dropped", dropped, "tables;", length(failed), "failed\n")
+          if (length(failed) > 0) print(head(sub("^[^.]+\\.", "<schema>.", failed), 20))
+          left <- DatabaseConnector::querySql(connection,
+            "SELECT COUNT(*) AS n FROM pg_class_info c WHERE c.relkind = 'r'")
+          cat("Tables on the cluster now:", left[1, 1], "of 9900\n")
+
       - uses: actions/upload-artifact@v4
         with:
           name: ct-tables
