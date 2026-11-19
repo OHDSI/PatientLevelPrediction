@@ -1,0 +1,94 @@
+# Read-only report on the shared Redshift test cluster: how many tables exist, in which
+# schemas, owned by whom, how old, and with which name prefixes. It runs no DDL or DML.
+# The database tests fail with "Maximum tables limit exceeded" (9900 per cluster).
+on:
+  push:
+    branches:
+      - ci/redshift-table-report
+  workflow_dispatch:
+
+name: Redshift table report
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DATABASECONNECTOR_JAR_FOLDER: ${{ github.workspace }}/.jdbc
+      CDM5_REDSHIFT_CDM_SCHEMA: ${{ secrets.CDM5_REDSHIFT_CDM_SCHEMA }}
+      CDM5_REDSHIFT_OHDSI_SCHEMA: ${{ secrets.CDM5_REDSHIFT_OHDSI_SCHEMA }}
+      CDM5_REDSHIFT_PASSWORD: ${{ secrets.CDM5_REDSHIFT_PASSWORD }}
+      CDM5_REDSHIFT_SERVER: ${{ secrets.CDM5_REDSHIFT_SERVER }}
+      CDM5_REDSHIFT_USER: ${{ secrets.CDM5_REDSHIFT_USER }}
+    steps:
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: any::DatabaseConnector
+          cache: always
+
+      - name: Report
+        shell: Rscript {0}
+        run: |
+          dir.create(Sys.getenv("DATABASECONNECTOR_JAR_FOLDER"), showWarnings = FALSE)
+          DatabaseConnector::downloadJdbcDrivers("redshift")
+          connection <- DatabaseConnector::connect(DatabaseConnector::createConnectionDetails(
+            dbms = "redshift",
+            server = Sys.getenv("CDM5_REDSHIFT_SERVER"),
+            user = Sys.getenv("CDM5_REDSHIFT_USER"),
+            password = URLdecode(Sys.getenv("CDM5_REDSHIFT_PASSWORD"))
+          ))
+          on.exit(DatabaseConnector::disconnect(connection))
+          q <- function(sql) DatabaseConnector::querySql(connection, sql, snakeCaseToCamelCase = TRUE)
+
+          # The schema names are secrets and masked in the log, so label them
+          ohdsi <- tolower(Sys.getenv("CDM5_REDSHIFT_OHDSI_SCHEMA"))
+          cdm <- tolower(Sys.getenv("CDM5_REDSHIFT_CDM_SCHEMA"))
+          me <- tolower(Sys.getenv("CDM5_REDSHIFT_USER"))
+          label <- function(x, mine, tag) ifelse(tolower(x) == mine, tag, x)
+
+          tables <- q("
+            SELECT n.nspname AS schema_name, c.relname AS table_name, u.usename AS owner,
+                   c.relcreationtime AS created
+            FROM pg_class_info c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            LEFT JOIN pg_user u ON u.usesysid = c.relowner
+            WHERE c.relkind = 'r' AND n.nspname <> 'information_schema'
+              AND n.nspname NOT IN ('pg_catalog', 'pg_internal', 'pg_automv')")
+          tables$isTemp <- grepl("^pg_temp", tables$schemaName)
+          tables$schema <- label(label(tables$schemaName, ohdsi, "<OHDSI_SCHEMA>"), cdm, "<CDM_SCHEMA>")
+          tables$schema[tables$isTemp] <- "<session temp schemas>"
+          tables$owner <- label(tables$owner, me, "<CI user>")
+          tables$ageDays <- as.numeric(difftime(Sys.time(), as.POSIXct(tables$created, tz = "UTC"),
+            units = "days"))
+
+          cat("\nTables on the cluster (incl. session temp tables):", nrow(tables), "of 9900\n")
+          cat("Session temp tables:", sum(tables$isTemp), "\n\n")
+
+          cat("== By schema and owner\n")
+          s <- aggregate(list(tables = tables$tableName), tables[c("schema", "owner")], length)
+          print(head(s[order(-s$tables), ], 40), row.names = FALSE)
+
+          cat("\n== By age, permanent tables\n")
+          p <- tables[!tables$isTemp, ]
+          print(table(schema = p$schema, age = cut(p$ageDays,
+            c(-Inf, 1, 7, 30, 90, 365, Inf), c("<1d", "1-7d", "7-30d", "30-90d", "90-365d", ">1y"))))
+
+          cat("\n== Most common name prefixes in <OHDSI_SCHEMA>\n")
+          o <- p[p$schema == "<OHDSI_SCHEMA>", ]
+          prefix <- sub("^([a-z]+_?[a-z]*).*$", "\\1", tolower(o$tableName))
+          print(head(sort(table(prefix), decreasing = TRUE), 40))
+          cat("\nPLP sampleSize test tables (plp_ss_*):", sum(grepl("^plp_ss_", o$tableName)), "\n")
+
+          cat("\n== 30 oldest tables in <OHDSI_SCHEMA>\n")
+          print(head(o[order(o$created), c("tableName", "owner", "created")], 30), row.names = FALSE)
+          cat("\n== 30 newest tables in <OHDSI_SCHEMA>\n")
+          print(head(o[order(o$created, decreasing = TRUE), c("tableName", "owner", "created")], 30),
+            row.names = FALSE)
