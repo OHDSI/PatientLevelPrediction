@@ -296,73 +296,179 @@ setCoxModel <- function(
 
 #' Create setting for Iterative Hard Thresholding model
 #'
-#' @param K              The maximum number of non-zero predictors
-#' @param penalty        Specifies the IHT penalty; possible values are `BIC` or `AIC` or a numeric value
-#' @param seed           An option to add a seed when training the model
-#' @param exclude        A vector of numbers or covariateId names to exclude from prior
-#' @param forceIntercept Logical: Force intercept coefficient into regularization
-#' @param fitBestSubset  Logical: Fit final subset with no regularization
-#' @param initialRidgeVariance  integer
-#' @param tolerance      numeric
-#' @param maxIterations  integer
-#' @param threshold      numeric
-#' @param delta          numeric
-#' 
+#' @description
+#' Logistic regression with at most `K` non-zero coefficients, fitted with the
+#' IterativeHardThresholding package (version 2.0.0 or later). It maximizes the
+#' log-likelihood minus a small ridge penalty (`variance`) over models with at
+#' most `K` covariates. When `K` or `variance` has several values, the
+#' hyperparameter search chooses between them on the training folds, as for
+#' other models, by the held-out log-likelihood unless the hyperparameter
+#' settings name another `tuningMetric`. Each fold's training rows are
+#' converted to Cyclops data once, and each fold starts a candidate from its
+#' own fit at the nearest earlier one (the next smaller `K`). The `foldWorkers`
+#' of [createHyperparameterSettings()] fit the folds in parallel.
+#'
+#' @param K              Number of covariates in the model (default 25, or 10
+#'   with `algorithm = "legacy"`, as in earlier versions); the intercept and
+#'   `exclude` do not count. One whole number, or several to
+#'   choose from by cross-validation, for example `c(5, 10, 25, 50, 100)`,
+#'   which takes several times longer to fit.
+#' @param variance       Ridge variance (default 1): a positive number, `Inf` for plain L0
+#'   (the best subset of size `K`), several numbers to choose from by
+#'   cross-validation, or `"tune"` for the grid 0.01, 0.03, 0.1, 0.3, 1, 3 and
+#'   `Inf`.
+#' @param exclude        Covariate ids that are not penalized and do not count
+#'   towards `K`.
+#' @param forceIntercept Logical: penalize the intercept and count it towards `K`.
+#' @param seed           An option to add a seed when training the model.
+#' @param algorithm      `"default"`, `"chu2020"` (the algorithm of Chu et al.,
+#'   2020) or `"legacy"` (IterativeHardThresholding 1.0.3: Broken Adaptive Ridge
+#'   with at most `K` covariates, counting the intercept; deprecated, to
+#'   reproduce earlier models).
+#' @param control        A named list of algorithm switches; see
+#'   `IterativeHardThresholding::createIhtControl()`. Empty entries take the
+#'   defaults of `algorithm`.
+#' @param oneStandardError With several `K`: choose the smallest `K` whose
+#'   held-out log-likelihood is within one standard error of the best. This
+#'   gives smaller models, which can discriminate less well than the best `K`.
+#' @param threads        Kept for earlier code; not used. The refits run on
+#'   `control$threads` threads (default 1); to fit the folds in parallel, use
+#'   `createHyperparameterSettings(foldWorkers = )`.
+#' @param ...            Only with `algorithm = "legacy"`: the arguments of
+#'   IterativeHardThresholding 1.0.3 (`penalty`, `fitBestSubset`,
+#'   `initialRidgeVariance`, `tolerance`, `maxIterations`, `threshold`, `delta`).
+#'
 #' @return `modelSettings` object
 #'
-#' @examplesIf rlang::is_installed("IterativeHardThresholding")
+#' @references
+#' Chu BB, Keys KL, German CA, Zhou H, Zhou JJ, Sobel EM, Sinsheimer JS, Lange K
+#' (2020). Iterative hard thresholding in genome-wide association studies:
+#' Generalized linear models, prior weights, and double sparsity. GigaScience
+#' 9(6), giaa044.
+#'
+#' @examplesIf rlang::is_installed("IterativeHardThresholding", version = "2.0.0")
 #' modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
+#' # choose K by cross-validation
+#' modelIht <- setIterativeHardThresholding(K = c(10, 25, 50), seed = 42)
 #' @export
 setIterativeHardThresholding <- function(
-    K = 10,
-    penalty = "bic",
-    seed = sample(100000, 1),
+    K = 25,
+    variance = 1,
     exclude = c(),
     forceIntercept = FALSE,
-    fitBestSubset = FALSE,
-    initialRidgeVariance = 0.1,
-    tolerance = 1e-08,
-    maxIterations = 10000,
-    threshold = 1e-06,
-    delta = 0) {
-  rlang::check_installed("IterativeHardThresholding")
-
-  if (K < 1) {
-    stop("Invalid maximum number of predictors")
+    seed = NULL,
+    algorithm = "default",
+    control = list(),
+    oneStandardError = FALSE,
+    threads = -1,
+    ...) {
+  rlang::check_installed("IterativeHardThresholding", version = "2.0.0")
+  algorithm <- match.arg(algorithm, c("default", "chu2020", "legacy"))
+  if (algorithm == "legacy" && missing(K)) {
+    # the default of earlier versions, so that a legacy model is reproduced
+    K <- 10
   }
-  if (!(penalty %in% c("aic", "bic") || is.numeric(penalty))) {
-    stop('Penalty must be "aic", "bic" or numeric')
+  legacyArguments <- list(...)
+  legacyNames <- c(
+    "penalty", "fitBestSubset", "initialRidgeVariance", "tolerance",
+    "maxIterations", "threshold", "delta"
+  )
+  if (length(legacyArguments) > 0 &&
+      (is.null(names(legacyArguments)) || any(!names(legacyArguments) %in% legacyNames))) {
+    stop("Unknown arguments; see ?setIterativeHardThresholding", call. = FALSE)
   }
-  if (!is.logical(forceIntercept)) {
-    stop("forceIntercept must be of type: logical")
+  if (algorithm == "legacy" &&
+      (!missing(variance) || length(control) > 0 || !missing(oneStandardError))) {
+    stop("variance, control and oneStandardError are not used with algorithm = \"legacy\"", call. = FALSE)
   }
-  if (!is.logical(fitBestSubset)) {
-    stop("fitBestSubset must be of type: logical")
+  if (length(legacyArguments) > 0 && algorithm != "legacy") {
+    stop(
+      paste(names(legacyArguments), collapse = ", "),
+      " belong to IterativeHardThresholding 1.0.3; use algorithm = \"legacy\" ",
+      "to reproduce models fitted with it",
+      call. = FALSE
+    )
   }
-  if (!inherits(x = seed, what = c("numeric", "NULL", "integer"))) {
-    stop("Invalid seed")
+  if (!is.numeric(K) || length(K) < 1 || any(!is.finite(K)) || any(K < 1) || any(K != round(K))) {
+    stop("K must be one or more whole numbers of at least 1", call. = FALSE)
   }
-
-
-  # set seed
+  if (algorithm == "legacy" && length(K) != 1) {
+    stop("algorithm = \"legacy\" takes one K", call. = FALSE)
+  }
+  if (!is.logical(forceIntercept) || length(forceIntercept) != 1 || is.na(forceIntercept)) {
+    stop("forceIntercept must be TRUE or FALSE", call. = FALSE)
+  }
+  if (!is.list(control) || (length(control) > 0 &&
+      (is.null(names(control)) || any(names(control) == "")))) {
+    stop("control must be a named list", call. = FALSE)
+  }
+  checkIsClass(seed, c("numeric", "NULL", "integer"))
   if (is.null(seed[1])) {
     seed <- as.integer(sample(100000000, 1))
   }
+  checkIsClass(threads, c("numeric", "integer"))
 
-  param <- list(
-    priorParams = list(
-      K = K,
-      penalty = penalty,
-      exclude = exclude,
-      forceIntercept = forceIntercept,
-      fitBestSubset = fitBestSubset,
-      initialRidgeVariance = initialRidgeVariance,
-      tolerance = tolerance[1],
-      maxIterations = maxIterations[1],
-      threshold = threshold,
-      delta = delta
+  if (algorithm == "legacy") {
+    priorParams <- c(
+      list(K = K, exclude = exclude, forceIntercept = forceIntercept, algorithm = "legacy"),
+      legacyArguments
     )
-  )
+    # IterativeHardThresholding checks the values
+    suppressWarnings(createIhtPriorFromSettings(priorParams))
+  } else {
+    # tuned by the generic hyperparameter search: a grid with K varying
+    # fastest, so that each fold starts K from its fit at the next smaller K
+    varianceGrid <- if (identical(variance, "tune")) {
+      ihtTuneVarianceGrid
+    } else {
+      if (!(is.numeric(variance) || (is.character(variance) && all(variance == "Inf"))) ||
+          length(variance) < 1 || anyNA(variance)) {
+        stop("variance must be one or more positive numbers, Inf, or \"tune\"", call. = FALSE)
+      }
+      sort(unique(as.numeric(variance)))
+    }
+    # IterativeHardThresholding checks the values, one variance at a time
+    for (v in varianceGrid) {
+      createIhtPriorFromSettings(list(
+        K = K[1], variance = v, exclude = exclude, forceIntercept = forceIntercept,
+        algorithm = algorithm, control = control
+      ))
+    }
+  }
+
+  if (algorithm != "legacy") {
+    settings <- list(
+      modelType = "binary",
+      modelName = "iterativeHardThresholding",
+      seed = seed[1],
+      threads = threads[1],
+      prepareData = "prepareIhtMatrix",
+      prepareFold = "prepareIhtFold",
+      train = "fitIhtModel",
+      predict = "predictIht",
+      updateState = "updateIhtState",
+      fitInfo = "ihtFitInfo",
+      variableImportance = "ihtVariableImportance",
+      parallelFolds = c("fork", "psock"),
+      tuningMetric = "logLikelihoodMetric",
+      saveType = "RtoJson",
+      priorParams = list(
+        exclude = exclude,
+        forceIntercept = forceIntercept,
+        algorithm = algorithm,
+        control = control
+      )
+    )
+    if (isTRUE(oneStandardError)) {
+      settings$selector <- "ihtOneStandardErrorSelector"
+    }
+    result <- list(
+      param = list(K = sort(unique(as.integer(K))), variance = varianceGrid),
+      settings = settings
+    )
+    class(result) <- "modelSettings"
+    return(result)
+  }
 
   settings <- list(
     modelType = "binary",
@@ -371,15 +477,17 @@ setIterativeHardThresholding <- function(
     priorfunction = "IterativeHardThresholding::createIhtPrior",
     crossValidationInPrior = FALSE,
     addIntercept = TRUE,
+    # the legacy algorithm runs without PLP's control, as in earlier versions
     useControl = FALSE,
     seed = seed[1],
+    threads = threads[1],
     predict = "predictCyclops",
     saveType = "RtoJson"
   )
 
   result <- list(
     fitFunction = "fitCyclopsModel",
-    param = param,
+    param = list(priorParams = priorParams),
     settings = settings
   )
   class(result) <- "modelSettings"
