@@ -32,10 +32,10 @@ modelDesign <- createModelDesign(targetId = 1, outcomeId = 2,
                                  modelSettings = setLassoLogisticRegression())
 saveLoc <- file.path(tempdir(), "loadPlpAnalysesJson")
 savePlpAnalysesJson(modelDesignList = modelDesign, saveDirectory = saveLoc)
-#> [1] "/tmp/RtmpDxolU0/loadPlpAnalysesJson/predictionAnalysisList.json"
+#> [1] "/tmp/RtmpIP5J7I/loadPlpAnalysesJson/predictionAnalysisList.json"
 loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $plpVersion
-#> [1] "6.7.0"
+#> [1] "6.7.1"
 #> 
 #> $analyses
 #> $analyses[[1]]
@@ -314,6 +314,9 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> $settings$priorfunction
 #> [1] "Cyclops::createPrior"
 #> 
+#> $settings$selectorType
+#> [1] "byPid"
+#> 
 #> $settings$crossValidationInPrior
 #> [1] TRUE
 #> 
@@ -324,7 +327,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] TRUE
 #> 
 #> $settings$seed
-#> [1] 41004677
+#> [1] 34832320
 #> 
 #> $settings$threads
 #> [1] -1
@@ -356,7 +359,7 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> [1] 0.75
 #> 
 #> $seed
-#> [1] 94669
+#> [1] 69649
 #> 
 #> $nfold
 #> [1] 3
@@ -375,17 +378,14 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> function (prediction) 
 #> {
 #>     result <- do.call(fun, c(list(prediction = prediction), funArgs))
-#>     if (length(result) == 1 && is.logical(result) && is.na(result)) {
-#>         result <- NA_real_
-#>     }
-#>     if (!is.numeric(result) || length(result) != 1) {
-#>         stop("Metric function must return one numeric value.", 
+#>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
+#>         stop("Metric function must return one finite numeric value.", 
 #>             call. = FALSE)
 #>     }
-#>     as.numeric(result)
+#>     result
 #> }
-#> <bytecode: 0x5e4ed99e8b20>
-#> <environment: 0x5e4ed99e2420>
+#> <bytecode: 0x5e6f94379af0>
+#> <environment: 0x5e6f9437c7e8>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
@@ -405,12 +405,6 @@ loadPlpAnalysesJson(file.path(saveLoc, "predictionAnalysisList.json"))
 #> 
 #> $generator
 #> NULL
-#> 
-#> $validation
-#> [1] "cv"
-#> 
-#> $tuningMetricIsDefault
-#> [1] TRUE
 #> 
 #> attr(,"class")
 #> [1] "hyperparameterSettings"

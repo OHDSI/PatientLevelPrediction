@@ -13,9 +13,7 @@ createTuningMetric(fun, maximize = TRUE, name, funArgs = list())
 - fun:
 
   Function (or function name) that returns a single numeric score when
-  given a prediction data frame. A missing score (`NA`, for example the
-  AUC of a fold with one class) is recorded and left out of the mean
-  over the folds.
+  given a prediction data frame.
 
 - maximize:
 

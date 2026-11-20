@@ -58,11 +58,7 @@ createStudyPopulationSettings(
 
 - minTimeAtRisk:
 
-  The minimum time at risk required to be included, in days elapsed
-  after the first day of the risk window. A person therefore needs
-  `minTimeAtRisk + 1` days in the risk window, counting its first and
-  last day. The default of 364 with a risk window of days 1 to 365
-  requires the full window.
+  The minimum number of days at risk required to be included
 
 - riskWindowStart:
 

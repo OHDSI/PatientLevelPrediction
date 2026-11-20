@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Load the multiple prediction json settings from a file</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
       <div class="d-none name"><code>loadPlpAnalysesJson.Rd</code></div>
     </div>
 
@@ -91,10 +91,10 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-in"><span>                                 modelSettings <span class="op">=</span> <span class="fu"><a href="setLassoLogisticRegression.html">setLassoLogisticRegression</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">saveLoc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"loadPlpAnalysesJson"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="savePlpAnalysesJson.html">savePlpAnalysesJson</a></span><span class="op">(</span>modelDesignList <span class="op">=</span> <span class="va">modelDesign</span>, saveDirectory <span class="op">=</span> <span class="va">saveLoc</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpDxolU0/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpIP5J7I/loadPlpAnalysesJson/predictionAnalysisList.json"</span>
 <span class="r-in"><span><span class="fu">loadPlpAnalysesJson</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">saveLoc</span>, <span class="st">"predictionAnalysisList.json"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $plpVersion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "6.7.0"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "6.7.1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $analyses</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $analyses[[1]]</span>
@@ -373,6 +373,9 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$priorfunction</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Cyclops::createPrior"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $settings$selectorType</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "byPid"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$crossValidationInPrior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -383,7 +386,7 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$seed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 41004677</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 34832320</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$threads</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1</span>
@@ -415,7 +418,7 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.75</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $seed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 94669</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 69649</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nfold</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
@@ -434,17 +437,14 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (prediction) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     result &lt;- do.call(fun, c(list(prediction = prediction), funArgs))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     if (length(result) == 1 &amp;&amp; is.logical(result) &amp;&amp; is.na(result)) {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         result &lt;- NA_real_</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1) {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one numeric value.", </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one finite numeric value.", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             call. = FALSE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     as.numeric(result)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     result</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x5e4ed99e8b20&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5e4ed99e2420&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x5e6f94379af0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5e6f9437c7e8&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetric$maximize</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -464,12 +464,6 @@ that can be combined with connection settings to run a multiple prediction study
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $generator</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $validation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cv"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetricIsDefault</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "hyperparameterSettings"</span>

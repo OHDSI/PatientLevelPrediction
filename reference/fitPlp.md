@@ -37,11 +37,7 @@ fitPlp(
 
 - analysisPath:
 
-  The path of the analysis. For models that ask for it
-  (`resumeSearch = TRUE` in their settings), or with
-  `options(plp.resumeSearch = TRUE)`, the hyperparameter search is saved
-  there after each candidate, so that an interrupted search resumes when
-  it is run again with the same data and settings. `NULL` saves nothing.
+  The path of the analysis
 
 ## Value
 

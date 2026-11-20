@@ -19,8 +19,6 @@ Useful links:
 
 Authors:
 
-- Egill Fridgeirsson <e.fridgeirsson@erasmusmc.nl>
-
 - Jenna Reps <jreps@its.jnj.com>
 
 - Martijn Schuemie

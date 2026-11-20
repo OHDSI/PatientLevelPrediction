@@ -815,13 +815,10 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the best
-cross-validation performance will then be chosen for the final model.
-When one fit takes long,
-`createHyperparameterSettings(validation = "trainValidation")` fits each
-candidate only once, on all folds but the last, and scores it on the
-last fold. For our problem we choose to build a logistic regression
-model with the default hyper-parameters
+hyper-parameters. The hyper-parameters that lead to the
+bestcross-validation performance will then be chosen for the final
+model. For our problem we choose to build a logistic regression model
+with the default hyper-parameters
 
 ``` r
 
@@ -1409,13 +1406,10 @@ gradientBoostingMachine: ntrees=c(100,200), maxDepth=4 the grid search
 will apply the gradient boosting machine algorithm with ntrees=100 and
 maxDepth=4 plus the default settings for other hyper-parameters and
 ntrees=200 and maxDepth=4 plus the default settings for other
-hyper-parameters. The hyper-parameters that lead to the best
-cross-validation performance will then be chosen for the final model.
-When one fit takes long,
-`createHyperparameterSettings(validation = "trainValidation")` fits each
-candidate only once, on all folds but the last, and scores it on the
-last fold. For our problem we choose to build a logistic regression
-model with the default hyper-parameters
+hyper-parameters. The hyper-parameters that lead to the
+bestcross-validation performance will then be chosen for the final
+model. For our problem we choose to build a logistic regression model
+with the default hyper-parameters
 
 ``` r
 
@@ -1602,8 +1596,9 @@ calibrated model. The ten (or fewer) dots represent the mean predicted
 values for each quantile plotted against the observed fraction of people
 in that quantile who had the outcome (observed fraction). The straight
 black line is the linear regression using these 10 plotted quantile mean
-predicted vs observed fraction points. The shaded band is the pointwise
-95% confidence interval of the fitted line.
+predicted vs observed fraction points. The straight vertical lines
+represented the 95% lower and upper confidence intervals of the slope of
+the fitted line.
 
 ![Calibration Plot](images/sparseCalibration.avif)
 
@@ -1744,10 +1739,7 @@ Precision Recall Plot
 \## Demographic summary
 
 This plot shows for females and males the expected and observed risk in
-different age groups. The shaded band is the mean predicted risk plus or
-minus 1.96 standard deviations of the individual predicted risks, so it
-shows how much predicted risks vary within a group. It is not a
-confidence interval.
+different age groups together with a confidence area.
 
 The results show that our model is well calibrated across gender and age
 groups.
