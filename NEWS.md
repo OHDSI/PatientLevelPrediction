@@ -1,3 +1,11 @@
+PatientLevelPrediction 6.7.1
+============================
+
+## Bug fixes
+- Preserved integer storage for bin indices in internal `cut2()` before
+  constructing the returned factor, fixing an R-devel compatibility error in
+  `base::structure()`.
+
 PatientLevelPrediction 6.7.0
 ============================
 
