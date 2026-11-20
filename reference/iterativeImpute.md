@@ -12,8 +12,7 @@ iterativeImpute(trainData, featureEngineeringSettings, done = FALSE)
 
 - trainData:
 
-  The data to impute: the training data, or new data when `done = TRUE`.
-  It is changed in place.
+  The data to be imputed
 
 - featureEngineeringSettings:
 
@@ -21,8 +20,8 @@ iterativeImpute(trainData, featureEngineeringSettings, done = FALSE)
 
 - done:
 
-  Whether the imputer has already been fitted (bool)
+  Whether the imputation has already been done (bool)
 
 ## Value
 
-`trainData`, imputed, with the step recorded for prediction
+The imputed data

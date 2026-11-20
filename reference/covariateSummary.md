@@ -64,25 +64,82 @@ the model
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 100, seed = 42)
 #> Generating covariates
-#> Generating cohorts
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpdnvUil/duckdb
+#> ℹ /tmp/Rtmp1anFSg/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
 #> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
 #> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
 #> ℹ See ?duckdb_storage for details and alternatives.
+#> Loading required namespace: FeatureExtraction
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> Generating cohorts
 #> Generating outcomes
 covariateSummary <- covariateSummary(plpData$covariateData, plpData$cohorts)
-#> Calculating covariate summary @ 2026-11-17 15:35:43.741048
+#> Calculating covariate summary @ 2026-11-20 10:38:48.473764
 #> This can take a while...
 #> calculating subset of strata 1
 #> Restricting to subgroup
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/Rtmp1anFSg/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 #> Calculating summary for subgroup 
 #> Aggregating with no labels or strata
-#> Finished covariate summary @ 2026-11-17 15:35:44.070611
-#> Time to calculate covariate summary: 0.33 secs
+#> Finished covariate summary @ 2026-11-20 10:38:48.867745
+#> Time to calculate covariate summary: 0.394 secs
 head(covariateSummary)
 #> # A tibble: 6 × 9
 #>   covariateId covariateName     analysisId conceptId valueAsConceptId collisions

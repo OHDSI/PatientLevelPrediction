@@ -59,18 +59,18 @@ observedRisk <- mean(prediction$value)
 message("outcome rate is: ", outcomeRate)
 #> outcome rate is: 0.12
 message("observed risk is: ", observedRisk)
-#> observed risk is: 0.482718767134938
+#> observed risk is: 0.486352271272335
 # lets recalibrate the predictions
 prediction <- recalibratePlp(prediction, 
                              analysisId = "recalibration", 
                              method = "recalibrationInTheLarge")
 recalibratedRisk <- mean(prediction$value)
 message("recalibrated risk with recalibration in the large is: ", recalibratedRisk)
-#> recalibrated risk with recalibration in the large is: 0.301359383568707
+#> recalibrated risk with recalibration in the large is: 0.34592215348276
 prediction <- recalibratePlp(prediction, 
                              analysisId = "recalibration", 
                              method = "weakRecalibration")
 recalibratedRisk <- mean(prediction$value)
 message("recalibrated risk with weak recalibration is: ", recalibratedRisk)
-#> recalibrated risk with weak recalibration is: 0.240906255712472
+#> recalibrated risk with weak recalibration is: 0.23296107674138
 ```

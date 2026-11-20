@@ -77,9 +77,6 @@ A ggplot object.
 
 ## Details
 
-Only binary models are supported. For survival models use
-[`plotSparseCalibration2`](https://ohdsi.github.io/PatientLevelPrediction/reference/plotSparseCalibration2.md).
-
 Create a plot showing the smoothed calibration
 
 ## Examples
