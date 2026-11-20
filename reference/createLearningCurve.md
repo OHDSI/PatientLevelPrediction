@@ -25,8 +25,7 @@ createLearningCurve(
   logSettings = createLogSettings(),
   executeSettings = createExecuteSettings(runSplitData = TRUE, runSampleData = FALSE,
     runFeatureEngineering = FALSE, runPreprocessData = TRUE, runModelDevelopment = TRUE,
-    runCovariateSummary = FALSE),
-  hyperparameterSettings = createHyperparameterSettings()
+    runCovariateSummary = FALSE)
 )
 ```
 
@@ -134,12 +133,6 @@ createLearningCurve(
   fraction of target population who must have a covariate for it to be
   included in the model training and whether to normalise the covariates
   before training
-
-- hyperparameterSettings:
-
-  An object of `hyperparameterSettings` created using
-  `createHyperparameterSettings`, used to tune the model at every
-  training fraction (default: the default search and AUC)
 
 - logSettings:
 

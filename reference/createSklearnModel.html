@@ -9,7 +9,7 @@ PLP framework"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@ PLP framework"></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Plug an existing scikit learn python model into the PLP framework</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/ExistingSklearn.R" class="external-link"><code>R/ExistingSklearn.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/ExistingSklearn.R" class="external-link"><code>R/ExistingSklearn.R</code></a></small>
       <div class="d-none name"><code>createSklearnModel.Rd</code></div>
     </div>
 
@@ -69,7 +69,7 @@ PLP framework</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">createSklearnModel</span><span class="op">(</span></span>
 <span>  modelLocation <span class="op">=</span> <span class="st">"/model"</span>,</span>
-<span>  covariateMap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>columnId <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, covariateId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  covariateMap <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>columnId <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, covariateId <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="op">)</span>,</span>
 <span>  isPickle <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  targetId <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  outcomeId <span class="op">=</span> <span class="cn">NULL</span>,</span>

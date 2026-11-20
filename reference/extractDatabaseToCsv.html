@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Exports all the results from a database into csv files</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
       <div class="d-none name"><code>extractDatabaseToCsv.Rd</code></div>
     </div>
 
@@ -96,24 +96,11 @@
 
 
 <dt id="arg-mincellcount">minCellCount<a class="anchor" aria-label="anchor" href="#arg-mincellcount"></a></dt>
-<dd><p>The min value to show in cells that are sensitive. Counts below this
-value are replaced with -1, together with the values that give them
-back, such as covariate means, observed incidences, the rates of a
-threshold summary row and the predicted risks of a small group.</p></dd>
+<dd><p>The min value to show in cells that are sensitive (values less than this value will be replaced with -1)</p></dd>
 
 
 <dt id="arg-sensitivecolumns">sensitiveColumns<a class="anchor" aria-label="anchor" href="#arg-sensitivecolumns"></a></dt>
-<dd><p>A named list, one element per result table (lower case, such as
-<code>"demographic_summary"</code>), each a list of column groups. A group is
-a character vector of count columns censored together, or a list with
-<code>counts</code> (the count columns), <code>alsoCensor</code> (columns censored
-with them) and, for long tables, <code>rows</code> (such as
-<code>list(metric = "outcomeCount")</code>, the rows that hold counts).
-The default covers the counts in the prediction distribution,
-covariate, calibration, demographic and threshold summaries, the
-attrition, the population size and outcome count of the evaluation
-statistics and the counts of the diagnostics. The attrition saved with
-each model in the <code>models</code> folder is censored too.</p></dd>
+<dd><p>A named list (name of table columns belong to) with a list of columns to apply the minCellCount to.</p></dd>
 
 
 <dt id="arg-fileappend">fileAppend<a class="anchor" aria-label="anchor" href="#arg-fileappend"></a></dt>

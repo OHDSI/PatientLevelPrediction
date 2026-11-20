@@ -18,8 +18,7 @@ robustNormalize(trainData, featureEngineeringSettings, done = FALSE)
 
 - trainData:
 
-  The data to normalize: the training data, or new data when
-  `done = TRUE`. It is changed in place.
+  The training data to be normalized
 
 - featureEngineeringSettings:
 
@@ -27,8 +26,8 @@ robustNormalize(trainData, featureEngineeringSettings, done = FALSE)
 
 - done:
 
-  Whether the normalization has already been fitted (bool)
+  Whether the data has already been normalized (bool)
 
 ## Value
 
-`trainData`, normalized, with the step recorded for prediction
+The `trainData` object with normalized data

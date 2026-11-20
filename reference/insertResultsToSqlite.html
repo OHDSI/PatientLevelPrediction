@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Create sqlite database with the results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/uploadToDatabase.R" class="external-link"><code>R/uploadToDatabase.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/uploadToDatabase.R" class="external-link"><code>R/uploadToDatabase.R</code></a></small>
       <div class="d-none name"><code>insertResultsToSqlite.Rd</code></div>
     </div>
 
@@ -69,8 +69,7 @@
 <span>  cohortDefinitions <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  databaseList <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sqliteLocation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">resultLocation</span>, <span class="st">"sqlite"</span><span class="op">)</span>,</span>
-<span>  skipDiagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  deleteTables <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  skipDiagnostics <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,11 +95,6 @@
 
 <dt id="arg-skipdiagnostics">skipDiagnostics<a class="anchor" aria-label="anchor" href="#arg-skipdiagnostics"></a></dt>
 <dd><p>Whether to skip uploading the diagnostics</p></dd>
-
-
-<dt id="arg-deletetables">deleteTables<a class="anchor" aria-label="anchor" href="#arg-deletetables"></a></dt>
-<dd><p>If TRUE any results already in the sqlite database are removed
-first. Use FALSE to add results to an existing database.</p></dd>
 
 </dl></div>
     <div class="section level2">

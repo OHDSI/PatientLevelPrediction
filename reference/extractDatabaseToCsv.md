@@ -36,24 +36,13 @@ extractDatabaseToCsv(
 
 - minCellCount:
 
-  The min value to show in cells that are sensitive. Counts below this
-  value are replaced with -1, together with the values that give them
-  back, such as covariate means, observed incidences, the rates of a
-  threshold summary row and the predicted risks of a small group.
+  The min value to show in cells that are sensitive (values less than
+  this value will be replaced with -1)
 
 - sensitiveColumns:
 
-  A named list, one element per result table (lower case, such as
-  `"demographic_summary"`), each a list of column groups. A group is a
-  character vector of count columns censored together, or a list with
-  `counts` (the count columns), `alsoCensor` (columns censored with
-  them) and, for long tables, `rows` (such as
-  `list(metric = "outcomeCount")`, the rows that hold counts). The
-  default covers the counts in the prediction distribution, covariate,
-  calibration, demographic and threshold summaries, the attrition, the
-  population size and outcome count of the evaluation statistics and the
-  counts of the diagnostics. The attrition saved with each model in the
-  `models` folder is censored too.
+  A named list (name of table columns belong to) with a list of columns
+  to apply the minCellCount to.
 
 - fileAppend:
 

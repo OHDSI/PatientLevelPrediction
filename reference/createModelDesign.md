@@ -381,6 +381,9 @@ createModelDesign(
 #> $settings$priorfunction
 #> [1] "Cyclops::createPrior"
 #> 
+#> $settings$selectorType
+#> [1] "byPid"
+#> 
 #> $settings$crossValidationInPrior
 #> [1] TRUE
 #> 
@@ -442,17 +445,14 @@ createModelDesign(
 #> function (prediction) 
 #> {
 #>     result <- do.call(fun, c(list(prediction = prediction), funArgs))
-#>     if (length(result) == 1 && is.logical(result) && is.na(result)) {
-#>         result <- NA_real_
-#>     }
-#>     if (!is.numeric(result) || length(result) != 1) {
-#>         stop("Metric function must return one numeric value.", 
+#>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {
+#>         stop("Metric function must return one finite numeric value.", 
 #>             call. = FALSE)
 #>     }
-#>     as.numeric(result)
+#>     result
 #> }
-#> <bytecode: 0x5ceff7c0da08>
-#> <environment: 0x5ceff7c04428>
+#> <bytecode: 0x6075e5924d28>
+#> <environment: 0x6075e5936e30>
 #> 
 #> $tuningMetric$maximize
 #> [1] TRUE
@@ -472,12 +472,6 @@ createModelDesign(
 #> 
 #> $generator
 #> NULL
-#> 
-#> $validation
-#> [1] "cv"
-#> 
-#> $tuningMetricIsDefault
-#> [1] TRUE
 #> 
 #> attr(,"class")
 #> [1] "hyperparameterSettings"

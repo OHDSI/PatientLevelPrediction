@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>predictPlp</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Predict.R" class="external-link"><code>R/Predict.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/Predict.R" class="external-link"><code>R/Predict.R</code></a></small>
       <div class="d-none name"><code>predictPlp.Rd</code></div>
     </div>
 
@@ -85,14 +85,7 @@ data extracted from the CDM.</p></dd>
 
 
 <dt id="arg-timepoint">timepoint<a class="anchor" aria-label="anchor" href="#arg-timepoint"></a></dt>
-<dd><p>Survival models only: the number of days since the start of the
-time-at-risk window at which to predict risk, counted like
-survivalTime (the first day of the window is day 1). The default
-is the length of the window, riskWindowEnd - riskWindowStart + 1,
-which needs both ends of the window anchored to the same date (both
-cohort start or both cohort end). With other anchors the window
-length differs between patients, so a timepoint must be given. A
-timepoint after the end of the window is an error.</p></dd>
+<dd><p>The timepoint to predict risk (survival models only)</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -115,35 +108,27 @@ timepoint after the end of the window is an error.</p></dd>
 <span class="r-in"><span><span class="va">plpData</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulatePlpData.html">simulatePlpData</a></span><span class="op">(</span><span class="va">simulationProfile</span>, n <span class="op">=</span> <span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating covariates</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating cohorts</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> duckdb keeps downloaded extensions and secrets in a temporary directory:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> /tmp/RtmpSj0n3K/duckdb</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> This is removed when the R session ends.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Extensions are re-downloaded each session.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> Secrets are lost.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #0000BB;">ℹ</span> See ?duckdb_storage for details and alternatives.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Generating outcomes</span>
 <span class="r-in"><span><span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">predictPlp</span><span class="op">(</span><span class="va">model</span>, <span class="va">plpData</span>, <span class="va">plpData</span><span class="op">$</span><span class="va">cohorts</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> predict risk probabilities using predictGlm</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.108 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.114 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction took 0.146 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prediction done in: 0.153 secs</span>
 <span class="r-in"><span><span class="co"># see the predicted risk values</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   rowId subjectId targetId cohortStartDate daysFromObsStart daysToCohortEnd</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2009-05-12              100             826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2011-09-12              710             791</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2009-07-05              458             938</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2009-08-22              603             425</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2012-09-16              212             252</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2009-02-03              504             444</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1     2e+10        1      2010-09-05              398             864</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2     2e+10        1      2010-06-22              130             899</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3     2e+10        1      2009-04-18              998             105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4     2e+10        1      2007-10-18              301             176</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5     2e+10        1      2011-06-30              256             587</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6     2e+10        1      2008-03-12              126             141</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   daysToObsEnd ageYear gender     value rawValue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1654      38   8532 0.3543437    -0.60</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1406      40   8532 0.3775407    -0.50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1429      37   8507 0.3429895    -0.65</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4          563      40   8532 0.3775407    -0.50</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          964      42   8532 0.4013123    -0.40</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6          667      34   8532 0.3100255    -0.80</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         1553      35   8507 0.3208213    -0.75</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1311      38   8532 0.3543437    -0.60</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3          827      36   8532 0.3318122    -0.70</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1003      33   8507 0.2994329    -0.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1217      39   8532 0.3658644    -0.55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          414      38   8532 0.3543437    -0.60</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

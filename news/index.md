@@ -1,5 +1,13 @@
 # Changelog
 
+## PatientLevelPrediction 6.7.1
+
+### Bug fixes
+
+- Preserved integer storage for bin indices in internal `cut2()` before
+  constructing the returned factor, fixing an R-devel compatibility
+  error in [`base::structure()`](https://rdrr.io/r/base/structure.html).
+
 ## PatientLevelPrediction 6.7.0
 
 CRAN release: 2026-09-21

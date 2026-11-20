@@ -14,7 +14,7 @@ getCohortCovariateData(
   cohortTable = "#cohort_person",
   rowIdField = "row_id",
   aggregated,
-  cohortIds = -1,
+  cohortIds,
   covariateSettings,
   ...
 )
@@ -57,7 +57,7 @@ getCohortCovariateData(
 
 - cohortIds:
 
-  cohort id(s) for the target cohort; -1 uses every cohort in the table
+  cohort id for the target cohort
 
 - covariateSettings:
 

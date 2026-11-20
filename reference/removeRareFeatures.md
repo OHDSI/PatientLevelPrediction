@@ -12,12 +12,11 @@ removeRareFeatures(trainData, featureEngineeringSettings, done = FALSE)
 
 - trainData:
 
-  The data to remove rare features from: the training data, or new data
-  when `done = TRUE`. It is changed in place.
+  The data to be normalized
 
 - featureEngineeringSettings:
 
-  The settings for the rare feature removal
+  The settings for the normalization
 
 - done:
 
@@ -25,8 +24,7 @@ removeRareFeatures(trainData, featureEngineeringSettings, done = FALSE)
 
 ## Value
 
-`trainData`, with rare features removed and the step recorded for
-prediction
+The data with rare features removed
 
 ## Details
 
