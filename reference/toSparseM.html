@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Convert the plpData in COO format into a sparse R matrix</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Formatting.R" class="external-link"><code>R/Formatting.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Formatting.R" class="external-link"><code>R/Formatting.R</code></a></small>
       <div class="d-none name"><code>toSparseM.Rd</code></div>
     </div>
 
@@ -81,28 +81,32 @@ data extracted from the CDM.</p></dd>
 
 
 <dt id="arg-map">map<a class="anchor" aria-label="anchor" href="#arg-map"></a></dt>
-<dd><p>A covariate map (telling us the column number for covariates)</p></dd>
+<dd><p>A covariate map (telling us the column number for covariates), with
+columns covariateId and columnId, for example from a fitted model.
+Covariates that are not in the map are left out.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Returns a list, containing the data as a sparse matrix, the plpData covariateRef
-and a data.frame named map that tells us what covariate corresponds to each column
-This object is a list with the following components:</p><dl><dt>data</dt>
-<dd><p>A sparse matrix with the rows corresponding to each person in the plpData and the columns corresponding to the covariates.</p></dd>
+    <p>A list with the following components:</p><dl><dt>dataMatrix</dt>
+<dd><p>A sparse matrix with a row for each person in the cohort, in the order of the
+cohort, and a column for each covariate in the map.</p></dd>
+
+<dt>labels</dt>
+<dd><p>The cohort, with rowId replaced by the matrix row and the original rowId in originalRowId.</p></dd>
 
 <dt>covariateRef</dt>
-<dd><p>The plpData covariateRef.</p></dd>
+<dd><p>The covariateRef of the mapped covariates, with their columnId.</p></dd>
 
-<dt>map</dt>
-<dd><p>A data.frame containing the data column ids and the corresponding covariateId from covariateRef.</p></dd>
+<dt>covariateMap</dt>
+<dd><p>A data.frame with the covariateId and columnId of each column.</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function converts the covariates <code>Andromeda</code> table in COO format into a sparse matrix from
-the package Matrix</p>
+the package Matrix. The matrix is built in one query on the covariates, without copying them.</p>
     </div>
 
     <div class="section level2">

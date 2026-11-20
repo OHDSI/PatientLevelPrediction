@@ -9,7 +9,7 @@ parameters"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@ parameters"></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>fitPlp</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/Fit.R" class="external-link"><code>R/Fit.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Fit.R" class="external-link"><code>R/Fit.R</code></a></small>
       <div class="d-none name"><code>fitPlp.Rd</code></div>
     </div>
 
@@ -99,7 +99,10 @@ one of the <code>createModelSettings</code> functions</p></dd>
 
 
 <dt id="arg-analysispath">analysisPath<a class="anchor" aria-label="anchor" href="#arg-analysispath"></a></dt>
-<dd><p>The path of the analysis</p></dd>
+<dd><p>The path of the analysis. For models that ask for it
+(<code>resumeSearch = TRUE</code> in their settings), or with <code>options(plp.resumeSearch = TRUE)</code>, the
+hyperparameter search is saved there after each candidate, so that an interrupted search resumes
+when it is run again with the same data and settings. <code>NULL</code> saves nothing.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -48,27 +48,36 @@ data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 1000, seed = 42)
 #> Generating covariates
 #> Generating cohorts
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/RtmpSj0n3K/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
+#> ℹ This message has been shown 60 times and will not be shown again this session.
 #> Generating outcomes
 preProcessedData <- preprocessData(plpData$covariateData, createPreprocessSettings())
-#> Removing 2 redundant covariates
+#> Removing 3 redundant covariates
 #> Removing 0 infrequent covariates
 #> Normalizing covariates
-#> Tidying covariates took 1.58 secs
+#> Tidying covariates took 1.31 secs
 # check age is normalized by max value
 preProcessedData$covariates %>% dplyr::filter(.data$covariateId == 1002)
 #> # A query:  ?? x 3
-#> # Database: DuckDB 2.0.0 [unknown@Linux 7.0.0-1019-azure:R 4.6.2//tmp/RtmpIP5J7I/file1d3a3a1fd2ed.duckdb]
+#> # Database: DuckDB 2.0.0 [unknown@Linux 7.0.0-1020-azure:R 4.6.2//tmp/RtmpSj0n3K/file1c06247748ab.duckdb]
 #>    rowId covariateId covariateValue
 #>    <int>       <dbl>          <dbl>
-#>  1     1        1002          0.851
-#>  2     2        1002          0.936
-#>  3     3        1002          0.851
-#>  4     4        1002          0.872
-#>  5     5        1002          0.872
-#>  6     6        1002          0.787
-#>  7     7        1002          0.809
-#>  8     8        1002          0.872
+#>  1     1        1002          0.660
+#>  2     2        1002          0.979
+#>  3     3        1002          0.830
+#>  4     4        1002          0.936
+#>  5     5        1002          0.851
+#>  6     6        1002          0.872
+#>  7     7        1002          0.894
+#>  8     8        1002          0.766
 #>  9     9        1002          0.872
-#> 10    10        1002          0.787
+#> 10    10        1002          0.830
 #> # ℹ more rows
 ```

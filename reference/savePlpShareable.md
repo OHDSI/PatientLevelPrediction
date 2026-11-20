@@ -20,8 +20,10 @@ savePlpShareable(result, saveDirectory, minCellCount = 10)
 
 - minCellCount:
 
-  Minimum cell count for the covariateSummary and certain evaluation
-  results
+  Counts below this value, and the values that give them back, are left
+  empty in the covariate summary and evaluation results. The rules are
+  those of
+  [`extractDatabaseToCsv()`](https://ohdsi.github.io/PatientLevelPrediction/reference/extractDatabaseToCsv.md).
 
 ## Value
 

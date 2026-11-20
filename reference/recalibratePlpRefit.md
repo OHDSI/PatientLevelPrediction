@@ -30,7 +30,12 @@ recalibratePlpRefit(plpModel, newPopulation, newData, returnModel = FALSE)
 
 ## Value
 
-An prediction dataframe with the predictions of the recalibrated model
-added
+A prediction data frame with the original model's predictions for
+`newPopulation` (evaluationType "validation") and one prediction per
+patient from the refitted model (evaluationType "recalibrationRefit").
+The refitted model is fitted on these same patients, so its predictions
+are in-sample and their performance is optimistic. With
+`returnModel = TRUE`, a list with this `prediction` and the refitted
+`model`. `NULL` if the refit fails.
 
 ## Examples

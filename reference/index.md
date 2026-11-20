@@ -67,6 +67,14 @@ Design settings required when developing a model.
 - [`createTuningMetric()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createTuningMetric.md)
   : Create a tuning metric descriptor
 
+- [`aucMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  [`auprcMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  [`logLikelihoodMetric`](https://ohdsi.github.io/PatientLevelPrediction/reference/tuningMetrics.md)
+  : Tuning metrics
+
+- [`stopCandidate()`](https://ohdsi.github.io/PatientLevelPrediction/reference/stopCandidate.md)
+  : Skip a hyperparameter candidate that cannot be fitted
+
 ## Optional design settings
 
 Settings for optional steps that can be used in the PLP pipeline
@@ -81,7 +89,7 @@ Settings for optional steps that can be used in the PLP pipeline
 - [`createSplineSettings()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createSplineSettings.md)
   : Create the settings for adding a spline for continuous variables
 - [`createStratifiedImputationSettings()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createStratifiedImputationSettings.md)
-  : Create the settings for using stratified imputation.
+  : Create the settings for using stratified imputation
 - [`createNormalizer()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createNormalizer.md)
   : Create the settings for normalizing the data
 - [`createSimpleImputer()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createSimpleImputer.md)
@@ -350,6 +358,9 @@ Functions for manipulating data
 
 - [`listAppend()`](https://ohdsi.github.io/PatientLevelPrediction/reference/listAppend.md)
   : join two lists
+- [`recordFeatureEngineeringStep()`](https://ohdsi.github.io/PatientLevelPrediction/reference/recordFeatureEngineeringStep.md)
+  : Record a fitted feature engineering step so it is applied at
+  prediction
 - [`listCartesian()`](https://ohdsi.github.io/PatientLevelPrediction/reference/listCartesian.md)
   : Cartesian product
 - [`createTempModelLoc()`](https://ohdsi.github.io/PatientLevelPrediction/reference/createTempModelLoc.md)
