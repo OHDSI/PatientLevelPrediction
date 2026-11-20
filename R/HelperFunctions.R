@@ -300,7 +300,7 @@ cut2 <- function(x, g, m = 150, digits = 3) {
   lower <- xx[1]
   upper <- 1e45
   up <- low <- double(g)
-  i <- 0
+  i <- 0L
   for (j in 1:g) {
     cj <- if (method == 1 || j == 1) {
       cuts[j]
@@ -325,7 +325,7 @@ cut2 <- function(x, g, m = 150, digits = 3) {
 
     if (cj == upper) next
 
-    i <- i + 1
+    i <- i + 1L
     upper <- cj
     # assign elements to group i
     # y contains the group number in the end
@@ -364,9 +364,8 @@ cut2 <- function(x, g, m = 150, digits = 3) {
     ))
   }
 
-  y <- structure(y, class = "factor", levels = labs)
+  y <- structure(as.integer(y), class = "factor", levels = labs)
 
-  attr(y, "class") <- "factor"
   if (length(xlab)) {
     class(y) <- "labelled"
     attr(y, "label") <- xlab
