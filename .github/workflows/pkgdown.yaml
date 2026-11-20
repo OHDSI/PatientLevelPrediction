@@ -25,7 +25,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: always
-          extra-packages: any::pkgdown
+          packages: any::pkgdown
 
       - name: Check pkgdown reference index
         run: |
