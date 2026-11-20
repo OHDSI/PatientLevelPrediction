@@ -24,7 +24,8 @@ the joined list
 
 ## Details
 
-This function joins two lists
+This function joins two lists. Names stay with their elements; an
+unnamed list contributes empty names.
 
 ## Examples
 

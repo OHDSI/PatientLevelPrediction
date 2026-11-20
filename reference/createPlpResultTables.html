@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Create the results tables to store PatientLevelPrediction models and results into a database</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/main/R/uploadToDatabase.R" class="external-link"><code>R/uploadToDatabase.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/uploadToDatabase.R" class="external-link"><code>R/uploadToDatabase.R</code></a></small>
       <div class="d-none name"><code>createPlpResultTables.Rd</code></div>
     </div>
 
@@ -68,7 +68,7 @@
 <span>  <span class="va">connectionDetails</span>,</span>
 <span>  targetDialect <span class="op">=</span> <span class="st">"postgresql"</span>,</span>
 <span>  <span class="va">resultSchema</span>,</span>
-<span>  deleteTables <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  deleteTables <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  createTables <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  tablePrefix <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  tempEmulationSchema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"sqlRenderTempEmulationSchema"</span><span class="op">)</span>,</span>
@@ -93,7 +93,10 @@
 
 
 <dt id="arg-deletetables">deleteTables<a class="anchor" aria-label="anchor" href="#arg-deletetables"></a></dt>
-<dd><p>If true any existing tables matching the PatientLevelPrediction result tables names will be deleted</p></dd>
+<dd><p>If TRUE, existing PatientLevelPrediction result tables (and the
+migration tables) in the schema are deleted first, with all
+their results. FALSE by default, so results are never removed
+unless asked for.</p></dd>
 
 
 <dt id="arg-createtables">createTables<a class="anchor" aria-label="anchor" href="#arg-createtables"></a></dt>
@@ -132,8 +135,6 @@
 <span class="r-in"><span>                      resultSchema <span class="op">=</span> <span class="st">"main"</span>,</span></span>
 <span class="r-in"><span>                      tablePrefix <span class="op">=</span> <span class="st">"plp_"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Connecting using SQLite driver</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> All or some PLP result tables do not exist, tables being recreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Deleting existing tables</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Creating PLP results tables</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
@@ -198,7 +199,7 @@
   |====================================================================  |  97%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0265 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0344 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> PLP result migration being applied</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migrating data set</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migrator using SQL files in PatientLevelPrediction</span>
@@ -209,7 +210,7 @@
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00301 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00487 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migrations table created</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Executing migration: Migration_1-store_version.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
@@ -219,14 +220,14 @@
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00275 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00337 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving migration: Migration_1-store_version.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00367 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00468 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migration complete Migration_1-store_version.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Executing migration: Migration_2-add_hyperparameter_settings.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
@@ -240,14 +241,14 @@
   |====================================================                  |  75%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00406 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00471 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving migration: Migration_2-add_hyperparameter_settings.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00377 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00501 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migration complete Migration_2-add_hyperparameter_settings.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Executing migration: Migration_3-add_model_name.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
@@ -257,14 +258,14 @@
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00327 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00389 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Saving migration: Migration_3-add_model_name.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00414 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00302 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Migration complete Migration_3-add_model_name.sql</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Closing database connection</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Updating version number</span>
@@ -276,7 +277,7 @@
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0028 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00334 secs</span>
 <span class="r-in"><span><span class="co"># delete the tables</span></span></span>
 <span class="r-in"><span><span class="fu">createPlpResultTables</span><span class="op">(</span>connectionDetails <span class="op">=</span> <span class="va">connectionDetails</span>,</span></span>
 <span class="r-in"><span>                      targetDialect <span class="op">=</span> <span class="st">"sqlite"</span>,</span></span>
@@ -285,182 +286,13 @@
 <span class="r-in"><span>                      createTables <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                      tablePrefix <span class="op">=</span> <span class="st">"plp_"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Connecting using SQLite driver</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> All or some PLP result tables do not exist, tables being recreated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Deleting existing tables</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Deleting existing PLP result tables</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00225 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00229 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00227 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00225 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00212 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00245 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00229 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00217 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0022 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00257 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00262 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0027 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00293 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00302 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0032 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00279 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00222 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00258 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00242 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00264 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00232 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00271 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00253 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00274 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00254 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00251 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00255 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00272 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00258 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00283 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
@@ -472,218 +304,385 @@
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00207 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00312 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00218 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00488 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0023 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00848 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00224 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00339 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00208 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00316 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00228 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00298 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00215 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00299 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00231 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00291 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00209 secs</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00276 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00287 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00287 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00294 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00287 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00329 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00295 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00297 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0029 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0579 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00304 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00323 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00288 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00287 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00286 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00288 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00286 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00313 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00283 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00328 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00292 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00291 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00313 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00294 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00294 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00314 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00277 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00328 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00312 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00406 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00282 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0031 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00298 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00296 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00287 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00306 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00285 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00283 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00284 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00294 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00302 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0029 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0028 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00286 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00284 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00281 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00274 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00369 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0029 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00281 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00291 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00302 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.0028 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00282 secs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00283 secs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00337 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00215 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00216 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00213 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00221 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00213 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00211 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00205 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00214 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00201 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00214 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00204 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00222 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00214 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00214 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00204 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00211 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00201 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00213 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00901 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00201 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00196 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00209 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Deleting PLP migration tables</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00208 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00206 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00212 secs</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Executing SQL took 0.00215 secs</span>
 <span class="r-in"><span><span class="co"># clean up the database file</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"test.sqlite"</span><span class="op">)</span><span class="op">)</span></span></span>
 </code></pre></div>

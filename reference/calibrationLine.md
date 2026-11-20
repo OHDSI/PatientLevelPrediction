@@ -30,7 +30,6 @@ prediction <- data.frame(
   value = c(0.1, 0.2, 0.3, 0.4, 0.5),
   outcomeCount = c(0, 1, 0, 1, 1))
 calibrationLine(prediction, numberOfStrata = 1)
-#> Warning: NaNs produced
 #> $lm
 #> Intercept  Gradient 
 #>      -0.3       3.0 
@@ -42,6 +41,6 @@ calibrationLine(prediction, numberOfStrata = 1)
 #> 
 #> $hosmerlemeshow
 #>   Xsquared df pvalue
-#> 1 2.924298 -1    NaN
+#> 1 2.924298 NA     NA
 #> 
 ```

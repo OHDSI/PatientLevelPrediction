@@ -27,134 +27,165 @@ input, checks these are valid and outputs these as a list of class
 ‘implement’ function to call.
 
 The ‘implement’ function, e.g.,
-implement\<FeatureEngineeringFunctionName\>, must take as input:
+implement\<FeatureEngineeringFunctionName\>, is called twice: once on
+the training data, to learn what it needs and change the data, and again
+whenever the model is applied to new data, to make the same change
+there. It must take as input:
 
 - `trainData` - a list containing:
 
-  - `covariateData`: the `plpData$covariateData`restricted to the
-    training patients
+  - `covariateData`: the covariates. During training these are the
+    covariates of the training patients. When the model is applied, they
+    are the covariates of the data it is applied to, which can include
+    patients outside the population being predicted.
 
-  - `labels`: a data frame that contain `rowId`(patient identifier) and
-    `outcomeCount` (the class labels)
+  - `labels`: a data frame with one row per patient, containing `rowId`
+    (patient identifier), the other columns of the study population such
+    as `ageYear` and `gender`, and `outcomeCount` (the class labels)
+    when it is known. When a model is applied to a full `plpData`
+    without labels, for example by
+    [`pfi()`](https://ohdsi.github.io/PatientLevelPrediction/reference/pfi.md),
+    `labels` is missing and `cohorts` holds the patients instead.
 
-  - `folds`: a data.frame that contains `rowId` (patient identifier) and
-    `index` (the cross validation fold)
+  - `folds`: a data frame that contains `rowId` (patient identifier) and
+    `index` (the cross validation fold). This is only present during
+    training.
 
 - `featureEngineeringSettings` - the output of your
   create\<FeatureEngineeringFunctionName\>
 
-The ‘implement’ function can then do any manipulation of the `trainData`
-(adding new features or removing features) but must output a `trainData`
-object containing the new `covariateData`, `labels` and `folds` for the
-training data patients.
+- any further arguments you recorded during training (see below), such
+  as values learned from the training data. Give them a `NULL` default:
+  they are `NULL` during training and set when the model is applied to
+  new data.
+
+The ‘implement’ function can then do any manipulation of
+`trainData$covariateData` (adding new features or removing features). It
+should:
+
+1.  Change `trainData$covariateData` directly. PatientLevelPrediction
+    always passes data that it owns: during training this is the
+    training set made when the data were split, and when a model is
+    applied it is a copy made before the first step runs. You do not
+    need to copy the data yourself, and the caller’s data is never
+    changed.
+
+2.  Call
+    [`recordFeatureEngineeringStep()`](https://ohdsi.github.io/PatientLevelPrediction/reference/recordFeatureEngineeringStep.md)
+    with the name of the ‘implement’ function and the arguments it needs
+    to repeat the step on new data, typically the
+    `featureEngineeringSettings` and the learned values. The model is
+    saved as JSON, so these should be numbers, strings, logicals, data
+    frames or lists of these, not fitted model objects.
+
+3.  Return `trainData`.
+
+When the model is applied to new data, PatientLevelPrediction calls each
+recorded step in the order it was recorded, with `trainData` and the
+recorded arguments.
 
 ## Example
 
-Let’s consider the situation where we wish to create an age spline
-feature. To make this custom feature engineering function we need to
-write the ‘create’ and ‘implement’ R functions.
+Let’s consider the situation where we wish to cap a continuous covariate
+at a quantile of its training values, so that extreme values do not
+dominate the model. The cap is learned from the training data and must
+be reused, not recomputed, when the model is applied to new data.
 
 ### Create function
 
-Our age spline feature function will create a new feature using the
-`plpData$cohorts$ageYear` column. We will implement a restricted cubic
-spline that requires specifying the number of knots. Therefore, the
-inputs for this are: `knots` - an integer/double specifying the number
-of knots.
+The inputs are the `covariateId` of the covariate to cap and the
+`quantile` to cap it at.
 
 ``` r
 
-createAgeSpline <- function(knots = 5) {
+createCapCovariate <- function(covariateId, quantile = 0.99) {
   # create list of inputs to implement function
   featureEngineeringSettings <- list(
-    knots = knots
+    covariateId = covariateId,
+    quantile = quantile
   )
 
-  # specify the function that will implement the sampling
-  attr(featureEngineeringSettings, "fun") <- "implementAgeSplines"
+  # specify the function that will implement the feature engineering
+  attr(featureEngineeringSettings, "fun") <- "implementCapCovariate"
 
-  # make sure the object returned is of class "sampleSettings"
+  # make sure the object returned is of class "featureEngineeringSettings"
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   return(featureEngineeringSettings)
 }
 ```
 
-We now need to create the ‘implement’ function `implementAgeSplines()`
+We now need to create the ‘implement’ function `implementCapCovariate()`
 
 ### Implement function
 
-All ‘implement’ functions must take as input the `trainData` and the
-`featureEngineeringSettings` (this is the output of the ‘create’
-function). They must return a `trainData` object containing the new
-`covariateData`, `labels` and `folds`.
-
-In our example, the `createAgeSpline()` will return a list with ‘knots’.
-The `featureEngineeringSettings` therefore contains this.
+The learned value is the cap. It is `NULL` during training, where it is
+computed from the training data, and it is the recorded value when the
+model is applied to new data.
 
 ``` r
 
-implementAgeSplines <- function(trainData, featureEngineeringSettings, model = NULL) {
-  # if there is a model, it means this function is called through applyFeatureengineering, meaning it   # should apply the model fitten on training data to the test data
-  if (is.null(model)) {
-    knots <- featureEngineeringSettings$knots
-    ageData <- trainData$labels
-    y <- ageData$outcomeCount
-    X <- ageData$ageYear
-    model <- mgcv::gam(
-      y ~ s(X, bs = "cr", k = knots, m = 2)
-    )
-    newData <- data.frame(
-      rowId = ageData$rowId,
-      covariateId = 2002,
-      covariateValue = model$fitted.values
-    )
-  } else {
-    ageData <- trainData$labels
-    X <- trainData$labels$ageYear
-    y <- ageData$outcomeCount
-    newData <- data.frame(y = y, X = X)
-    yHat <- predict(model, newData)
-    newData <- data.frame(
-      rowId = trainData$labels$rowId,
-      covariateId = 2002,
-      covariateValue = yHat
-    )
+implementCapCovariate <- function(trainData, featureEngineeringSettings, cap = NULL) {
+  covariateId <- featureEngineeringSettings$covariateId
+
+  # during training, learn the cap from the training data
+  if (is.null(cap)) {
+    cap <- trainData$covariateData$covariates |>
+      dplyr::filter(.data$covariateId == !!covariateId) |>
+      dplyr::pull(.data$covariateValue) |>
+      stats::quantile(featureEngineeringSettings$quantile, names = FALSE)
   }
 
-  # remove existing age if in covariates
+  # change the data in place
   trainData$covariateData$covariates <- trainData$covariateData$covariates |>
-    dplyr::filter(!.data$covariateId %in% c(1002))
+    dplyr::mutate(covariateValue = dplyr::if_else(
+      .data$covariateId == !!covariateId & .data$covariateValue > !!cap,
+      !!cap,
+      .data$covariateValue
+    ))
 
-  # update covRef
-  Andromeda::appendToTable(
-    trainData$covariateData$covariateRef,
-    data.frame(
-      covariateId = 2002,
-      covariateName = "Cubic restricted age splines",
-      analysisId = 2,
-      conceptId = 2002
-    )
-  )
-
-  # update covariates
-  Andromeda::appendToTable(trainData$covariateData$covariates, newData)
-
-  featureEngineering <- list(
-    funct = "implementAgeSplines",
+  # record how to repeat this step when the model is applied to new data
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
+    funct = "implementCapCovariate",
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
-      model = model
+      cap = cap
     )
-  )
-
-  attr(trainData$covariateData, "metaData")$featureEngineering <- listAppend(
-    attr(trainData$covariateData, "metaData")$featureEngineering,
-    featureEngineering
   )
 
   return(trainData)
 }
 ```
+
+### Using it
+
+Pass the settings to
+[`runPlp()`](https://ohdsi.github.io/PatientLevelPrediction/reference/runPlp.md)
+and turn feature engineering on in the execute settings. Here age
+(covariateId 1002) is capped at its 99th percentile in the training
+data:
+
+``` r
+
+capAge <- createCapCovariate(covariateId = 1002, quantile = 0.99)
+
+plpResult <- runPlp(
+  plpData = plpData,
+  outcomeId = 3,
+  featureEngineeringSettings = capAge,
+  executeSettings = createExecuteSettings(
+    runSplitData = TRUE,
+    runFeatureEngineering = TRUE,
+    runModelDevelopment = TRUE
+  ),
+  saveDirectory = file.path(tempdir(), "capAge")
+)
+```
+
+The test set,
+[`predictPlp()`](https://ohdsi.github.io/PatientLevelPrediction/reference/predictPlp.md)
+and external validation then cap age at the value learned from the
+training data.
 
 ## Acknowledgments
 
