@@ -163,10 +163,10 @@ createPollutants <- function(
     method = method
     )
   
-  # specify the function that will implement the sampling
+  # specify the function that will implement the feature engineering
   attr(featureEngineeringSettings, "fun") <- "implementPollutants"
 
-  # make sure the object returned is of class "sampleSettings"
+  # make sure the object returned is of class "featureEngineeringSettings"
   class(featureEngineeringSettings) <- "featureEngineeringSettings"
   return(featureEngineeringSettings)
   
@@ -210,17 +210,13 @@ implementPollutants <- function(trainData, featureEngineeringSettings, model=NUL
   # update covariates
   Andromeda::appendToTable(trainData$covariateData$covariates, newData)
   
-  featureEngineering <- list(
+  trainData <- recordFeatureEngineeringStep(
+    trainData,
     funct = 'implementPollutants',
     settings = list(
       featureEngineeringSettings = featureEngineeringSettings,
       model = model
     )
-  )
-  
-  attr(trainData$covariateData, 'metaData')$featureEngineering = listAppend(
-    attr(trainData$covariateData, 'metaData')$featureEngineering,
-    featureEngineering
   )
   
   trainData$model <- model
@@ -229,14 +225,22 @@ implementPollutants <- function(trainData, featureEngineeringSettings, model=NUL
 }
 ```
 
+This example applies the step by hand within one R session, so it can
+keep the fitted `mgcv` model and pass it back in for the test data. A
+step meant to run inside
+[`runPlp()`](https://ohdsi.github.io/PatientLevelPrediction/reference/runPlp.md)
+and be saved with the model should record only values that can be saved
+as JSON, as described in
+[`vignette('AddingCustomFeatureEngineering')`](https://ohdsi.github.io/PatientLevelPrediction/articles/AddingCustomFeatureEngineering.md).
+
 We can then execute these functions to create training and test data
 objects that contain our extended covariates:
 
 ``` r
 
 featureEngineeringSettingsPol <- createPollutants('QNCV')
-trainDataPol <- implementPollutants(trainData, featureEngineeringSettings)
-testDataPol <- implementPollutants(testData, featureEngineeringSettings, trainDataPol$model)
+trainDataPol <- implementPollutants(trainData, featureEngineeringSettingsPol)
+testDataPol <- implementPollutants(testData, featureEngineeringSettingsPol, trainDataPol$model)
 ```
 
 Note that if we plot the output model of the `GAM` fitting in the

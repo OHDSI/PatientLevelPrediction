@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>calibrationLine</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/EvaluationSummary.R" class="external-link"><code>R/EvaluationSummary.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/EvaluationSummary.R" class="external-link"><code>R/EvaluationSummary.R</code></a></small>
       <div class="d-none name"><code>calibrationLine.Rd</code></div>
     </div>
 
@@ -91,7 +91,6 @@ to fit the line and the Hosmer-Lemeshow goodness of fit test</p>
 <span class="r-in"><span>  value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  outcomeCount <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">calibrationLine</span><span class="op">(</span><span class="va">prediction</span>, numberOfStrata <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>NaNs produced</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $lm</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Intercept  Gradient </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      -0.3       3.0 </span>
@@ -103,7 +102,7 @@ to fit the line and the Hosmer-Lemeshow goodness of fit test</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $hosmerlemeshow</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Xsquared df pvalue</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.924298 -1    NaN</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 2.924298 NA     NA</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>

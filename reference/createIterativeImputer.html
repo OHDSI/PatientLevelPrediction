@@ -11,7 +11,7 @@ and then imputes the missing values iteratively using chained equations"></head>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ and then imputes the missing values iteratively using chained equations"></head>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Create Iterative Imputer settings</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/Imputation.R" class="external-link"><code>R/Imputation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Imputation.R" class="external-link"><code>R/Imputation.R</code></a></small>
       <div class="d-none name"><code>createIterativeImputer.Rd</code></div>
     </div>
 
@@ -95,6 +95,9 @@ and then imputes the missing values iteratively using chained equations</p>
 Currently only "pmm" is supported with the following settings:</p><ul><li><p>k: The number of donors to use for matching</p></li>
 <li><p>iterations: The number of iterations to use for imputation</p></li>
 <li><p>alpha: Elastic-net mixing parameter for PMM fit (<code>1</code> = lasso, <code>0</code> = ridge)</p></li>
+<li><p>seed: The seed of the random draws of the imputation (the cross-validation
+folds of each imputation model and the donor sampling), drawn at random when
+not given. The imputations then depend only on the settings and the data.</p></li>
 </ul></dd>
 
 
@@ -113,7 +116,9 @@ passes the imputation missingness threshold.</p></dd>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># create imputer to impute values with missingness less than 30% using </span></span></span>
 <span class="r-in"><span><span class="co"># predictive mean matching in 5 iterations with 5 donors</span></span></span>
 <span class="r-in"><span><span class="fu">createIterativeImputer</span><span class="op">(</span>missingThreshold <span class="op">=</span> <span class="fl">0.3</span>, method <span class="op">=</span> <span class="st">"pmm"</span>,</span></span>
-<span class="r-in"><span>                       methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                       methodSettings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>                         pmm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span>, iterations <span class="op">=</span> <span class="fl">5</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                       <span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $missingThreshold</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -129,6 +134,9 @@ passes the imputation missingness threshold.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $methodSettings$alpha</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $methodSettings$seed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 92007</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $addMissingIndicator</span>

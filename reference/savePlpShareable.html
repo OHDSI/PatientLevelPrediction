@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Save the plp result as json files and csv files for transparent sharing</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/SaveLoadPlp.R" class="external-link"><code>R/SaveLoadPlp.R</code></a></small>
       <div class="d-none name"><code>savePlpShareable.Rd</code></div>
     </div>
 
@@ -80,7 +80,9 @@
 
 
 <dt id="arg-mincellcount">minCellCount<a class="anchor" aria-label="anchor" href="#arg-mincellcount"></a></dt>
-<dd><p>Minimum cell count for the covariateSummary and certain evaluation results</p></dd>
+<dd><p>Counts below this value, and the values that give them back,
+are left empty in the covariate summary and evaluation results.
+The rules are those of <code><a href="extractDatabaseToCsv.html">extractDatabaseToCsv()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

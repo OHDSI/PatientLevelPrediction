@@ -37,6 +37,11 @@ createIterativeImputer(
   - alpha: Elastic-net mixing parameter for PMM fit (`1` = lasso, `0` =
     ridge)
 
+  - seed: The seed of the random draws of the imputation (the
+    cross-validation folds of each imputation model and the donor
+    sampling), drawn at random when not given. The imputations then
+    depend only on the settings and the data.
+
 - addMissingIndicator:
 
   Add a binary missingness indicator per feature that passes the
@@ -53,7 +58,9 @@ The settings for the iterative imputer of class
 # create imputer to impute values with missingness less than 30% using 
 # predictive mean matching in 5 iterations with 5 donors
 createIterativeImputer(missingThreshold = 0.3, method = "pmm",
-                       methodSettings = list(pmm = list(k = 5, iterations = 5, alpha = 0.5)))
+                       methodSettings = list(
+                         pmm = list(k = 5, iterations = 5, alpha = 0.5)
+                       ))
 #> $missingThreshold
 #> [1] 0.3
 #> 
@@ -69,6 +76,9 @@ createIterativeImputer(missingThreshold = 0.3, method = "pmm",
 #> 
 #> $methodSettings$alpha
 #> [1] 0.5
+#> 
+#> $methodSettings$seed
+#> [1] 92007
 #> 
 #> 
 #> $addMissingIndicator

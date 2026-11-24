@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>create the study population settings</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/PopulationSettings.R" class="external-link"><code>R/PopulationSettings.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/PopulationSettings.R" class="external-link"><code>R/PopulationSettings.R</code></a></small>
       <div class="d-none name"><code>createStudyPopulationSettings.Rd</code></div>
     </div>
 
@@ -116,7 +116,11 @@ date for a person to be included in the cohort.</p></dd>
 
 
 <dt id="arg-mintimeatrisk">minTimeAtRisk<a class="anchor" aria-label="anchor" href="#arg-mintimeatrisk"></a></dt>
-<dd><p>The minimum number of days at risk required to be included</p></dd>
+<dd><p>The minimum time at risk required to be included, in days elapsed after
+the first day of the risk window. A person therefore needs
+<code>minTimeAtRisk + 1</code> days in the risk window, counting its first and
+last day. The default of 364 with a risk window of days 1 to 365 requires
+the full window.</p></dd>
 
 
 <dt id="arg-riskwindowstart">riskWindowStart<a class="anchor" aria-label="anchor" href="#arg-riskwindowstart"></a></dt>

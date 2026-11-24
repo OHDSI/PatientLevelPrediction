@@ -9,7 +9,7 @@ powered by scikit-learn's IterativeImputer through reticulate."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,7 @@ powered by scikit-learn's IterativeImputer through reticulate."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Create scikit-learn Iterative Imputer settings</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/Imputation.R" class="external-link"><code>R/Imputation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/Imputation.R" class="external-link"><code>R/Imputation.R</code></a></small>
       <div class="d-none name"><code>createSklearnIterativeImputer.Rd</code></div>
     </div>
 
@@ -105,6 +105,15 @@ passes the imputation missingness threshold.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The settings for the sklearn iterative imputer of class <code>featureEngineeringSettings</code></p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>scikit-learn fits the imputer; at prediction its fitted steps (the
+starting value of each feature and the coefficients of each BayesianRidge
+model) are applied in R, so a saved model can be loaded and applied without
+Python. With <code>samplePosterior = TRUE</code> the imputer draws random values, which
+cannot be repeated in R, so such a model can only be applied in the R session
+it was fitted in.</p>
     </div>
 
     <div class="section level2">

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">PatientLevelPrediction</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">6.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Specify settings for developing a single model</h1>
-      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/v6.7.1/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/OHDSI/PatientLevelPrediction/blob/develop/R/RunMultiplePlp.R" class="external-link"><code>R/RunMultiplePlp.R</code></a></small>
       <div class="d-none name"><code>createModelDesign.Rd</code></div>
     </div>
 
@@ -430,9 +430,6 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$priorfunction</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Cyclops::createPrior"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $settings$selectorType</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "byPid"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $settings$crossValidationInPrior</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -494,14 +491,17 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> function (prediction) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     result &lt;- do.call(fun, c(list(prediction = prediction), funArgs))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1 || !is.finite(result)) {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one finite numeric value.", </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (length(result) == 1 &amp;&amp; is.logical(result) &amp;&amp; is.na(result)) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         result &lt;- NA_real_</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     if (!is.numeric(result) || length(result) != 1) {</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         stop("Metric function must return one numeric value.", </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             call. = FALSE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     result</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     as.numeric(result)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x6075e5924d28&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x6075e5936e30&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;bytecode: 0x6095e7a2d028&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x6095e7a27878&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetric$maximize</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
@@ -521,6 +521,12 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $generator</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $validation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cv"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $tuningMetricIsDefault</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "hyperparameterSettings"</span>

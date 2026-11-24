@@ -7,7 +7,7 @@ Plug an existing scikit learn python model into the PLP framework
 ``` r
 createSklearnModel(
   modelLocation = "/model",
-  covariateMap = data.frame(columnId = 1:2, covariateId = c(1, 2), ),
+  covariateMap = data.frame(columnId = 1:2, covariateId = c(1, 2)),
   isPickle = TRUE,
   targetId = NULL,
   outcomeId = NULL,

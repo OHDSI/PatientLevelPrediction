@@ -10,7 +10,7 @@ createPlpResultTables(
   connectionDetails,
   targetDialect = "postgresql",
   resultSchema,
-  deleteTables = TRUE,
+  deleteTables = FALSE,
   createTables = TRUE,
   tablePrefix = "",
   tempEmulationSchema = getOption("sqlRenderTempEmulationSchema"),
@@ -35,8 +35,10 @@ createPlpResultTables(
 
 - deleteTables:
 
-  If true any existing tables matching the PatientLevelPrediction result
-  tables names will be deleted
+  If TRUE, existing PatientLevelPrediction result tables (and the
+  migration tables) in the schema are deleted first, with all their
+  results. FALSE by default, so results are never removed unless asked
+  for.
 
 - createTables:
 
@@ -77,8 +79,6 @@ createPlpResultTables(connectionDetails = connectionDetails,
                       resultSchema = "main",
                       tablePrefix = "plp_")
 #> Connecting using SQLite driver
-#> All or some PLP result tables do not exist, tables being recreated
-#> Deleting existing tables
 #> Creating PLP results tables
 #> 
   |                                                                            
@@ -143,7 +143,7 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |====================================================================  |  97%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0207 secs
+#> Executing SQL took 0.0344 secs
 #> PLP result migration being applied
 #> Migrating data set
 #> Migrator using SQL files in PatientLevelPrediction
@@ -154,7 +154,7 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.004 secs
+#> Executing SQL took 0.00492 secs
 #> Migrations table created
 #> Executing migration: Migration_1-store_version.sql
 #> 
@@ -164,14 +164,14 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00328 secs
+#> Executing SQL took 0.00337 secs
 #> Saving migration: Migration_1-store_version.sql
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0043 secs
+#> Executing SQL took 0.00468 secs
 #> Migration complete Migration_1-store_version.sql
 #> Executing migration: Migration_2-add_hyperparameter_settings.sql
 #> 
@@ -185,14 +185,14 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |====================================================                  |  75%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00452 secs
+#> Executing SQL took 0.00498 secs
 #> Saving migration: Migration_2-add_hyperparameter_settings.sql
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00435 secs
+#> Executing SQL took 0.00483 secs
 #> Migration complete Migration_2-add_hyperparameter_settings.sql
 #> Executing migration: Migration_3-add_model_name.sql
 #> 
@@ -202,14 +202,14 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00368 secs
+#> Executing SQL took 0.00542 secs
 #> Saving migration: Migration_3-add_model_name.sql
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00264 secs
+#> Executing SQL took 0.00538 secs
 #> Migration complete Migration_3-add_model_name.sql
 #> Closing database connection
 #> Updating version number
@@ -221,7 +221,7 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |===================================                                   |  50%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00289 secs
+#> Executing SQL took 0.00345 secs
 # delete the tables
 createPlpResultTables(connectionDetails = connectionDetails,
                       targetDialect = "sqlite",
@@ -230,98 +230,25 @@ createPlpResultTables(connectionDetails = connectionDetails,
                       createTables = FALSE,
                       tablePrefix = "plp_")
 #> Connecting using SQLite driver
-#> All or some PLP result tables do not exist, tables being recreated
-#> Deleting existing tables
+#> Deleting existing PLP result tables
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0026 secs
+#> Executing SQL took 0.00286 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.276 secs
+#> Executing SQL took 0.234 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0026 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.0027 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00233 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00267 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.0025 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00258 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00271 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00302 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00295 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00288 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00293 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00291 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00272 secs
+#> Executing SQL took 0.00308 secs
 #> 
   |                                                                            
   |                                                                      |   0%
@@ -333,31 +260,13 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00294 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00272 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00267 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
 #> Executing SQL took 0.00278 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00293 secs
+#> Executing SQL took 0.00302 secs
 #> 
   |                                                                            
   |                                                                      |   0%
@@ -369,43 +278,109 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00296 secs
+#> Executing SQL took 0.00285 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00283 secs
+#> Executing SQL took 0.00289 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00259 secs
+#> Executing SQL took 0.00318 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0029 secs
+#> Executing SQL took 0.00289 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00284 secs
+#> Executing SQL took 0.00355 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00296 secs
+#> Executing SQL took 0.00333 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00294 secs
+#> Executing SQL took 0.00343 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00353 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00321 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00365 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00333 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00326 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00341 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00301 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00364 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00326 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.0033 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00336 secs
 #> 
   |                                                                            
   |                                                                      |   0%
@@ -417,31 +392,85 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00243 secs
+#> Executing SQL took 0.00334 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00269 secs
+#> Executing SQL took 0.00347 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00274 secs
+#> Executing SQL took 0.0034 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00266 secs
+#> Executing SQL took 0.00373 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00238 secs
+#> Executing SQL took 0.00282 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00283 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00306 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00276 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00273 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00307 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00272 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00294 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00276 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00452 secs
 #> 
   |                                                                            
   |                                                                      |   0%
@@ -453,127 +482,25 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00259 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
 #> Executing SQL took 0.0028 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00254 secs
+#> Executing SQL took 0.00275 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00422 secs
+#> Executing SQL took 0.00289 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00271 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00278 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00261 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.0027 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00249 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00252 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.0025 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00263 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00244 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00261 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00241 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00262 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00263 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00254 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00237 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00249 secs
-#> 
-  |                                                                            
-  |                                                                      |   0%
-  |                                                                            
-  |======================================================================| 100%
-#> Executing SQL took 0.00256 secs
+#> Executing SQL took 0.0028 secs
 #> 
   |                                                                            
   |                                                                      |   0%
@@ -585,50 +512,121 @@ createPlpResultTables(connectionDetails = connectionDetails,
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00894 secs
+#> Executing SQL took 0.00281 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00249 secs
+#> Executing SQL took 0.0029 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00244 secs
+#> Executing SQL took 0.00265 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00254 secs
-#> Deleting PLP migration tables
+#> Executing SQL took 0.00282 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00251 secs
+#> Executing SQL took 0.00268 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00247 secs
+#> Executing SQL took 0.00271 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.00249 secs
+#> Executing SQL took 0.00263 secs
 #> 
   |                                                                            
   |                                                                      |   0%
   |                                                                            
   |======================================================================| 100%
-#> Executing SQL took 0.0026 secs
+#> Executing SQL took 0.00274 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.0027 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00276 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00269 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00272 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00275 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00269 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00265 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00267 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00268 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00274 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00271 secs
+#> 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |======================================================================| 100%
+#> Executing SQL took 0.00279 secs
 # clean up the database file
 unlink(file.path(tempdir(), "test.sqlite"))
 ```

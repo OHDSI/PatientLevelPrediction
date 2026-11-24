@@ -60,31 +60,15 @@ time-at-risk period
 data("simulationProfile")
 plpData <- simulatePlpData(simulationProfile, n = 999, seed = 42)
 #> Generating covariates
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpIwzFak/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpIwzFak/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
-#> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpIwzFak/duckdb
-#> This is removed when the R session ends.
-#> • Extensions are re-downloaded each session.
-#> • Secrets are lost.
-#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
-#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
-#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating cohorts
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/RtmppeeqHG/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 #> Generating outcomes
 plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 #> outcomeId: 3
@@ -105,8 +89,8 @@ plotObject <- outcomeSurvivalPlot(plpData, outcomeId = 3)
 #> Removing subjects with prior outcomes (if any)
 #> Removing subjects with no time at risk (if any)
 #> Outcome is 0 or 1
-#> Population created with: 995 observations, 995 unique subjects and 496 outcomes
-#> Population created in 0.05 secs
+#> Population created with: 999 observations, 999 unique subjects and 486 outcomes
+#> Population created in 0.0491 secs
 #> Ignoring unknown labels:
 #> • fill : "Strata"
 print(plotObject)

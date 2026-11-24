@@ -13,7 +13,8 @@ minMaxNormalize(trainData, featureEngineeringSettings, done = FALSE)
 
 - trainData:
 
-  The training data to be normalized
+  The data to normalize: the training data, or new data when
+  `done = TRUE`. It is changed in place.
 
 - featureEngineeringSettings:
 
@@ -21,11 +22,11 @@ minMaxNormalize(trainData, featureEngineeringSettings, done = FALSE)
 
 - done:
 
-  Whether the data has already been normalized (bool)
+  Whether the normalization has already been fitted (bool)
 
 ## Value
 
-The normalized data
+`trainData`, normalized, with the step recorded for prediction
 
 ## Details
 
