@@ -20,17 +20,19 @@ setIterativeHardThresholding(
 \arguments{
 \item{K}{Number of covariates in the model (default 25, or 10
 with \code{algorithm = "legacy"}, as in earlier versions); the intercept and
-\code{exclude} do not count. One whole number, or several to
+\code{exclude} do not count. With fewer covariates than \code{K}, the model has all
+of them. One whole number, or several to
 choose from by cross-validation, for example \code{c(5, 10, 25, 50, 100)},
 which takes several times longer to fit.}
 
 \item{variance}{Ridge variance (default 1): a positive number, \code{Inf} for plain L0
 (the best subset of size \code{K}), several numbers to choose from by
 cross-validation, or \code{"tune"} for the grid 0.01, 0.03, 0.1, 0.3, 1, 3 and
-\code{Inf}.}
+\code{Inf}. In earlier versions the second argument was \code{penalty}, so give
+\code{variance} by name; given by position, it gives a warning.}
 
-\item{exclude}{Covariate ids that are not penalized and do not count
-towards \code{K}.}
+\item{exclude}{Covariate ids (numbers) that are not penalized and do
+not count towards \code{K}.}
 
 \item{forceIntercept}{Logical: penalize the intercept and count it towards \code{K}.}
 
@@ -61,10 +63,10 @@ IterativeHardThresholding 1.0.3 (\code{penalty}, \code{fitBestSubset},
 \code{modelSettings} object
 }
 \description{
-Logistic regression with at most \code{K} non-zero coefficients, fitted with the
+Logistic regression with \code{K} non-zero coefficients, fitted with the
 IterativeHardThresholding package (version 2.0.0 or later). It maximizes the
-log-likelihood minus a small ridge penalty (\code{variance}) over models with at
-most \code{K} covariates. When \code{K} or \code{variance} has several values, the
+log-likelihood minus a small ridge penalty (\code{variance}) over models with
+\code{K} covariates. When \code{K} or \code{variance} has several values, the
 hyperparameter search chooses between them on the training folds, as for
 other models, by the held-out log-likelihood unless the hyperparameter
 settings name another \code{tuningMetric}. Each fold's training rows are

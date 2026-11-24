@@ -307,6 +307,14 @@ test_that("test IHT incorrect inputs", {
   expect_error(setIterativeHardThresholding(control = list(noSuchSwitch = TRUE)))
   expect_error(setIterativeHardThresholding(forceIntercept = "true"), "forceIntercept")
   expect_error(setIterativeHardThresholding(seed = "F"))
+  expect_error(setIterativeHardThresholding(K = 3e9), "K must be")
+  expect_error(setIterativeHardThresholding(oneStandardError = 1), "oneStandardError")
+  expect_error(setIterativeHardThresholding(oneStandardError = NA), "oneStandardError")
+  expect_error(setIterativeHardThresholding(exclude = c("(Intercept)", "8507001")), "exclude must be covariate ids")
+  expect_equal(setIterativeHardThresholding(exclude = c(8507001))$settings$priorParams$exclude, 8507001)
+  # the second argument was penalty in earlier versions
+  expect_warning(setIterativeHardThresholding(10, 2), "now variance")
+  expect_no_warning(setIterativeHardThresholding(10, variance = 2))
 })
 
 test_that("Cyclops CV refit controls preserve model settings", {

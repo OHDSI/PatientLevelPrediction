@@ -297,10 +297,10 @@ setCoxModel <- function(
 #' Create setting for Iterative Hard Thresholding model
 #'
 #' @description
-#' Logistic regression with at most `K` non-zero coefficients, fitted with the
+#' Logistic regression with `K` non-zero coefficients, fitted with the
 #' IterativeHardThresholding package (version 2.0.0 or later). It maximizes the
-#' log-likelihood minus a small ridge penalty (`variance`) over models with at
-#' most `K` covariates. When `K` or `variance` has several values, the
+#' log-likelihood minus a small ridge penalty (`variance`) over models with
+#' `K` covariates. When `K` or `variance` has several values, the
 #' hyperparameter search chooses between them on the training folds, as for
 #' other models, by the held-out log-likelihood unless the hyperparameter
 #' settings name another `tuningMetric`. Each fold's training rows are
@@ -310,15 +310,17 @@ setCoxModel <- function(
 #'
 #' @param K              Number of covariates in the model (default 25, or 10
 #'   with `algorithm = "legacy"`, as in earlier versions); the intercept and
-#'   `exclude` do not count. One whole number, or several to
+#'   `exclude` do not count. With fewer covariates than `K`, the model has all
+#'   of them. One whole number, or several to
 #'   choose from by cross-validation, for example `c(5, 10, 25, 50, 100)`,
 #'   which takes several times longer to fit.
 #' @param variance       Ridge variance (default 1): a positive number, `Inf` for plain L0
 #'   (the best subset of size `K`), several numbers to choose from by
 #'   cross-validation, or `"tune"` for the grid 0.01, 0.03, 0.1, 0.3, 1, 3 and
-#'   `Inf`.
-#' @param exclude        Covariate ids that are not penalized and do not count
-#'   towards `K`.
+#'   `Inf`. In earlier versions the second argument was `penalty`, so give
+#'   `variance` by name; given by position, it gives a warning.
+#' @param exclude        Covariate ids (numbers) that are not penalized and do
+#'   not count towards `K`.
 #' @param forceIntercept Logical: penalize the intercept and count it towards `K`.
 #' @param seed           An option to add a seed when training the model.
 #' @param algorithm      `"default"`, `"chu2020"` (the algorithm of Chu et al.,
@@ -364,6 +366,15 @@ setIterativeHardThresholding <- function(
     ...) {
   rlang::check_installed("IterativeHardThresholding", version = "2.0.0")
   algorithm <- match.arg(algorithm, c("default", "chu2020", "legacy"))
+  callArguments <- as.list(sys.call())[-1]
+  argumentNames <- names(callArguments) %||% rep("", length(callArguments))
+  if (algorithm != "legacy" && sum(argumentNames == "") >= 2) {
+    warning(
+      "The second argument of setIterativeHardThresholding() is now variance (the ridge variance), ",
+      "not penalty as in earlier versions; give it by name",
+      call. = FALSE
+    )
+  }
   if (algorithm == "legacy" && missing(K)) {
     # the default of earlier versions, so that a legacy model is reproduced
     K <- 10
@@ -389,7 +400,8 @@ setIterativeHardThresholding <- function(
       call. = FALSE
     )
   }
-  if (!is.numeric(K) || length(K) < 1 || any(!is.finite(K)) || any(K < 1) || any(K != round(K))) {
+  if (!is.numeric(K) || length(K) < 1 || any(!is.finite(K)) || any(K < 1) || any(K != round(K)) ||
+      any(K > .Machine$integer.max)) {
     stop("K must be one or more whole numbers of at least 1", call. = FALSE)
   }
   if (algorithm == "legacy" && length(K) != 1) {
@@ -397,6 +409,16 @@ setIterativeHardThresholding <- function(
   }
   if (!is.logical(forceIntercept) || length(forceIntercept) != 1 || is.na(forceIntercept)) {
     stop("forceIntercept must be TRUE or FALSE", call. = FALSE)
+  }
+  if (!is.logical(oneStandardError) || length(oneStandardError) != 1 || is.na(oneStandardError)) {
+    stop("oneStandardError must be TRUE or FALSE", call. = FALSE)
+  }
+  if (algorithm != "legacy" && length(exclude) > 0 && (!is.numeric(exclude) || anyNA(exclude))) {
+    stop(
+      "exclude must be covariate ids (numbers); the intercept is not penalized ",
+      "unless forceIntercept = TRUE",
+      call. = FALSE
+    )
   }
   if (!is.list(control) || (length(control) > 0 &&
       (is.null(names(control)) || any(names(control) == "")))) {

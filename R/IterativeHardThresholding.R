@@ -28,11 +28,12 @@
 ihtTuneVarianceGrid <- c(0.01, 0.03, 0.1, 0.3, 1, 3, Inf)
 
 # The sparse matrix of toSparseM(), with the covariateIds as column names, so
-# that the model can map its coefficients and exclude to covariates
+# that the model can map its coefficients and exclude to covariates. The names
+# come from the covariate map, which has every column (covariateRef may not).
 prepareIhtMatrix <- function(plpData, cohort = NULL, map = NULL) {
   result <- toSparseM(plpData, cohort = cohort, map = map)
   covariateIds <- rep(NA_real_, ncol(result$dataMatrix))
-  covariateIds[result$covariateRef$columnId] <- result$covariateRef$covariateId
+  covariateIds[result$covariateMap$columnId] <- result$covariateMap$covariateId
   colnames(result$dataMatrix) <- sprintf("%.0f", covariateIds)
   result
 }
@@ -83,7 +84,7 @@ prepareIhtFold <- function(dataMatrix, labels, settings) {
 fitIhtModel <- function(dataMatrix, labels, hyperParameters, settings, context = NULL) {
   rlang::check_installed("IterativeHardThresholding", version = "2.0.0")
   fold <- prepareIhtFold(dataMatrix, labels, settings)
-  K <- as.integer(hyperParameters$K)
+  requestedK <- as.integer(hyperParameters$K)
   # Inf comes back from JSON as "Inf"
   variance <- as.numeric(hyperParameters$variance)
   priorParams <- settings$priorParams
@@ -93,10 +94,16 @@ fitIhtModel <- function(dataMatrix, labels, hyperParameters, settings, context =
   exclude <- match(as.numeric(priorParams$exclude), fold$covariateIds)
   exclude <- exclude[!is.na(exclude) & as.character(exclude) %in% columns]
   nPenalized <- length(columns) - length(exclude) + forceIntercept
-  if (K > nPenalized) {
-    stopCandidate(paste0(
-      "K = ", K, " is more than the ", nPenalized, " penalized covariates with values in the training rows"
-    ))
+  if (nPenalized < 1) {
+    stopCandidate("there are no penalized covariates with values in the training rows")
+  }
+  # with fewer penalized covariates than K, the model has all of them
+  K <- min(requestedK, nPenalized)
+  if (K < requestedK && isTRUE(context$final)) {
+    ParallelLogger::logInfo(
+      "IHT: K = ", requestedK, " is more than the ", nPenalized,
+      " penalized covariates; the model uses all ", nPenalized
+    )
   }
 
   prior <- IterativeHardThresholding::createIhtPrior(
@@ -107,7 +114,11 @@ fitIhtModel <- function(dataMatrix, labels, hyperParameters, settings, context =
     algorithm = priorParams$algorithm %||% "default",
     control = do.call(IterativeHardThresholding::createIhtControl, as.list(priorParams$control))
   )
-  start <- ihtStartingCoefficients(context$state, K, variance, fold$coefficientNames)
+  # IterativeHardThresholding uses starting coefficients only with exact refits
+  # (not with "chu2020"), so only then is a fold warm-started
+  start <- if (isTRUE(prior$control$exactRefits)) {
+    ihtStartingCoefficients(context$state, K, variance, fold$coefficientNames)
+  }
   control <- Cyclops::createControl(noiseLevel = "silent", seed = settings$seed, threads = 1)
   # convergence is reported in the search history (ihtFitInfo) and logged for
   # the final fit, rather than warned for every fold and candidate
@@ -145,6 +156,7 @@ fitIhtModel <- function(dataMatrix, labels, hyperParameters, settings, context =
     columnId = columnId,
     mapping = "logistic",
     K = K,
+    requestedK = requestedK,
     variance = variance,
     algorithm = priorParams$algorithm %||% "default",
     converged = converged,
@@ -218,6 +230,8 @@ predictIht <- function(plpModel, data, cohort) {
   }
   prediction <- cohort
   prediction$value <- stats::plogis(linearPredictor)
+  # the linear predictor, as predictGlm gives for new data
+  prediction$rawValue <- linearPredictor
   if (!is.null(prediction$originalRowId)) {
     prediction$rowId <- prediction$originalRowId
     prediction$originalRowId <- NULL

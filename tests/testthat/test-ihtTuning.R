@@ -153,6 +153,7 @@ test_that("IHT predicts new data with its coefficients, also after saving", {
   trainRows <- model$prediction[model$prediction$evaluationType == "Train", ]
   newData <- predictIht(model, data = train, cohort = train$labels)
   expect_equal(newData$value[match(trainRows$rowId, newData$rowId)], trainRows$value, tolerance = 1e-12)
+  expect_equal(newData$rawValue[match(trainRows$rowId, newData$rowId)], trainRows$rawValue, tolerance = 1e-12)
 
   dir <- tempfile("ihtModel")
   on.exit(unlink(dir, recursive = TRUE), add = TRUE)
@@ -160,6 +161,32 @@ test_that("IHT predicts new data with its coefficients, also after saving", {
   loaded <- loadPlpModel(dir)
   expect_equal(loaded$model$coefficients, model$model$coefficients)
   expect_equal(predictIht(loaded, data = train, cohort = train$labels)$value, newData$value)
+})
+
+test_that("runPlp develops and evaluates an IHT model with a test split", {
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
+  skip_if_not_installed("Eunomia")
+  skip_if_no_eunomia()
+  skip_on_cran()
+  result <- runPlp(
+    plpData = plpData,
+    outcomeId = outcomeId,
+    analysisId = "ihtRunPlp",
+    populationSettings = populationSettings,
+    splitSettings = createDefaultSplitSetting(testFraction = 0.25, nfold = 3, splitSeed = 42),
+    modelSettings = setIterativeHardThresholding(K = c(2, 5), variance = 1, seed = 42),
+    logSettings = createLogSettings(verbosity = "ERROR"),
+    executeSettings = createExecuteSettings(
+      runSplitData = TRUE, runSampleData = FALSE, runFeatureEngineering = FALSE,
+      runPreprocessData = TRUE, runModelDevelopment = TRUE, runCovariateSummary = FALSE
+    ),
+    saveDirectory = file.path(saveLoc, "ihtRunPlp")
+  )
+  expect_setequal(unique(result$prediction$evaluationType), c("Train", "CV", "Test"))
+  expect_false(anyNA(result$prediction$rawValue))
+  expect_equal(result$prediction$value, stats::plogis(result$prediction$rawValue), tolerance = 1e-12)
+  statistics <- result$performanceEvaluation$evaluationStatistics
+  expect_true(all(c("Train", "CV", "Test") %in% statistics$evaluation[statistics$metric == "AUROC"]))
 })
 
 test_that("IHT settings survive saving as JSON", {
@@ -179,19 +206,51 @@ test_that("IHT settings survive saving as JSON", {
   expect_equal(model$model$coefficients, original$model$coefficients)
 })
 
-test_that("an IHT candidate with more covariates than the data have is skipped", {
+test_that("with fewer covariates than K, an IHT model has all of them", {
   skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
   skip_on_cran()
   train <- makeIhtFixture(p = 6L)
   on.exit(Andromeda::close(train$covariateData))
-  expect_warning(
-    model <- fitIht(train, setIterativeHardThresholding(K = c(2, 7), seed = 42)),
-    class = "plpCandidateWarning"
-  )
+  model <- fitIht(train, setIterativeHardThresholding(K = c(2, 7), seed = 42))
   search <- model$trainDetails$hyperParamSearch
-  expect_true(is.na(search[[2]]$cvPerformance))
-  expect_match(search[[2]]$error, "more than the 6 penalized covariates")
-  expect_equal(model$trainDetails$finalModelParameters$K, 2L)
+  expect_false(anyNA(vapply(search, function(e) e$cvPerformance, numeric(1))))
+  expect_equal(vapply(search[[2]]$info, function(f) f$nonZero, numeric(1)), rep(6, 3))
+
+  # the default K of 25
+  model <- fitIht(train, setIterativeHardThresholding(seed = 42))
+  expect_equal(nrow(model$model$coefficients), 6)
+  expect_equal(model$model$requestedK, 25L)
+})
+
+test_that("chu2020 folds are not reported as warm-started", {
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
+  skip_on_cran()
+  train <- makeIhtFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  model <- fitIht(train, setIterativeHardThresholding(K = c(1, 2), algorithm = "chu2020", seed = 42))
+  warm <- unlist(lapply(
+    model$trainDetails$hyperParamSearch,
+    function(e) vapply(e$info, function(f) f$warmStart, logical(1))
+  ))
+  expect_false(any(warm))
+})
+
+test_that("an IHT covariate missing from covariateRef keeps its covariateId", {
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
+  skip_on_cran()
+  train <- makeIhtFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  # the strongest covariate (the first) has no covariateRef row
+  train$covariateData$covariateRef <- train$covariateData$covariateRef %>%
+    dplyr::filter(.data$covariateId != 1102)
+  prepared <- prepareIhtMatrix(train)
+  expect_false("NA" %in% colnames(prepared$dataMatrix))
+  model <- fitIht(train, setIterativeHardThresholding(K = 3, seed = 42))
+  expect_false(anyNA(model$model$coefficients$covariateId))
+  expect_true(1102 %in% model$model$coefficients$covariateId)
+  trainRows <- model$prediction[model$prediction$evaluationType == "Train", ]
+  newData <- predictIht(model, data = train, cohort = train$labels)
+  expect_equal(newData$value[match(trainRows$rowId, newData$rowId)], trainRows$value, tolerance = 1e-12)
 })
 
 test_that("IHT is tuned on another metric when the hyperparameter settings name one", {
