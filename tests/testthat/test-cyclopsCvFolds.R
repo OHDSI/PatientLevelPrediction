@@ -214,20 +214,69 @@ independentFoldPredictions <- function(train, prior) {
   data.frame(rowId = outcomes$rowId, value = predictions)
 }
 
-test_that("IHT CV predictions select covariates within each fold", {
-  skip_if_not_installed("IterativeHardThresholding")
+test_that("legacy IHT CV predictions select covariates within each fold", {
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
   skip_on_cran()
   train <- makeCvFoldsFixture()
   on.exit(Andromeda::close(train$covariateData))
-  settings <- setIterativeHardThresholding(K = 3, seed = 42)
+  settings <- setIterativeHardThresholding(K = 5, seed = 42, threads = 1, algorithm = "legacy")
   fit <- suppressWarnings(fitCyclopsModel(train, settings, analysisId = "test"))
   cv <- fit$prediction[fit$prediction$evaluationType == "CV", ]
   expect_equal(sort(cv$rowId), sort(train$labels$rowId))
 
-  prior <- do.call(IterativeHardThresholding::createIhtPrior, settings$param$priorParams)
+  prior <- suppressWarnings(createIhtPriorFromSettings(settings$param$priorParams))
   expected <- suppressWarnings(independentFoldPredictions(train, prior))
   expect_equal(cv$value[match(expected$rowId, cv$rowId)], expected$value, tolerance = 1e-6)
 })
+
+test_that("Cyclops fit control gets the model's threads, seed and variance search", {
+  lasso <- setLassoLogisticRegression(variance = 0.05, threads = 3, seed = 1)
+  control <- createCyclopsFitControl(lasso$param, lasso$settings)
+  expect_equal(control$startingVariance, 0.05)
+  expect_equal(control$threads, 3)
+  expect_equal(control$seed, 1)
+  expect_equal(control$lowerLimit, lasso$param$lowerLimit)
+})
+
+test_that("IHT settings saved before IterativeHardThresholding 2.0 run the legacy algorithm", {
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
+  # the priorParams setIterativeHardThresholding() saved in PatientLevelPrediction 6.x
+  old <- list(
+    K = 10, penalty = "bic", exclude = c(), forceIntercept = FALSE, fitBestSubset = FALSE,
+    initialRidgeVariance = 0.1, tolerance = 1e-08, maxIterations = 10000, threshold = 1e-06, delta = 0
+  )
+  messages <- character()
+  prior <- withCallingHandlers(
+    createIhtPriorFromSettings(old),
+    warning = function(w) {
+      messages <<- c(messages, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  expect_true(any(grepl("saved before", messages)))
+  expect_s3_class(prior, "ihtLegacyPrior")
+  expect_equal(prior$penalty, "bic")
+
+  # a model setting saved by PLP 6.x, through JSON, fits with CV predictions
+  old$K <- 3
+  saved <- structure(list(
+    fitFunction = "fitCyclopsModel",
+    param = list(priorParams = old),
+    settings = list(
+      modelType = "binary", modelName = "iterativeHardThresholding", cyclopsModelType = "logistic",
+      priorfunction = "IterativeHardThresholding::createIhtPrior", selectorType = "byRow",
+      crossValidationInPrior = FALSE, addIntercept = TRUE, useControl = FALSE, seed = 42,
+      predict = "predictCyclops", saveType = "RtoJson"
+    )
+  ), class = "modelSettings")
+  saved <- ParallelLogger::convertJsonToSettings(ParallelLogger::convertSettingsToJson(saved))
+  train <- makeCvFoldsFixture()
+  on.exit(Andromeda::close(train$covariateData))
+  fit <- suppressWarnings(fitCyclopsModel(train, saved, analysisId = "test"))
+  expect_equal(sum(fit$prediction$evaluationType == "CV"), nrow(train$labels))
+  expect_lte(sum(fit$model$coefficients$betas != 0), 3)
+})
+
 
 test_that("BAR CV predictions refit each fold with the BAR prior", {
   skip_if_not_installed("BrokenAdaptiveRidge")

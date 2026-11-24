@@ -229,72 +229,92 @@ test_that("set cox regression incorrect inputs", {
 
 
 test_that("set IHT inputs", {
-  skip_if_not_installed("IterativeHardThresholding")
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
   skip_on_cran()
-  # =====================================
-  # checking IHT
-  # =====================================
+  # the default and chu2020 algorithms are tuned by the generic hyperparameter search
   modelSet <- setIterativeHardThresholding()
   expect_s3_class(modelSet, "modelSettings")
-
-  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
-  expect_type(modelSet$param, "list")
-
+  expect_null(modelSet$fitFunction)
+  expect_equal(modelSet$param, list(K = 25L, variance = 1))
   expect_equal(modelSet$settings$modelName, "iterativeHardThresholding")
-  expect_equal(modelSet$settings$cyclopsModelType, "logistic")
   expect_equal(modelSet$settings$modelType, "binary")
+  expect_equal(modelSet$settings$train, "fitIhtModel")
+  expect_equal(modelSet$settings$prepareFold, "prepareIhtFold")
+  expect_equal(modelSet$settings$parallelFolds, c("fork", "psock"))
+  expect_equal(modelSet$settings$tuningMetric, "logLikelihoodMetric")
+  expect_null(modelSet$settings$selector)
+  expect_equal(modelSet$settings$threads, -1)
+  expect_equal(modelSet$settings$priorParams, list(
+    exclude = c(), forceIntercept = FALSE, algorithm = "default", control = list()
+  ))
+
+  modelSet <- setIterativeHardThresholding(
+    K = c(10, 5, 10), variance = "tune", exclude = c(1, 2), forceIntercept = TRUE,
+    algorithm = "chu2020", control = list(maxIterations = 50), oneStandardError = TRUE,
+    seed = 3, threads = 2
+  )
+  expect_equal(modelSet$param$K, c(5L, 10L))
+  expect_equal(modelSet$param$variance, c(0.01, 0.03, 0.1, 0.3, 1, 3, Inf))
+  expect_equal(modelSet$settings$priorParams$exclude, c(1, 2))
+  expect_true(modelSet$settings$priorParams$forceIntercept)
+  expect_equal(modelSet$settings$priorParams$algorithm, "chu2020")
+  expect_equal(modelSet$settings$priorParams$control, list(maxIterations = 50))
+  expect_equal(modelSet$settings$selector, "ihtOneStandardErrorSelector")
+  expect_equal(modelSet$settings$seed, 3)
+  expect_equal(setIterativeHardThresholding(variance = c(Inf, 0.5))$param$variance, c(0.5, Inf))
+
+  # the 1.0.3 algorithm keeps its arguments and is fitted by fitCyclopsModel
+  modelSet <- setIterativeHardThresholding(
+    K = 5, algorithm = "legacy", penalty = 2, fitBestSubset = TRUE, maxIterations = 200
+  )
+  expect_equal(modelSet$fitFunction, "fitCyclopsModel")
   expect_equal(modelSet$settings$priorfunction, "IterativeHardThresholding::createIhtPrior")
-  expect_equal(modelSet$settings$addIntercept, TRUE)
-  expect_equal(modelSet$settings$useControl, FALSE)
-  expect_equal(modelSet$settings$crossValidationInPrior, FALSE)
-
-  k <- sample(100, 1)
-  modelSet <- setIterativeHardThresholding(K = k)
-  expect_equal(modelSet$param$priorParams$K, k)
-
-
-  penalty <- sample(c("bic", "aic"), 1)
-  modelSet <- setIterativeHardThresholding(penalty = penalty)
-  expect_equal(modelSet$param$priorParams$penalty, penalty)
-
-  modelSet <- setIterativeHardThresholding(exclude = c(1, 2))
-  expect_equal(modelSet$param$priorParams$exclude, c(1, 2))
-
-  modelSet <- setIterativeHardThresholding(forceIntercept = TRUE)
-  expect_equal(modelSet$param$priorParams$forceIntercept, TRUE)
-
-  modelSet <- setIterativeHardThresholding(fitBestSubset = TRUE)
-  expect_equal(modelSet$param$priorParams$fitBestSubset, TRUE)
-
-  modelSet <- setIterativeHardThresholding(initialRidgeVariance = 0.5)
-  expect_equal(modelSet$param$priorParams$initialRidgeVariance, 0.5)
-
-  modelSet <- setIterativeHardThresholding(tolerance = 0.01)
-  expect_equal(modelSet$param$priorParams$tolerance, 0.01)
-  
-  modelSet <- setIterativeHardThresholding(maxIterations = 200)
+  expect_equal(modelSet$param$priorParams$algorithm, "legacy")
+  expect_equal(modelSet$param$priorParams$penalty, 2)
+  expect_true(modelSet$param$priorParams$fitBestSubset)
   expect_equal(modelSet$param$priorParams$maxIterations, 200)
-
-  modelSetg <- setIterativeHardThresholding(threshold = 0.1) 
-  expect_equal(modelSetg$param$priorParams$threshold, 0.1)
-
-  modelSet <- setIterativeHardThresholding(delta = 0.01)
-  expect_equal(modelSet$param$priorParams$delta, 0.01)
-
-
-  seed <- sample(10, 1)
-  modelSet <- setIterativeHardThresholding(seed = seed)
-  expect_equal(modelSet$settings$seed, seed)
+  expect_null(modelSet$param$priorParams$variance)
+  expect_false(modelSet$settings$useControl)
+  # the legacy algorithm keeps the default K of earlier versions
+  expect_equal(setIterativeHardThresholding(algorithm = "legacy")$param$priorParams$K, 10)
+  # 1.0.3 only handled a number or "bic"; IterativeHardThresholding now says so
+  # when the settings are made instead of when the model is fitted
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", penalty = "aic"))
 })
 
 
 test_that("test IHT incorrect inputs", {
-  skip_if_not_installed("IterativeHardThresholding")
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
   skip_on_cran()
-  expect_error(setIterativeHardThresholding(K = 0), "Invalid maximum number of predictors")
-  expect_error(setIterativeHardThresholding(penalty = "L1"), "Penalty must be \"aic\", \"bic\" or numeric")
-  expect_error(setIterativeHardThresholding(fitBestSubset = "true"), "fitBestSubset must be of type: logical")
-  expect_error(setIterativeHardThresholding(seed = "F"), "Invalid seed")
+  expect_error(setIterativeHardThresholding(K = 0), "K must be")
+  expect_error(setIterativeHardThresholding(K = 2.5), "K must be")
+  expect_error(setIterativeHardThresholding(K = Inf), "K must be")
+  expect_error(setIterativeHardThresholding(control = list(maxIterations = 50, TRUE)), "named list")
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", variance = 1), "not used")
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", K = c(5, 10)), "takes one K")
+  expect_error(setIterativeHardThresholding(variance = "big"), "variance must be one or more positive numbers")
+  expect_error(setIterativeHardThresholding(variance = -1))
+  # Inf as text, as it comes back from JSON
+  expect_equal(setIterativeHardThresholding(variance = c("Inf"))$param$variance, Inf)
+  expect_error(setIterativeHardThresholding(algorithm = "legacy", control = list(maxIterations = 5)), "not used")
+  expect_error(setIterativeHardThresholding(variance = -1), "variance")
+  expect_error(setIterativeHardThresholding(variance = "bic"), "variance")
+  expect_error(setIterativeHardThresholding(penalty = "bic"), "algorithm = \"legacy\"")
+  expect_error(setIterativeHardThresholding(fitBestSubset = TRUE), "algorithm = \"legacy\"")
+  expect_error(setIterativeHardThresholding(unknown = 1), "Unknown arguments")
+  expect_error(setIterativeHardThresholding(algorithm = "fast"))
+  expect_error(setIterativeHardThresholding(control = list(1)), "named list")
+  expect_error(setIterativeHardThresholding(control = list(noSuchSwitch = TRUE)))
+  expect_error(setIterativeHardThresholding(forceIntercept = "true"), "forceIntercept")
+  expect_error(setIterativeHardThresholding(seed = "F"))
+  expect_error(setIterativeHardThresholding(K = 3e9), "K must be")
+  expect_error(setIterativeHardThresholding(oneStandardError = 1), "oneStandardError")
+  expect_error(setIterativeHardThresholding(oneStandardError = NA), "oneStandardError")
+  expect_error(setIterativeHardThresholding(exclude = c("(Intercept)", "8507001")), "exclude must be covariate ids")
+  expect_equal(setIterativeHardThresholding(exclude = c(8507001))$settings$priorParams$exclude, 8507001)
+  # the second argument was penalty in earlier versions
+  expect_warning(setIterativeHardThresholding(10, 2), "now variance")
+  expect_no_warning(setIterativeHardThresholding(10, variance = 2))
 })
 
 test_that("Cyclops CV refit controls preserve model settings", {
@@ -311,16 +331,18 @@ test_that("Cyclops CV refit controls preserve model settings", {
   expect_equal(lassoControl$maxIterations, 17)
   expect_equal(lassoControl$noiseLevel, "silent")
 
-  skip_if_not_installed("IterativeHardThresholding")
-  ihtControl <- createCyclopsRefitControl(setIterativeHardThresholding(
+  skip_if_not_installed("BrokenAdaptiveRidge")
+  barControl <- createCyclopsRefitControl(setBrokenAdaptiveRidge(
     seed = 43,
+    threads = 3,
     tolerance = 2e-5,
     maxIterations = 19
   ))
 
-  expect_equal(ihtControl$seed, 43)
-  expect_equal(ihtControl$tolerance, 2e-5)
-  expect_equal(ihtControl$maxIterations, 19)
+  expect_equal(barControl$seed, 43)
+  expect_equal(barControl$threads, 3)
+  expect_equal(barControl$tolerance, 2e-5)
+  expect_equal(barControl$maxIterations, 19)
 })
 
 test_that("set BAR inputs", {
@@ -496,13 +518,13 @@ test_that("BAR automatic penalty validates folds before resolving its prior", {
 
 test_that("test IHT returns CV predictions", {
   skip_if_no_eunomia()
-  skip_if_not_installed("IterativeHardThresholding")
+  skip_if_not_installed("IterativeHardThresholding", minimum_version = "2.0.0")
   skip_on_cran()
 
   fitModel <- suppressWarnings(
     fitPlp(
       trainData = trainData,
-      modelSettings = setIterativeHardThresholding(K = 5, seed = 42, maxIterations = 100),
+      modelSettings = setIterativeHardThresholding(K = 5, seed = 42),
       analysisId = "ihtTest",
       analysisPath = tempdir()
     )
@@ -511,9 +533,11 @@ test_that("test IHT returns CV predictions", {
   expect_equal(length(unique(fitModel$prediction$evaluationType)), 2)
   expect_true("CV" %in% fitModel$prediction$evaluationType)
   expect_equal(nrow(fitModel$prediction), nrow(trainData$labels) * 2)
-  expect_true("(Intercept)" %in% fitModel$model$coefficients$covariateIds)
-  expect_true(is.data.frame(fitModel$trainDetails$hyperParamSearch))
-  expect_true("CV" %in% fitModel$trainDetails$hyperParamSearch$fold)
+  expect_lte(nrow(fitModel$model$coefficients), 5)
+  expect_true(is.numeric(fitModel$model$intercept))
+  search <- fitModel$trainDetails$hyperParamSearch
+  expect_equal(search[[1]]$metric, "logLikelihood")
+  expect_true("CV" %in% search[[1]]$hyperSummary$fold)
 })
 
 test_that("test BAR automatic penalty search runs", {

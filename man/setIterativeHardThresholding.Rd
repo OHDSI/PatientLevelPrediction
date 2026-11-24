@@ -5,50 +5,85 @@
 \title{Create setting for Iterative Hard Thresholding model}
 \usage{
 setIterativeHardThresholding(
-  K = 10,
-  penalty = "bic",
-  seed = sample(1e+05, 1),
+  K = 25,
+  variance = 1,
   exclude = c(),
   forceIntercept = FALSE,
-  fitBestSubset = FALSE,
-  initialRidgeVariance = 0.1,
-  tolerance = 1e-08,
-  maxIterations = 10000,
-  threshold = 1e-06,
-  delta = 0
+  seed = NULL,
+  algorithm = "default",
+  control = list(),
+  oneStandardError = FALSE,
+  threads = -1,
+  ...
 )
 }
 \arguments{
-\item{K}{The maximum number of non-zero predictors}
+\item{K}{Number of covariates in the model (default 25, or 10
+with \code{algorithm = "legacy"}, as in earlier versions); the intercept and
+\code{exclude} do not count. With fewer covariates than \code{K}, the model has all
+of them. One whole number, or several to
+choose from by cross-validation, for example \code{c(5, 10, 25, 50, 100)},
+which takes several times longer to fit.}
 
-\item{penalty}{Specifies the IHT penalty; possible values are \code{BIC} or \code{AIC} or a numeric value}
+\item{variance}{Ridge variance (default 1): a positive number, \code{Inf} for plain L0
+(the best subset of size \code{K}), several numbers to choose from by
+cross-validation, or \code{"tune"} for the grid 0.01, 0.03, 0.1, 0.3, 1, 3 and
+\code{Inf}. In earlier versions the second argument was \code{penalty}, so give
+\code{variance} by name; given by position, it gives a warning.}
 
-\item{seed}{An option to add a seed when training the model}
+\item{exclude}{Covariate ids (numbers) that are not penalized and do
+not count towards \code{K}.}
 
-\item{exclude}{A vector of numbers or covariateId names to exclude from prior}
+\item{forceIntercept}{Logical: penalize the intercept and count it towards \code{K}.}
 
-\item{forceIntercept}{Logical: Force intercept coefficient into regularization}
+\item{seed}{An option to add a seed when training the model.}
 
-\item{fitBestSubset}{Logical: Fit final subset with no regularization}
+\item{algorithm}{\code{"default"}, \code{"chu2020"} (the algorithm of Chu et al.,
+2020) or \code{"legacy"} (IterativeHardThresholding 1.0.3: Broken Adaptive Ridge
+with at most \code{K} covariates, counting the intercept; deprecated, to
+reproduce earlier models).}
 
-\item{initialRidgeVariance}{integer}
+\item{control}{A named list of algorithm switches; see
+\code{IterativeHardThresholding::createIhtControl()}. Empty entries take the
+defaults of \code{algorithm}.}
 
-\item{tolerance}{numeric}
+\item{oneStandardError}{With several \code{K}: choose the smallest \code{K} whose
+held-out log-likelihood is within one standard error of the best. This
+gives smaller models, which can discriminate less well than the best \code{K}.}
 
-\item{maxIterations}{integer}
+\item{threads}{Kept for earlier code; not used. The refits run on
+\code{control$threads} threads (default 1); to fit the folds in parallel, use
+\code{createHyperparameterSettings(foldWorkers = )}.}
 
-\item{threshold}{numeric}
-
-\item{delta}{numeric}
+\item{...}{Only with \code{algorithm = "legacy"}: the arguments of
+IterativeHardThresholding 1.0.3 (\code{penalty}, \code{fitBestSubset},
+\code{initialRidgeVariance}, \code{tolerance}, \code{maxIterations}, \code{threshold}, \code{delta}).}
 }
 \value{
 \code{modelSettings} object
 }
 \description{
-Create setting for Iterative Hard Thresholding model
+Logistic regression with \code{K} non-zero coefficients, fitted with the
+IterativeHardThresholding package (version 2.0.0 or later). It maximizes the
+log-likelihood minus a small ridge penalty (\code{variance}) over models with
+\code{K} covariates. When \code{K} or \code{variance} has several values, the
+hyperparameter search chooses between them on the training folds, as for
+other models, by the held-out log-likelihood unless the hyperparameter
+settings name another \code{tuningMetric}. Each fold's training rows are
+converted to Cyclops data once, and each fold starts a candidate from its
+own fit at the nearest earlier one (the next smaller \code{K}). The \code{foldWorkers}
+of \code{\link[=createHyperparameterSettings]{createHyperparameterSettings()}} fit the folds in parallel.
 }
 \examples{
-\dontshow{if (rlang::is_installed("IterativeHardThresholding")) withAutoprint(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("IterativeHardThresholding", version = "2.0.0")) withAutoprint(\{ # examplesIf}
 modelIht <- setIterativeHardThresholding(K = 5, seed = 42)
+# choose K by cross-validation
+modelIht <- setIterativeHardThresholding(K = c(10, 25, 50), seed = 42)
 \dontshow{\}) # examplesIf}
+}
+\references{
+Chu BB, Keys KL, German CA, Zhou H, Zhou JJ, Sobel EM, Sinsheimer JS, Lange K
+(2020). Iterative hard thresholding in genome-wide association studies:
+Generalized linear models, prior weights, and double sparsity. GigaScience
+9(6), giaa044.
 }

@@ -49,7 +49,7 @@ Suggests:
     glmnet,
     ggplot2,
     gridExtra,
-    IterativeHardThresholding,
+    IterativeHardThresholding (>= 2.0.0),
     knitr,
     lightgbm (>= 4.2.0),
     Metrics,
@@ -70,7 +70,8 @@ Suggests:
     withr,
     xgboost (> 1.3.2.1)
 Remotes:
-    ohdsi/Cyclops@develop
+    ohdsi/Cyclops@develop,
+    ohdsi/IterativeHardThresholding@v2.0.0
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 Config/testthat/edition: 3

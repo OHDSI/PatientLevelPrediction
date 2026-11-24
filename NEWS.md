@@ -7,6 +7,30 @@ can be refitted or re-evaluated.
 
 ## Breaking changes
 - PatientLevelPrediction needs Cyclops 4.0.0 or later.
+- `setIterativeHardThresholding()` uses IterativeHardThresholding 2.0.0 or
+  later, which fits L0-constrained logistic regression with a small ridge
+  penalty as its documentation describes (version 1.0.3 ran Broken Adaptive
+  Ridge with a cap of `K`). New arguments: `variance`, `algorithm`, `control`
+  and `oneStandardError`; `threads` is no longer used. `K` and `variance` can
+  be vectors, and the generic hyperparameter search then chooses them on the
+  training folds, as for other models, by the held-out log-likelihood (or the
+  `tuningMetric` of the hyperparameter settings). Each fold is converted to
+  Cyclops data once and starts each candidate from its own nearest earlier
+  fit, and `createHyperparameterSettings(foldWorkers = )` fits the folds in
+  parallel. `K` counts only penalized covariates, so `K = 10` gives 10
+  covariates instead of 9, and the default `K` is now 25 (was 10; still 10
+  with `algorithm = "legacy"`); with fewer covariates than `K`, the model has
+  all of them. The second argument is now `variance` instead of `penalty`, so
+  `setIterativeHardThresholding(10, 2)` gives a warning and fits ridge variance
+  2 instead of penalty 2; give the arguments by name. `exclude` takes covariate
+  ids only (not `"(Intercept)"`, which is not penalized unless `forceIntercept
+  = TRUE`). The model
+  is saved as its coefficients and predicts new data like `createGlmModel()`
+  models. `penalty`, `fitBestSubset`, `initialRidgeVariance`, `tolerance`,
+  `maxIterations`, `threshold` and `delta` are only accepted with `algorithm =
+  "legacy"`, which runs 1.0.3 unchanged (deprecated) through
+  `fitCyclopsModel()`. Model settings saved by earlier versions run the legacy
+  algorithm, with a warning, so that their models can be refitted.
 - `createPlpResultTables()` now defaults to `deleteTables = FALSE`, and
   `deleteTables = TRUE` removes the existing results from a complete schema.
   `insertResultsToSqlite()` (new `deleteTables` argument, default `TRUE`) and
